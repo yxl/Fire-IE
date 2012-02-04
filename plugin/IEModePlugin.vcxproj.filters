@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="IEControlSite.cpp" />
+    <ClCompile Include="IECtrl.cpp" />
+    <ClCompile Include="IEHostWindow.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="httpmonitor\HttpMonitorApp.cpp">
+      <Filter>HttpMonitor</Filter>
+    </ClCompile>
+    <ClCompile Include="httpmonitor\MonitorSink.cpp">
+      <Filter>HttpMonitor</Filter>
+    </ClCompile>
+    <ClCompile Include="np\np_entry.cpp">
+      <Filter>np</Filter>
+    </ClCompile>
+    <ClCompile Include="np\npn_gate.cpp">
+      <Filter>np</Filter>
+    </ClCompile>
+    <ClCompile Include="np\npp_gate.cpp">
+      <Filter>np</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\plugin.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\ScriptablePluginObject.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility\URI.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginApp.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IECtrl.h" />
+    <ClInclude Include="IEHostWindow.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="httpmonitor\HttpMonitorApp.h">
+      <Filter>HttpMonitor</Filter>
+    </ClInclude>
+    <ClInclude Include="httpmonitor\MonitorSink.h">
+      <Filter>HttpMonitor</Filter>
+    </ClInclude>
+    <ClInclude Include="np\nptypes.h">
+      <Filter>np</Filter>
+    </ClInclude>
+    <ClInclude Include="np\npapi.h">
+      <Filter>np</Filter>
+    </ClInclude>
+    <ClInclude Include="np\npfunctions.h">
+      <Filter>np</Filter>
+    </ClInclude>
+    <ClInclude Include="np\npplat.h">
+      <Filter>np</Filter>
+    </ClInclude>
+    <ClInclude Include="np\npruntime.h">
+      <Filter>np</Filter>
+    </ClInclude>
+    <ClInclude Include="PassthroughAPP\ProtocolCF.h">
+      <Filter>PassthroughAPP</Filter>
+    </ClInclude>
+    <ClInclude Include="PassthroughAPP\ProtocolImpl.h">
+      <Filter>PassthroughAPP</Filter>
+    </ClInclude>
+    <ClInclude Include="PassthroughAPP\PassthroughObject.h">
+      <Filter>PassthroughAPP</Filter>
+    </ClInclude>
+    <ClInclude Include="PassthroughAPP\SinkPolicy.h">
+      <Filter>PassthroughAPP</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\plugin.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\pluginbase.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\ScriptablePluginObjectBase.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\ScriptablePluginObject.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\URI.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="IEControlSite.h" />
+    <ClInclude Include="PluginApp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="plugin.def" />
+    <None Include="ReadMe.txt" />
+    <None Include="PassthroughAPP\ProtocolImpl.inl">
+      <Filter>PassthroughAPP</Filter>
+    </None>
+    <None Include="PassthroughAPP\ProtocolCF.inl">
+      <Filter>PassthroughAPP</Filter>
+    </None>
+    <None Include="PassthroughAPP\SinkPolicy.inl">
+      <Filter>PassthroughAPP</Filter>
+    </None>
+    <None Include="res\plugin.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="HttpMonitor">
+      <UniqueIdentifier>{acefb653-62fb-4321-9d32-15cd7d93c8cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="np">
+      <UniqueIdentifier>{c72fe0a7-54c6-4984-8913-c1fb634778a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PassthroughAPP">
+      <UniqueIdentifier>{f6107d30-b937-4c5b-8351-063c8c7156d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin">
+      <UniqueIdentifier>{13f3dee4-b322-474d-b10d-b4269b300717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="plugin.rc" />
+  </ItemGroup>
+</Project>

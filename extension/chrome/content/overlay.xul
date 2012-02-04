@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://fireie/skin/fireie.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % fireieDTD SYSTEM "chrome://fireie/locale/fireie.dtd" >
+%fireieDTD;
+]>
+
+<overlay id="fireieOverlay"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://fireie/content/fireieCommon.js" />
+<script type="application/x-javascript" src="chrome://fireie/content/fireieHttpObserver.js" />
+<script type="application/x-javascript" src="chrome://fireie/content/overlay.js" />
+
+<window id="main-window">
+</window>
+
+<!-- urlbar switch button -->
+<textbox id="urlbar">
+	 <toolbarbutton id="fireie-urlbar-switch"
+									insertbefore="urlbar-go-button"
+									onclick="FireIE.clickSwitchButton(event);" tooltip="fireie-urlbar-switch-tooltip">
+			<image id="fireie-urlbar-switch-image" class="fireie-status-image" engine="fx"/>
+			<label id="fireie-urlbar-switch-label"/>
+			<!-- tooltips -->
+			<tooltip id="fireie-urlbar-switch-tooltip" noautohide="true" orient="vertical" position="before_start" style="padding:2px;">
+			 <vbox>
+				 <label value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;"/>
+				 <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;"/>
+				 <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;"/>
+			 </vbox>
+			</tooltip>			
+	 </toolbarbutton>
+</textbox>
+
+<!-- firefox toolsmenu -->
+<menupopup id="menu_ToolsPopup">
+   <menuitem id="fireie-toolsmenu" hidden="false"
+      label="&fireie.options.title;" insertbefore="prefSep"
+      class="menuitem-iconic fireie-icon-toolsmenu"
+      oncommand="FireIE.openOptionsDialog();"/>
+</menupopup>
+
+<!-- popup menus -->
+<popupset>
+	<!-- urlbar switch button context menu -->
+	<menupopup id="fireie-urlbar-switch-context-menu">
+		<menuitem label="&fireie.options.title;" oncommand="FireIE.openOptionsDialog()"/>
+	</menupopup>
+</popupset>
+
+</overlay>

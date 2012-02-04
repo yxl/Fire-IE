@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+ <Description about="urn:mozilla:install-manifest">
+
+   <em:id>fireie@yxl.name</em:id>
+   <em:name>Fire IE</em:name>
+   <em:version>0.2.1</em:version>
+   <em:description>Enables you to use the embedded IE engine within Firefox.</em:description>
+   <em:creator>Yuan Xulei</em:creator>
+   <em:developer>Jiao Feng</em:developer>
+   <em:homepageURL></em:homepageURL>
+   <em:optionsURL>chrome://fireie/content/options.xul</em:optionsURL>
+   <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
+   <em:unpack>true</em:unpack>
+
+   <!-- Firefox -->
+   <em:targetApplication>
+     <Description>
+       <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+       <em:minVersion>6.0</em:minVersion>
+       <em:maxVersion>10.*</em:maxVersion>
+     </Description>
+   </em:targetApplication>
+   
+   <em:localized>
+     <Description>
+       <em:locale>zh-CN</em:locale>
+       <em:name>解雇IE</em:name>
+       <em:creator>袁徐磊</em:creator>
+       <em:developer>焦锋</em:developer>
+       <em:homepageURL></em:homepageURL>
+       <em:description>使用IE控件访问网银</em:description>
+     </Description>
+   </em:localized>
+
+ </Description>
+</RDF>

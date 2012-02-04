@@ -1,0 +1,5 @@
+<!ENTITY privatebrowsingwarning.title "IE 引擎不支持隐私浏览模式">
+<!ENTITY privatebrowsingwarning.intro1 "您已经启用了隐私浏览模式，但是 IE 引擎并不支持。">
+<!ENTITY privatebrowsingwarning.intro2 "如果您使用 IE 引擎，浏览历史、搜索历史、下载历史、表单历史、cookie 或者 Internet临时文件会被保留在 IE 的记录中。">
+<!ENTITY privatewarning.whatShouldIDo.content "如果你不希望保留隐私信息，请切换回 &brandShortName; 引擎。">
+<!ENTITY privatewarning.expert.content "如果你仍然打算继续使用 IE 引擎浏览页面，可以点击下面的“继续”。注意，其它没有使用 IE 引擎的 &brandShortName; 标签仍然处于隐私浏览模式中。">

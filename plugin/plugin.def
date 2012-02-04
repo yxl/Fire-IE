@@ -1,0 +1,9 @@
+; plugin.def : Declares the module parameters for the DLL.
+
+LIBRARY      "npfireie"
+
+EXPORTS
+  ; Explicit exports can go here
+  NP_GetEntryPoints   @1
+	NP_Initialize       @2
+	NP_Shutdown         @3

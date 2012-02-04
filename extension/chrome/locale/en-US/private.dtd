@@ -1,0 +1,5 @@
+<!ENTITY privatebrowsingwarning.title "IE Engine Does Not Support Private Browsing">
+<!ENTITY privatebrowsingwarning.intro1 "You have started Private Browsing for &brandShortName;, but it is not supported by IE engine.">
+<!ENTITY privatebrowsingwarning.intro2 "If you start IE engine, your browser history, search history, download history, web form history, cookies, and temporary internet files will be recorded in IE history logs.">
+<!ENTITY privatewarning.whatShouldIDo.content "If you do not want your private data to be recorded, please switch back to &brandShortName; engine.">
+<!ENTITY privatewarning.expert.content "If you still want to start IE engine to view the pages, please click 'Continue'. Notice: Other &brandShortName; tabs not using IE engine are still in Private Browsing sessions.">

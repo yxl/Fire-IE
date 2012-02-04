@@ -1,0 +1,23 @@
+<!ENTITY fireie.urlbar.switch.tooltip1 "Switch rendering engine">
+<!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
+
+<!ENTITY fireie.options.title "Fire IE Options">
+<!ENTITY fireie.options.filter.label "Sites Filter">
+<!ENTITY fireie.options.filter.enabled "Enable Sites Filter">
+<!ENTITY fireie.options.filter.column.rule "Rule">
+<!ENTITY fireie.options.filter.column.enabled "Enabled">
+<!ENTITY fireie.options.filter.url.label "URL:">
+<!ENTITY fireie.options.filter.button.add "Add">
+<!ENTITY fireie.options.filter.button.delete "Delete">
+
+<!ENTITY fireie.options.general.label "General Options">
+<!ENTITY fireie.options.switch.caption "When switch rendering engine:">
+<!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
+<!ENTITY fireie.options.processmode.caption "Process Mode:">
+<!ENTITY fireie.options.processmode.runinprocess "Run the plugin in the firefox.exe process (requires Firefox to restart)">
+
+<!ENTITY fireie.options.apply "Apply">
+<!ENTITY fireie.options.manager "Options Manager">
+<!ENTITY fireie.options.default "Restore Defaults">
+<!ENTITY fireie.options.import "Import Options File">
+<!ENTITY fireie.options.export "Export Options File">

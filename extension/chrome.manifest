@@ -1,0 +1,8 @@
+content	fireie chrome/content/
+skin	fireie classic/1.0 chrome/skin/
+
+overlay	chrome://browser/content/browser.xul chrome://fireie/content/overlay.xul
+style	chrome://global/content/customizeToolbar.xul chrome://fireie/skin/fireie.css
+
+locale	fireie	en-US	chrome/locale/en-US/
+locale	fireie	zh-CN	chrome/locale/zh-CN/
