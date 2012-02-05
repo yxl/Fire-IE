@@ -27,7 +27,7 @@ FireIE.importSettings = function() {
          FireIE._setAllSettings(aOld);
          FireIE.updateApplyButton(true);
       } else {
-         alert(FireIE.GetLocalizedString("settings.import.error"));
+         alert(FireIE.GetLocalizedString("fireie.options.import.error"));
       }
    }
 }
@@ -65,7 +65,7 @@ FireIE.setOptions = function(quiet) {
    
    //notify of restart requirement
    if(requiresRestart && !quiet) {
-      alert(FireIE.GetLocalizedString("settings.alert.restart"));
+      alert(FireIE.GetLocalizedString("fireie.options.alert.restart"));
    }
 }
 
@@ -130,6 +130,15 @@ FireIE.init = function() {
    FireIE.addEventListener("filterChilds", "DOMNodeInserted", FireIE.updateApplyButton);
    FireIE.addEventListener("filterChilds", "DOMNodeRemoved", FireIE.updateApplyButton);
    FireIE.addEventListener("parambox", "input", FireIE.updateApplyButton);
+}
+
+FireIE.close = function() {
+	 let isModified = !document.getElementById("myApply").disabled;
+	 if (isModified) {
+	   if (confirm("选项已修改，是否保存？")) {
+			  FireIE.setOptions(true);
+		 }
+	 }
 }
 
 FireIE.destory = function() {
