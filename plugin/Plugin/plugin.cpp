@@ -119,34 +119,31 @@ namespace Plugin
 			MSG * pMsg = (MSG *)lParam;
 
 			UINT uMsg = pMsg->message;
-			if ( (uMsg >= WM_KEYFIRST) && (uMsg <= WM_KEYLAST) )
+			if ((uMsg >= WM_KEYFIRST) && (uMsg <= WM_KEYLAST))
 			{
 				HWND hwnd = pMsg->hwnd;
 				TCHAR szClassName[MAX_PATH];
 				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
 				{
-					/*
+					
 					CString str;
 					str.Format(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
 					OutputDebugString(str);
-					*/
+					
 					if ( ( WM_KEYDOWN == uMsg ) && ( VK_TAB == pMsg->wParam ) && (_tcscmp(szClassName, _T("Internet Explorer_TridentCmboBx")) == 0) )
 					{
 						hwnd = ::GetParent(pMsg->hwnd);
 					}
-					else
+					else if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) != 0)
 					{
-						if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) != 0 )
-						{
-							hwnd = NULL;
-						}
+						hwnd = NULL;
 					}
 
 					if (hwnd)
 					{
 						PreTranslateAccelerator(hwnd, pMsg);
 
-						if ( (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) )
+						if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
 						{
 							// BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
 							// Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
@@ -154,7 +151,12 @@ namespace Plugin
 							bool bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL))!=0;
 							bool bAltPressed = HIBYTE(GetKeyState(VK_MENU))!=0;
 
-							if ( ( bCtrlPressed ^ bAltPressed ) || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)) )
+							// 当Alt键释放时，也向Firefox窗口转发按钮消息。否则无法通过Alt键选中主菜单。
+							if (uMsg == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
+							{
+								bAltPressed = TRUE;
+							}
+							if ( ( bCtrlPressed ^ bAltPressed) || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)) )
 							{
 								/* Test Cases by Meyer Kuno (Helbling Technik):
 								Ctrl-L (change keyboard focus to navigation bar)
@@ -167,7 +169,7 @@ namespace Plugin
 								if (hwndIECtrl)
 								{
 									HWND hwndMessageTarget = GetMozillaContentWindow(hwndIECtrl);
-									if ( ! hwndMessageTarget )
+									if ( !hwndMessageTarget )
 									{
 										hwndMessageTarget = GetTopMozillaWindowClassWindow(hwndIECtrl);
 									}
@@ -186,31 +188,32 @@ namespace Plugin
 											case 'B':
 											case 'T':
 											case 'H':
-												::SetFocus( hwndMessageTarget );
+												::SetFocus(hwndMessageTarget);
+												TRACE(_T("%x, Alt + %c pressed!\n"),  hwndMessageTarget, pMsg->wParam);
 												break;
-												// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
-											case VK_LEFT:
-											case VK_RIGHT:
+											// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
+											case VK_LEFT:	// 前进
+											case VK_RIGHT:	// 后退
 												uMsg = WM_NULL;
+												break;
+											case VK_MENU:
+												::SetFocus(hwndMessageTarget);
 												break;
 											default:
 												break;
 											}
 										}
-										else
+										else if ( bCtrlPressed )
 										{
-											if ( bCtrlPressed )
+											switch ( pMsg->wParam )
 											{
-												switch ( pMsg->wParam )
-												{
-													// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
-												case 'P':
-												case 'F':
-													uMsg = WM_NULL;
-													break;
-												default:
-													break;
-												}
+												// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
+											case 'P':
+											case 'F':
+												uMsg = WM_NULL;
+												break;
+											default:
+												break;
 											}
 										}
 
@@ -246,9 +249,12 @@ namespace Plugin
 				{
 					if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) == 0 )
 					{
-						// 重新把焦点移到 ATL:xxxx 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
+						// 重新把焦点移到 plugin 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
 						HWND hwndIECtrl = GetWebBrowserControlWindow(hwnd);
-						if (hwndIECtrl) ::SetFocus(hwndIECtrl);
+						if (hwndIECtrl)
+						{
+							::SetFocus(hwndIECtrl);
+						}
 					}
 				}
 			}

@@ -44,15 +44,12 @@ var FireIEContainer = {
 		window.addEventListener("PluginNotFound", FireIEContainer._pluginNotFoundListener, false);
 		window.addEventListener("TitleChanged", FireIEContainer._onTitleChanged, false);
 		window.addEventListener("CloseIETab", FireIEContainer._onCloseIETab, false);
-		window.addEventListener("focus", FireIEContainer._onWindowFocused, false);
+		var pluginObject = document.getElementById(FireIE.objectID);
+		if (pluginObject) {
+			pluginObject.addEventListener("focus", FireIEContainer._onPluginFocus, false);
+		}
 	},
 	
-	_onWindowFocused: function() {
-		var fireieObject = document.getElementById(FireIE.objectID);
-		if (fireieObject) {
-			fireieObject.Focus();
-		}		
-	},
 
 	_pluginNotFoundListener: function(event) {
 		alert("Loading Fire IE plugin failed. Please try restarting Firefox.");
@@ -69,7 +66,18 @@ var FireIEContainer = {
 		window.setTimeout(function() {
 			window.close();
 		}, 100);
-	}	
+	},
+	
+	/**
+	 * 当焦点在plugin对象上时，在plugin中按Alt+XXX组合键时，
+	 * 菜单栏无法正常弹出，因此当plugin对象得到焦点时，需要
+	 * 调用其blus方法去除焦点。
+	 */
+	_onPluginFocus: function(event) {
+		var pluginObject = event.originalTarget;
+		pluginObject.blur();
+		pluginObject.Focus();
+	}
 }
 
 window.addEventListener('DOMContentLoaded', FireIEContainer.init, false);
