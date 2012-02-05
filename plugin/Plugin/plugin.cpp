@@ -99,13 +99,13 @@ namespace Plugin
 	inline HWND GetWebBrowserControlWindow(HWND hwnd)
 	{
 		// Internet Explorer_Server 往上三级是 ATL:xxxxx 窗口
-		HWND hwndAtl = ::GetParent(::GetParent(::GetParent(hwnd)));
+		HWND hwndIECtrl = ::GetParent(::GetParent(::GetParent(hwnd)));
 		TCHAR szClassName[MAX_PATH];
-		if ( GetClassName(hwndAtl, szClassName, ARRAYSIZE(szClassName)) > 0 )
+		if ( GetClassName(hwndIECtrl, szClassName, ARRAYSIZE(szClassName)) > 0 )
 		{
 			if ( _tcsncmp(szClassName, STR_WINDOW_CLASS_NAME, 6) == 0 )
 			{
-				return hwndAtl;
+				return hwndIECtrl;
 			}
 		}
 	
@@ -136,11 +136,7 @@ namespace Plugin
 					}
 					else
 					{
-						if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) == 0 )
-						{
-							// hwnd = pMsg->hwnd;
-						}
-						else
+						if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) != 0 )
 						{
 							hwnd = NULL;
 						}
@@ -150,9 +146,9 @@ namespace Plugin
 					{
 						PreTranslateAccelerator(hwnd, pMsg);
 
-						if ( (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN /*|| uMsg == WM_CHAR*/) )
+						if ( (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) )
 						{
-							// BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in CoralIETab
+							// BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
 							// Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
 							// 
 							bool bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL))!=0;
@@ -167,13 +163,13 @@ namespace Plugin
 								Alt-d (sometimes Alt-s): "Address": the IE-way of Ctrl-L
 								Alt-F (open File menu) (NOTE: BUG: keyboard focus is not moved)
 								*/
-								HWND hwndAtl = GetWebBrowserControlWindow(hwnd);
-								if (hwndAtl)
+								HWND hwndIECtrl = GetWebBrowserControlWindow(hwnd);
+								if (hwndIECtrl)
 								{
-									HWND hwndMessageTarget = GetMozillaContentWindow(hwndAtl);
+									HWND hwndMessageTarget = GetMozillaContentWindow(hwndIECtrl);
 									if ( ! hwndMessageTarget )
 									{
-										hwndMessageTarget = GetTopMozillaWindowClassWindow(hwndAtl);
+										hwndMessageTarget = GetTopMozillaWindowClassWindow(hwndIECtrl);
 									}
 
 									if ( hwndMessageTarget )
@@ -251,8 +247,8 @@ namespace Plugin
 					if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) == 0 )
 					{
 						// 重新把焦点移到 ATL:xxxx 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
-						HWND hwndAtl = GetWebBrowserControlWindow(hwnd);
-						if (hwndAtl) ::SetFocus(hwndAtl);
+						HWND hwndIECtrl = GetWebBrowserControlWindow(hwnd);
+						if (hwndIECtrl) ::SetFocus(hwndIECtrl);
 					}
 				}
 			}

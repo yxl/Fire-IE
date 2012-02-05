@@ -93,7 +93,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
-    <None Include="ReadMe.txt" />
     <None Include="PassthroughAPP\ProtocolImpl.inl">
       <Filter>PassthroughAPP</Filter>
     </None>

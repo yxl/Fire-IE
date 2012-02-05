@@ -29,12 +29,12 @@ namespace UserMessage
 
 // 我们要把消息发送到 MozillaContentWindow 的子窗口，但是这个窗口结构比较复杂，Firefox/SeaMonkey各不相同，
 // Firefox 如果开启了 OOPP 也会增加一级，所以这里专门写一个查找的函数
-HWND GetMozillaContentWindow(HWND hwndAtl);
+HWND GetMozillaContentWindow(HWND hwndIECtrl);
 
 // Firefox 4.0 开始采用了新的窗口结构
 // 对于插件，是放在 GeckoPluginWindow 窗口里，往上有一个 MozillaWindowClass，再往上是顶层的
 // MozillaWindowClass，我们的消息要发到顶层，所以再写一个查找的函数
-HWND GetTopMozillaWindowClassWindow(HWND hwndAtl);
+HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl);
 
 
 // CIEHostWindow dialog

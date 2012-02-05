@@ -197,7 +197,6 @@ buildxpi.bat</Command>
     <None Include="PassthroughAPP\ProtocolImpl.inl" />
     <None Include="PassthroughAPP\SinkPolicy.inl" />
     <None Include="res\plugin.rc2" />
-    <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="plugin.rc" />

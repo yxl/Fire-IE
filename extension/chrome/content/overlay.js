@@ -135,15 +135,16 @@ FireIE.switchTabEngine = function(aTab) {
 			// We have to tell FireIEWatcher that this is manual switching, do not switch back to IE engine
 			FireIE.manualSwitchUrl = url;
 		}
+		let zoomLevel = FireIE.getZoomLevel();
+		FireIE.setTabAttributeJSON(aTab, 'zoom', {zoomLevel: zoomLevel});
+
 
 		// firefox特有地址只允许使用Firefox内核
 		if (isIEEngineAfterSwitch && !FireIE.isFirefoxOnly(url)){
 			// ie tab URL
 			url = FireIE.getfireieURL(url);
 		}
-		if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url) aTab.linkedBrowser.loadURI(url);
-		
-		FireIE.manualSwitchUrl = null;
+		if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url) aTab.linkedBrowser.loadURI(url);		
 	}
 }
 
@@ -521,25 +522,55 @@ FireIE.getTabByDocument = function(doc) {
 FireIE.onPageShowOrLoad = function(e) {
 	FireIE.updateAll();
 	FireIE.focusIE();
-
-	// 检查是否需要自动切换到IE内核	
+	
 	var doc = e.originalTarget;
+
 	var tab = FireIE.getTabByDocument(doc);
 	if (!tab) return;
+
+	//
+	// 检查是否需要设置ZoomLevel
+	//	
+	let zoomLevelParams = FireIE.getTabAttributeJSON(tab, 'zoom');
+	if (zoomLevelParams) {
+		FireIE.setZoomLevel(zoomLevelParams.zoomLevel);
+		tab.removeAttribute(tab, 'zoom');
+	}
 	
-	var fireieObject = FireIE.getIeTabElmt(tab);
-	if (!fireieObject) return;
-	var attr = tab.getAttribute(FireIE.navigateParamsAttr);
-	if (attr) {
-		var navigateParams = null;
-		try {
-			navigateParams = JSON.parse(attr);
-			if (navigateParams) {
-				fireieObject.Navigate(navigateParams.url, navigateParams.headers, navigateParams.post);
-			}			
-		} catch (ex) {alert(ex);}
+	
+	//
+	// 检查是否需要自动切换到IE内核	
+  //	
+	
+	let pluginObject = FireIE.getIeTabElmt(tab);
+	if (!pluginObject) return;
+	
+	let navigateParams = FireIE.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
+	if (navigateParams) {
+		pluginObject.Navigate(navigateParams.url, navigateParams.headers, navigateParams.post);
 		tab.removeAttribute(FireIE.navigateParamsAttr);
 	}	
+}
+
+FireIE.getTabAttributeJSON =  function(tab, name) {
+	let attrString = tab.getAttribute(name);
+	if (!attrString) {
+		return null;
+	}
+	
+	try {
+		let json = JSON.parse(attrString);
+		return json;
+	} catch (ex) {
+		MY_LOG('FireIE.getTabAttributeJSON:' + ex);
+	}
+	
+	return null;
+}
+
+FireIE.setTabAttributeJSON = function(tab, name, value) {
+	let attrString = JSON.stringify(value);
+	tab.setAttribute(name, attrString);
 }
 
 /** 响应界面大小变化事件

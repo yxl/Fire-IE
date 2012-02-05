@@ -117,8 +117,10 @@ FireIE.HttpObserver = {
           post = NetUtil.readInputStreamToString(uploadChannel.uploadStream, len);
         }
         
-        var param = {url: url, headers: headers, post: post};
-        tab.setAttribute(FireIE.navigateParamsAttr, JSON.stringify(param));
+				// 通过Tab的Attribute传送http header和post data参数
+				var param = {url: url, headers: headers, post: post};
+				FireIE.setTabAttributeJSON(tab, FireIE.navigateParamsAttr, param);
+				
         tab.linkedBrowser.loadURI(FireIE.getfireieURL("about:blank"));
       }
 		}
@@ -137,7 +139,7 @@ FireIE.HttpObserver = {
   },
   
   shouldFilter: function(url) {
-	  if (FireIE.manualSwitchUrl != null) {
+	  if (FireIE.manualSwitchUrl && FireIE.getUrlDomain(FireIE.manualSwitchUrl) == FireIE.getUrlDomain(url)) {
 			return false;
 		}
     return !FireIEWatcher.isFireIEURL(url)

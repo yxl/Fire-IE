@@ -38,8 +38,8 @@ namespace Plugin
 		NPIdentifier m_CanCopyID;
 		NPIdentifier m_CanCutID;
 		NPIdentifier m_CanPasteID;
-		NPIdentifier m_CanSelectAllID; // 没用, 恒为真
 		NPIdentifier m_ProgressID;
+
 	public:
 		ScriptablePluginObject(NPP npp)
 			: ScriptablePluginObjectBase(npp)
@@ -75,7 +75,6 @@ namespace Plugin
 			m_CanCopyID = NPN_GetStringIdentifier("CanCopy");
 			m_CanCutID = NPN_GetStringIdentifier("CanCut");
 			m_CanPasteID = NPN_GetStringIdentifier("CanPaste");
-			m_CanSelectAllID = NPN_GetStringIdentifier("CanSelectAll");
 			m_ProgressID = NPN_GetStringIdentifier("Progress");
 		}
 

@@ -26,15 +26,15 @@
  
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function fireie_LOG(txt) {
+function MY_LOG(txt) {
   Services.console.logStringMessage("[FireIE] Log: " + txt);
 }
 
-function fireie_WARN(txt) {
+function MY_WARN(txt) {
   Services.console.logStringMessage("[FireIE] Warning: " + txt);
 }
 
-function fireie_ERROR(txt) {
+function MY_ERROR(txt) {
   Components.utils.reportError("[FireIE] Error: " + txt);
 }
 
@@ -53,7 +53,7 @@ FireIE.GetLocalizedString = function (name) {
     var stringService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
     var strings = stringService.createBundle("chrome://fireie/locale/global.properties");
     s = strings.GetStringFromName(name);
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
   return s;
 };
 
@@ -63,7 +63,7 @@ FireIE.isValidURL = function (url) {
     const ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
     var uri = ios.newURI(url, null, null);
     b = true;
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
   return b;
 }
 
@@ -82,6 +82,19 @@ FireIE.getZoomLevel = function () {
   var zoomLevel = fullZoom ? docViewer.fullZoom : docViewer.textZoom;
   return zoomLevel;
 }
+
+FireIE.setZoomLevel = function (value) {
+  var aBrowser = (typeof (gBrowser) == "undefined") ? FireIE.getChromeWindow().gBrowser : gBrowser;
+  var fullZoom = FireIE.getBoolPref("browser.zoom.full", false);
+  var docViewer = aBrowser.selectedBrowser.markupDocumentViewer;
+  if (fullZoom) {
+    docViewer.fullZoom = value;
+  } else {
+    docViewer.textZoom = value;
+  }  
+}
+
+
 
 //-----------------------------------------------------------------------------
 FireIE.addEventListener = function (obj, type, listener) {
@@ -112,7 +125,7 @@ FireIE.hookCode = function (orgFunc, orgCode, myCode) {
   try {
     if (eval(orgFunc).toString() == eval(orgFunc + "=" + eval(orgFunc).toString().replace(orgCode, myCode))) throw orgFunc;
   } catch (e) {
-    fireie_ERROR("Failed to hook function: " + orgFunc);
+    MY_ERROR("Failed to hook function: " + orgFunc);
   }
 }
 
@@ -122,7 +135,7 @@ FireIE.hookAttr = function (parentNode, attrName, myFunc) {
   try {
     parentNode.setAttribute(attrName, myFunc + parentNode.getAttribute(attrName));
   } catch (e) {
-    fireie_ERROR("Failed to hook attribute: " + attrName);
+    MY_ERROR("Failed to hook attribute: " + attrName);
   }
 }
 
@@ -137,12 +150,12 @@ FireIE.hookProp = function (parentNode, propName, myGetter, mySetter) {
   if (myGetter) try {
     eval('parentNode.__defineGetter__(propName, ' + myGetter.toString() + ');');
   } catch (e) {
-    fireie_ERROR("Failed to hook property Getter: " + propName);
+    MY_ERROR("Failed to hook property Getter: " + propName);
   }
   if (mySetter) try {
     eval('parentNode.__defineSetter__(propName, ' + mySetter.toString() + ');');
   } catch (e) {
-    fireie_ERROR("Failed to hook property Setter: " + propName);
+    MY_ERROR("Failed to hook property Setter: " + propName);
   }
 }
 
@@ -164,7 +177,7 @@ FireIE.getBoolPref = function (prefName, defval) {
   if (prefs.getPrefType(prefName) == prefs.PREF_BOOL) {
     try {
       result = prefs.getBoolPref(prefName);
-    } catch (e) {fireie_ERROR(e)}
+    } catch (e) {MY_ERROR(e)}
   }
   return (result);
 }
@@ -175,7 +188,7 @@ FireIE.getIntPref = function (prefName, defval) {
   if (prefs.getPrefType(prefName) == prefs.PREF_INT) {
     try {
       result = prefs.getIntPref(prefName);
-    } catch (e) {fireie_ERROR(e)}
+    } catch (e) {MY_ERROR(e)}
   }
   return (result);
 }
@@ -186,7 +199,7 @@ FireIE.getStrPref = function (prefName, defval) {
   if (prefs.getPrefType(prefName) == prefs.PREF_STRING) {
     try {
       result = prefs.getComplexValue(prefName, Components.interfaces.nsISupportsString).data;
-    } catch (e) {fireie_ERROR(e)}
+    } catch (e) {MY_ERROR(e)}
   }
   return (result);
 }
@@ -197,7 +210,7 @@ FireIE.getDefaultStrPref = function (prefName, defval) {
   if (defaults.getPrefType(prefName) == defaults.PREF_STRING) {
     try {
       result = defaults.getCharPref(prefName);
-    } catch (e) {fireie_ERROR(e)}
+    } catch (e) {MY_ERROR(e)}
   }
   return (result);
 }
@@ -206,14 +219,14 @@ FireIE.setBoolPref = function (prefName, value) {
   var prefs = Services.prefs.getBranch("");
   try {
     prefs.setBoolPref(prefName, value);
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
 }
 
 FireIE.setIntPref = function (prefName, value) {
   var prefs = Services.prefs.getBranch("");
   try {
     prefs.setIntPref(prefName, value);
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
 }
 
 FireIE.setStrPref = function (prefName, value) {
@@ -222,7 +235,7 @@ FireIE.setStrPref = function (prefName, value) {
   sString.data = value;
   try {
     prefs.setComplexValue(prefName, Components.interfaces.nsISupportsString, sString);
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
 }
 
 //-----------------------------------------------------------------------------
@@ -238,7 +251,7 @@ FireIE.getDefaultCharset = function (defval) {
     try {
       return intlMess.GetStringFromName("intl.charset.default");
     } catch (e) {
-      {fireie_WARN(e)}
+      {MY_WARN(e)}
       return defval;
     }
   }
@@ -249,7 +262,7 @@ FireIE.queryDirectoryService = function (aPropName) {
     var dirService = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
     var file = dirService.get(aPropName, Components.interfaces.nsIFile);
     return file.path;
-  } catch (e) {fireie_ERROR(e)}
+  } catch (e) {MY_ERROR(e)}
 
   return null;
 }
@@ -258,7 +271,7 @@ FireIE.convertToUTF8 = function (data, charset) {
   try {
     data = decodeURI(data);
   } catch (e) {
-    fireie_WARN("convertToUTF8 faild");
+    MY_WARN("convertToUTF8 faild");
     if (!charset) charset = FireIE.getDefaultCharset();
     if (charset) {
       var uc = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
@@ -266,7 +279,7 @@ FireIE.convertToUTF8 = function (data, charset) {
         uc.charset = charset;
         data = uc.ConvertToUnicode(unescape(data));
         data = decodeURI(data);
-      } catch (e) {fireie_ERROR(e)}
+      } catch (e) {MY_ERROR(e)}
       uc.Finish();
     }
   }
@@ -281,7 +294,7 @@ FireIE.convertToASCII = function (data, charset) {
     try {
       data = uc.ConvertFromUnicode(data);
     } catch (e) {
-      fireie_WARN("ConvertFromUnicode faild");
+      MY_WARN("ConvertFromUnicode faild");
       data = uc.ConvertToUnicode(unescape(data));
       data = decodeURI(data);
       data = uc.ConvertFromUnicode(data);
@@ -302,7 +315,7 @@ FireIE.getUrlDomain = function (url) {
         var uri = ios.newURI(url, null, null);
         uri.path = "";
         r = uri.spec;
-      } catch (e) {fireie_ERROR(e)}
+      } catch (e) {MY_ERROR(e)}
     }
   }
   return r;

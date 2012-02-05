@@ -1,4 +1,4 @@
-// MainWindow.cpp : implementation file
+// IEHostWindow.cpp : implementation file
 //
 
 #include "stdafx.h"
@@ -92,8 +92,6 @@ BOOL CIEHostWindow::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	// TODO:  Add extra initialization here
-
 	InitIE();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -120,14 +118,14 @@ void CIEHostWindow::InitIE()
 	{
 		CoInternetSetFeatureEnabled(features[i], SET_FEATURE_ON_PROCESS, TRUE);
 	}
-
-	// 屏蔽脚本错误提示
-	//m_ie.put_Silent(TRUE);
 }
 
 
 void CIEHostWindow::UninitIE()
 {
+	// 屏蔽脚本错误提示
+	m_ie.put_Silent(TRUE);
+
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
 	s_csIEWindowMap.Unlock();
@@ -138,7 +136,6 @@ void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 
-	// TODO: Add your message handler code here
 	if (m_ie.GetSafeHwnd())
 	{
 		m_ie.MoveWindow(0, 0, cx, cy);
@@ -174,7 +171,6 @@ END_EVENTSINK_MAP()
 
 void CIEHostWindow::OnCommandStateChange(long Command, BOOL Enable)
 {
-	// TODO: Add your message handler code here
 	switch (Command)
 	{
 	case CSC_NAVIGATEBACK:
@@ -400,10 +396,10 @@ void CIEHostWindow::Find()
 
 // 我们要把消息发送到 MozillaContentWindow 的子窗口，但是这个窗口结构比较复杂，Firefox/SeaMonkey各不相同，
 // Firefox 如果开启了 OOPP 也会增加一级，所以这里专门写一个查找的函数
-HWND GetMozillaContentWindow(HWND hwndAtl)
+HWND GetMozillaContentWindow(HWND hwndIECtrl)
 {
 	//这里来个土办法，用一个循环往上找，直到找到 MozillaContentWindow 为止
-	HWND hwnd = ::GetParent(hwndAtl);
+	HWND hwnd = ::GetParent(hwndIECtrl);
 	for ( int i = 0; i < 5; i++ )
 	{
 		hwnd = ::GetParent( hwnd );
@@ -423,9 +419,9 @@ HWND GetMozillaContentWindow(HWND hwndAtl)
 // Firefox 4.0 开始采用了新的窗口结构
 // 对于插件，是放在 GeckoPluginWindow 窗口里，往上有一个 MozillaWindowClass，再往上是顶层的
 // MozillaWindowClass，我们的消息要发到顶层，所以再写一个查找的函数
-HWND GetTopMozillaWindowClassWindow(HWND hwndAtl)
+HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl)
 {
-	HWND hwnd = ::GetParent(hwndAtl);
+	HWND hwnd = ::GetParent(hwndIECtrl);
 	for ( int i = 0; i < 5; i++ )
 	{
 		HWND hwndParent = ::GetParent( hwnd );
@@ -683,14 +679,14 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 
 BOOL CIEHostWindow::DestroyWindow()
 {
-	// TODO: Add your specialized code here and/or call the base class
 	UninitIE();
 
 	return CDialog::DestroyWindow();
 }
 
 
-/** 这里之所有要使用NewWindow3而不使用NewWindow2，是因为NewWindow3提供了bstrUrlContext参数，
+/** 
+*  这里之所有要使用NewWindow3而不使用NewWindow2，是因为NewWindow3提供了bstrUrlContext参数，
 * 该参数用来设置新打开链接的referrer,一些网站通过检查referrer来防止盗链
 */
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
@@ -715,5 +711,3 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
     s_csNewIEWindowMap.Unlock();
   }
 }
-
-

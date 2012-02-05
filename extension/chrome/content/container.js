@@ -3,7 +3,7 @@ var FireIEContainer = {
 		window.removeEventListener('DOMContentLoaded', FireIEContainer.init, false);
 		var container = document.getElementById('container');
 		if (!container) {
-			fireie_ERROR('Cannot find container div to insert fireie-object.');
+			MY_ERROR('Cannot find container div to insert fireie-object.');
 			return;
 		}
 		if (FireIEContainer._isInPrivateBrowsingMode()) {
@@ -48,7 +48,7 @@ var FireIEContainer = {
 	},
 	
 	_onWindowFocused: function() {
-		var fireieObject = document.getElementById('fireie-object');
+		var fireieObject = document.getElementById(FireIE.objectID);
 		if (fireieObject) {
 			fireieObject.Focus();
 		}		

@@ -41,7 +41,6 @@ namespace Plugin
 			name == m_CanCopyID ||
 			name == m_CanCutID || 
 			name == m_CanPasteID ||
-			name == m_CanSelectAllID ||
 			name == m_ProgressID)
 		{
 			return true;
@@ -115,13 +114,6 @@ namespace Plugin
 		{
 			BOOL canPaste = m_pMainWindow->GetCanPaste();
 			BOOLEAN_TO_NPVARIANT(canPaste, *result);
-			return true;
-		}
-		// readonly property {boolean} CanSelectAll
-		else if (name == m_CanSelectAllID)
-		{
-			BOOL canSelectAll = m_pMainWindow->GetCanSelectAll();
-			BOOLEAN_TO_NPVARIANT(canSelectAll, *result);
 			return true;
 		}
 		// readonly property {boolean} Progress

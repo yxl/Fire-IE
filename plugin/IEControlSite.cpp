@@ -64,7 +64,7 @@ STDMETHODIMP CIEControlSite::XOleCommandTarget::Exec(
 			return S_OK;
 
 		}
-	}
+	} 
 	// 通过脚本关闭IE页面时通知父窗口
 	if (nCmdID == OLECMDID_CLOSE) 
 	{
