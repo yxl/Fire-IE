@@ -44,8 +44,8 @@ FireIE.getfireieURL = function(url) {
 	return FireIE.containerUrl + encodeURI(url);
 }
 
-/** 从IE Tab URL中提取实际访问的URL */
-FireIE.getIeTabTrimURL = function(url) {
+/** 从Plugin URL中提取实际访问的URL */
+FireIE.getActualUrl = function(url) {
 	if (url && url.length > 0) {
 		url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
 		if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
@@ -61,7 +61,7 @@ FireIE.getIeTabTrimURL = function(url) {
 }
 
 /** 获取Firefox页面内嵌的plugin对象 */
-FireIE.getIeTabElmt = function(aTab) {
+FireIE.getPluginObject = function(aTab) {
 	var aBrowser = (aTab ? aTab.linkedBrowser : gBrowser);
 	if (aBrowser && aBrowser.currentURI && FireIE.startsWith(aBrowser.currentURI.spec, FireIE.containerUrl)) {
 		if (aBrowser.contentDocument) {
@@ -75,36 +75,38 @@ FireIE.getIeTabElmt = function(aTab) {
 }
 
 /** 获取IE Tab实际访问的URL*/
-FireIE.getIeTabElmtURL = function(aTab) {
+FireIE.getPluginObjectURL = function(aTab) {
 	var tab = aTab || null;
 	var aBrowser = (tab ? tab.linkedBrowser : gBrowser);
-	var url = FireIE.getIeTabTrimURL(aBrowser.currentURI.spec);
-	var fireieObject = FireIE.getIeTabElmt(tab);
-	if (fireieObject && fireieObject.URL && fireieObject.URL != "") {
-		url = (/^file:\/\/.*/.test(url) ? encodeURI(FireIE.convertToUTF8(fireieObject.URL)) : fireieObject.URL);
+	var url = FireIE.getActualUrl(aBrowser.currentURI.spec);
+	var pluginObject = FireIE.getPluginObject(tab);
+	if (pluginObject && pluginObject.URL && pluginObject.URL != "") {
+		url = (/^file:\/\/.*/.test(url) ? encodeURI(FireIE.convertToUTF8(pluginObject.URL)) : pluginObject.URL);
 	}
 	return url;
 }
 
 /** 获取当前Tab的IE Tab URI
- *  与FireIE.getIeTabElmtURL功能相同
+ *  与FireIE.getPluginObjectURL功能相同
  */
 FireIE.getCurrentIeTabURI = function(aBrowser) {
 	try {
 		var docShell = aBrowser.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
 		var wNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
 		if (wNav.currentURI && FireIE.startsWith(wNav.currentURI.spec, FireIE.containerUrl)) {
-			var fireieObject = wNav.document.getElementById(FireIE.objectID);
-			if (fireieObject) {
-				if (fireieObject.wrappedJSObject) fireieObject = fireieObject.wrappedJSObject;
-				var url = fireieObject.URL;
+			var pluginObject = wNav.document.getElementById(FireIE.objectID);
+			if (pluginObject) {
+				if (pluginObject.wrappedJSObject) pluginObject = pluginObject.wrappedJSObject;
+				var url = pluginObject.URL;
 				if (url) {
 					const ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 					return ios.newURI(FireIE.containerUrl + encodeURI(url), null, null);
 				}
 			}
 		}
-	} catch (e) {}
+	} catch (e) {
+		MY_LOG('FireIE.getCurrentIeTabURI: ' + ex);
+	}
 	return null;
 }
 
@@ -126,7 +128,7 @@ FireIE.isIEEngine = function(aTab) {
 FireIE.switchTabEngine = function(aTab) {
 	if (aTab && aTab.localName == "tab") {				
 		// 实际浏览的URL
-		var url = FireIE.getIeTabElmtURL(aTab);
+		var url = FireIE.getPluginObjectURL(aTab);
 		
 		var isIEEngineAfterSwitch = !FireIE.isIEEngine(aTab);
 		
@@ -150,7 +152,7 @@ FireIE.switchTabEngine = function(aTab) {
 
 FireIE.setUrlbarSwitchButtonStatus = function(isIEEngine) {
 	// Firefox特有页面禁止内核切换
-	var url = FireIE.getIeTabElmtURL();
+	var url = FireIE.getPluginObjectURL();
 	var btn = document.getElementById("fireie-urlbar-switch");
 	if (btn) {
 		btn.disabled = FireIE.isFirefoxOnly(url);
@@ -184,7 +186,7 @@ FireIE.switchEngine = function() {
 
 /** 打开配置对话框 */
 FireIE.openOptionsDialog = function(url) {
-	if (!url) url = FireIE.getIeTabElmtURL();
+	if (!url) url = FireIE.getPluginObjectURL();
 	var icon = document.getElementById('ietab-status');
 	window.openDialog('chrome://fireie/content/options.xul', "fireieOptionsDialog", 'chrome,centerscreen', FireIE.getUrlDomain(url), icon);
 }
@@ -210,9 +212,9 @@ FireIE.getHandledURL = function(url, isModeIE) {
 
 	if (FireIE.isIEEngine() && (!FireIE.startsWith(url, "about:")) && (!FireIE.startsWith(url, "view-source:"))) {
 		if (FireIE.isValidURL(url) || FireIE.isValidDomainName(url)) {
-			var isBlank = (FireIE.getIeTabTrimURL(gBrowser.currentURI.spec) == "about:blank");
+			var isBlank = (FireIE.getActualUrl(gBrowser.currentURI.spec) == "about:blank");
 			var handleUrlBar = FireIE.getBoolPref("extensions.fireie.handleUrlBar", false);
-			var isSimilar = (FireIE.getUrlDomain(FireIE.getIeTabElmtURL()) == FireIE.getUrlDomain(url));
+			var isSimilar = (FireIE.getUrlDomain(FireIE.getPluginObjectURL()) == FireIE.getUrlDomain(url));
 			if (isBlank || handleUrlBar || isSimilar) return FireIE.getfireieURL(url);
 		}
 	}
@@ -241,7 +243,7 @@ FireIE.updateUrlBar = function() {
 			gURLBar.focus();
 		}, 0);
 	} else {
-		var url = FireIE.getIeTabElmtURL();
+		var url = FireIE.getPluginObjectURL();
 		if (url == "about:blank") url = "";
 		if (gURLBar.value != url) gURLBar.value = url;
 	}
@@ -264,48 +266,46 @@ FireIE.updateObjectDisabledStatus = function(objId, isEnabled) {
 
 /** 更新前进、后退铵钮状态*/
 FireIE.updateBackForwardButtons = function() {
-	try {
-		var fireieObject = FireIE.getIeTabElmt();
-		var canBack = (fireieObject ? fireieObject.CanBack : false) || gBrowser.webNavigation.canGoBack;
-		var canForward = (fireieObject ? fireieObject.CanForward : false) || gBrowser.webNavigation.canGoForward;
-		FireIE.updateObjectDisabledStatus("Browser:Back", canBack);
-		FireIE.updateObjectDisabledStatus("Browser:Forward", canForward);
-	} catch (e) {}
+	var pluginObject = FireIE.getPluginObject();
+	var canBack = (pluginObject ? pluginObject.CanBack : false) || gBrowser.webNavigation.canGoBack;
+	var canForward = (pluginObject ? pluginObject.CanForward : false) || gBrowser.webNavigation.canGoForward;
+	FireIE.updateObjectDisabledStatus("Browser:Back", canBack);
+	FireIE.updateObjectDisabledStatus("Browser:Forward", canForward);
 }
 
 /** 更新停止和刷新按钮状态*/
 FireIE.updateStopReloadButtons = function() {
 	try {
-		var fireieObject = FireIE.getIeTabElmt();
+		var pluginObject = FireIE.getPluginObject();
 		var isBlank = (gBrowser.currentURI.spec == "about:blank");
 		var isLoading = gBrowser.mIsBusy;
-		FireIE.updateObjectDisabledStatus("Browser:Reload", fireieObject ? fireieObject.CanRefresh : !isBlank);
-		FireIE.updateObjectDisabledStatus("Browser:Stop", fireieObject ? fireieObject.CanStop : isLoading);
+		FireIE.updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
+		FireIE.updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 	} catch (e) {}
 }
 
 // 更新编辑菜单中cmd_cut、cmd_copy、cmd_paste状态
 FireIE.updateEditMenuItems = function(e) {
 	if (e.originalTarget != document.getElementById("menu_EditPopup")) return;
-	var fireieObject = FireIE.getIeTabElmt();
-	if (fireieObject) {
-		FireIE.updateObjectDisabledStatus("cmd_cut", fireieObject.CanCut);
-		FireIE.updateObjectDisabledStatus("cmd_copy", fireieObject.CanCopy);
-		FireIE.updateObjectDisabledStatus("cmd_paste", fireieObject.CanPaste);
+	var pluginObject = FireIE.getPluginObject();
+	if (pluginObject) {
+		FireIE.updateObjectDisabledStatus("cmd_cut", pluginObject.CanCut);
+		FireIE.updateObjectDisabledStatus("cmd_copy", pluginObject.CanCopy);
+		FireIE.updateObjectDisabledStatus("cmd_paste", pluginObject.CanPaste);
 	}
 }
 
 // @todo 这是哪个按钮？
 FireIE.updateSecureLockIcon = function() {
-	var fireieObject = FireIE.getIeTabElmt();
-	if (fireieObject) {
+	var pluginObject = FireIE.getPluginObject();
+	if (pluginObject) {
 		var securityButton = document.getElementById("security-button");
 		if (securityButton) {
-			var url = fireieObject.URL;
+			var url = pluginObject.URL;
 			const wpl = Components.interfaces.nsIWebProgressListener;
 			var state = (FireIE.startsWith(url, "https://") ? wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH : wpl.STATE_IS_INSECURE);
 			window.XULBrowserWindow.onSecurityChange(null, null, state);
-			securityButton.setAttribute("label", FireIE.getUrlHost(fireieObject.URL));
+			securityButton.setAttribute("label", FireIE.getUrlHost(pluginObject.URL));
 		}
 	}
 }
@@ -333,9 +333,9 @@ FireIE.updateProgressStatus = function() {
 	var mTabs = gBrowser.mTabContainer.childNodes;
 	for (var i = 0; i < mTabs.length; i++) {
 		if (mTabs[i].localName == "tab") {
-			var fireieObject = FireIE.getIeTabElmt(mTabs[i]);
-			if (fireieObject) {
-				var aCurTotalProgress = fireieObject.Progress;
+			var pluginObject = FireIE.getPluginObject(mTabs[i]);
+			if (pluginObject) {
+				var aCurTotalProgress = pluginObject.Progress;
 				if (aCurTotalProgress != mTabs[i].mProgress) {
 					const ios = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 					const wpl = Components.interfaces.nsIWebProgressListener;
@@ -357,7 +357,7 @@ FireIE.updateProgressStatus = function() {
 FireIE.onIEProgressChange = function(event) {
 	var progress = parseInt(event.detail);
 	if (progress == 0) gBrowser.userTypedValue = null;
-//	if (progress == -1) alert(FireIE.getIeTabElmtURL());
+//	if (progress == -1) alert(FireIE.getPluginObjectURL());
 	FireIE.updateProgressStatus();
 	FireIE.updateAll();
 }
@@ -375,20 +375,22 @@ FireIE.onSecurityChange = function(security) {
 /** 异步调用plugin的方法*/
 FireIE.goDoCommand = function(cmd) {
 	try {
-		var fireieObject = FireIE.getIeTabElmt();
-		if (fireieObject == null) {
+		var pluginObject = FireIE.getPluginObject();
+		if (pluginObject == null) {
 			return false;
 		}
 		var param = null;
 		switch (cmd) {
 		case "Back":
-			if (!fireieObject.CanBack) {
+			if (!pluginObject.CanBack) {
 				return false;
 			}
+			break;
 		case "Forward":
-			if (!fireieObject.CanForward) {
+			if (!pluginObject.CanForward) {
 				return false;
 			}
+			break;
 		}
 		window.setTimeout(function() {
 			FireIE.delayedGoDoCommand(cmd);
@@ -401,59 +403,59 @@ FireIE.goDoCommand = function(cmd) {
 /** 配合FireIE.goDoCommand完成对plugin方法的调用*/
 FireIE.delayedGoDoCommand = function(cmd) {
 	try {
-		var fireieObject = FireIE.getIeTabElmt();
+		var pluginObject = FireIE.getPluginObject();
 		switch (cmd) {
 		case "Back":
-			fireieObject.Back();
+			pluginObject.Back();
 			break;
 		case "Forward":
-			fireieObject.Forward();
+			pluginObject.Forward();
 			break;
 		case "Stop":
-			fireieObject.Stop();
+			pluginObject.Stop();
 			break;
 		case "Refresh":
-			fireieObject.Refresh();
+			pluginObject.Refresh();
 			break;
 		case "SaveAs":
-			fireieObject.SaveAs();
+			pluginObject.SaveAs();
 			break;
 		case "Print":
-			fireieObject.Print();
+			pluginObject.Print();
 			break;
 		case "PrintSetup":
-			fireieObject.PrintSetup();
+			pluginObject.PrintSetup();
 			break;
 		case "PrintPreview":
-			fireieObject.PrintPreview();
+			pluginObject.PrintPreview();
 			break;
 		case "Find":
-			fireieObject.Find();
+			pluginObject.Find();
 			break;
 		case "cmd_cut":
-			fireieObject.Cut();
+			pluginObject.Cut();
 			break;
 		case "cmd_copy":
-			fireieObject.Copy();
+			pluginObject.Copy();
 			break;
 		case "cmd_paste":
-			fireieObject.Paste();
+			pluginObject.Paste();
 			break;
 		case "cmd_selectAll":
-			fireieObject.SelectAll();
+			pluginObject.SelectAll();
 			break;
 		case "Focus":
-			fireieObject.Focus();
+			pluginObject.Focus();
 			break;
 		case "HandOverFocus":
-			fireieObject.HandOverFocus();
+			pluginObject.HandOverFocus();
 			break;
 		case "Zoom":
 			var zoomLevel = FireIE.getZoomLevel();
-			fireieObject.Zoom(zoomLevel);
+			pluginObject.Zoom(zoomLevel);
 			break;
 		case "DisplaySecurityInfo":    
-			fireieObject.DisplaySecurityInfo();
+			pluginObject.DisplaySecurityInfo();
 		break;
 		}
 	} catch (ex) {
@@ -542,7 +544,7 @@ FireIE.onPageShowOrLoad = function(e) {
 	// 检查是否需要自动切换到IE内核	
   //	
 	
-	let pluginObject = FireIE.getIeTabElmt(tab);
+	let pluginObject = FireIE.getPluginObject(tab);
 	if (!pluginObject) return;
 	
 	let navigateParams = FireIE.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
@@ -606,15 +608,15 @@ FireIE.hookURLBarSetter = function(aURLBar) {
 	if (!aURLBar) aURLBar = document.getElementById("urlbar");
 	if (!aURLBar) return;
 	aURLBar.onclick = function(e) {
-		var fireieObject = FireIE.getIeTabElmt();
-		if (fireieObject) {
+		var pluginObject = FireIE.getPluginObject();
+		if (pluginObject) {
 			FireIE.goDoCommand("HandOverFocus");
 		}
 	}
 	FireIE.hookProp(aURLBar, "value", null, function() {
 		this.isModeIE = arguments[0] && (arguments[0].substr(0, FireIE.containerUrl.length) == FireIE.containerUrl);
 		if (this.isModeIE) {
-			arguments[0] = FireIE.getIeTabTrimURL(arguments[0]);
+			arguments[0] = FireIE.getActualUrl(arguments[0]);
 			// if (arguments[0] == "about:blank") arguments[0] = "";
 		}
 	});
@@ -627,8 +629,8 @@ FireIE.hookCodeAll = function() {
 
 	//hook functions
 	FireIE.hookCode("gFindBar._onBrowserKeypress", "this._useTypeAheadFind &&", "$& !FireIE.isIEEngine() &&"); // IE内核时不使用Firefox的查找条, $&指代被替换的代码
-	FireIE.hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(FireIE.getIeTabTrimURL($&.spec))"); // 添加到收藏夹时获取实际URL
-	FireIE.hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(FireIE.getIeTabTrimURL($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
+	FireIE.hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(FireIE.getActualUrl($&.spec))"); // 添加到收藏夹时获取实际URL
+	FireIE.hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(FireIE.getActualUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
 	FireIE.hookCode("gBrowser.addTab", "return t;", "FireIE.hookBrowserGetter(t.linkedBrowser); $&");
 	FireIE.hookCode("nsBrowserAccess.prototype.openURI", " loadflags = isExternal ?", " loadflags = false ?"); // @todo 有什么用?
 	FireIE.hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(FireIE.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
@@ -643,7 +645,7 @@ FireIE.hookCodeAll = function() {
 	FireIE.hookCode("BrowserReloadSkipCache", /{/, "$& if(FireIE.goDoCommand('Refresh')) return;");
 
 	FireIE.hookCode("saveDocument", /{/, "$& if(FireIE.goDoCommand('SaveAs')) return;");
-	FireIE.hookCode("MailIntegration.sendMessage", /{/, "$& var fireieObject = FireIE.getIeTabElmt(); if(fireieObject){ arguments[0]=fireieObject.URL; arguments[1]=fireieObject.Title; }"); // @todo 发送邮件？
+	FireIE.hookCode("MailIntegration.sendMessage", /{/, "$& var pluginObject = FireIE.getPluginObject(); if(pluginObject){ arguments[0]=pluginObject.URL; arguments[1]=pluginObject.Title; }"); // @todo 发送邮件？
 
 	FireIE.hookCode("PrintUtils.print", /{/, "$& if(FireIE.goDoCommand('Print')) return;");
 	FireIE.hookCode("PrintUtils.showPageSetup", /{/, "$& if(FireIE.goDoCommand('PrintSetup')) return;");

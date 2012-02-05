@@ -126,9 +126,9 @@ namespace Plugin
 				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
 				{
 					
-					CString str;
-					str.Format(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
-					OutputDebugString(str);
+					//CString str;
+					//str.Format(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
+					//OutputDebugString(str);
 					
 					if ( ( WM_KEYDOWN == uMsg ) && ( VK_TAB == pMsg->wParam ) && (_tcscmp(szClassName, _T("Internet Explorer_TridentCmboBx")) == 0) )
 					{
