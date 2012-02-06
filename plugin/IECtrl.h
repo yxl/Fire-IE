@@ -523,7 +523,4 @@ public:
 		static BYTE parms[] = VTS_BOOL ;
 		InvokeHelper(0x22c, DISPATCH_PROPERTYPUT, VT_EMPTY, NULL, parms, newValue);
 	}
-
-// Properties
-//
 };

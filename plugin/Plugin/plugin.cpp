@@ -125,7 +125,6 @@ namespace Plugin
 				TCHAR szClassName[MAX_PATH];
 				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
 				{
-					
 					//CString str;
 					//str.Format(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
 					//OutputDebugString(str);

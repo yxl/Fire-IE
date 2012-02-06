@@ -195,6 +195,26 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::ShowContextMenu(
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
 	return S_FALSE;
+
+	// 点击右键添加到收藏夹
+	HWND hwnd;
+    CComPtr<IOleCommandTarget> spCT;
+    CComPtr<IOleWindow> spWnd;
+
+    HRESULT hr = pcmdTarget->QueryInterface(IID_IOleCommandTarget, (void**)&spCT);
+    if ( FAILED(hr) )
+        return S_FALSE;
+
+    hr = pcmdTarget->QueryInterface(IID_IOleWindow, (void**)&spWnd);
+    if ( FAILED(hr) )
+        return S_FALSE;
+
+    hr = spWnd->GetWindow(&hwnd);
+
+	#define ID_IE_ID_ADDFAV 2261
+	::SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(LOWORD(ID_IE_ID_ADDFAV), 0x0), 0 );
+
+	return S_OK;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::GetHostInfo(
