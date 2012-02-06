@@ -79,7 +79,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -125,7 +125,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -148,6 +148,7 @@ buildxpi.bat</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
     <ClCompile Include="IEHostWindow.cpp" />
@@ -167,6 +168,7 @@ buildxpi.bat</Command>
     <ClCompile Include="Utility\URI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BrowserHook\WindowMessageHook.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />
     <ClInclude Include="IEHostWindow.h" />

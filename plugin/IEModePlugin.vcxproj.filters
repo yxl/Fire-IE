@@ -33,6 +33,9 @@
       <Filter>Utility</Filter>
     </ClCompile>
     <ClCompile Include="PluginApp.cpp" />
+    <ClCompile Include="BrowserHook\WindowMessageHook.cpp">
+      <Filter>BrowserHook</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -90,6 +93,9 @@
     </ClInclude>
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="PluginApp.h" />
+    <ClInclude Include="BrowserHook\WindowMessageHook.h">
+      <Filter>BrowserHook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
@@ -119,6 +125,9 @@
     </Filter>
     <Filter Include="Utility">
       <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BrowserHook">
+      <UniqueIdentifier>{e9cf651e-492b-4a66-bd8a-9be8e0a77e3c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
