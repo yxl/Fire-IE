@@ -83,23 +83,6 @@ namespace BrowserHook
 		}
 	}
 
-	// 返回 plugin 窗口的句柄
-	inline HWND GetWebBrowserControlWindow(HWND hwnd)
-	{
-		// Internet Explorer_Server 往上三级是 plugin 窗口
-		HWND hwndIECtrl = ::GetParent(::GetParent(::GetParent(hwnd)));
-		TCHAR szClassName[MAX_PATH];
-		if ( GetClassName(hwndIECtrl, szClassName, ARRAYSIZE(szClassName)) > 0 )
-		{
-			if ( _tcsncmp(szClassName, STR_WINDOW_CLASS_NAME, 6) == 0 )
-			{
-				return hwndIECtrl;
-			}
-		}
-
-		return NULL;
-	}
-
 	LRESULT CALLBACK WindowMessageHook::GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam) 
 	{ 
 		if ( (nCode >= 0) && (wParam == PM_REMOVE) && lParam)
@@ -113,15 +96,13 @@ namespace BrowserHook
 				TCHAR szClassName[MAX_PATH];
 				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
 				{
-					//CString str;
-					//str.Format(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
-					//OutputDebugString(str);
+					//TRACE(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
 
 					if ( ( WM_KEYDOWN == uMsg ) && ( VK_TAB == pMsg->wParam ) && (_tcscmp(szClassName, _T("Internet Explorer_TridentCmboBx")) == 0) )
 					{
 						hwnd = ::GetParent(pMsg->hwnd);
 					}
-					else if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) != 0)
+					if (_tcscmp(szClassName, _T("Internet Explorer_Server")) != 0)
 					{
 						hwnd = NULL;
 					}
@@ -152,10 +133,10 @@ namespace BrowserHook
 								Alt-d (sometimes Alt-s): "Address": the IE-way of Ctrl-L
 								Alt-F (open File menu) (NOTE: BUG: keyboard focus is not moved)
 								*/
-								HWND hwndIECtrl = GetWebBrowserControlWindow(hwnd);
-								if (hwndIECtrl)
+								CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
+								if (pIEHostWindow)
 								{
-									HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(hwndIECtrl);
+									HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 
 									if ( hwndMessageTarget )
 									{
@@ -233,10 +214,10 @@ namespace BrowserHook
 					if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) == 0 )
 					{
 						// 重新把焦点移到 plugin 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
-						HWND hwndIECtrl = GetWebBrowserControlWindow(hwnd);
-						if (hwndIECtrl)
+						CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
+						if (pIEHostWindow)
 						{
-							::SetFocus(hwndIECtrl);
+							pIEHostWindow->SetFocus();
 						}
 					}
 				}

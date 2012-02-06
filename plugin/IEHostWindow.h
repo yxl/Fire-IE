@@ -45,10 +45,13 @@ class CIEHostWindow : public CDialog
 
 public:
 	/** 根据 CIEHostWindow 的 HWND 寻找对应的 CIEHostWindow 对象 */
-	static CIEHostWindow * GetInstance(HWND hwnd);
+	static CIEHostWindow* GetInstance(HWND hwnd);
 
 	/** 根据 URL 寻找对应的 CIEHostWindow 对象 */
-	static CIEHostWindow * GetInstance(const CString& URL);
+	static CIEHostWindow* GetInstance(const CString& URL);
+
+	/** 根据Internet Explorer_Server窗口找到对应的 CIEHostWindow 对象*/
+	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
 public:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor

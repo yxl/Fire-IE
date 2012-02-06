@@ -37,7 +37,7 @@ CIEHostWindow::~CIEHostWindow()
 }
 
 /** 根据 CIEHostWindow 的 HWND 寻找对应的 CIEHostWindow 对象 */
-CIEHostWindow * CIEHostWindow::GetInstance(HWND hwnd)
+CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 {
 	CIEHostWindow *pInstance = NULL;
 	s_csIEWindowMap.Lock();
@@ -47,7 +47,7 @@ CIEHostWindow * CIEHostWindow::GetInstance(HWND hwnd)
 }
 
 /** 根据 URL 寻找对应的 CIEHostWindow 对象 */
-CIEHostWindow * CIEHostWindow::GetInstance(const CString& URL)
+CIEHostWindow* CIEHostWindow::GetInstance(const CString& URL)
 {
 	CIEHostWindow *pInstance = NULL;
 	s_csIEWindowMap.Lock();
@@ -61,6 +61,23 @@ CIEHostWindow * CIEHostWindow::GetInstance(const CString& URL)
 		}
 	}
 	s_csIEWindowMap.Unlock();
+	return pInstance;
+}
+/** 根据Internet Explorer_Server找到对应的 CIEHostWindow 对象*/
+CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
+{
+	// Internet Explorer_Server 往上三级是 plugin 窗口
+	HWND hwnd = ::GetParent(::GetParent(::GetParent(hwndIEServer)));
+	CString strClassName;
+	GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	strClassName.ReleaseBuffer();
+	if (strClassName != STR_WINDOW_CLASS_NAME)
+	{
+		return NULL;
+	}
+
+	// 从Window Long中取出CIEHostWindow对象指针 
+	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 	return pInstance;
 }
 
@@ -94,8 +111,10 @@ BOOL CIEHostWindow::OnInitDialog()
 
 	InitIE();
 
+	// 保存CIEHostWindow对象指针，让BrowserHook::WindowMessageHook可以通过Window handle找到对应的CIEHostWindow对象
+	::SetWindowLongPtr(GetSafeHwnd(), GWLP_USERDATA, reinterpret_cast<LONG>(this)); 
+
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CIEHostWindow::InitIE()
@@ -123,7 +142,13 @@ void CIEHostWindow::InitIE()
 
 void CIEHostWindow::UninitIE()
 {
-	// 屏蔽脚本错误提示
+	/**
+	 *  屏蔽页面关闭时IE控件的脚本错误提示
+	 *  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
+	 *  但IE Ctrl关闭时，在某些站点(如map.baidu.com)仍会显示脚本错误提示; 这里用put_Silent
+	 *  强制关闭所有弹窗提示。
+	 *  注意：不能在页面加载时调用put_Silent，否则会同时屏蔽插件安装的提示。
+	 */
 	m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();

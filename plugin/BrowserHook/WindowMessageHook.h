@@ -2,6 +2,11 @@
 
 namespace BrowserHook
 {
+	/**
+	 * 这个类用于处理Firefox的Bug 78414(https://bugzilla.mozilla.org/show_bug.cgi?id=78414)
+	 * Bug的内容是: (PluginShortcuts) Application shortcut keys (keyboard commands such as f11, ctrl+t, ctrl+r) fail to operate when plug-in (flash, acrobat, quicktime) has focus
+	 * 这个会导致IE控件与Firefox主窗口间无法正确传递按键消息
+	 */
 	class WindowMessageHook
 	{
 	public:
