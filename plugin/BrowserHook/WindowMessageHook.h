@@ -19,6 +19,7 @@ namespace BrowserHook
 		WindowMessageHook(void);
 		static LRESULT CALLBACK GetMsgProc(int code, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam);
+    static BOOL FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed);
 	private:
 		// WH_GETMESSAGE, 用于转发IE控件与Firefox窗口间的键盘消息
 		static HHOOK s_hhookGetMessage;

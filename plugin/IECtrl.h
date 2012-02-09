@@ -523,4 +523,18 @@ public:
 		static BYTE parms[] = VTS_BOOL ;
 		InvokeHelper(0x22c, DISPATCH_PROPERTYPUT, VT_EMPTY, NULL, parms, newValue);
 	}
+
+  HRESULT TranslateAccelerator(MSG *pMsg)
+  {
+    CComPtr< IDispatch > pDisp = get_Application();
+    if (pDisp)
+    {
+      CComQIPtr< IOleInPlaceActiveObject > spObj( pDisp );
+      if ( spObj )
+      {
+        return spObj->TranslateAccelerator(pMsg);
+      }
+    }
+    return S_FALSE;
+  }
 };

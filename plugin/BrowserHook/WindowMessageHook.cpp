@@ -49,180 +49,210 @@ namespace BrowserHook
 		return TRUE;
 	}
 
-	inline VOID PreTranslateAccelerator(HWND hwnd, MSG * pMsg)
-	{
-		static const UINT  WM_HTML_GETOBJECT = ::RegisterWindowMessage(_T( "WM_HTML_GETOBJECT" ));
+  // The message loop of Mozilla does not handle accelertor keys.
+  // IOleInplaceActivateObject requires MSG be filtered by its TranslateAccellerator() method.
+  // So we install a hook to do the dirty hack.
+  // Mozilla message loop is here:
+  // http://mxr.mozilla.org/mozilla-central/source/widget/src/windows/nsAppShell.cpp
+  // bool nsAppShell::ProcessNextNativeEvent(bool mayWait)
+  // It does PeekMessage, TranslateMessage, and then pass the result directly
+  // to DispatchMessage.
+  // Just before PeekMessage returns, our hook procedure is called.
+  LRESULT CALLBACK WindowMessageHook::GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam) 
+  { 
+    if (nCode >= 0 && wParam == PM_REMOVE && lParam)
+    {
+      MSG * pMsg = reinterpret_cast<MSG *>(lParam);
+      HWND hwnd = pMsg->hwnd;
 
-		LRESULT lRes;
-		if ( ::SendMessageTimeout( hwnd, WM_HTML_GETOBJECT, 0, 0, SMTO_ABORTIFHUNG, 1000, (DWORD*)&lRes ) && lRes )
-		{
-			CComPtr<IHTMLDocument2> spDoc;
-			if (SUCCEEDED(::ObjectFromLresult(lRes, IID_IHTMLDocument2, 0, (void**)&spDoc)))
-			{
-				CComQIPtr<IServiceProvider> spSP(spDoc);
-				if (spSP)
-				{
-					CComPtr<IWebBrowser2> spWB2;
-					if ( SUCCEEDED(spSP->QueryService(IID_IWebBrowserApp, IID_IWebBrowser2, (void**)&spWB2)) && spWB2 )
-					{
-						CComPtr< IDispatch > pDisp;
-						if ( SUCCEEDED(spWB2->get_Application(&pDisp)) && pDisp )
-						{
-							CComQIPtr< IOleInPlaceActiveObject > spObj( pDisp );
-							if ( spObj )
-							{
-								if (spObj->TranslateAccelerator(pMsg) == S_OK)
-								{
-									pMsg->message = /*uMsg = */WM_NULL;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+      // 只处理键盘消息
+      if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST || hwnd == NULL)
+      {
+        goto Exit;
+      }
 
-	LRESULT CALLBACK WindowMessageHook::GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam) 
-	{ 
-		if ( (nCode >= 0) && (wParam == PM_REMOVE) && lParam)
-		{
-			MSG * pMsg = (MSG *)lParam;
+      // 只处理IE窗口消息，通过检查窗口类名过滤非IE窗口
+      CString strClassName;
+      GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+      strClassName.ReleaseBuffer(); 
+      if (WM_KEYDOWN == pMsg->message && VK_TAB == pMsg->wParam && strClassName == _T("Internet Explorer_TridentCmboBx"))
+      {
+        hwnd = ::GetParent(hwnd);
+        GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+        strClassName.ReleaseBuffer(); 
+      }
+      if (strClassName != _T("Internet Explorer_Server"))
+      {
+        goto Exit;
+      }
 
-			UINT uMsg = pMsg->message;
-			if ((uMsg >= WM_KEYFIRST) && (uMsg <= WM_KEYLAST))
-			{
-				HWND hwnd = pMsg->hwnd;
-				TCHAR szClassName[MAX_PATH];
-				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
-				{
-					//TRACE(_T("%s: Msg = %.4X, wParam = %.8X, lParam = %.8X\r\n"), szClassName, uMsg, pMsg->wParam, pMsg->lParam );
+      // 获取CIEHostWindow对象
+      CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
+      if (pIEHostWindow == NULL) 
+      {
+        goto Exit;
+      }
 
-					if ( ( WM_KEYDOWN == uMsg ) && ( VK_TAB == pMsg->wParam ) && (_tcscmp(szClassName, _T("Internet Explorer_TridentCmboBx")) == 0) )
-					{
-						hwnd = ::GetParent(pMsg->hwnd);
-					}
-					if (_tcscmp(szClassName, _T("Internet Explorer_Server")) != 0)
-					{
-						hwnd = NULL;
-					}
+      if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
+      {
+        BOOL bAltPressed = HIBYTE(GetKeyState(VK_MENU)) != 0;
+        BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
+        BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
 
-					if (hwnd)
-					{
-						PreTranslateAccelerator(hwnd, pMsg);
+        // 当Alt键释放时，也向Firefox窗口转发按钮消息。否则无法通过Alt键选中主菜单。
+        if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
+        {
+          bAltPressed = TRUE;
+        }
 
-						if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN || uMsg == WM_SYSKEYUP)
-						{
-							// BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
-							// Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
-							// 
-							bool bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL))!=0;
-							bool bAltPressed = HIBYTE(GetKeyState(VK_MENU))!=0;
+        if (bCtrlPressed || bAltPressed || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)))
+        {
+          int nKeyCode = static_cast<int>(pMsg->wParam);
+          if (FilterFirefoxKey(nKeyCode, bAltPressed, bCtrlPressed, bShiftPressed))
+          {
+            HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+            if (hwndMessageTarget)
+            {
+              ::SetFocus(hwndMessageTarget);
+              ::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, pMsg->lParam );
+              pMsg->message = WM_NULL;
+              goto Exit;
+            }
+          }
+        }
+      }
 
-							// 当Alt键释放时，也向Firefox窗口转发按钮消息。否则无法通过Alt键选中主菜单。
-							if (uMsg == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
-							{
-								bAltPressed = TRUE;
-							}
-							if ( ( bCtrlPressed ^ bAltPressed) || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)) )
-							{
-								/* Test Cases by Meyer Kuno (Helbling Technik):
-								Ctrl-L (change keyboard focus to navigation bar)
-								Ctrl-O (open a file)
-								Ctrl-P (print)
-								Alt-d (sometimes Alt-s): "Address": the IE-way of Ctrl-L
-								Alt-F (open File menu) (NOTE: BUG: keyboard focus is not moved)
-								*/
-								CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
-								if (pIEHostWindow)
-								{
-									HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+      if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
+      {
+        pMsg->message = WM_NULL;
+      }
+    }
+Exit:
+    return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
+  }
 
-									if ( hwndMessageTarget )
-									{
-										if ( bAltPressed )
-										{
-											// BUG FIX: Alt-F (open File menu): keyboard focus is not moved
-											switch ( pMsg->wParam )
-											{
-											case 'F':
-											case 'E':
-											case 'V':
-											case 'S':
-											case 'B':
-											case 'T':
-											case 'H':
-												::SetFocus(hwndMessageTarget);
-												TRACE(_T("%x, Alt + %c pressed!\n"),  hwndMessageTarget, pMsg->wParam);
-												break;
-												// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
-											case VK_LEFT:	// 前进
-											case VK_RIGHT:	// 后退
-												uMsg = WM_NULL;
-												break;
-											case VK_MENU:
-												::SetFocus(hwndMessageTarget);
-												break;
-											default:
-												break;
-											}
-										}
-										else if ( bCtrlPressed )
-										{
-											switch ( pMsg->wParam )
-											{
-												// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
-											case 'P':
-											case 'F':
-												uMsg = WM_NULL;
-												break;
-											default:
-												break;
-											}
-										}
-
-										if ( uMsg != WM_NULL )
-										{
-											// 不是同一个进程的话调用 SendMessage() 会崩溃
-											::PostMessage( hwndMessageTarget, uMsg, pMsg->wParam, pMsg->lParam );
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
-	} 
+  BOOL WindowMessageHook::FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed)
+  {
+    // BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
+    // Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
+    // 
+    if (bAltPressed && !bCtrlPressed)
+    {
+      switch (keyCode)
+      {
+        // Below is standard firefox menu shortcuts
+      case 'F':  // Alt+F, File menu
+      case 'E':  // Alt+E, Eidt menu
+      case 'V':  // Alt+V, View menu
+      case 'S':  // Alt+S, History menu
+      case 'B':  // Alt+B, Bookmarks menu
+      case 'T':  // Alt+T, Tools menu
+      case 'H':  // Alt+H, Help menu
+        return TRUE;
+      case VK_MENU:   // Only ALT is pressed. Select or show the menu bar.
+        return TRUE;
+        break;
+      default:
+        break;
+      }
+    }
+    else if (bCtrlPressed && !bAltPressed)
+    {
+      if (bShiftPressed)
+      {
+        switch (keyCode)
+        {
+        case 'H': // Ctrl+Shift+H, Show all bookmarks
+        case 'A': // Ctrl+Shift+A, Show Add-ons
+        case 'P': // Ctrl+Shift+P, Start private browsing
+        case VK_DELETE: // Ctrl+Shift+Delete, Clear recent history
+        case 'K': // Ctrl+Shift+K, Web console 
+        case 'J': // Ctrl+Shift+J, Error console
+        case 'I': // Ctrl+Shift+I, DOM inspector
+          return TRUE;
+        }
+      }
+      else 
+      {
+        switch (keyCode)
+        {
+        case 'T': // Ctrl+T, New Tab
+        case 'N': // Ctrl+N, New window
+        case 'O': // Ctrl+O, Open File
+        case 'L': // Ctrl+L, change keyboard focus to address bar
+        case '/': // Ctrl+/, Toggle add-on bar
+        case 'B': // Ctrl+B, Toggle bookmarks sidebar
+        case 'H': // Ctrl+H, Toggle history sidebar
+        case '+': // Ctrl++, Zoom in      // BUG 有时不响应
+        case '-': // Ctrl+-, Zoom out     // BUG 有时不响应
+        case '0': // Ctrl+0, Reset zoom
+        case 'D': // Ctrl+D, Bookmark this page
+        case 'J': // Ctrl+J, Show downloads
+        case 'U': // Ctrl+U, Page source
+          return TRUE;
+        default:
+          break;
+        }
+      }
+    }
+    else if (bCtrlPressed && bAltPressed)
+    {
+      switch (keyCode)
+      {
+      case 'R': // Ctrl+Alt+R, Restart
+        return TRUE;
+      default:
+        break;
+      }
+    }
+    else if (bShiftPressed)
+    {
+      switch (keyCode)
+      {
+      case VK_F4: // Shift+F4, Scratchpad
+      case VK_F7: // Shift+F7, Style Editor
+        return TRUE;
+      default:
+        break;
+      }
+    }
+    else 
+    {
+      switch (keyCode)
+      {
+      case VK_F11: // F11, Full screen
+      case VK_F12: // F12, Firebug
+        return TRUE;
+      default:
+        break;
+      }
+    }
+    return FALSE;
+  }
 
 	LRESULT CALLBACK WindowMessageHook::CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam)
-	{
-		if (nCode == HC_ACTION)
-		{
-			CWPRETSTRUCT * info = (CWPRETSTRUCT*) lParam;
-			UINT uMsg = info->message;
-			// info->wParam == NULL 表示焦点移到其它进程去了，我们只有在这个时候才要保护IE的焦点
-			if ( ( WM_KILLFOCUS == uMsg ) && ( NULL == info->wParam ) )
-			{
-				HWND hwnd = info->hwnd;
-				TCHAR szClassName[MAX_PATH];
-				if ( GetClassName( hwnd, szClassName, ARRAYSIZE(szClassName) ) > 0 )
-				{
-					if ( _tcscmp(szClassName, _T("Internet Explorer_Server")) == 0 )
-					{
-						// 重新把焦点移到 plugin 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
-						CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
-						if (pIEHostWindow)
-						{
-							pIEHostWindow->SetFocus();
-						}
-					}
-				}
-			}
-		}
+  {
+    if (nCode == HC_ACTION)
+    {
+      CWPRETSTRUCT * info = (CWPRETSTRUCT*) lParam;
+      // info->wParam == NULL 表示焦点移到其它进程去了，我们只有在这个时候才要保护IE的焦点
+      if (WM_KILLFOCUS == info->message && NULL == info->wParam)
+      {
+        HWND hwnd = info->hwnd;
+        CString strClassName;
+        GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+        strClassName.ReleaseBuffer(); 
+        if (strClassName ==  _T("Internet Explorer_Server"))
+        {
+          // 重新把焦点移到 plugin 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
+          CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
+          if (pIEHostWindow)
+          {
+            pIEHostWindow->SetFocus();
+          }
+        }
+      }
+    }
 
 		return CallNextHookEx(s_hhookCallWndProcRet, nCode, wParam, lParam);
 	}

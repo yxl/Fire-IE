@@ -147,12 +147,12 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "MozillaOnline.com"
+            VALUE "CompanyName", "hi@yxl.name"
             VALUE "FileDescription", "Fire IE DLL"
             VALUE "FileExtents", "*"
             VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "npfireid.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2011 Mozilla Online"
+            VALUE "LegalCopyright", "Copyright (C) 2012 yxl.name"
             VALUE "MIMEType", "application/fireie"
             VALUE "OriginalFilename", "npfireid.dll"
             VALUE "ProductName", "Fire IE DLL"
