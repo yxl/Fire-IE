@@ -93,11 +93,11 @@ namespace BrowserHook
         goto Exit;
       }
 
-      if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
+      if (pMsg->message == WM_KEYDOWN  || pMsg->message == WM_KEYUP || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
       {
-        BOOL bAltPressed = HIBYTE(GetKeyState(VK_MENU)) != 0;
-        BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
-        BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
+        BOOL bAltPressed = HIBYTE(GetAsyncKeyState(VK_MENU)) != 0;
+        BOOL bCtrlPressed = HIBYTE(GetAsyncKeyState(VK_CONTROL)) != 0;
+        BOOL bShiftPressed = HIBYTE(GetAsyncKeyState(VK_SHIFT))  != 0;
 
         // 当Alt键释放时，也向Firefox窗口转发按钮消息。否则无法通过Alt键选中主菜单。
         if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
@@ -105,8 +105,7 @@ namespace BrowserHook
           bAltPressed = TRUE;
         }
 
-        TRACE(_T("WindowMessageHook::GetMsgProc MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
-
+        TRACE(_T("WindowMessageHook::GetMsgProc MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);;
         if (bCtrlPressed || bAltPressed || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)))
         {
           int nKeyCode = static_cast<int>(pMsg->wParam);
@@ -135,101 +134,32 @@ Exit:
 
   BOOL WindowMessageHook::FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed)
   {
-    // BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
-    // Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
-    // 
-    if (bAltPressed && !bCtrlPressed)
-    {
-      switch (keyCode)
-      {
-        // Below is standard firefox menu shortcuts
-      case 'F':  // Alt+F, File menu
-      case 'E':  // Alt+E, Eidt menu
-      case 'V':  // Alt+V, View menu
-      case 'S':  // Alt+S, History menu
-      case 'B':  // Alt+B, Bookmarks menu
-      case 'T':  // Alt+T, Tools menu
-      case 'H':  // Alt+H, Help menu
-        return TRUE;
-      case VK_MENU:   // Only ALT is pressed. Select or show the menu bar.
-        return TRUE;
-        break;
-      default:
-        break;
-      }
-    }
-    else if (bCtrlPressed && !bAltPressed)
-    {
-      if (bShiftPressed)
-      {
-        switch (keyCode)
-        {
-        case 'H': // Ctrl+Shift+H, Show all bookmarks
-        case 'A': // Ctrl+Shift+A, Show Add-ons
-        case 'P': // Ctrl+Shift+P, Start private browsing
-        case VK_DELETE: // Ctrl+Shift+Delete, Clear recent history
-        case 'K': // Ctrl+Shift+K, Web console 
-        case 'J': // Ctrl+Shift+J, Error console
-        case 'I': // Ctrl+Shift+I, DOM inspector
-          return TRUE;
-        }
-      }
-      else 
-      {
-        switch (keyCode)
-        {
-        case 'T': // Ctrl+T, New Tab
-        case 'N': // Ctrl+N, New window
-        case 'O': // Ctrl+O, Open File
-        case 'L': // Ctrl+L, change keyboard focus to address bar
-        case '/': // Ctrl+/, Toggle add-on bar
-        case 'B': // Ctrl+B, Toggle bookmarks sidebar
-        case 'H': // Ctrl+H, Toggle history sidebar
-        case VK_OEM_PLUS: // Ctrl++, Zoom in
-        case VK_OEM_MINUS: // Ctrl+-, Zoom out
-        case '0': // Ctrl+0, Reset zoom
-        case 'D': // Ctrl+D, Bookmark this page
-        case 'J': // Ctrl+J, Show downloads
-        case 'U': // Ctrl+U, Page source
-          return TRUE;
-        default:
-          break;
-        }
-      }
-    }
-    else if (bCtrlPressed && bAltPressed)
-    {
-      switch (keyCode)
-      {
-      case 'R': // Ctrl+Alt+R, Restart
-        return TRUE;
-      default:
-        break;
-      }
-    }
-    else if (bShiftPressed)
-    {
-      switch (keyCode)
-      {
-      case VK_F4: // Shift+F4, Scratchpad
-      case VK_F7: // Shift+F7, Style Editor
-        return TRUE;
-      default:
-        break;
-      }
-    }
-    else 
-    {
-      switch (keyCode)
-      {
-      case VK_F11: // F11, Full screen
-      case VK_F12: // F12, Firebug
-        return TRUE;
-      default:
-        break;
-      }
-    }
-    return FALSE;
+	  if (bCtrlPressed && bAltPressed)
+	  {
+		  // BUG FIX: Characters like @, #, � (and others that require AltGr on European keyboard layouts) cannot be entered in the plugin
+		  // Suggested by Meyer Kuno (Helbling Technik): AltGr is represented in Windows massages as the combination of Alt+Ctrl, and that is used for text input, not for menu naviagation.
+		  // 
+		  switch (keyCode)
+		  {
+		  case 'R': // Ctrl+Alt+R, Restart firefox
+			  return TRUE;
+		  default:
+			  return FALSE;
+		  }
+	  }
+	  else if (bCtrlPressed)
+	  {
+		  switch (keyCode)
+		  {
+			  // 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
+		  case 'P': // Ctrl+P, Print
+		  case 'F': // Ctrl+F, Find
+			  return FALSE;
+		  default:
+			  return TRUE;
+		  }
+	  } 
+	  return TRUE;
   }
 
 	LRESULT CALLBACK WindowMessageHook::CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam)
