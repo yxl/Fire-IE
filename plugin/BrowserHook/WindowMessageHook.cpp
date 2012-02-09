@@ -105,6 +105,8 @@ namespace BrowserHook
           bAltPressed = TRUE;
         }
 
+        TRACE(_T("WindowMessageHook::GetMsgProc MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
+
         if (bCtrlPressed || bAltPressed || ((pMsg->wParam >= VK_F1) && (pMsg->wParam <= VK_F24)))
         {
           int nKeyCode = static_cast<int>(pMsg->wParam);
@@ -183,8 +185,8 @@ Exit:
         case '/': // Ctrl+/, Toggle add-on bar
         case 'B': // Ctrl+B, Toggle bookmarks sidebar
         case 'H': // Ctrl+H, Toggle history sidebar
-        case '+': // Ctrl++, Zoom in      // BUG 有时不响应
-        case '-': // Ctrl+-, Zoom out     // BUG 有时不响应
+        case VK_OEM_PLUS: // Ctrl++, Zoom in
+        case VK_OEM_MINUS: // Ctrl+-, Zoom out
         case '0': // Ctrl+0, Reset zoom
         case 'D': // Ctrl+D, Bookmark this page
         case 'J': // Ctrl+J, Show downloads

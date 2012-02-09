@@ -285,31 +285,7 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::TranslateAccelerator(
 	LPMSG lpMsg, const GUID* pguidCmdGroup, DWORD nCmdID)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	HRESULT hr = S_FALSE;
-
-	if ( lpMsg )
-	{
-		switch ( lpMsg->message )
-		{
-		case WM_KEYDOWN:
-			{
-				bool bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL))!=0;
-				bool bAltPressed = HIBYTE(GetKeyState(VK_MENU))!=0;
-				bool bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))!=0;
-
-				// Ctrl-N 会让 IE 自己打开一个 IE 窗口，该窗口无法被我们的处理函数拦截
-				// BUG #22839: AltGr + N (也就是 Ctrl-Alt-N）也被拦截了，在这里只拦截 Ctrl-N
-				if ( bCtrlPressed && (!bAltPressed) && (!bShiftPressed) && ('N' == lpMsg->wParam) )
-				{
-					hr = S_OK;
-				}
-
-				break;
-			}
-		}
-	}
-
-	return hr;
+  return S_OK;
 }
 
 
