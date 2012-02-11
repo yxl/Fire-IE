@@ -9,7 +9,7 @@ BEGIN_INTERFACE_MAP(CIEControlSite, COleControlSite)
 END_INTERFACE_MAP()
 
 CIEControlSite::CIEControlSite(COleControlContainer* pContainer, CIEHostWindow* dlg)
-: COleControlSite(pContainer), m_dlg(dlg)
+	: COleControlSite(pContainer), m_dlg(dlg)
 {
 }
 
@@ -34,18 +34,18 @@ ULONG FAR EXPORT CIEControlSite::XOleCommandTarget::Release()
 HRESULT FAR EXPORT CIEControlSite::XOleCommandTarget::QueryInterface(REFIID riid, void **ppvObj)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, OleCommandTarget);
-    HRESULT hr = (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
+	HRESULT hr = (HRESULT)pThis->ExternalQueryInterface(&riid, ppvObj);
 	return hr;
 }
 
 
 STDMETHODIMP CIEControlSite::XOleCommandTarget::Exec(
-            /* [unique][in] */ const GUID __RPC_FAR *pguidCmdGroup,
-            /* [in] */ DWORD nCmdID,
-            /* [in] */ DWORD nCmdexecopt,
-            /* [unique][in] */ VARIANT __RPC_FAR *pvaIn,
-            /* [unique][out][in] */ VARIANT __RPC_FAR *pvaOut
-		   )
+	/* [unique][in] */ const GUID __RPC_FAR *pguidCmdGroup,
+	/* [in] */ DWORD nCmdID,
+	/* [in] */ DWORD nCmdexecopt,
+	/* [unique][in] */ VARIANT __RPC_FAR *pvaIn,
+	/* [unique][out][in] */ VARIANT __RPC_FAR *pvaOut
+	)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, OleCommandTarget);
 	if ( pguidCmdGroup && IsEqualGUID(*pguidCmdGroup, CGID_DocHostCommandHandler))
@@ -74,14 +74,14 @@ STDMETHODIMP CIEControlSite::XOleCommandTarget::Exec(
 }
 
 STDMETHODIMP CIEControlSite::XOleCommandTarget::QueryStatus(
-            /* [unique][in] */ const GUID __RPC_FAR *pguidCmdGroup,
-            /* [in] */ ULONG cCmds,
-            /* [out][in][size_is] */ OLECMD __RPC_FAR prgCmds[  ],
-            /* [unique][out][in] */ OLECMDTEXT __RPC_FAR *pCmdText
-		   )
+	/* [unique][in] */ const GUID __RPC_FAR *pguidCmdGroup,
+	/* [in] */ ULONG cCmds,
+	/* [out][in][size_is] */ OLECMD __RPC_FAR prgCmds[  ],
+	/* [unique][out][in] */ OLECMDTEXT __RPC_FAR *pCmdText
+	)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, OleCommandTarget);
-    return OLECMDERR_E_NOTSUPPORTED;
+	return OLECMDERR_E_NOTSUPPORTED;
 }
 
 ULONG FAR EXPORT CIEControlSite::XHTMLOMWindowServices::AddRef()
@@ -134,35 +134,35 @@ HRESULT CIEControlSite::XHTMLOMWindowServices::window_call(const char * methodNa
 	// Suggested by Sonja's boodschappenlijst (jeepeenl@gmail.com):
 	// Tools -> Options -> Content -> Enable Javascript [Advanced] -> Allow scripts to “Move or resize existing windows”.
 	if ( ! pThis->m_dlg ) return S_OK;
-/*
+	/*
 	if (nsConfigManager::isClassicMode || m_pParent->m_pPluginInstance->getConfigManager()->getBoolPref("dom.disable_window_move_resize")) return S_OK;
 
 	HRESULT hr = E_FAIL;
 
 	do 
 	{
-		if ( ! m_pParent ) break;
-		if ( ! m_pParent->m_pPluginInstance ) break;
+	if ( ! m_pParent ) break;
+	if ( ! m_pParent->m_pPluginInstance ) break;
 
-		NPP npp = m_pParent->m_pPluginInstance->instance();
+	NPP npp = m_pParent->m_pPluginInstance->instance();
 
-		NPObject * window_object_ = NULL;
-		if ( NPN_GetValue(npp, NPNVWindowNPObject, &window_object_) != NPERR_NO_ERROR ) break;
+	NPObject * window_object_ = NULL;
+	if ( NPN_GetValue(npp, NPNVWindowNPObject, &window_object_) != NPERR_NO_ERROR ) break;
 
-		NPIdentifier id_method = NPN_GetStringIdentifier(methodName);
-		if ( !id_method ) break;
+	NPIdentifier id_method = NPN_GetStringIdentifier(methodName);
+	if ( !id_method ) break;
 
-		NPVariant pt[2];
-		INT32_TO_NPVARIANT(x, pt[0]);
-		INT32_TO_NPVARIANT(y, pt[1]);
-		NPVariant result;
-		NULL_TO_NPVARIANT(result);
-		if ( NPN_Invoke(npp, window_object_, id_method, pt, 2, &result) )
-		{
-			NPN_ReleaseVariantValue(&result);
-		}
+	NPVariant pt[2];
+	INT32_TO_NPVARIANT(x, pt[0]);
+	INT32_TO_NPVARIANT(y, pt[1]);
+	NPVariant result;
+	NULL_TO_NPVARIANT(result);
+	if ( NPN_Invoke(npp, window_object_, id_method, pt, 2, &result) )
+	{
+	NPN_ReleaseVariantValue(&result);
+	}
 
-		hr = S_OK;
+	hr = S_OK;
 
 	} while(false);
 	*/
@@ -171,7 +171,7 @@ HRESULT CIEControlSite::XHTMLOMWindowServices::window_call(const char * methodNa
 }
 
 STDMETHODIMP CIEControlSite::XHTMLOMWindowServices::QueryInterface(
-		  REFIID iid, LPVOID far* ppvObj)     
+	REFIID iid, LPVOID far* ppvObj)     
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, HTMLOMWindowServices);
 	return pThis->ExternalQueryInterface(&iid, ppvObj);
@@ -198,20 +198,20 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::ShowContextMenu(
 
 	// 点击右键添加到收藏夹
 	HWND hwnd;
-    CComPtr<IOleCommandTarget> spCT;
-    CComPtr<IOleWindow> spWnd;
+	CComPtr<IOleCommandTarget> spCT;
+	CComPtr<IOleWindow> spWnd;
 
-    HRESULT hr = pcmdTarget->QueryInterface(IID_IOleCommandTarget, (void**)&spCT);
-    if ( FAILED(hr) )
-        return S_FALSE;
+	HRESULT hr = pcmdTarget->QueryInterface(IID_IOleCommandTarget, (void**)&spCT);
+	if ( FAILED(hr) )
+		return S_FALSE;
 
-    hr = pcmdTarget->QueryInterface(IID_IOleWindow, (void**)&spWnd);
-    if ( FAILED(hr) )
-        return S_FALSE;
+	hr = pcmdTarget->QueryInterface(IID_IOleWindow, (void**)&spWnd);
+	if ( FAILED(hr) )
+		return S_FALSE;
 
-    hr = spWnd->GetWindow(&hwnd);
+	hr = spWnd->GetWindow(&hwnd);
 
-	#define ID_IE_ID_ADDFAV 2261
+#define ID_IE_ID_ADDFAV 2261
 	::SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(LOWORD(ID_IE_ID_ADDFAV), 0x0), 0 );
 
 	return S_OK;
@@ -245,33 +245,33 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::ShowUI(
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::HideUI(void)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return S_FALSE;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::UpdateUI(void)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return S_FALSE;
 }
 
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::EnableModeless(BOOL fEnable)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return S_FALSE;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::OnDocWindowActivate(BOOL fActivate)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return S_FALSE;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::OnFrameWindowActivate(
 	BOOL fActivate)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return S_FALSE;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::ResizeBorder(
@@ -285,7 +285,7 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::TranslateAccelerator(
 	LPMSG lpMsg, const GUID* pguidCmdGroup, DWORD nCmdID)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-  return S_OK;
+	return S_FALSE;
 }
 
 
