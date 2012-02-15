@@ -523,7 +523,6 @@ FireIE.getTabByDocument = function(doc) {
 /** 加载或显示页面时更新界面*/
 FireIE.onPageShowOrLoad = function(e) {
 	FireIE.updateAll();
-	FireIE.focusIE();
 	
 	var doc = e.originalTarget;
 
