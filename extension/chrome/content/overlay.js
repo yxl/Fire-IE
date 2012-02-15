@@ -575,9 +575,9 @@ FireIE.setTabAttributeJSON = function(tab, name, value) {
 }
 
 /** 响应界面大小变化事件
- * @todo 为何要Zoom
  */
 FireIE.onResize = function(e) {
+  // Zoom时会触发Resize事件
 	FireIE.goDoCommand("Zoom");
 }
 
