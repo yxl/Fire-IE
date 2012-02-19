@@ -75,11 +75,16 @@ namespace Plugin
 		// 获取Plugin所在页面的URL
 		CString GetHostURL() const;
 
+		CString GetNavigateParam(const NPUTF8* name) const;
+
 		// 获取IECtrl::Navigate的Http headers参数
 		CString GetNavigateHeaders() const;
 
 		// 获取IECtrl::Navigate的Post data参数
 		CString GetNavigatePostData() const;
+
+		// 获取CIEHostWindow ID
+		DWORD GetNavigateWindowId() const;
 
 		// 清空IECtrl::Navigate的参数
 		void RemoveNavigateParams();
@@ -120,11 +125,15 @@ namespace Plugin
 
 		/** 打开一个新IE标签, 使用已创建的CIEHostWindow
 		 * @param id CIEHostWindow ID
+		 * @param strURL 新IE标签页面URL
 		 */
-		void NewIETab(DWORD id);
+		void NewIETab(DWORD id, const CString& strURL);
 
 		/** 关闭当前的IE标签窗口*/
 		void CloseIETab();
+
+		/** 向Firefox发送IE窗口标题改变的消息 */
+		void OnIeTitleChanged(const CString& strTitle);
 	protected:
 
 		NPP m_pNPInstance;

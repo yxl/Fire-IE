@@ -14,7 +14,11 @@ var FireIEContainer = {
 			container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
 		} else {
 			FireIEContainer._registerEventHandler();
-		}			
+		}
+		window.setTimeout(function() {
+			var pluginObject = document.getElementById(FireIE.objectID);;
+			document.title = pluginObject.Title;
+		}, 200);
 	},
 	
 	destroy: function(event) {
@@ -22,26 +26,26 @@ var FireIEContainer = {
 		
 	},
 	
-	getNavigateHeaders: function() {
+	_getNavigateParam: function(name) {
 		var headers = "";
 		var tab = fireieUtils.getTabFromDocument(document);
 		var navigateParams = fireieUtils.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
-		if (navigateParams) {
-			headers = navigateParams.headers;
+		if (navigateParams && typeof navigateParams[name] != "undefined") {
+			headers = navigateParams[name];
 		}
-		MY_LOG('headers: ' + headers)
-		return headers;
+		return headers;	
+	},
+	
+	getNavigateHeaders: function() {
+		return this._getNavigateParam("headers");
 	},
 	
 	getNavigatePostData: function() {
-		var post = "";
-		var tab = fireieUtils.getTabFromDocument(document);
-		var navigateParams = fireieUtils.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
-		if (navigateParams) {
-			post = navigateParams.post;
-		}
-		MY_LOG('post: ' + post)
-		return post;	
+		return this._getNavigateParam("post");
+	},
+	
+	getNavigateWindowId: function() {
+		return this._getNavigateParam("id") + "";		
 	},
 	
 	removeNavigateParams: function() {
@@ -76,7 +80,7 @@ var FireIEContainer = {
 
 	_registerEventHandler: function() {
 		window.addEventListener("PluginNotFound", FireIEContainer._pluginNotFoundListener, false);
-		window.addEventListener("TitleChanged", FireIEContainer._onTitleChanged, false);
+		window.addEventListener("IeTitleChanged", FireIEContainer._onTitleChanged, false);
 		window.addEventListener("CloseIETab", FireIEContainer._onCloseIETab, false);
 		var pluginObject = document.getElementById(FireIE.objectID);
 		if (pluginObject) {

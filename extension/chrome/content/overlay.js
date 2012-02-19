@@ -197,11 +197,12 @@ FireIE.openOptionsDialog = function(url) {
 
 /** 新建一个ie标签*/
 FireIE.addIeTab = function(url) {
-	var newTab = gBrowser.addTab(FireIE.getfireieURL(url));
+	let newTab = gBrowser.addTab(FireIE.getfireieURL(url));
 	gBrowser.selectedTab = newTab;
 	if (gURLBar && (url == 'about:blank')) window.setTimeout(function() {
 		gURLBar.focus();
 	}, 0);
+	return newTab;
 }
 
 FireIE.getHandledURL = function(url, isModeIE) {
@@ -367,8 +368,12 @@ FireIE.onIEProgressChange = function(event) {
 
 /** 响应新开IE标签的消息*/
 FireIE.onNewIETab = function(event) {
-	var id = event.detail;
-	FireIE.addIeTab("FireIE.onNewIETab/"+id);
+	let data = JSON.parse(event.detail);
+	let url = data.url;
+	let id = data.id;
+	let tab = FireIE.addIeTab(FireIE.getfireieURL(url));
+	var param = {id: id};
+	FireIE.setTabAttributeJSON(tab, FireIE.navigateParamsAttr, param);
 }
 
 FireIE.onSecurityChange = function(security) {
@@ -658,7 +663,7 @@ FireIE.addEventAll = function() {
 
 	FireIE.addEventListener("menu_EditPopup", "popupshowing", FireIE.updateEditMenuItems);
 
-	FireIE.addEventListener(window, "ProgressChanged", FireIE.onIEProgressChange);
+	FireIE.addEventListener(window, "IeProgressChanged", FireIE.onIEProgressChange);
 	FireIE.addEventListener(window, "NewIETab", FireIE.onNewIETab);
 }
 

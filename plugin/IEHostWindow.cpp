@@ -621,7 +621,7 @@ void CIEHostWindow::OnTitleChanged(const CString& title)
 {
   if (m_pPlugin)
   {
-	  m_pPlugin->FireEvent(_T("TitleChanged"), title);
+	  m_pPlugin->OnIeTitleChanged(title);
   }
 }
 
@@ -631,7 +631,7 @@ void CIEHostWindow::OnProgressChanged(INT32 iProgress)
   {
 	  CString strDetail;
 	  strDetail.Format(_T("%d"), iProgress);
-	  m_pPlugin->FireEvent(_T("ProgressChanged"), strDetail);
+	  m_pPlugin->FireEvent(_T("IeProgressChanged"), strDetail);
   }
 }
 
@@ -723,10 +723,10 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
     CIEHostWindow* pIEHostWindow = new CIEHostWindow();
     if (pIEHostWindow->Create(CIEHostWindow::IDD))
     {
-      DWORD id = GetTickCount();
+      DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
       s_NewIEWindowMap.Add(id, pIEHostWindow);
       *ppDisp = pIEHostWindow->m_ie.get_Application();
-      m_pPlugin->NewIETab(id);
+      m_pPlugin->NewIETab(id, bstrUrl);
     }
     else
     {
