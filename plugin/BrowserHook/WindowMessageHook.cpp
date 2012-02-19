@@ -156,7 +156,6 @@ Exit:
 				// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
 			case 'P': // Ctrl+P, Print
 			case 'F': // Ctrl+F, Find
-				return TRUE;
 			case 'C': // Ctrl+C, Copy
 			case 'V': // Ctrl+V, Paste
 			case 'X': // Ctrl+X, Cut

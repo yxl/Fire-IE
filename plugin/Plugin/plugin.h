@@ -75,6 +75,14 @@ namespace Plugin
 		// 获取Plugin所在页面的URL
 		CString GetHostURL() const;
 
+		// 获取IECtrl::Navigate的Http headers参数
+		CString GetNavigateHeaders() const;
+
+		// 获取IECtrl::Navigate的Post data参数
+		CString GetNavigatePostData() const;
+
+		// 清空IECtrl::Navigate的参数
+		void RemoveNavigateParams();
 
 		NPObject *GetScriptableObject();
 

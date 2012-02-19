@@ -13,8 +13,6 @@
 <!ENTITY fireie.options.general.label "功能设置">
 <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
-<!ENTITY fireie.options.processmode.caption "进程模式">
-<!ENTITY fireie.options.processmode.runinprocess "在firefox.exe进程中运行插件(重启火狐生效)">
 
 <!ENTITY fireie.options.apply "应用">
 <!ENTITY fireie.options.manager "选项管理">

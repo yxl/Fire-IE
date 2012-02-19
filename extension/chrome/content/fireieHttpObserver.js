@@ -1,4 +1,7 @@
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+let jsm = {};
+Components.utils.import("resource://gre/modules/NetUtil.jsm", jsm);
+Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
+let {NetUtil, fireieUtils} = jsm;
 
 /**
  * @namespace
@@ -36,38 +39,6 @@ function getWebProgressForRequest(request) {
 function getWindowForRequest(request){
   return getWindowForWebProgress(getWebProgressForRequest(request));
 }
-
-
-function getRootWindow(win) {
-  for (; win; win = win.parent) {
-    if (!win.parent || win == win.parent || !(win.parent instanceof Window))
-      return win;
-  }
-
-  return null;
-}
-
-function getTabForWindow(win) {
-  aWindow = getRootWindow(win);
-  
-  if (!aWindow || !gBrowser.getBrowserIndexForDocument)
-    return null;
-    
-  try {
-    var targetDoc = aWindow.document;
-    
-    var tab = null;
-    var targetBrowserIndex = gBrowser.getBrowserIndexForDocument(targetDoc);
-    
-    if (targetBrowserIndex != -1) {
-      tab = gBrowser.tabContainer.childNodes[targetBrowserIndex];
-      return tab;
-    }
-  } catch (err) {
-    LOG(err);
-  }
-  return null;
-}
     
 FireIE.HttpObserver = {
 	// nsISupports
@@ -97,7 +68,7 @@ FireIE.HttpObserver = {
 	onModifyRequest: function(subject) {
 		var httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
     var win = getWindowForRequest(httpChannel);
-    var tab = getTabForWindow(win);
+    var tab = fireieUtils.getTabFromWindow(win);
     var isWindowURI = httpChannel.loadFlags & Components.interfaces.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
 		if (isWindowURI) {
       var url = httpChannel.URI.spec;
@@ -118,10 +89,10 @@ FireIE.HttpObserver = {
         }
         
 				// 通过Tab的Attribute传送http header和post data参数
-				var param = {url: url, headers: headers, post: post};
+				var param = {headers: headers, post: post};
 				FireIE.setTabAttributeJSON(tab, FireIE.navigateParamsAttr, param);
 				
-        tab.linkedBrowser.loadURI(FireIE.getfireieURL("about:blank"));
+        tab.linkedBrowser.loadURI(FireIE.getfireieURL(url));
       }
 		}
 	},

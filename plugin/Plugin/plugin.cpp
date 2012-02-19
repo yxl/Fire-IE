@@ -202,7 +202,10 @@ namespace Plugin
 			}
 			else
 			{
-				m_pIEHostWindow->Navigate(url, _T(""), _T(""));
+				CString post = GetNavigatePostData();
+				CString headers = GetNavigateHeaders();
+				RemoveNavigateParams();
+				m_pIEHostWindow->Navigate(url, post, headers);
 			}
 		}
 		catch (CString strMessage)
@@ -335,6 +338,132 @@ namespace Plugin
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return url;
+	}
+
+	// 获取IECtrl::Navigate的Http headers参数
+	CString CPlugin::GetNavigateHeaders() const
+	{
+		CString strHeaders;
+
+		NPObject* pWindow = NULL;
+		NPVariant vFireIEContainer;
+		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vHeaders;
+		VOID_TO_NPVARIANT(vHeaders);
+
+		try
+		{
+			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
+			{
+				throw(CString(_T("Cannot get window")));
+			}
+
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			{
+				throw(CString(_T("Cannot get window.FireIEContainer")));
+			}
+
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("getNavigateHeaders"), NULL, 0, &vHeaders))
+			{
+				throw(CString(_T("Cannot execute window.FireIEContainer.getNavigateHeaders()")));
+			}
+			if (!NPVARIANT_IS_STRING(vHeaders)) 
+			{
+				throw(CString(_T("Invalid return value.")));
+			}
+			strHeaders = NPStringToCString(vHeaders.value.stringValue);
+		}
+		catch (CString strMessage)
+		{
+			TRACE(_T("[CPlugin::GetNavigateHeaders Exception] %s"), strMessage);
+		}
+
+		if (!NPVARIANT_IS_VOID(vHeaders))	NPN_ReleaseVariantValue(&vHeaders);
+		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
+
+		return strHeaders;
+	}
+
+	// 获取IECtrl::Navigate的Post data参数
+	CString CPlugin::GetNavigatePostData() const
+	{
+		CString strPost;
+
+		NPObject* pWindow = NULL;
+		NPVariant vFireIEContainer;
+		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vPost;
+		VOID_TO_NPVARIANT(vPost);
+
+		try
+		{
+			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
+			{
+				throw(CString(_T("Cannot get window")));
+			}
+
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			{
+				throw(CString(_T("Cannot get window.FireIEContainer")));
+			}
+
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("getNavigatePostData"), NULL, 0, &vPost))
+			{
+				throw(CString(_T("Cannot execute window.FireIEContainer.getNavigatePostData()")));
+			}
+			if (!NPVARIANT_IS_STRING(vPost)) 
+			{
+				throw(CString(_T("Invalid return value.")));
+			}
+			strPost = NPStringToCString(vPost.value.stringValue);
+		}
+		catch (CString strMessage)
+		{
+			TRACE(_T("[CPlugin::GetNavigatePostData Exception] %s"), strMessage);
+		}
+
+		if (!NPVARIANT_IS_VOID(vPost))	NPN_ReleaseVariantValue(&vPost);
+		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
+
+		return strPost;
+	}
+
+	// 清空IECtrl::Navigate的参数
+	void CPlugin::RemoveNavigateParams()
+	{
+		NPObject* pWindow = NULL;
+		NPVariant vFireIEContainer;
+		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vResult;
+		VOID_TO_NPVARIANT(vResult);
+
+		try
+		{
+			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
+			{
+				throw(CString(_T("Cannot get window")));
+			}
+
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			{
+				throw(CString(_T("Cannot get window.FireIEContainer")));
+			}
+
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("removeNavigateParams"), NULL, 0, &vResult))
+			{
+				throw(CString(_T("Cannot execute window.FireIEContainer.removeNavigateParams()")));
+			}
+		}
+		catch (CString strMessage)
+		{
+			TRACE(_T("[CPlugin::RemoveNavigateParams Exception] %s"), strMessage);
+		}
+
+		if (!NPVARIANT_IS_VOID(vResult))	NPN_ReleaseVariantValue(&vResult);
+		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 	}
 
 	// This function is equivalent to the following JavaScript function:

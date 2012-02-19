@@ -1,3 +1,7 @@
+var jsm = {};
+Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
+var {fireieUtils} = jsm;
+
 var FireIEContainer = {
 	init: function() {
 		window.removeEventListener('DOMContentLoaded', FireIEContainer.init, false);
@@ -15,9 +19,39 @@ var FireIEContainer = {
 	
 	destroy: function(event) {
 		window.removeEventListener('unload', FireIEContainer.destroy, false);
-
+		
 	},
 	
+	getNavigateHeaders: function() {
+		var headers = "";
+		var tab = fireieUtils.getTabFromDocument(document);
+		var navigateParams = fireieUtils.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
+		if (navigateParams) {
+			headers = navigateParams.headers;
+		}
+		MY_LOG('headers: ' + headers)
+		return headers;
+	},
+	
+	getNavigatePostData: function() {
+		var post = "";
+		var tab = fireieUtils.getTabFromDocument(document);
+		var navigateParams = fireieUtils.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
+		if (navigateParams) {
+			post = navigateParams.post;
+		}
+		MY_LOG('post: ' + post)
+		return post;	
+	},
+	
+	removeNavigateParams: function() {
+		var tab = fireieUtils.getTabFromDocument(document);
+		var navigateParams = fireieUtils.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
+		if (navigateParams) {
+			tab.removeAttribute(FireIE.navigateParamsAttr);
+		}	
+	},
+
 	_isInPrivateBrowsingMode: function() {
 		var pbs;
 		try { pbs = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService); } catch (e) {}

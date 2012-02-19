@@ -31,7 +31,11 @@ if (typeof(FireIE) == "undefined") {
 	var FireIE = {};
 }
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+let jsm = {};
+Components.utils.import("resource://gre/modules/Services.jsm", jsm);
+Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
+let {Services, fireieUtils} = jsm;
+let Strings = fireieUtils.Strings;
 
 FireIE.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
 
@@ -169,13 +173,13 @@ FireIE.setUrlbarSwitchButtonStatus = function(isIEEngine) {
 	var label = document.getElementById("fireie-urlbar-switch-label");
 	if (label) {
 		var labelId = isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx";
-		label.value = FireIE.GetLocalizedString(labelId);
+		label.value = Strings.global.GetStringFromName(labelId);
 	}
 	// 更新内核切换按钮tooltip文字
 	var tooltip = document.getElementById("fireie-urlbar-switch-tooltip2");
 	if (tooltip) {
 		var tooltipId = isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx";
-		tooltip.value = FireIE.GetLocalizedString(tooltipId);
+		tooltip.value = Strings.global.GetStringFromName(tooltipId);
 	}
 }
 
@@ -357,7 +361,6 @@ FireIE.updateProgressStatus = function() {
 FireIE.onIEProgressChange = function(event) {
 	var progress = parseInt(event.detail);
 	if (progress == 0) gBrowser.userTypedValue = null;
-//	if (progress == -1) alert(FireIE.getPluginObjectURL());
 	FireIE.updateProgressStatus();
 	FireIE.updateAll();
 }
@@ -502,7 +505,6 @@ FireIE.focusIE = function() {
 }
 
 FireIE.onTabSelected = function(e) {
-	var aTab = e.originalTarget;
 	FireIE.updateAll();
 	FireIE.focusIE();
 }
@@ -518,7 +520,6 @@ FireIE.getTabByDocument = function(doc) {
 	}
 	return null;
 }
-
 
 /** 加载或显示页面时更新界面*/
 FireIE.onPageShowOrLoad = function(e) {
@@ -537,20 +538,6 @@ FireIE.onPageShowOrLoad = function(e) {
 		FireIE.setZoomLevel(zoomLevelParams.zoomLevel);
 		tab.removeAttribute(tab, 'zoom');
 	}
-	
-	
-	//
-	// 检查是否需要自动切换到IE内核	
-  //	
-	
-	let pluginObject = FireIE.getPluginObject(tab);
-	if (!pluginObject) return;
-	
-	let navigateParams = FireIE.getTabAttributeJSON(tab, FireIE.navigateParamsAttr);
-	if (navigateParams) {
-		pluginObject.Navigate(navigateParams.url, navigateParams.headers, navigateParams.post);
-		tab.removeAttribute(FireIE.navigateParamsAttr);
-	}	
 }
 
 FireIE.getTabAttributeJSON =  function(tab, name) {

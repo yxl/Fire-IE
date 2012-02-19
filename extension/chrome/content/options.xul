@@ -74,13 +74,7 @@
                   <hbox align="center">
                   <checkbox label="&fireie.options.switch.handleurl;" id="handleurl"/>
                   </hbox>
-               </groupbox>
-               <groupbox>
-                  <caption label="&fireie.options.processmode.caption;"/>
-                  <hbox align="center">
-                    <checkbox label="&fireie.options.processmode.runinprocess;" id="runinprocess"/>
-                  </hbox>
-               </groupbox>						 
+               </groupbox>					 
             </vbox>
          </tabpanel>
 

@@ -13,8 +13,6 @@
 <!ENTITY fireie.options.general.label "General Options">
 <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
 <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
-<!ENTITY fireie.options.processmode.caption "Process Mode:">
-<!ENTITY fireie.options.processmode.runinprocess "Run the plugin in the firefox.exe process (requires Firefox to restart)">
 
 <!ENTITY fireie.options.apply "Apply">
 <!ENTITY fireie.options.manager "Options Manager">

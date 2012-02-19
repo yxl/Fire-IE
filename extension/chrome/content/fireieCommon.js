@@ -47,16 +47,6 @@ FireIE.containerUrl = "chrome://fireie/content/container.xhtml?url=";
 FireIE.navigateParamsAttr = "fireieNavigateParams";
 FireIE.objectID = "fireie-object";
 
-FireIE.GetLocalizedString = function (name) {
-  var s = "";
-  try {
-    var stringService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-    var strings = stringService.createBundle("chrome://fireie/locale/global.properties");
-    s = strings.GetStringFromName(name);
-  } catch (e) {MY_ERROR(e)}
-  return s;
-};
-
 FireIE.isValidURL = function (url) {
   var b = false;
   try {
@@ -72,26 +62,26 @@ FireIE.isValidDomainName = function (domainName) {
 }
 
 FireIE.getChromeWindow = function () {
-  return QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation).QueryInterface(Components.interfaces.nsIDocShellTreeItem).rootTreeItem.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);
+  return Services.wm.getMostRecentWindow("navigator:browser");
 }
 
+/**
+ * 由于IE不支持Text Zoom, 只考虑Full Zoom
+ */
 FireIE.getZoomLevel = function () {
   var aBrowser = (typeof (gBrowser) == "undefined") ? FireIE.getChromeWindow().gBrowser : gBrowser;
-  var fullZoom = FireIE.getBoolPref("browser.zoom.full", false);
   var docViewer = aBrowser.selectedBrowser.markupDocumentViewer;
-  var zoomLevel = fullZoom ? docViewer.fullZoom : docViewer.textZoom;
+  var zoomLevel = docViewer.fullZoom;
   return zoomLevel;
 }
 
+/**
+ * 由于IE不支持Text Zoom, 只考虑Full Zoom
+ */
 FireIE.setZoomLevel = function (value) {
   var aBrowser = (typeof (gBrowser) == "undefined") ? FireIE.getChromeWindow().gBrowser : gBrowser;
-  var fullZoom = FireIE.getBoolPref("browser.zoom.full", false);
   var docViewer = aBrowser.selectedBrowser.markupDocumentViewer;
-  if (fullZoom) {
-    docViewer.fullZoom = value;
-  } else {
-    docViewer.textZoom = value;
-  }  
+  docViewer.fullZoom = value;
 }
 
 

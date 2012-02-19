@@ -2,8 +2,12 @@
  * @namespace
  */
 
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+let jsm = {};
+Components.utils.import("resource://gre/modules/AddonManager.jsm", jsm);
+Components.utils.import("resource://gre/modules/Services.jsm", jsm);
+Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
+let {AddonManager, Services, fireieUtils} = jsm;
+let Strings = fireieUtils.Strings;
 
 if (typeof(FireIE) == "undefined") {
 	var FireIE = {};
@@ -27,7 +31,7 @@ FireIE.importSettings = function() {
          FireIE._setAllSettings(aOld);
          FireIE.updateApplyButton(true);
       } else {
-         alert(FireIE.GetLocalizedString("fireie.options.import.error"));
+         alert(Strings.global.GetStringFromName("fireie.options.import.error"));
       }
    }
 }
@@ -42,9 +46,7 @@ FireIE.restoreDefaultSettings = function() {
 }
 
 // 应用设置
-FireIE.setOptions = function(quiet) {
-   var requiresRestart = false;
-   
+FireIE.setOptions = function(quiet) {  
    //filter
    var filter = document.getElementById('filtercbx').checked;
    FireIE.setBoolPref("extensions.fireie.filter", filter);
@@ -52,21 +54,9 @@ FireIE.setOptions = function(quiet) {
 
    //general
    FireIE.setBoolPref("extensions.fireie.handleUrlBar", document.getElementById('handleurl').checked);
-   var runInProcess = document.getElementById('runinprocess').checked;
-   if(runInProcess != FireIE.getBoolPref("extensions.fireie.runinprocess"))
-   {
-	   requiresRestart = true;
-	   FireIE.setBoolPref("extensions.fireie.runinprocess", runInProcess);
-	   FireIE.setBoolPref("dom.ipc.plugins.enabled.npfireie.dll", !runInProcess );
-   }
-
+	 
     //update UI
    FireIE.updateApplyButton(false);
-   
-   //notify of restart requirement
-   if(requiresRestart && !quiet) {
-      alert(FireIE.GetLocalizedString("fireie.options.alert.restart"));
-   }
 }
 
 FireIE.getPrefFilterList = function() {
@@ -111,7 +101,6 @@ FireIE.initDialog = function() {
    
    //general 功能设置
    document.getElementById('handleurl').checked = FireIE.getBoolPref("extensions.fireie.handleUrlBar", false);
-   document.getElementById('runinprocess').checked = FireIE.getBoolPref("extensions.fireie.runinprocess", false);
 
    //updateStatus
    FireIE.updateDialogAllStatus();
@@ -135,6 +124,7 @@ FireIE.init = function() {
 FireIE.close = function() {
 	 let isModified = !document.getElementById("myApply").disabled;
 	 if (isModified) {
+	   // TODO Replace with localized string
 	   if (confirm("选项已修改，是否保存？")) {
 			  FireIE.setOptions(true);
 		 }

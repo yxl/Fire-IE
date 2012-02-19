@@ -145,13 +145,13 @@ namespace Plugin
 				return false;
 			CString URL = NPStringToCString(vURL.value.stringValue);
 
-      NPVariant vHeaders = args[1];
-  		if (vHeaders.type != NPVariantType_String)
+			NPVariant vHeaders = args[1];
+			if (vHeaders.type != NPVariantType_String)
 				return false;
 			CString headers = NPStringToCString(vHeaders.value.stringValue);
 
-      NPVariant vPost = args[2];
-      if (vPost.type != NPVariantType_String)
+			NPVariant vPost = args[2];
+			if (vPost.type != NPVariantType_String)
 				return false;
 			CString post = NPStringToCString(vPost.value.stringValue);
 
