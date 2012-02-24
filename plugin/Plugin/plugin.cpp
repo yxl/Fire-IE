@@ -60,7 +60,6 @@ namespace Plugin
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
-    /*
     // 监视http和https请求，同步cookie
 		CComPtr<IInternetSession> spSession;
 		HRESULT hret = S_OK;
@@ -84,7 +83,6 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
-    */
 		if (!BrowserHook::WindowMessageHook::s_instance.Install())
 		{
 			return NPERR_GENERIC_ERROR;
