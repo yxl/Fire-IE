@@ -187,15 +187,6 @@ namespace HttpMonitor
 					ImportCookies();
 				}
 
-				if (m_pIEHostWindow->SyncUserAgent)
-				{
-					// 增加 User-Agent
-					CString strUserAgent;
-					strUserAgent.Format(_T("User-Agent: %s\r\n"), m_pIEHostWindow->m_pPlugin->GetFirefoxUserAgent());
-
-					strHeaders += strUserAgent;
-				}
-
 				// 如果有 m_strUrlContext, 说明这是新窗口, 需要替 IE 加上 Referer
 				if (! m_pIEHostWindow->m_strUrlContext.IsEmpty() )
 				{
