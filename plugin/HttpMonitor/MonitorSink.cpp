@@ -254,7 +254,7 @@ namespace HttpMonitor
 
 	void MonitorSink::ImportCookies()
 	{
-		CString strCookie = m_pIEHostWindow->m_pPlugin->GetURLCookie(m_strURL);
+		CString strCookie = CIEHostWindow::GetFirefoxCookie(m_strURL);
 		CT2A url(m_strURL);
 		if (!strCookie.IsEmpty())
 		{
@@ -315,8 +315,7 @@ namespace HttpMonitor
 			if (lpCookies)
 			{
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				LParamSetFirefoxCookie param = {m_strURL, strCookie};
-				m_pIEHostWindow->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+        CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
 				VirtualFree( lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;

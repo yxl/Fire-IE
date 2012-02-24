@@ -81,6 +81,30 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
+void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+{
+  using namespace UserMessage;
+  s_csIEWindowMap.Lock();
+  if (s_IEWindowMap.GetSize() > 0)
+  {
+    CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
+    LParamSetFirefoxCookie param = {strURL, strCookie};
+		p->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+  }
+  s_csIEWindowMap.Unlock();
+}
+
+CString CIEHostWindow::GetFirefoxCookie(CString strURL)
+{
+  s_csIEWindowMap.Lock();
+  if (s_IEWindowMap.GetSize() > 0)
+  {
+    CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
+    CString strCookie = p->m_pPlugin->GetURLCookie(strURL);
+    return strCookie;
+  }
+  s_csIEWindowMap.Unlock();
+}
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
 									  COleControlSite** ppSite, UINT nID, REFCLSID clsid)
 {
