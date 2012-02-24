@@ -53,6 +53,8 @@ public:
 	/** 根据Internet Explorer_Server窗口找到对应的 CIEHostWindow 对象*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
+  static void SetFirefoxCookie(CString strURL, CString strCookie);
+  static CString GetFirefoxCookie(CString strURL);
 public:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 	virtual ~CIEHostWindow();

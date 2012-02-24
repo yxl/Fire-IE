@@ -129,6 +129,9 @@
     <Filter Include="BrowserHook">
       <UniqueIdentifier>{e9cf651e-492b-4a66-bd8a-9be8e0a77e3c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cookie">
+      <UniqueIdentifier>{f08b1100-713c-4a7b-ae7d-ae40404ddb5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="plugin.rc" />

@@ -21,13 +21,13 @@ CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 
 IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 
-CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
-: CDialog(CIEHostWindow::IDD, pParent)
-, m_pPlugin(pPlugin)
-, m_bCanBack(FALSE)
-, m_bCanForward(FALSE)
-, m_iProgress(-1)
-, SyncUserAgent(TRUE)
+	CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
+	: CDialog(CIEHostWindow::IDD, pParent)
+	, m_pPlugin(pPlugin)
+	, m_bCanBack(FALSE)
+	, m_bCanForward(FALSE)
+	, m_iProgress(-1)
+	, SyncUserAgent(TRUE)
 {
 
 }
@@ -81,8 +81,33 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
+void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+{
+	using namespace UserMessage;
+	s_csIEWindowMap.Lock();
+	if (s_IEWindowMap.GetSize() > 0)
+	{
+		CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
+		LParamSetFirefoxCookie param = {strURL, strCookie};
+		p->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+	}
+	s_csIEWindowMap.Unlock();
+}
+
+CString CIEHostWindow::GetFirefoxCookie(CString strURL)
+{
+	CString strCookie;
+	s_csIEWindowMap.Lock();
+	if (s_IEWindowMap.GetSize() > 0)
+	{
+		CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
+		strCookie = p->m_pPlugin->GetURLCookie(strURL);
+	}
+	s_csIEWindowMap.Unlock();
+	return strCookie;
+}
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
-									  COleControlSite** ppSite, UINT nID, REFCLSID clsid)
+	COleControlSite** ppSite, UINT nID, REFCLSID clsid)
 {
 	ASSERT(ppSite != NULL);
 	*ppSite = new CIEControlSite(pContainer, this);
@@ -119,7 +144,7 @@ BOOL CIEHostWindow::OnInitDialog()
 
 void CIEHostWindow::InitIE()
 {
-  SetProcessDEPPolicy(2);
+	SetProcessDEPPolicy(2);
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Add(GetSafeHwnd(), this);
 	s_csIEWindowMap.Unlock();
@@ -143,12 +168,12 @@ void CIEHostWindow::InitIE()
 void CIEHostWindow::UninitIE()
 {
 	/**
-	 *  屏蔽页面关闭时IE控件的脚本错误提示
-	 *  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
-	 *  但IE Ctrl关闭时，在某些站点(如map.baidu.com)仍会显示脚本错误提示; 这里用put_Silent
-	 *  强制关闭所有弹窗提示。
-	 *  注意：不能在页面加载时调用put_Silent，否则会同时屏蔽插件安装的提示。
-	 */
+	*  屏蔽页面关闭时IE控件的脚本错误提示
+	*  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
+	*  但IE Ctrl关闭时，在某些站点(如map.baidu.com)仍会显示脚本错误提示; 这里用put_Silent
+	*  强制关闭所有弹窗提示。
+	*  注意：不能在页面加载时调用put_Silent，否则会同时屏蔽插件安装的提示。
+	*/
 	m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();
@@ -210,81 +235,81 @@ void CIEHostWindow::OnCommandStateChange(long Command, BOOL Enable)
 // Pack some data into a SAFEARRAY of BYTEs
 HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 {
-    HRESULT hr;
-    LPSAFEARRAY psa;
-    UINT cElems = strlen(szSrc);
-    LPSTR pPostData;
+	HRESULT hr;
+	LPSAFEARRAY psa;
+	UINT cElems = strlen(szSrc);
+	LPSTR pPostData;
 
-    psa = SafeArrayCreateVector(VT_UI1, 0, cElems);
-    if (!psa)
-    {
-      return E_OUTOFMEMORY;
-    }
+	psa = SafeArrayCreateVector(VT_UI1, 0, cElems);
+	if (!psa)
+	{
+		return E_OUTOFMEMORY;
+	}
 
-    hr = SafeArrayAccessData(psa, (LPVOID*)&pPostData);
-    memcpy(pPostData, szSrc, cElems);
-    hr = SafeArrayUnaccessData(psa);
+	hr = SafeArrayAccessData(psa, (LPVOID*)&pPostData);
+	memcpy(pPostData, szSrc, cElems);
+	hr = SafeArrayUnaccessData(psa);
 
-    vDest.vt = VT_ARRAY | VT_UI1;
-    vDest.parray = psa;
-    return NOERROR;
+	vDest.vt = VT_ARRAY | VT_UI1;
+	vDest.parray = psa;
+	return NOERROR;
 }
 
 CString GetHostName(const CString& strHeaders)
 {
-  const CString HOST_HEADER(_T("Host:"));
-  int start = strHeaders.Find(HOST_HEADER);
-  if (start != -1) 
-  {
-    start += HOST_HEADER.GetLength();
-    int stop = strHeaders.Find(_T("\r\n"), start);
-    if (stop != -1)
-    {
-      int count = stop - start + 1;
-      CString strHost = strHeaders.Mid(start, count).Trim();
-      return strHost;
-    }
-  }
-  return _T("");
+	const CString HOST_HEADER(_T("Host:"));
+	int start = strHeaders.Find(HOST_HEADER);
+	if (start != -1) 
+	{
+		start += HOST_HEADER.GetLength();
+		int stop = strHeaders.Find(_T("\r\n"), start);
+		if (stop != -1)
+		{
+			int count = stop - start + 1;
+			CString strHost = strHeaders.Mid(start, count).Trim();
+			return strHost;
+		}
+	}
+	return _T("");
 }
 
 CString GetHostFromUrl(const CString& strUrl)
 {
-  CString strHost(strUrl);
-  int pos = strUrl.Find(_T("://"));
-  if (pos != -1)
-  {
-    strHost.Delete(0, pos+3);
-    
-  }
-  pos = strHost.Find(_T("/"));
-  if (pos != -1)
-  {
-    strHost = strHost.Left(pos);
-  }
-  return strHost;
+	CString strHost(strUrl);
+	int pos = strUrl.Find(_T("://"));
+	if (pos != -1)
+	{
+		strHost.Delete(0, pos+3);
+
+	}
+	pos = strHost.Find(_T("/"));
+	if (pos != -1)
+	{
+		strHost = strHost.Left(pos);
+	}
+	return strHost;
 }
 
 void FetchCookie(const CString& strUrl, const CString& strHeaders)
 {
-  const CString COOKIE_HEADER(_T("Cookie:"));
-  int start = strHeaders.Find(COOKIE_HEADER);
-  if (start != -1) 
-  {
-    start += COOKIE_HEADER.GetLength();
-    int stop = strHeaders.Find(_T("\r\n"), start);
-    if (stop != -1)
-    {
-      int count = stop - start + 1;
-      CString strCookie = strHeaders.Mid(start, count);
-      CString strHost = GetHostName(strHeaders);
-      if (strHost.IsEmpty()) 
-      {
-        strHost = GetHostFromUrl(strUrl);
-      }
-      InternetSetCookie(strHost, NULL, strCookie + _T(";Sat,01-Jan-2020 00:00:00 GMT"));
-    }
-  } 
+	const CString COOKIE_HEADER(_T("Cookie:"));
+	int start = strHeaders.Find(COOKIE_HEADER);
+	if (start != -1) 
+	{
+		start += COOKIE_HEADER.GetLength();
+		int stop = strHeaders.Find(_T("\r\n"), start);
+		if (stop != -1)
+		{
+			int count = stop - start + 1;
+			CString strCookie = strHeaders.Mid(start, count);
+			CString strHost = GetHostName(strHeaders);
+			if (strHost.IsEmpty()) 
+			{
+				strHost = GetHostFromUrl(strUrl);
+			}
+			InternetSetCookie(strHost, NULL, strCookie + _T(";Sat,01-Jan-2020 00:00:00 GMT"));
+		}
+	} 
 }
 
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
@@ -295,29 +320,29 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	{
 		try
 		{
-      CString strHost = GetHostName(strHeaders);
-      if (strHost.IsEmpty()) 
-      {
-        strHost = GetHostFromUrl(strURL);
-      }
+			CString strHost = GetHostName(strHeaders);
+			if (strHost.IsEmpty()) 
+			{
+				strHost = GetHostFromUrl(strURL);
+			}
 
-      FetchCookie(strURL, strHeaders);
-      _variant_t vFlags(0l);
-      _variant_t vTarget(_T(""));
-      _variant_t vPost;
-      _variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
-      if (!strPost.IsEmpty()) 
-      {
-        // 去除postContent-Type和Content-Length这样的header信息
-        int pos = strPost.Find(_T("\r\n\r\n"));
-        
-        CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
-        int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
-        char* szPostData = new char[size + 1];
-	      WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
-	      FillSafeArray(vPost, szPostData);
-      }
-      m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
+			FetchCookie(strURL, strHeaders);
+			_variant_t vFlags(0l);
+			_variant_t vTarget(_T(""));
+			_variant_t vPost;
+			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
+			if (!strPost.IsEmpty()) 
+			{
+				// 去除postContent-Type和Content-Length这样的header信息
+				int pos = strPost.Find(_T("\r\n\r\n"));
+
+				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
+				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
+				char* szPostData = new char[size + 1];
+				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
+				FillSafeArray(vPost, szPostData);
+			}
+			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
 		}
 		catch(...)
 		{
@@ -611,36 +636,36 @@ void CIEHostWindow::ExecOleCmd(OLECMDID cmdID)
 
 void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& strCookie)
 {
-  if (m_pPlugin)
-  {
-    m_pPlugin->SetURLCookie(strURL, strCookie);
-  }
+	if (m_pPlugin)
+	{
+		m_pPlugin->SetURLCookie(strURL, strCookie);
+	}
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
 {
-  if (m_pPlugin)
-  {
-	  m_pPlugin->OnIeTitleChanged(title);
-  }
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnIeTitleChanged(title);
+	}
 }
 
 void CIEHostWindow::OnProgressChanged(INT32 iProgress)
 {
-  if (m_pPlugin)
-  {
-	  CString strDetail;
-	  strDetail.Format(_T("%d"), iProgress);
-	  m_pPlugin->FireEvent(_T("IeProgressChanged"), strDetail);
-  }
+	if (m_pPlugin)
+	{
+		CString strDetail;
+		strDetail.Format(_T("%d"), iProgress);
+		m_pPlugin->FireEvent(_T("IeProgressChanged"), strDetail);
+	}
 }
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
-  if (m_pPlugin)
-  {
-	  m_pPlugin->setStatus(message);
-  }
+	if (m_pPlugin)
+	{
+		m_pPlugin->setStatus(message);
+	}
 }
 
 void CIEHostWindow::OnCloseIETab()
@@ -692,14 +717,14 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	OnProgressChanged(m_iProgress);
 
 	// 按Firefox的设置缩放页面
-  if (m_pPlugin)
-  {
-	  double level = m_pPlugin->GetZoomLevel();
-	  if (fabs(level - 1.0) > 0.01) 
-	  {
-		  Zoom(level);
-	  }
-  }
+	if (m_pPlugin)
+	{
+		double level = m_pPlugin->GetZoomLevel();
+		if (fabs(level - 1.0) > 0.01) 
+		{
+			Zoom(level);
+		}
+	}
 }
 
 BOOL CIEHostWindow::DestroyWindow()
@@ -716,23 +741,23 @@ BOOL CIEHostWindow::DestroyWindow()
 */
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
 {
-  if (m_pPlugin)
-  {
-    s_csNewIEWindowMap.Lock();
+	if (m_pPlugin)
+	{
+		s_csNewIEWindowMap.Lock();
 
-    CIEHostWindow* pIEHostWindow = new CIEHostWindow();
-    if (pIEHostWindow->Create(CIEHostWindow::IDD))
-    {
-      DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
-      s_NewIEWindowMap.Add(id, pIEHostWindow);
-      *ppDisp = pIEHostWindow->m_ie.get_Application();
-      m_pPlugin->NewIETab(id, bstrUrl);
-    }
-    else
-    {
-      delete pIEHostWindow;
-      *Cancel = TRUE;
-    }
-    s_csNewIEWindowMap.Unlock();
-  }
+		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
+		if (pIEHostWindow->Create(CIEHostWindow::IDD))
+		{
+			DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
+			s_NewIEWindowMap.Add(id, pIEHostWindow);
+			*ppDisp = pIEHostWindow->m_ie.get_Application();
+			m_pPlugin->NewIETab(id, bstrUrl);
+		}
+		else
+		{
+			delete pIEHostWindow;
+			*Cancel = TRUE;
+		}
+		s_csNewIEWindowMap.Unlock();
+	}
 }
