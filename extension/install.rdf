@@ -11,6 +11,7 @@
    <em:homepageURL></em:homepageURL>
    <em:optionsURL>chrome://fireie/content/options.xul</em:optionsURL>
    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
+   <em:targetPlatform>WINNT</em:targetPlatform>
    <em:unpack>true</em:unpack>
 
    <!-- Firefox -->
