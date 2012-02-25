@@ -10,6 +10,9 @@
  *  Yuan Xulei <hi@yxl.name>
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+A Firefox add-on let you switch to IE engine in one click and give up your Internet Explorer.
+
 Build
 ==================
 Open plugin.sln with Visual Studio 2010 and build the solution.
