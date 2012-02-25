@@ -195,7 +195,7 @@ namespace Plugin
 
 		if (m_strId == _T("fireie-cookie-object"))
 		{
-			CIEHostWindow::SetCookieIEWindow(m_pIEHostWindow);
+			CIEHostWindow::AddCookieIEWindow(m_pIEHostWindow);
 		}
 
 		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址

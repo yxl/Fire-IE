@@ -55,7 +55,7 @@ public:
 	/** 根据Internet Explorer_Server窗口找到对应的 CIEHostWindow 对象*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
-	static void SetCookieIEWindow(CIEHostWindow *pWnd) { s_pCookieIEWindow = pWnd; }
+	static void AddCookieIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
 	static CString GetFirefoxCookie(CString strURL);
@@ -91,7 +91,10 @@ protected:
 	static CCriticalSection s_csNewIEWindowMap;
 
 	/** 用于同步Cookie的 CIEHostWindow 对象 */
-	static CIEHostWindow* s_pCookieIEWindow;
+	static CSimpleMap<HWND, CIEHostWindow *> s_CookieIEWindowMap;
+
+	/** 与 s_CookieIEWindowMap 配对使用的, 保证线程安全 */
+	static CCriticalSection s_csCookieIEWindowMap;
 	
 	void InitIE();
 	void UninitIE();

@@ -13,10 +13,11 @@
 
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
-CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
+CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
-CIEHostWindow* CIEHostWindow::s_pCookieIEWindow = NULL;
+CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_CookieIEWindowMap;
+CCriticalSection CIEHostWindow::s_csCookieIEWindowMap;
 
 // CIEHostWindow dialog
 
@@ -113,25 +114,48 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 	return pIEHostWindow;
 }
 
+void CIEHostWindow::AddCookieIEWindow(CIEHostWindow *pWnd)
+{
+	s_csCookieIEWindowMap.Lock();
+	s_IEWindowMap.Add(pWnd->GetSafeHwnd(), pWnd);
+	s_csCookieIEWindowMap.Unlock();
+}
+
 void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 {
 	using namespace UserMessage;
-	if (s_pCookieIEWindow)
+	HWND hwnd = NULL;
+	s_csCookieIEWindowMap.Lock();
+	if (s_CookieIEWindowMap.GetSize() > 0)
+	{
+		hwnd = s_CookieIEWindowMap.GetValueAt(0)->GetSafeHwnd();
+	}
+	s_csCookieIEWindowMap.Unlock();
+	if (hwnd)
 	{
 		LParamSetFirefoxCookie param = {strURL, strCookie};
-		s_pCookieIEWindow->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
 	}
 }
 
 CString CIEHostWindow::GetFirefoxCookie(CString strURL)
 {
 	CString strCookie;
-	if (s_pCookieIEWindow && s_pCookieIEWindow->m_pPlugin)
+	CIEHostWindow *pIEHostWindow = NULL;
+	s_csCookieIEWindowMap.Lock();
+	if (s_CookieIEWindowMap.GetSize() > 0)
 	{
-		strCookie = s_pCookieIEWindow->m_pPlugin->GetURLCookie(strURL);
+		pIEHostWindow = s_CookieIEWindowMap.GetValueAt(0);
 	}
+	
+	if (pIEHostWindow && pIEHostWindow->m_pPlugin)
+	{
+		strCookie = pIEHostWindow->m_pPlugin->GetURLCookie(strURL);
+	}
+	s_csCookieIEWindowMap.Unlock();
 	return strCookie;
 }
+
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
 	COleControlSite** ppSite, UINT nID, REFCLSID clsid)
 {
@@ -205,6 +229,10 @@ void CIEHostWindow::UninitIE()
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
 	s_csIEWindowMap.Unlock();
+
+	s_csCookieIEWindowMap.Lock();
+	s_CookieIEWindowMap.Remove(GetSafeHwnd());
+	s_csCookieIEWindowMap.Unlock();
 }
 
 
@@ -703,21 +731,18 @@ void CIEHostWindow::OnCloseIETab()
 }
 void CIEHostWindow::OnStatusTextChange(LPCTSTR Text)
 {
-	// TODO: Add your message handler code here
 	OnStatusChanged(Text);
 }
 
 
 void CIEHostWindow::OnTitleChange(LPCTSTR Text)
 {
-	// TODO: Add your message handler code here
 	OnTitleChanged(Text);
 }
 
 
 void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 {
-	// TODO: Add your message handler code here
 	if (Progress == -1) 
 		Progress = ProgressMax;
 	if (ProgressMax > 0) 
@@ -732,13 +757,11 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 {
 	COLE2T szURL(URL->bstrVal);
 	m_strLoadingUrl = szURL;
-	// TODO: Add your message handler code here
 }
 
 
 void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 {
-	// TODO: Add your message handler code here
 	m_iProgress = -1;
 	OnProgressChanged(m_iProgress);
 
