@@ -123,7 +123,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 void CIEHostWindow::AddCookieIEWindow(CIEHostWindow *pWnd)
 {
 	s_csCookieIEWindowMap.Lock();
-	s_IEWindowMap.Add(pWnd->GetSafeHwnd(), pWnd);
+	s_CookieIEWindowMap.Add(pWnd->GetSafeHwnd(), pWnd);
 	s_csCookieIEWindowMap.Unlock();
 }
 
