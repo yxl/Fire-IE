@@ -14,7 +14,7 @@ let fireieUtils = {
       let json = JSON.parse(attrString);
       return json;
     } catch (ex) {
-      MY_LOG('FireIE.getTabAttributeJSON:' + ex);
+      fireieUtils.LOG('FireIE.getTabAttributeJSON:' + ex);
     }
 
     return null;
@@ -42,7 +42,7 @@ let fireieUtils = {
         return tab;
       }
     } catch (err) {
-      MY_LOG(err);
+      fireieUtils.ERROR(err);
     }
     return null;
   },
@@ -50,7 +50,7 @@ let fireieUtils = {
   getTabFromWindow: function(win) {
     function getRootWindow(win) {
       for (; win; win = win.parent) {
-        if (!win.parent || win == win.parent || !(win.parent instanceof Window))
+        if (!win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow))
           return win;
       }
     
@@ -66,8 +66,6 @@ let fireieUtils = {
 
 };
 
-
-
 /**
  * Cache of commonly used string bundles.
  * Usage: fireieUtils.Strings.global.GetStringFromName("XXX")
@@ -78,5 +76,14 @@ fireieUtils.Strings = {};
   let[name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(fireieUtils.Strings, name, function() {
     return Services.strings.createBundle(bundle);
+  });
+});
+
+["LOG", "WARN", "ERROR"].forEach(function(aName) {
+  XPCOMUtils.defineLazyGetter(fireieUtils, aName, function() {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    let logger = {};
+    LogManager.getLogger("[fireie]", logger);
+    return logger[aName];
   });
 });

@@ -109,7 +109,7 @@ FireIE.getCurrentIeTabURI = function(aBrowser) {
 			}
 		}
 	} catch (e) {
-		MY_LOG('FireIE.getCurrentIeTabURI: ' + ex);
+		fireieUtils.LOG('FireIE.getCurrentIeTabURI: ' + ex);
 	}
 	return null;
 }
@@ -555,7 +555,7 @@ FireIE.getTabAttributeJSON =  function(tab, name) {
 		let json = JSON.parse(attrString);
 		return json;
 	} catch (ex) {
-		MY_LOG('FireIE.getTabAttributeJSON:' + ex);
+		fireieUtils.LOG('FireIE.getTabAttributeJSON:' + ex);
 	}
 	
 	return null;

@@ -52,17 +52,13 @@ FireIE.HttpObserver = {
 	
 	// nsIObserver
 	observe: function(subject, topic, data) {		
-		try {
-			if (!(subject instanceof Components.interfaces.nsIHttpChannel))
-				return;
-			switch (topic) {
-				case 'http-on-modify-request':
-					this.onModifyRequest(subject);
-					break;
+		if (!(subject instanceof Components.interfaces.nsIHttpChannel))
+			return;
+		switch (topic) {
+			case 'http-on-modify-request':
+				this.onModifyRequest(subject);
+				break;
 			}
-		} catch (err) {
-			LOG(err);
-		}
 	},
 	
 	onModifyRequest: function(subject) {

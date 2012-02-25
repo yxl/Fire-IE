@@ -7,7 +7,7 @@ var FireIEContainer = {
 		window.removeEventListener('DOMContentLoaded', FireIEContainer.init, false);
 		var container = document.getElementById('container');
 		if (!container) {
-			MY_ERROR('Cannot find container div to insert fireie-object.');
+			fireieUtils.ERROR('Cannot find container to insert fireie-object.');
 			return;
 		}
 		if (FireIEContainer._isInPrivateBrowsingMode()) {
