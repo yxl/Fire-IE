@@ -1,7 +1,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "切换浏览模式">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击设置 解雇IE 选项">
 
-<!ENTITY fireie.options.title "Fire IE 选项">
+<!ENTITY fireie.options.title "解雇IE 选项">
 <!ENTITY fireie.options.filter.label "网址过滤">
 <!ENTITY fireie.options.filter.enabled "总是使用 IE Tab 浏览以下网址">
 <!ENTITY fireie.options.filter.column.rule "规则">
