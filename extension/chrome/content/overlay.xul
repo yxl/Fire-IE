@@ -35,14 +35,6 @@
 	 </toolbarbutton>
 </textbox>
 
-<!-- firefox toolsmenu -->
-<menupopup id="menu_ToolsPopup">
-   <menuitem id="fireie-toolsmenu" hidden="false"
-      label="&fireie.options.title;" insertbefore="prefSep"
-      class="menuitem-iconic fireie-icon-toolsmenu"
-      oncommand="FireIE.openOptionsDialog();"/>
-</menupopup>
-
 <!-- popup menus -->
 <popupset>
 	<!-- urlbar switch button context menu -->

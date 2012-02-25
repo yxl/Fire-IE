@@ -188,13 +188,6 @@ FireIE.switchEngine = function() {
 	FireIE.switchTabEngine(gBrowser.mCurrentTab);
 }
 
-/** 打开配置对话框 */
-FireIE.openOptionsDialog = function(url) {
-	if (!url) url = FireIE.getPluginObjectURL();
-	var icon = document.getElementById('ietab-status');
-	window.openDialog('chrome://fireie/content/options.xul', "fireieOptionsDialog", 'chrome,centerscreen', FireIE.getUrlDomain(url), icon);
-}
-
 /** 新建一个ie标签*/
 FireIE.addIeTab = function(url) {
 	let newTab = gBrowser.addTab(FireIE.getfireieURL(url));
