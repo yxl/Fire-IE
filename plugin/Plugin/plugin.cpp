@@ -114,13 +114,28 @@ namespace Plugin
 	}
 
 
-	CPlugin::CPlugin(NPP pNPInstance) :
-	m_pNPInstance(pNPInstance),
+	CPlugin::CPlugin(NPP pNPInstance, int16_t argc, char* argn[], char* argv[]):
+		m_pNPInstance(pNPInstance),
 		m_pNPStream(NULL),
 		m_bInitialized(false),
 		m_pScriptableObject(NULL),
 		m_pIEHostWindow(NULL)
 	{
+		USES_CONVERSION;
+		// <html:embed id='fireie-cookie-object' type='application/fireie' hidden='true' width='0' height='0'/>
+		// argc == 5
+		// argn[0] = "id",                   argn[1] = "type",               argn[2] = "hidden", argn[3] = "width", argn[4] = "height"
+		// argn[0] = "fireie-cookie-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
+
+		// 从Plugin参数中获取Plugin ID
+		for (int i=0; i<argc; i++)
+		{
+			if (_stricmp(argn[i], "id") == 0)
+			{
+				m_strId = A2T(argv[i]);
+				break;
+			}
+		}
 	}
 
 	CPlugin::~CPlugin()
@@ -128,7 +143,10 @@ namespace Plugin
 		if (m_pScriptableObject)
 			NPN_ReleaseObject(m_pScriptableObject);
 		if (m_pIEHostWindow)
+		{
 			delete m_pIEHostWindow;
+			m_pIEHostWindow = NULL;
+		}
 	}
 
 
@@ -143,71 +161,54 @@ namespace Plugin
 		if (!IsWindow(m_hWnd))
 			return FALSE;
 
-		// 获取Plugin所在页面的URL, URL的格式是chrome://fireie/content/container.xhtml?url=XXX，
-		// 其中XXX是实际要访问的URL
-		CString strHostUrl = GetHostURL();
-		static const CString PREFIX(_T("chrome://fireie/content/container.xhtml?url="));
+		DWORD navId = 0;
+		CString url;
+		CString post;
+		CString headers;
 
-		// 安全检查, 检查Plugin所在页面的URL，不允许其他插件或页面调用这个Plugin
-		if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
-			return FALSE;
-
-		// 从URL参数中获取实际要访问的URL地址
-		CString url = strHostUrl.Mid(PREFIX.GetLength());
-
-		CWnd parent;
-		if (!parent.Attach(m_hWnd))
-			return FALSE;
-		try
+		if (m_strId == _T("fireie-object"))
 		{
-			DWORD id = GetNavigateWindowId();
-			CString post = GetNavigatePostData();
-			CString headers = GetNavigateHeaders();
+			// 获取Plugin所在页面的URL, URL的格式是chrome://fireie/content/container.xhtml?url=XXX，
+			// 其中XXX是实际要访问的URL
+			CString strHostUrl = GetHostURL();
+			static const CString PREFIX(_T("chrome://fireie/content/container.xhtml?url="));
+
+			// 安全检查, 检查Plugin所在页面的URL，不允许其他插件或页面调用这个Plugin
+			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
+				return FALSE;
+
+			// 从URL参数中获取实际要访问的URL地址
+			url = strHostUrl.Mid(PREFIX.GetLength());
+
+			// 获取从Firefox传入的其他参数
+			navId = GetNavigateWindowId();
+			post = GetNavigatePostData();
+			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
-			if (id != 0)
-			{
-				CIEHostWindow::s_csNewIEWindowMap.Lock();
-				// CIEhostWindow已创建
-				m_pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(id);
-				if (m_pIEHostWindow)
-				{
-					m_pIEHostWindow->SetPlugin(this);
-					CIEHostWindow::s_NewIEWindowMap.Remove(id);
-				}
-				CIEHostWindow::s_csNewIEWindowMap.Unlock();
-			}
-			if (m_pIEHostWindow == NULL)
-			{
-				m_pIEHostWindow = new CIEHostWindow(this);
-				if (m_pIEHostWindow == NULL || !m_pIEHostWindow->Create(CIEHostWindow::IDD))
-				{
-					throw CString(_T("Cannot Create CIEHostWindow!"));
-				}
-			}
-			m_pIEHostWindow->SetParent(&parent);
-			CRect rect;
-			parent.GetClientRect(rect);
-			m_pIEHostWindow->MoveWindow(rect);
-			m_pIEHostWindow->ShowWindow(SW_SHOW);
-			if (id == 0)
-			{
-				m_pIEHostWindow->Navigate(url, post, headers);
-			}
 		}
-		catch (CString strMessage)
+
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId);
+		if (m_pIEHostWindow == NULL)
 		{
-			if (m_pIEHostWindow)
-				delete m_pIEHostWindow;
-			parent.Detach();
-			TRACE(_T("[CPlugin::init] Exception: %s\n"), (LPCTSTR)strMessage);
 			return FALSE;
 		}
-		parent.Detach();
 
+		if (m_strId == _T("fireie-cookie-object"))
+		{
+			CIEHostWindow::SetCookieIEWindow(m_pIEHostWindow);
+		}
+
+		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
+		if (navId == 0)
+		{
+			m_pIEHostWindow->Navigate(url, post, headers);
+		}
 
 		ScriptablePluginObject* sp = static_cast<ScriptablePluginObject*>(GetScriptableObject());
-		if (sp == NULL)
-			return false;
+		if (sp == NULL) 
+		{
+			return FALSE;
+		}
 		sp->SetMainWindow(m_pIEHostWindow);
 
 		// 有了这两句, Firefox 窗口变化的时候才会通知 IE 窗口刷新显示
@@ -216,6 +217,41 @@ namespace Plugin
 
 		m_bInitialized = TRUE;
 		return TRUE;
+	}
+
+	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId)
+	{
+		CIEHostWindow *pIEHostWindow = NULL;
+		CWnd parent;
+		if (!parent.Attach(hParent))
+		{
+			return FALSE;
+		}
+		try
+		{
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId);
+			if (pIEHostWindow == NULL)
+			{
+				throw CString(_T("Cannot Create CIEHostWindow!"));
+			}
+			pIEHostWindow->SetPlugin(this);
+			pIEHostWindow->SetParent(&parent);
+			CRect rect;
+			parent.GetClientRect(rect);
+			pIEHostWindow->MoveWindow(rect);
+			pIEHostWindow->ShowWindow(SW_SHOW);
+		}
+		catch (CString strMessage)
+		{
+			if (pIEHostWindow) 
+			{
+				delete pIEHostWindow;
+				pIEHostWindow = NULL;
+			}
+			TRACE(_T("[CPlugin::CreateIEHostWindow] Exception: %s\n"), (LPCTSTR)strMessage);
+		}
+		parent.Detach();
+		return pIEHostWindow;
 	}
 
 	NPError CPlugin::SetWindow(NPWindow* aWindow)
@@ -231,12 +267,15 @@ namespace Plugin
 
 	void CPlugin::shut()
 	{
-		m_pIEHostWindow->DestroyWindow();
+		if (m_pIEHostWindow)
+		{
+			m_pIEHostWindow->DestroyWindow();
+		}
 		m_hWnd = NULL;
-		m_bInitialized = false;
+		m_bInitialized = FALSE;
 	}
 
-	void CPlugin::setStatus(const CString& text)
+	void CPlugin::SetStatus(const CString& text)
 	{
 		if (m_pNPInstance)
 		{

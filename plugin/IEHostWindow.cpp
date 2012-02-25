@@ -15,7 +15,8 @@
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
-CCriticalSection CIEHostWindow::s_csNewIEWindowMap; 
+CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
+CIEHostWindow* CIEHostWindow::s_pCookieIEWindow = NULL;
 
 // CIEHostWindow dialog
 
@@ -27,7 +28,6 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bCanBack(FALSE)
 	, m_bCanForward(FALSE)
 	, m_iProgress(-1)
-	, SyncUserAgent(TRUE)
 {
 
 }
@@ -81,29 +81,55 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+{
+	CIEHostWindow *pIEHostWindow = NULL;
+
+	if (dwId != 0)
+	{
+		// 如果提供了ID参数，说明IEHostWindow窗口已创建，不需要再新建。
+		s_csNewIEWindowMap.Lock();
+		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
+		if (pIEHostWindow)
+		{
+			CIEHostWindow::s_NewIEWindowMap.Remove(dwId);
+		}
+		s_csNewIEWindowMap.Unlock();
+	}
+	else 
+	{
+		s_csNewIEWindowMap.Lock();
+		pIEHostWindow = new CIEHostWindow();
+		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD))
+		{
+			if (pIEHostWindow)
+			{
+				delete pIEHostWindow;
+			}
+			pIEHostWindow = NULL;
+		}
+		s_csNewIEWindowMap.Unlock();
+	}
+	return pIEHostWindow;
+}
+
 void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 {
 	using namespace UserMessage;
-	s_csIEWindowMap.Lock();
-	if (s_IEWindowMap.GetSize() > 0)
+	if (s_pCookieIEWindow)
 	{
-		CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
 		LParamSetFirefoxCookie param = {strURL, strCookie};
-		p->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+		s_pCookieIEWindow->SendMessage(WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
 	}
-	s_csIEWindowMap.Unlock();
 }
 
 CString CIEHostWindow::GetFirefoxCookie(CString strURL)
 {
 	CString strCookie;
-	s_csIEWindowMap.Lock();
-	if (s_IEWindowMap.GetSize() > 0)
+	if (s_pCookieIEWindow && s_pCookieIEWindow->m_pPlugin)
 	{
-		CIEHostWindow* p = s_IEWindowMap.GetValueAt(0);
-		strCookie = p->m_pPlugin->GetURLCookie(strURL);
+		strCookie = s_pCookieIEWindow->m_pPlugin->GetURLCookie(strURL);
 	}
-	s_csIEWindowMap.Unlock();
 	return strCookie;
 }
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
@@ -664,7 +690,7 @@ void CIEHostWindow::OnStatusChanged(const CString& message)
 {
 	if (m_pPlugin)
 	{
-		m_pPlugin->setStatus(message);
+		m_pPlugin->SetStatus(message);
 	}
 }
 
@@ -746,7 +772,7 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		s_csNewIEWindowMap.Lock();
 
 		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
-		if (pIEHostWindow->Create(CIEHostWindow::IDD))
+		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
 			DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
 			s_NewIEWindowMap.Add(id, pIEHostWindow);
@@ -755,7 +781,10 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		}
 		else
 		{
-			delete pIEHostWindow;
+			if (pIEHostWindow)
+			{
+				delete pIEHostWindow;
+			}
 			*Cancel = TRUE;
 		}
 		s_csNewIEWindowMap.Unlock();

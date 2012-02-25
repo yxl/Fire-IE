@@ -695,6 +695,14 @@ FireIE.init = function() {
    * 当用户安装插件后，该插件将不会可用，除非调用了 refresh，或者用户关闭并重新启动了 Navigator。 
    */
   navigator.plugins.refresh(false);
+
+	// 创建同步Cookie的plugin
+	let item = document.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
+	item.hidden = true;
+	item.setAttribute("id", "fireie-cookie-object");
+	item.setAttribute("type", "application/fireie");
+	let mainWindow = document.getElementById("main-window");
+	mainWindow.appendChild(item);
 	
 	FireIE.hookCodeAll();
 	FireIE.addEventAll();

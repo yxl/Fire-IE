@@ -57,7 +57,7 @@ namespace Plugin
 	public: 
 		// Overrides
 
-		CPlugin(NPP pNPInstance);
+		CPlugin(NPP pNPInstance, int16_t argc, char* argn[], char* argv[]);
 		~CPlugin();
 		// 初始化Plugin窗口
 		NPBool init(NPWindow* pNPWindow);
@@ -67,10 +67,13 @@ namespace Plugin
 		void shut();
 		NPBool isInitialized();
 
+	private: 
+		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId);
+
 	public:
 
 		// 设置Plugin状态文本, 会在Firefox的状态栏中显示出来
-		void setStatus(const CString& text);
+		void SetStatus(const CString& text);
 
 		// 获取Plugin所在页面的URL
 		CString GetHostURL() const;
@@ -146,6 +149,9 @@ namespace Plugin
 		NPBool m_bInitialized;
 
 		NPObject *m_pScriptableObject;
+
+		// Plugin ID
+		CString m_strId;
 	};
 
 }

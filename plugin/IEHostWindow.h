@@ -44,6 +44,8 @@ class CIEHostWindow : public CDialog
 	friend class HttpMonitor::MonitorSink;
 
 public:
+	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
+
 	/** 根据 CIEHostWindow 的 HWND 寻找对应的 CIEHostWindow 对象 */
 	static CIEHostWindow* GetInstance(HWND hwnd);
 
@@ -53,30 +55,44 @@ public:
 	/** 根据Internet Explorer_Server窗口找到对应的 CIEHostWindow 对象*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
-  static void SetFirefoxCookie(CString strURL, CString strCookie);
-  static CString GetFirefoxCookie(CString strURL);
+	static void SetCookieIEWindow(CIEHostWindow *pWnd) { s_pCookieIEWindow = pWnd; }
+
+	static void SetFirefoxCookie(CString strURL, CString strCookie);
+	static CString GetFirefoxCookie(CString strURL);
 public:
-	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
+	
 	virtual ~CIEHostWindow();
 
 	virtual BOOL CreateControlSite(COleControlContainer* pContainer, 
 		COleControlSite** ppSite, UINT nID, REFCLSID clsid);
 
-// Dialog Data
+	// Dialog Data
 	enum { IDD = IDD_MAIN_WINDOW };
 
-// Overrides
+	// Overrides
 	virtual BOOL OnInitDialog();
 	virtual BOOL DestroyWindow();
 
-  /** 设置窗口关联的Plugin对象 */
-  void SetPlugin(Plugin::CPlugin* pPlugin) {m_pPlugin = pPlugin;}
+	/** 设置窗口关联的Plugin对象 */
+	void SetPlugin(Plugin::CPlugin* pPlugin) {m_pPlugin = pPlugin;}
 protected:
-  /** HWND到 CIEWindow 对象的映射, 用于通过 HWND 快速找到已打开的 CIEWindow 对象 */
-  static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
-  /** 与 s_IEWindowMap 配对使用的, 保证线程安全 */
-  static CCriticalSection s_csIEWindowMap;
+	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
+	/** HWND到 CIEWindow 对象的映射, 用于通过 HWND 快速找到已打开的 CIEWindow 对象 */
+	static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
+	
+	/** 与 s_IEWindowMap 配对使用的, 保证线程安全 */
+	static CCriticalSection s_csIEWindowMap;
+
+	/** ID到 CIEWindow 对象的映射, 用于通过 ID 快速找到创建后未使用的 CIEWindow 对象 */
+	static CSimpleMap<DWORD, CIEHostWindow *> s_NewIEWindowMap;
+
+	/** 与 s_csNewIEWindowMap 配对使用的, 保证线程安全 */
+	static CCriticalSection s_csNewIEWindowMap;
+
+	/** 用于同步Cookie的 CIEHostWindow 对象 */
+	static CIEHostWindow* s_pCookieIEWindow;
+	
 	void InitIE();
 	void UninitIE();
 
@@ -104,13 +120,8 @@ protected:
 public:
 	CIECtrl m_ie;
 
-  /** ID到 CIEWindow 对象的映射, 用于通过 ID 快速找到创建后未使用的 CIEWindow 对象 */
-  static CSimpleMap<DWORD, CIEHostWindow *> s_NewIEWindowMap;
-  /** 与 s_csNewIEWindowMap 配对使用的, 保证线程安全 */
-  static CCriticalSection s_csNewIEWindowMap;
-
-  /** 正在加载的 URL. */
-  CString m_strLoadingUrl;
+	/** 正在加载的 URL. */
+	CString m_strLoadingUrl;
 
 	// plugin methods
 	void Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders);
@@ -158,8 +169,6 @@ protected:
 
 	/** DIRTY FIX: NewWindow3 里面创建的 IE 窗口不能设置 Referrer */
 	CString m_strUrlContext;
-
-	BOOL SyncUserAgent;
 
 	Plugin::CPlugin* m_pPlugin;
 };

@@ -81,7 +81,7 @@ NPError NPP_New(NPMIMEType pluginType,
 
 	NPError rv = NPERR_NO_ERROR;
 
-	CPlugin * pPlugin = new CPlugin(instance);
+	CPlugin * pPlugin = new CPlugin(instance, argc, argn, argv);
 	if(pPlugin == NULL)
 		return NPERR_OUT_OF_MEMORY_ERROR;
 
@@ -101,6 +101,7 @@ NPError NPP_Destroy (NPP instance, NPSavedData** save)
 	if(pPlugin != NULL) {
 		pPlugin->shut();
 		delete pPlugin;
+		pPlugin = NULL; 
 	}
 	return rv;
 }
@@ -126,8 +127,6 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 	// window just created
 	if(!pPlugin->isInitialized() && (pNPWindow->window != NULL)) { 
 		if(!pPlugin->init(pNPWindow)) {
-			delete pPlugin;
-			pPlugin = NULL;
 			return NPERR_MODULE_LOAD_FAILED_ERROR;
 		}
 	}
