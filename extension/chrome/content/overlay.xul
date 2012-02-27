@@ -14,8 +14,14 @@
 <script type="application/x-javascript" src="chrome://fireie/content/fireieHttpObserver.js" />
 <script type="application/x-javascript" src="chrome://fireie/content/overlay.js" />
 
-<window id="main-window">
-</window>
+<commandset id="mainCommandSet">
+	<command id="cmd_fireieToggle" oncommand="FireIE.switchEngine();" />
+</commandset>
+	
+<keyset id="mainKeyset">
+	<key id="key_fireieToggle" command="cmd_fireieToggle"
+	modifiers="alt" key="C" />
+</keyset>
 
 <!-- urlbar switch button -->
 <textbox id="urlbar">
