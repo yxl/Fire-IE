@@ -276,6 +276,7 @@ buildxpi.bat</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
@@ -298,6 +299,7 @@ buildxpi.bat</Command>
     <ClCompile Include="Utility\URI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />

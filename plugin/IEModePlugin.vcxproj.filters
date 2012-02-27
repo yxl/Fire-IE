@@ -36,6 +36,9 @@
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
+    <ClCompile Include="BrowserHook\AtlDepHook.cpp">
+      <Filter>BrowserHook</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -94,6 +97,9 @@
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="PluginApp.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h">
+      <Filter>BrowserHook</Filter>
+    </ClInclude>
+    <ClInclude Include="BrowserHook\AtlDepHook.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
   </ItemGroup>

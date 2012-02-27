@@ -48,6 +48,7 @@
 #include "ScriptablePluginObject.h"
 #include "HttpMonitorAPP.h"
 #include "WindowMessageHook.h"
+#include "AtlDepHook.h"
 
 namespace Plugin
 {
@@ -87,6 +88,7 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
+		BrowserHook::AtlDepHook::s_instance.Install();
 
 		return NPERR_NO_ERROR;
 	}
@@ -109,7 +111,7 @@ namespace Plugin
 				g_spCFHTTPS.Release();
 			}
 		}
-
+		BrowserHook::AtlDepHook::s_instance.Uninstall();
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
 	}
 

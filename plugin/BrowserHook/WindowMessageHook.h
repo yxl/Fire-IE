@@ -16,12 +16,12 @@ namespace BrowserHook
 	{
 	public:
 		static WindowMessageHook s_instance;
-		~WindowMessageHook(void);
 		BOOL Install(void);
 		BOOL Uninstall(void);
 
 	private:
 		WindowMessageHook(void);
+    ~WindowMessageHook(void);
 		static LRESULT CALLBACK GetMsgProc(int code, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam);
     static BOOL FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed);
