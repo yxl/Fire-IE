@@ -634,6 +634,7 @@ FireIE.hookCodeAll = function() {
 
 FireIE.addEventAll = function() {
 	FireIE.observerService.addObserver(FireIE.HttpObserver, 'http-on-modify-request', false);
+	FireIE.CookieObserver.register();
 
 	FireIE.addEventListener(window, "DOMContentLoaded", FireIE.onPageShowOrLoad);
 	FireIE.addEventListener(window, "pageshow", FireIE.onPageShowOrLoad);
@@ -649,6 +650,7 @@ FireIE.addEventAll = function() {
 
 FireIE.removeEventAll = function() {
 	FireIE.observerService.removeObserver(FireIE.HttpObserver, 'http-on-modify-request');
+	FireIE.CookieObserver.unregister();
 	
 	FireIE.removeEventListener(window, "DOMContentLoaded", FireIE.onPageShowOrLoad);
 	FireIE.removeEventListener(window, "pageshow", FireIE.onPageShowOrLoad);

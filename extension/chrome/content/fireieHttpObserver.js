@@ -44,7 +44,7 @@ function getWebProgressForRequest(request) {
 function getWindowForRequest(request){
   return getWindowForWebProgress(getWebProgressForRequest(request));
 }
-    
+
 FireIE.HttpObserver = {
 	// nsISupports
 	QueryInterface: function(iid) {

@@ -61,7 +61,7 @@ namespace Plugin
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
-    // 监视http和https请求，同步cookie
+		// 监视http和https请求，同步cookie
 		CComPtr<IInternetSession> spSession;
 		HRESULT hret = S_OK;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )

@@ -11,6 +11,7 @@
 	 xmlns:html="http://www.w3.org/1999/xhtml">
 
 <script type="application/x-javascript" src="chrome://fireie/content/fireieCommon.js" />
+<script type="application/x-javascript" src="chrome://fireie/content/CookieObserver.js" />
 <script type="application/x-javascript" src="chrome://fireie/content/fireieHttpObserver.js" />
 <script type="application/x-javascript" src="chrome://fireie/content/overlay.js" />
 

@@ -84,6 +84,10 @@ fireieUtils.Strings = {};
   });
 });
 
+/**
+ * Set the value of preference "extensions.logging.enabled" to false to hide
+ * fireieUtils.LOG message
+ */
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   XPCOMUtils.defineLazyGetter(fireieUtils, aName, function() {
     Components.utils.import("resource://gre/modules/AddonLogging.jsm");

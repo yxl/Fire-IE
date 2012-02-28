@@ -315,7 +315,7 @@ namespace HttpMonitor
 			if (lpCookies)
 			{
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-        CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
+				CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
 				VirtualFree( lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;
