@@ -57,22 +57,23 @@ FireIE.setOptions = function(quiet) {
   let requiresRestart = false;
 
   //filter
-  let filter = document.getElementById('filtercbx').checked;
-  FireIE.setBoolPref("extensions.fireie.filter", filter);
-  FireIE.setStrPref("extensions.fireie.filterlist", FireIE.getFilterListString());
+  let filter = document.getElementById("filtercbx").checked;
+  Services.prefs.setBoolPref("extensions.fireie.filter", filter);
+  Services.prefs.setCharPref("extensions.fireie.filterlist", FireIE.getFilterListString());
 
   //general
-  FireIE.setBoolPref("extensions.fireie.handleUrlBar", document.getElementById('handleurl').checked);
+  Services.prefs.setBoolPref("extensions.fireie.handleUrlBar", document.getElementById("handleurl").checked);
 	let newKey = document.getElementById('shortcut-key').value;
-	if (FireIE.getStrPref("extensions.fireie.shortcut.key") != newKey) {
+	if (Services.prefs.getCharPref("extensions.fireie.shortcut.key") != newKey) {
 		requiresRestart = true;
-		FireIE.setStrPref("extensions.fireie.shortcut.key", newKey);
+		Services.prefs.setCharPref("extensions.fireie.shortcut.key", newKey);
 	}
 	let newModifiers = document.getElementById('shortcut-modifiers').value;
-	if (FireIE.getStrPref("extensions.fireie.shortcut.modifiers") != newModifiers) {
+	if (Services.prefs.getCharPref("extensions.fireie.shortcut.modifiers") != newModifiers) {
 		requiresRestart = true;
-		FireIE.setStrPref("extensions.fireie.shortcut.modifiers", newModifiers);
-	}	
+		Services.prefs.setCharPref("extensions.fireie.shortcut.modifiers", newModifiers);
+	}
+	Services.prefs.setBoolPref("extensions.fireie.showUrlBarLabel", document.getElementById("showUrlBarLabel").checked);
 
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -80,9 +81,9 @@ FireIE.setOptions = function(quiet) {
   if (iemode) {
     newMode = iemode.value;
   }
-  if (FireIE.getStrPref("extensions.fireie.compatMode") != newMode) {
+  if (Services.prefs.getCharPref("extensions.fireie.compatMode") != newMode) {
     requiresRestart = true;
-    FireIE.setStrPref("extensions.fireie.compatMode", newMode);
+    Services.prefs.setCharPref("extensions.fireie.compatMode", newMode);
     FireIE.applyIECompatMode();
   }
 
@@ -96,7 +97,7 @@ FireIE.setOptions = function(quiet) {
 }
 
 FireIE.applyIECompatMode = function() {
-  let mode = FireIE.getStrPref("extensions.fireie.compatMode");
+  let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
 
@@ -150,12 +151,12 @@ FireIE.updateIEModeTab = function() {
     break;
   }
   document.getElementById("iemode-tab").hidden = false;
-  let mode = FireIE.getStrPref("extensions.fireie.compatMode");
+  let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
   document.getElementById("iemode").value = mode;
 }
 
 FireIE.getPrefFilterList = function() {
-  var s = FireIE.getStrPref("extensions.fireie.filterlist", null);
+  var s = Services.prefs.getCharPref("extensions.fireie.filterlist", null);
   return (s ? s.split(" ") : "");
 }
 
@@ -176,7 +177,7 @@ FireIE.addFilterRule = function(rule, enabled) {
 
 FireIE.initDialog = function() {
   //filter tab 网址过滤
-  document.getElementById('filtercbx').checked = FireIE.getBoolPref("extensions.fireie.filter", true);
+  document.getElementById('filtercbx').checked = Services.prefs.getBoolPref("extensions.fireie.filter", true);
   var list = FireIE.getPrefFilterList();
   var rules = document.getElementById('filterChilds');
   while (rules.hasChildNodes()) rules.removeChild(rules.firstChild);
@@ -195,9 +196,11 @@ FireIE.initDialog = function() {
   document.getElementById('urlbox').select();
 
   // general 功能设置
-  document.getElementById('handleurl').checked = FireIE.getBoolPref("extensions.fireie.handleUrlBar", false);
-	document.getElementById('shortcut-modifiers').value = FireIE.getStrPref("extensions.fireie.shortcut.modifiers", "alt");
-	document.getElementById('shortcut-key').value = FireIE.getStrPref("extensions.fireie.shortcut.key", "C");
+  document.getElementById('handleurl').checked = Services.prefs.getBoolPref("extensions.fireie.handleUrlBar", false);
+	document.getElementById('shortcut-modifiers').value = Services.prefs.getCharPref("extensions.fireie.shortcut.modifiers", "alt");
+	document.getElementById('shortcut-key').value = Services.prefs.getCharPref("extensions.fireie.shortcut.key", "C");
+	document.getElementById("showUrlBarLabel").checked = Services.prefs.getBoolPref("extensions.fireie.showUrlBarLabel", true);
+
 	
   // updateStatus
   FireIE.updateDialogAllStatus();
@@ -390,8 +393,7 @@ FireIE._loadFromFile = function() {
 
 FireIE._getAllSettings = function(isDefault) {
   var prefix = "extensions.fireie.";
-  var prefservice = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
-  var prefs = (isDefault ? prefservice.getDefaultBranch("") : prefservice.getBranch(""));
+  var prefs = (isDefault ? Services.prefs.getDefaultBranch("") : Services.prefs.getBranch(""));
   var preflist = prefs.getChildList(prefix, {});
 
   var aList = ["FireIEPref"];
@@ -420,22 +422,21 @@ FireIE._setAllSettings = function(aList) {
   if (aList.length == 0) return;
   if (aList[0] != "FireIEPref") return;
 
-  var prefservice = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
-  var prefs = prefservice.getBranch("");
+  let prefs = Services.prefs.getBranch("");
 
-  var aPrefs = [];
-  for (var i = 1; i < aList.length; i++) {
-    var index = aList[i].indexOf("=");
+  let aPrefs = [];
+  for (let i = 1; i < aList.length; i++) {
+    let index = aList[i].indexOf("=");
     if (index > 0) {
       var name = aList[i].substring(0, index);
       var value = aList[i].substring(index + 1, aList[i].length);
       aPrefs.push([name, value]);
     }
   }
-  for (var i = 0; i < aPrefs.length; i++) {
+  for (let i = 0; i < aPrefs.length; i++) {
     try {
-      var name = aPrefs[i][0];
-      var value = aPrefs[i][1];
+      let name = aPrefs[i][0];
+      let value = aPrefs[i][1];
       switch (prefs.getPrefType(name)) {
       case prefs.PREF_BOOL:
         prefs.setBoolPref(name, /true/i.test(value));
@@ -445,7 +446,7 @@ FireIE._setAllSettings = function(aList) {
         break;
       case prefs.PREF_STRING:
         if (value.indexOf('"') == 0) value = value.substring(1, value.length - 1);
-        var sString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+        let sString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
         sString.data = value;
         prefs.setComplexValue(name, Components.interfaces.nsISupportsString, sString);
         break;

@@ -1,7 +1,17 @@
+<!ENTITY fireie.switchButton.label "Fire IE">
+
 <!ENTITY fireie.urlbar.switch.tooltip1 "Switch rendering engine">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
 
 <!ENTITY fireie.options.title "Fire IE Options">
+
+<!ENTITY fireie.options.general.label "General Options">
+<!ENTITY fireie.options.switch.caption "When switch rendering engine:">
+<!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
+<!ENTITY fireie.options.shorcut.title "Shortcut Key">
+<!ENTITY fireie.options.ui.caption "User Interface">
+<!ENTITY fireie.options.showUrlBarLabel "Show url bar button label.">
+
 <!ENTITY fireie.options.filter.label "Sites Filter">
 <!ENTITY fireie.options.filter.enabled "Enable Sites Filter">
 <!ENTITY fireie.options.filter.column.rule "Rule">
@@ -9,11 +19,6 @@
 <!ENTITY fireie.options.filter.url.label "URL:">
 <!ENTITY fireie.options.filter.button.add "Add">
 <!ENTITY fireie.options.filter.button.delete "Delete">
-
-<!ENTITY fireie.options.general.label "General Options">
-<!ENTITY fireie.options.switch.caption "When switch rendering engine:">
-<!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
-<!ENTITY fireie.options.shorcut.title "Shortcut Keys">
 
 <!ENTITY fireie.options.iecompat.label "IE Compatibility Mode">
 <!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">

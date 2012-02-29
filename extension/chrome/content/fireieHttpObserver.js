@@ -6,7 +6,8 @@
 let jsm = {};
 Components.utils.import("resource://gre/modules/NetUtil.jsm", jsm);
 Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
-let {NetUtil, fireieUtils} = jsm;
+Components.utils.import("resource://gre/modules/Services.jsm", jsm);
+let {NetUtil, fireieUtils, Services} = jsm;
 
 /**
  * @namespace
@@ -129,16 +130,16 @@ var FireIEWatcher = {
    },
 
    isFilterEnabled: function() {
-      return (FireIE.getBoolPref("extensions.fireie.filter", true));
+      return (Services.prefs.getBoolPref("extensions.fireie.filter", true));
    },
 
    getPrefFilterList: function() {
-      var s = FireIE.getStrPref("extensions.fireie.filterlist", null);
+      var s = Services.prefs.getCharPref("extensions.fireie.filterlist", null);
       return (s ? s.split(" ") : "");
    },
 
    setPrefFilterList: function(list) {
-      FireIE.setStrPref("extensions.fireie.filterlist", list.join(" "));
+      Services.prefs.setCharPref("extensions.fireie.filterlist", list.join(" "));
    },
 
    isMatchURL: function(url, pattern) {

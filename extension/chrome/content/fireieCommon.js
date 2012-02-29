@@ -130,80 +130,11 @@ FireIE.endsWith = function (s, suffix) {
 }
 
 //-----------------------------------------------------------------------------
-FireIE.getBoolPref = function (prefName, defval) {
-  var result = defval;
-  var prefs = Services.prefs.getBranch("");
-  if (prefs.getPrefType(prefName) == prefs.PREF_BOOL) {
-    try {
-      result = prefs.getBoolPref(prefName);
-    } catch (e) {fireieUtils.ERROR(e)}
-  }
-  return (result);
-}
-
-FireIE.getIntPref = function (prefName, defval) {
-  var result = defval;
-  var prefs = Services.prefs.getBranch("");
-  if (prefs.getPrefType(prefName) == prefs.PREF_INT) {
-    try {
-      result = prefs.getIntPref(prefName);
-    } catch (e) {fireieUtils.ERROR(e)}
-  }
-  return (result);
-}
-
-FireIE.getStrPref = function (prefName, defval) {
-  var result = defval;
-  var prefs = Services.prefs.getBranch("");
-  if (prefs.getPrefType(prefName) == prefs.PREF_STRING) {
-    try {
-      result = prefs.getComplexValue(prefName, Components.interfaces.nsISupportsString).data;
-    } catch (e) {fireieUtils.ERROR(e)}
-  }
-  return (result);
-}
-
-FireIE.getDefaultStrPref = function (prefName, defval) {
-  var result = defval;
-  var defaults = Services.prefs.getDefaultBranch("");
-  if (defaults.getPrefType(prefName) == defaults.PREF_STRING) {
-    try {
-      result = defaults.getCharPref(prefName);
-    } catch (e) {fireieUtils.ERROR(e)}
-  }
-  return (result);
-}
-//-----------------------------------------------------------------------------
-FireIE.setBoolPref = function (prefName, value) {
-  var prefs = Services.prefs.getBranch("");
-  try {
-    prefs.setBoolPref(prefName, value);
-  } catch (e) {fireieUtils.ERROR(e)}
-}
-
-FireIE.setIntPref = function (prefName, value) {
-  var prefs = Services.prefs.getBranch("");
-  try {
-    prefs.setIntPref(prefName, value);
-  } catch (e) {fireieUtils.ERROR(e)}
-}
-
-FireIE.setStrPref = function (prefName, value) {
-  var prefs = Services.prefs.getBranch("");
-  var sString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
-  sString.data = value;
-  try {
-    prefs.setComplexValue(prefName, Components.interfaces.nsISupportsString, sString);
-  } catch (e) {fireieUtils.ERROR(e)}
-}
-
-//-----------------------------------------------------------------------------
 FireIE.getDefaultCharset = function (defval) {
-  var charset = this.getStrPref("extensions.fireie.intl.charset.default", "");
+  var charset = this.getCharPref("extensions.fireie.intl.charset.default", "");
   if (charset.length) return charset;
-  var gPrefs = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefBranch);
-  if (gPrefs.prefHasUserValue("intl.charset.default")) {
-    return gPrefs.getCharPref("intl.charset.default");
+  if (Services.prefs.prefHasUserValue("intl.charset.default")) {
+    return Services.prefs.getCharPref("intl.charset.default");
   } else {
     var strBundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
     var intlMess = strBundle.createBundle("chrome://global-platform/locale/intl.properties");

@@ -1,11 +1,19 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.fireie-status-image[engine="fx"]  {
+#fireie-urlbar-switch[engine="fx"] .fireie-status-image, #fireie-toolbar-palette-button[engine="fx"]{
   list-style-image: url("chrome://fireie/skin/engine-fx.png");
 }
 
-.fireie-status-image[engine="ie"] {
+#fireie-urlbar-switch[engine="ie"] .fireie-status-image, #fireie-toolbar-palette-button[engine="ie"]{
   list-style-image: url("chrome://fireie/skin/engine-ie.png");
+}
+
+#fireie-urlbar-switch {
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+  margin-top: -1px;
+  margin-bottom: -1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
 /* treechildren checkbox */

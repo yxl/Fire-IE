@@ -17,50 +17,12 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
   src="chrome://fireie/content/options.js" />
   <tabbox>
     <tabs>
-      <tab label="&fireie.options.filter.label;" />
       <tab label="&fireie.options.general.label;" />
+      <tab label="&fireie.options.filter.label;" />
       <tab id="iemode-tab" label="&fireie.options.iecompat.label;"
       hidden="true" />
-    </tabs>
-    <!-- Filter Tab-->
+    </tabs>		
     <tabpanels>
-      <tabpanel>
-        <vbox flex="1">
-          <hbox align="center">
-            <checkbox id="filtercbx" label="&fireie.options.filter.enabled;"
-            oncommand="FireIE.updateDialogAllStatus();" />
-            <spacer flex="1" />
-            <button id="delbtn" label="&fireie.options.filter.button.delete;"
-            disabled="true" oncommand="FireIE.delSelected();" />
-          </hbox>
-          <hbox align="center" flex="1">
-            <tree id="filterList" flex="1" width="375" height="170"
-            seltype="multiple" enableColumnDrag="true"
-            disableKeyNavigation="true" editable="true"
-            onselect="FireIE.updateDelButtonStatus();">
-              <treecols>
-                <treecol id="columnRule"
-                label="&fireie.options.filter.column.rule;" flex="1"
-                persist="width ordinal hidden" />
-                <splitter class="tree-splitter" />
-                <treecol id="columnEnabled"
-                label="&fireie.options.filter.column.enabled;" flex="0"
-                persist="width ordinal hidden" type="checkbox"
-                editable="true" />
-              </treecols>
-              <treechildren id="filterChilds"
-              ondblclick="FireIE.onClickFilterList(event);" />
-            </tree>
-          </hbox>
-          <hbox align="center">
-            <label id="urllabel" value="&fireie.options.filter.url.label;" />
-            <textbox id="urlbox" flex="1"
-            oninput="FireIE.updateAddButtonStatus();" />
-            <button id="addbtn" label="&fireie.options.filter.button.add;"
-            disabled="true" oncommand="FireIE.addNewURL();" />
-          </hbox>
-        </vbox>
-      </tabpanel>
       <!-- General Tab -->
       <tabpanel>
         <vbox flex="1">
@@ -130,6 +92,51 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
               <label value="&fireie.options.restart.descr;" />
             </hbox>
           </groupbox>
+          <groupbox>
+            <caption label="&fireie.options.ui.caption;" />
+            <hbox align="center">
+              <checkbox label="&fireie.options.showUrlBarLabel;"
+              id="showUrlBarLabel" />
+            </hbox>
+          </groupbox>					
+        </vbox>
+      </tabpanel>
+			<!-- Filter Tab-->			
+      <tabpanel>
+        <vbox flex="1">
+          <hbox align="center">
+            <checkbox id="filtercbx" label="&fireie.options.filter.enabled;"
+            oncommand="FireIE.updateDialogAllStatus();" />
+            <spacer flex="1" />
+            <button id="delbtn" label="&fireie.options.filter.button.delete;"
+            disabled="true" oncommand="FireIE.delSelected();" />
+          </hbox>
+          <hbox align="center" flex="1">
+            <tree id="filterList" flex="1" width="375" height="170"
+            seltype="multiple" enableColumnDrag="true"
+            disableKeyNavigation="true" editable="true"
+            onselect="FireIE.updateDelButtonStatus();">
+              <treecols>
+                <treecol id="columnRule"
+                label="&fireie.options.filter.column.rule;" flex="1"
+                persist="width ordinal hidden" />
+                <splitter class="tree-splitter" />
+                <treecol id="columnEnabled"
+                label="&fireie.options.filter.column.enabled;" flex="0"
+                persist="width ordinal hidden" type="checkbox"
+                editable="true" />
+              </treecols>
+              <treechildren id="filterChilds"
+              ondblclick="FireIE.onClickFilterList(event);" />
+            </tree>
+          </hbox>
+          <hbox align="center">
+            <label id="urllabel" value="&fireie.options.filter.url.label;" />
+            <textbox id="urlbox" flex="1"
+            oninput="FireIE.updateAddButtonStatus();" />
+            <button id="addbtn" label="&fireie.options.filter.button.add;"
+            disabled="true" oncommand="FireIE.addNewURL();" />
+          </hbox>
         </vbox>
       </tabpanel>
       <!-- IE Compatibility Mode -->

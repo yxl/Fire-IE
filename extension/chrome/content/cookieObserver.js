@@ -63,8 +63,10 @@ FireIE.IECookieManager = {
     let cookieName = ""; // cookieName不能为null
     let cookieData = cookie2.name + "=" + cookie2.value +
       "; domain=" + cookie2.host + 
-      "; path=" + cookie2.path +
-      "; expires=" + this.getExpiresString(cookie2.expires);
+      "; path=" + cookie2.path;
+    if (cookie2.expires > 1) {
+      cookieData += "; expires=" + this.getExpiresString(cookie2.expires);
+    }
     let ret = InternetSetCookieW(url, cookieName, cookieData);
     if (!ret) {
       fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' name:'+ cookieName + ' data:' + cookieData);
@@ -77,10 +79,6 @@ FireIE.IECookieManager = {
   },
   
   getExpiresString: function(expiresInSeconds) {
-    // expiresInSecondsy为0代表session Cookie，此处为了测试将session cookie变为普通cookie
-    if (expiresInSeconds == 0) {
-      return "Tue, 28-Feb-2014 17:14:26 GMT";
-    }
     // Convert expires seconds to date string of the format "Tue, 28 Feb 2012 17:14:26 GMT"
     let dateString = new Date(expiresInSeconds * 1000).toGMTString();
     // Convert "Tue, 28 Feb 2012 17:14:26 GMT" to "Tue, 28-Feb-2012 17:14:26 GMT"

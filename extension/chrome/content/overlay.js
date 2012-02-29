@@ -134,32 +134,37 @@ FireIE.switchTabEngine = function(aTab) {
 	}
 }
 
-FireIE.setUrlbarSwitchButtonStatus = function(isIEEngine) {
+FireIE.setUrlBarSwitchButtonStatus = function(isIEEngine) {
 	// Firefox特有页面禁止内核切换
-	var url = FireIE.getPluginObjectURL();
-	var btn = document.getElementById("fireie-urlbar-switch");
+	let url = FireIE.getPluginObjectURL();
+	let btn = document.getElementById("fireie-urlbar-switch");
 	if (btn) {
 		btn.disabled = FireIE.isFirefoxOnly(url);
-		btn.style.visibility = 'visible';
-	}
-		
-	// 更新内核切换按钮图标
-	var image = document.getElementById("fireie-urlbar-switch-image");
-	if (image) {
-		image.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
+		btn.style.visibility = "visible";
+		btn.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
 	}
 
 	// 更新内核切换按钮文字
-	var label = document.getElementById("fireie-urlbar-switch-label");
+	let label = document.getElementById("fireie-urlbar-switch-label");
 	if (label) {
-		var labelId = isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx";
+		let labelId = isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx";
 		label.value = Strings.global.GetStringFromName(labelId);
 	}
 	// 更新内核切换按钮tooltip文字
-	var tooltip = document.getElementById("fireie-urlbar-switch-tooltip2");
+	let tooltip = document.getElementById("fireie-urlbar-switch-tooltip2");
 	if (tooltip) {
-		var tooltipId = isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx";
+		let tooltipId = isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx";
 		tooltip.value = Strings.global.GetStringFromName(tooltipId);
+	}
+}
+
+// 工具栏按钮的状态与地址栏状态相同
+FireIE.updateToolBar = function() {
+	let urlbarButton = document.getElementById("fireie-urlbar-switch");
+	let toolbarButton = document.getElementById("fireie-toolbar-palette-button");
+	if (urlbarButton && toolbarButton) {
+		toolbarButton.disabled = urlbarButton.disabled;
+		toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
 	}
 }
 
@@ -198,7 +203,7 @@ FireIE.getHandledURL = function(url, isModeIE) {
 	if (FireIE.isIEEngine() && (!FireIE.startsWith(url, "about:")) && (!FireIE.startsWith(url, "view-source:"))) {
 		if (FireIE.isValidURL(url) || FireIE.isValidDomainName(url)) {
 			var isBlank = (FireIE.getActualUrl(gBrowser.currentURI.spec) == "about:blank");
-			var handleUrlBar = FireIE.getBoolPref("extensions.fireie.handleUrlBar", false);
+			var handleUrlBar = Services.prefs.getBoolPref("extensions.fireie.handleUrlBar", false);
 			var isSimilar = (FireIE.getUrlDomain(FireIE.getPluginObjectURL()) == FireIE.getUrlDomain(url));
 			if (isBlank || handleUrlBar || isSimilar) return FireIE.getfireieURL(url);
 		}
@@ -220,7 +225,7 @@ FireIE.isFirefoxOnly = function(url) {
 
 /** 更新地址栏显示*/
 FireIE.updateUrlBar = function() {
-	FireIE.setUrlbarSwitchButtonStatus(FireIE.isIEEngine());
+	FireIE.setUrlBarSwitchButtonStatus(FireIE.isIEEngine());
 	
 	if (!gURLBar || !FireIE.isIEEngine()) return;
 	if (gBrowser.userTypedValue) {
@@ -301,6 +306,7 @@ FireIE.updateInterface = function() {
 	FireIE.updateStopReloadButtons();
 	FireIE.updateSecureLockIcon();
 	FireIE.updateUrlBar();
+	FireIE.updateToolBar();
 }
 
 /** 更新fireie相关的界面*/
@@ -635,6 +641,7 @@ FireIE.hookCodeAll = function() {
 FireIE.addEventAll = function() {
 	FireIE.observerService.addObserver(FireIE.HttpObserver, 'http-on-modify-request', false);
 	FireIE.CookieObserver.register();
+	FireIE.Observer.register();
 
 	FireIE.addEventListener(window, "DOMContentLoaded", FireIE.onPageShowOrLoad);
 	FireIE.addEventListener(window, "pageshow", FireIE.onPageShowOrLoad);
@@ -651,6 +658,7 @@ FireIE.addEventAll = function() {
 FireIE.removeEventAll = function() {
 	FireIE.observerService.removeObserver(FireIE.HttpObserver, 'http-on-modify-request');
 	FireIE.CookieObserver.unregister();
+	FireIE.Observer.unregister();
 	
 	FireIE.removeEventListener(window, "DOMContentLoaded", FireIE.onPageShowOrLoad);
 	FireIE.removeEventListener(window, "pageshow", FireIE.onPageShowOrLoad);
@@ -691,6 +699,7 @@ FireIE.init = function() {
 	FireIE.updateAll();
 	
 	FireIE.setupShortcut();
+	FireIE.setupUrlBar();
 }
 
 FireIE.destroy = function() {
@@ -705,29 +714,57 @@ FireIE.setupShortcut = function() {
 		let keyItem = document.getElementById('key_fireieToggle');
 		if (keyItem) {
 			// Default key is "C"
-			keyItem.setAttribute('key', Services.prefs.getCharPref('extensions.fireie.shortcut.key'));
+			keyItem.setAttribute('key', Services.prefs.getCharPref('extensions.fireie.shortcut.key', 'C'));
 			// Default modifiers is "alt"
-			keyItem.setAttribute('modifiers', Services.prefs.getCharPref('extensions.fireie.shortcut.modifiers'));
+			keyItem.setAttribute('modifiers', Services.prefs.getCharPref('extensions.fireie.shortcut.modifiers', 'alt'));
 		}
 	} catch (e) {
 		fireieUtils.ERROR(e);
 	}
 }
 
-FireIE.browse = function(url, feature) {
-	var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
-	if (windowMediator) {
-		var w = windowMediator.getMostRecentWindow('navigator:browser');
-		if (w && !w.closed) {
-			var browser = w.getBrowser();
-			var b = (browser.selectedTab = browser.addTab()).linkedBrowser;
-			b.stop();
-			b.webNavigation.loadURI(url, Components.interfaces.nsIWebNavigation.FLAGS_NONE, null, null, null);
-		} else {
-			window.open(url, "_blank", features || null)
+// 设置地址栏按钮
+FireIE.setupUrlBar = function() {
+	let showUrlBarLabel = Services.prefs.getBoolPref("extensions.fireie.showUrlBarLabel", true);
+	document.getElementById("fireie-urlbar-switch-label").hidden = !showUrlBarLabel;
+}
+
+const PREF_BRANCH = "extensions.fireie.";
+
+/**
+ * Observer monitering the preferences.
+ */
+FireIE.Observer = {
+	_branch: null,
+
+	observe: function(subject, topic, data) {
+		if (topic === "nsPref:changed") {
+			let prefName = PREF_BRANCH + data;
+			if (prefName.indexOf("shortcut.") != -1) {
+				FireIE.setupShortcut();
+			} else if (prefName === "extensions.fireie.showUrlBarLabel") {
+				FireIE.setupUrlBar();
+			}
+		}
+	},
+
+	register: function() {	
+		this._branch = Services.prefs.getBranch(PREF_BRANCH);
+		if (this._branch) {
+			// Now we queue the interface called nsIPrefBranch2. This interface is described as: 
+			// "nsIPrefBranch2 allows clients to observe changes to pref values."
+			this._branch.QueryInterface(Components.interfaces.nsIPrefBranch2);
+			this._branch.addObserver("", this, false);
+		}
+		
+	},
+
+	unregister: function() {     
+		if (this._branch) {
+			this._branch.removeObserver("", this);
 		}
 	}
-}
+};
 
 window.addEventListener("load", FireIE.init, false);
 window.addEventListener("unload", FireIE.destroy, false);

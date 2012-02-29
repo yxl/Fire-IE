@@ -1,7 +1,17 @@
+<!ENTITY fireie.switchButton.label "解雇IE">
+
 <!ENTITY fireie.urlbar.switch.tooltip1 "切换浏览模式">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击设置 解雇IE 选项">
 
 <!ENTITY fireie.options.title "解雇IE 选项">
+
+<!ENTITY fireie.options.general.label "常规">
+<!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
+<!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
+<!ENTITY fireie.options.shorcut.title "快捷键">
+<!ENTITY fireie.options.ui.caption "用户界面">
+<!ENTITY fireie.options.showUrlBarLabel "显示地址栏按钮文字">
+
 <!ENTITY fireie.options.filter.label "网址过滤">
 <!ENTITY fireie.options.filter.enabled "总是使用 IE Tab 浏览以下网址">
 <!ENTITY fireie.options.filter.column.rule "规则">
@@ -9,11 +19,6 @@
 <!ENTITY fireie.options.filter.url.label "加入网址:">
 <!ENTITY fireie.options.filter.button.add "添加">
 <!ENTITY fireie.options.filter.button.delete "删除">
-
-<!ENTITY fireie.options.general.label "功能设置">
-<!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
-<!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
-<!ENTITY fireie.options.shorcut.title "快捷键">
 
 <!ENTITY fireie.options.iecompat.label "IE兼容模式">
 <!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">

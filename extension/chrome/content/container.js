@@ -5,7 +5,8 @@
  * ***** END LICENSE BLOCK ***** */
 var jsm = {};
 Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
-var {fireieUtils} = jsm;
+Components.utils.import("resource://gre/modules/Services.jsm", jsm);
+var {fireieUtils, Services} = jsm;
 
 var FireIEContainer = {
 	init: function() {
@@ -64,9 +65,9 @@ var FireIEContainer = {
 	_isInPrivateBrowsingMode: function() {
 		var pbs;
 		try { pbs = Components.classes["@mozilla.org/privatebrowsing;1"].getService(Components.interfaces.nsIPrivateBrowsingService); } catch (e) {}
-		var privatebrowsingwarning = pbs && pbs.privateBrowsingEnabled && FireIE.getBoolPref("extensions.fireie.privatebrowsingwarning", true);
+		var privatebrowsingwarning = pbs && pbs.privateBrowsingEnabled && Services.prefs.getBoolPref("extensions.fireie.privatebrowsingwarning", true);
 		
-		if ( privatebrowsingwarning ) {
+		if (privatebrowsingwarning) {
 			var cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
 			var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 			var cookieManager = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager);
