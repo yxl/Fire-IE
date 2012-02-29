@@ -63,6 +63,16 @@ FireIE.setOptions = function(quiet) {
 
   //general
   FireIE.setBoolPref("extensions.fireie.handleUrlBar", document.getElementById('handleurl').checked);
+	let newKey = document.getElementById('shortcut-key').value;
+	if (FireIE.getStrPref("extensions.fireie.shortcut.key") != newKey) {
+		requiresRestart = true;
+		FireIE.setStrPref("extensions.fireie.shortcut.key", newKey);
+	}
+	let newModifiers = document.getElementById('shortcut-modifiers').value;
+	if (FireIE.getStrPref("extensions.fireie.shortcut.modifiers") != newModifiers) {
+		requiresRestart = true;
+		FireIE.setStrPref("extensions.fireie.shortcut.modifiers", newModifiers);
+	}	
 
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -186,7 +196,9 @@ FireIE.initDialog = function() {
 
   // general 功能设置
   document.getElementById('handleurl').checked = FireIE.getBoolPref("extensions.fireie.handleUrlBar", false);
-
+	document.getElementById('shortcut-modifiers').value = FireIE.getStrPref("extensions.fireie.shortcut.modifiers", "alt");
+	document.getElementById('shortcut-key').value = FireIE.getStrPref("extensions.fireie.shortcut.key", "C");
+	
   // updateStatus
   FireIE.updateDialogAllStatus();
   FireIE.updateApplyButton(false);

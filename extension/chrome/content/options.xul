@@ -19,7 +19,8 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
     <tabs>
       <tab label="&fireie.options.filter.label;" />
       <tab label="&fireie.options.general.label;" />
-      <tab id="iemode-tab" label="&fireie.options.iecompat.label;" hidden="true"/>
+      <tab id="iemode-tab" label="&fireie.options.iecompat.label;"
+      hidden="true" />
     </tabs>
     <!-- Filter Tab-->
     <tabpanels>
@@ -70,6 +71,65 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
               id="handleurl" />
             </hbox>
           </groupbox>
+          <!-- Sets Shortcut key -->
+          <groupbox id="shortcut">
+            <caption label="&fireie.options.shorcut.title;" />
+            <hbox>
+              <menulist id="shortcut-modifiers">
+                <menupopup>
+									<menuitem value="alt" label="Alt" />
+                  <menuitem value="control" label="Ctrl" />
+                  <menuitem value="control shift" label="Ctrl + Shift" />
+                  <menuitem value="control alt" label="Ctrl + Alt" />
+                  <menuitem value="alt shift" label="Alt + Shift" />
+                </menupopup>
+              </menulist>
+              <label>+</label>
+              <menulist id="shortcut-key">
+                <menupopup>
+                  <menuitem value="A" label="A" />
+                  <menuitem value="B" label="B" />
+                  <menuitem value="C" label="C" />
+                  <menuitem value="D" label="D" />
+                  <menuitem value="E" label="E" />
+                  <menuitem value="F" label="F" />
+                  <menuitem value="G" label="G" />
+                  <menuitem value="H" label="H" />
+                  <menuitem value="I" label="I" />
+                  <menuitem value="J" label="J" />
+                  <menuitem value="K" label="K" />
+                  <menuitem value="L" label="L" />
+                  <menuitem value="M" label="M" />
+                  <menuitem value="N" label="N" />
+                  <menuitem value="O" label="O" />
+                  <menuitem value="P" label="P" />
+                  <menuitem value="Q" label="Q" />
+                  <menuitem value="R" label="R" />
+                  <menuitem value="S" label="S" />
+                  <menuitem value="T" label="T" />
+                  <menuitem value="U" label="U" />
+                  <menuitem value="V" label="V" />
+                  <menuitem value="W" label="W" />
+                  <menuitem value="X" label="X" />
+                  <menuitem value="Y" label="Y" />
+                  <menuitem value="Z" label="Z" />
+                  <menuitem value="0" label="0" />
+                  <menuitem value="1" label="1" />
+                  <menuitem value="2" label="2" />
+                  <menuitem value="3" label="3" />
+                  <menuitem value="4" label="4" />
+                  <menuitem value="5" label="5" />
+                  <menuitem value="6" label="6" />
+                  <menuitem value="7" label="7" />
+                  <menuitem value="8" label="8" />
+                  <menuitem value="9" label="9" />
+                </menupopup>
+              </menulist>
+            </hbox>
+            <hbox>
+              <label value="&fireie.options.restart.descr;" />
+            </hbox>
+          </groupbox>
         </vbox>
       </tabpanel>
       <!-- IE Compatibility Mode -->
@@ -86,7 +146,8 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
                 <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
                 hidden="true" value="ie9mode" />
               </radiogroup>
-              <label style="margin-top:20px">&fireie.options.iecompat.desc;</label>
+              <label style="margin-top:20px">
+              &fireie.options.restart.descr;</label>
             </vbox>
           </groupbox>
         </vbox>

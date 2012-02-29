@@ -688,7 +688,9 @@ FireIE.init = function() {
 	
 	FireIE.hookCodeAll();
 	FireIE.addEventAll();
-	FireIE.updateAll();	
+	FireIE.updateAll();
+	
+	FireIE.setupShortcut();
 }
 
 FireIE.destroy = function() {
@@ -697,6 +699,20 @@ FireIE.destroy = function() {
 	FireIE.removeEventAll();
 }
 
+// 设置内核切换快捷键
+FireIE.setupShortcut = function() {
+	try {
+		let keyItem = document.getElementById('key_fireieToggle');
+		if (keyItem) {
+			// Default key is "C"
+			keyItem.setAttribute('key', Services.prefs.getCharPref('extensions.fireie.shortcut.key'));
+			// Default modifiers is "alt"
+			keyItem.setAttribute('modifiers', Services.prefs.getCharPref('extensions.fireie.shortcut.modifiers'));
+		}
+	} catch (e) {
+		fireieUtils.ERROR(e);
+	}
+}
 
 FireIE.browse = function(url, feature) {
 	var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
