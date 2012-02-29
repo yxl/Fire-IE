@@ -165,6 +165,8 @@ Exit:
 			case 'V': // Ctrl+V, Paste
 			case 'X': // Ctrl+X, Cut
 			case 'A': // Ctrl+A, Select ALl
+			case VK_HOME: // Ctrl+HOME, Scroll to Top
+			case VK_END:  // Ctrl+END, Scroll to end
 				return FALSE;
 			default:
 				return TRUE;

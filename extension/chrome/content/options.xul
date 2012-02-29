@@ -3,101 +3,113 @@
 -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://fireie/skin/fireie.css" type="text/css"?>
-
 <!DOCTYPE window SYSTEM "chrome://fireie/locale/fireie.dtd">
-
 <dialog id="fireie-dialog"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      autosize="true"
-      resizable="no"
-      persist="screenX screenY"
-      buttons="accept,cancel,extra1,extra2"
-      onload="FireIE.init();"
-      onunload="FireIE.destory();"
-			onclose="FireIE.close();"
-      ondialogaccept="FireIE.setOptions(false);"
-      ondialogextra1="FireIE.setOptions(false);"
-      title="&fireie.options.title;">
-
-   <script type="application/x-javascript" src="chrome://fireie/content/fireieCommon.js"/>
-   <script type="application/x-javascript" src="chrome://fireie/content/options.js"/>
-
-   <tabbox>
-      <tabs>
-         <tab label="&fireie.options.filter.label;"/>
-         <tab label="&fireie.options.general.label;"/>
-      </tabs>
-
-      <!-- Filter Tab 网址过滤-->
-      <tabpanels>
-         <tabpanel>
-            <vbox flex="1">
-               <hbox align="center">
-                  <checkbox id="filtercbx" label="&fireie.options.filter.enabled;"
-                     oncommand="FireIE.updateDialogAllStatus();"/>
-                  <spacer flex="1"/>
-                  <button id="delbtn"
-                     label="&fireie.options.filter.button.delete;"
-                     disabled="true"
-                     oncommand="FireIE.delSelected();"/>
-               </hbox>
-
-               <hbox align="center" flex="1">
-         		<tree id="filterList" flex="1" width="375" height="170" seltype="multiple"
-         		      enableColumnDrag="true" disableKeyNavigation="true" editable="true"
-         		      onselect="FireIE.updateDelButtonStatus();">
-         			<treecols>
-         				<treecol id="columnRule" label="&fireie.options.filter.column.rule;" flex="1" persist="width ordinal hidden"/>
-         				<splitter class="tree-splitter"/>
-         				<treecol id="columnEnabled" label="&fireie.options.filter.column.enabled;" flex="0" persist="width ordinal hidden" type="checkbox" editable="true"/>
-         			</treecols>
-         			<treechildren id="filterChilds" ondblclick="FireIE.onClickFilterList(event);"/>
-         		</tree>
-               </hbox>
-
-               <hbox align="center">
-               <label id="urllabel" value="&fireie.options.filter.url.label;"/>
-                  <textbox id="urlbox" flex="1"
-                     oninput="FireIE.updateAddButtonStatus();"/>
-                  <button id="addbtn"
-                     label="&fireie.options.filter.button.add;"
-                     disabled="true"
-                     oncommand="FireIE.addNewURL();"/>
-               </hbox>
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+autosize="true" resizable="no" persist="screenX screenY"
+buttons="accept,cancel,extra1,extra2" onload="FireIE.init();"
+onunload="FireIE.destory();" onclose="FireIE.close();"
+ondialogaccept="FireIE.setOptions(false);"
+ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
+  <script type="application/x-javascript"
+  src="chrome://fireie/content/fireieCommon.js" />
+  <script type="application/x-javascript"
+  src="chrome://fireie/content/options.js" />
+  <tabbox>
+    <tabs>
+      <tab label="&fireie.options.filter.label;" />
+      <tab label="&fireie.options.general.label;" />
+      <tab id="iemode-tab" label="&fireie.options.iecompat.label;" hidden="true"/>
+    </tabs>
+    <!-- Filter Tab-->
+    <tabpanels>
+      <tabpanel>
+        <vbox flex="1">
+          <hbox align="center">
+            <checkbox id="filtercbx" label="&fireie.options.filter.enabled;"
+            oncommand="FireIE.updateDialogAllStatus();" />
+            <spacer flex="1" />
+            <button id="delbtn" label="&fireie.options.filter.button.delete;"
+            disabled="true" oncommand="FireIE.delSelected();" />
+          </hbox>
+          <hbox align="center" flex="1">
+            <tree id="filterList" flex="1" width="375" height="170"
+            seltype="multiple" enableColumnDrag="true"
+            disableKeyNavigation="true" editable="true"
+            onselect="FireIE.updateDelButtonStatus();">
+              <treecols>
+                <treecol id="columnRule"
+                label="&fireie.options.filter.column.rule;" flex="1"
+                persist="width ordinal hidden" />
+                <splitter class="tree-splitter" />
+                <treecol id="columnEnabled"
+                label="&fireie.options.filter.column.enabled;" flex="0"
+                persist="width ordinal hidden" type="checkbox"
+                editable="true" />
+              </treecols>
+              <treechildren id="filterChilds"
+              ondblclick="FireIE.onClickFilterList(event);" />
+            </tree>
+          </hbox>
+          <hbox align="center">
+            <label id="urllabel" value="&fireie.options.filter.url.label;" />
+            <textbox id="urlbox" flex="1"
+            oninput="FireIE.updateAddButtonStatus();" />
+            <button id="addbtn" label="&fireie.options.filter.button.add;"
+            disabled="true" oncommand="FireIE.addNewURL();" />
+          </hbox>
+        </vbox>
+      </tabpanel>
+      <!-- General Tab -->
+      <tabpanel>
+        <vbox flex="1">
+          <groupbox>
+            <caption label="&fireie.options.switch.caption;" />
+            <hbox align="center">
+              <checkbox label="&fireie.options.switch.handleurl;"
+              id="handleurl" />
+            </hbox>
+          </groupbox>
+        </vbox>
+      </tabpanel>
+      <!-- IE Compatibility Mode -->
+      <tabpanel>
+        <vbox flex="1">
+          <groupbox>
+            <caption label="&fireie.options.iecompat.label;" />
+            <vbox>
+              <radiogroup id="iemode">
+                <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
+                hidden="true" value="ie7mode" />
+                <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
+                hidden="true" value="ie8mode" />
+                <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
+                hidden="true" value="ie9mode" />
+              </radiogroup>
+              <label style="margin-top:20px">&fireie.options.iecompat.desc;</label>
             </vbox>
-         </tabpanel>
-
-         <!-- General Tab 功能设置-->
-         <tabpanel>
-            <vbox flex="1">
-               <groupbox><caption label="&fireie.options.switch.caption;"/>
-                  <hbox align="center">
-                  <checkbox label="&fireie.options.switch.handleurl;" id="handleurl"/>
-                  </hbox>
-               </groupbox>					 
-            </vbox>
-         </tabpanel>
-
-      </tabpanels>
-   </tabbox>
-
-   <hbox>
-      <button dlgtype="extra2" id="mySettingManager" type="menu" label="&fireie.options.manager;" popup="options">
-         <menupopup>
-            <menuitem id="import"  label="&fireie.options.import;"  oncommand="FireIE.importoptions();"/>
-            <menuitem id="export"  label="&fireie.options.export;"  oncommand="FireIE.exportoptions();"/>
-            <menuseparator/>
-            <menuitem id="default" label="&fireie.options.default;" oncommand="FireIE.restoreDefaultoptions();"/>
-         </menupopup>
-      </button>
-      <spacer flex="1"/>
-      <button dlgtype="accept" id="myAccept"/>
-      <button dlgtype="extra1" id="myApply" label="&fireie.options.apply;"/>
-      <button dlgtype="cancel" id="myCancel"/>
-   </hbox>
-
-   <popupset>
-
-   </popupset>
-
+          </groupbox>
+        </vbox>
+      </tabpanel>
+    </tabpanels>
+  </tabbox>
+  <hbox>
+    <button dlgtype="extra2" id="mySettingManager" type="menu"
+    label="&fireie.options.manager;" popup="options">
+      <menupopup>
+        <menuitem id="import" label="&fireie.options.import;"
+        oncommand="FireIE.importoptions();" />
+        <menuitem id="export" label="&fireie.options.export;"
+        oncommand="FireIE.exportoptions();" />
+        <menuseparator />
+        <menuitem id="default" label="&fireie.options.default;"
+        oncommand="FireIE.restoreDefaultoptions();" />
+      </menupopup>
+    </button>
+    <spacer flex="1" />
+    <button dlgtype="accept" id="myAccept" />
+    <button dlgtype="extra1" id="myApply" label="&fireie.options.apply;" />
+    <button dlgtype="cancel" id="myCancel" />
+  </hbox>
+  <popupset></popupset>
 </dialog>

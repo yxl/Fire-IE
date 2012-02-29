@@ -14,6 +14,12 @@
 <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
 <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
 
+<!ENTITY fireie.options.iecompat.label "IE Compatibility Mode">
+<!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie8 "IE8 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie9 "IE9 Standards Mode">
+<!ENTITY iemode.settings.iecompat.desc "Restart Firefox to take effect.">
+
 <!ENTITY fireie.options.apply "Apply">
 <!ENTITY fireie.options.manager "Options Manager">
 <!ENTITY fireie.options.default "Restore Defaults">

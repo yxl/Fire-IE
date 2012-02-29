@@ -14,6 +14,12 @@
 <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
 
+<!ENTITY fireie.options.iecompat.label "IE兼容模式">
+<!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">
+<!ENTITY fireie.options.iecompat.ie8 "IE8标准模式">
+<!ENTITY fireie.options.iecompat.ie9 "IE9标准模式">
+<!ENTITY fireie.options.iecompat.desc "重启火狐生效">
+
 <!ENTITY fireie.options.apply "应用">
 <!ENTITY fireie.options.manager "选项管理">
 <!ENTITY fireie.options.default "还原默认值">
