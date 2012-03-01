@@ -48,7 +48,7 @@ namespace HttpMonitor
 			LPWSTR lpBuffer = (LPWSTR)VirtualAlloc( NULL, nBufLen * sizeof(WCHAR), MEM_COMMIT, PAGE_READWRITE );
 			if ( !lpBuffer ) break;
 
-			if ( wcsncpy_s( lpBuffer, nBufLen, pStart, nSize) )
+			if (wcsncpy_s( lpBuffer, nBufLen, pStart, nSize))
 			{
 				VirtualFree( lpBuffer, 0, MEM_RELEASE);
 				break;
@@ -174,7 +174,7 @@ namespace HttpMonitor
 
 	void MonitorSink::SetCustomHeaders(LPWSTR *pszAdditionalHeaders)
 	{
-		if ( pszAdditionalHeaders )
+		if (pszAdditionalHeaders)
 		{
 			static const WCHAR REFERER [] = L"Referer:";
 
@@ -188,9 +188,9 @@ namespace HttpMonitor
 				}
 
 				// 如果有 m_strUrlContext, 说明这是新窗口, 需要替 IE 加上 Referer
-				if (! m_pIEHostWindow->m_strUrlContext.IsEmpty() )
+				if (!m_pIEHostWindow->m_strUrlContext.IsEmpty())
 				{
-					if (StrStrIW( *pszAdditionalHeaders, REFERER))
+					if (StrStrIW(*pszAdditionalHeaders, REFERER))
 					{
 						// 已经有 Referer 了, 那就不用了
 						if (!m_bIsSubRequest)
@@ -209,7 +209,7 @@ namespace HttpMonitor
 
 
 				size_t nLen = strHeaders.GetLength() + 2;
-				if ( *pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen*sizeof(WCHAR)) )
+				if (*pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen*sizeof(WCHAR)))
 				{
 					wcscpy_s(*pszAdditionalHeaders, nLen, strHeaders);
 				}
@@ -221,7 +221,7 @@ namespace HttpMonitor
 			{
 				m_strReferer = lpReferer;
 
-				VirtualFree( lpReferer, 0, MEM_RELEASE);
+				VirtualFree(lpReferer, 0, MEM_RELEASE);
 			}
 		}
 	}
@@ -315,6 +315,7 @@ namespace HttpMonitor
 			if (lpCookies)
 			{
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
+				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s"), m_strURL, strCookie);
 				CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
 				VirtualFree( lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;

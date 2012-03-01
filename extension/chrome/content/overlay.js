@@ -484,7 +484,7 @@ FireIE.clickSwitchButton = function(e) {
 	
 	// 右键点击显示选项菜单
 	else if (e.button == 2) {
-		document.getElementById("fireie-urlbar-switch-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
+		document.getElementById("fireie-switch-button-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
 	}
 	
 	e.preventDefault();

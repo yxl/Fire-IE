@@ -51,10 +51,10 @@
 	engine="fx" />
 </toolbarpalette>
 
-<!-- popup menus -->
+<!-- Popup menus -->
 <popupset>
-	<!-- urlbar switch button context menu -->
-	<menupopup id="fireie-urlbar-switch-context-menu">
+	<!-- Switch button context menu -->
+	<menupopup id="fireie-switch-button-context-menu">
 		<menuitem label="&fireie.options.title;" oncommand="FireIE.openOptionsDialog()"/>
 	</menupopup>
 </popupset>
