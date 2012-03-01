@@ -52,7 +52,7 @@ namespace HttpMonitor
 		/**
 		* 为了保证兼容性，在不确定能否正确登录的时候，屏蔽 IAuthenticate 接口，这样，IE 会弹出自己的 login 对话框。
 		*/
-		static HRESULT WINAPI QueryIAuthenticate(void* pv, REFIID riid, LPVOID* ppv, DWORD dw);
+		static HRESULT WINAPI QueryIAuthenticate(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw);
 
 	private:
 		static CIEHostWindow* s_pLastIEHostWindow;

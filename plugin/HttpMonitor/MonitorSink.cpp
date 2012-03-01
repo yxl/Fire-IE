@@ -388,7 +388,7 @@ namespace HttpMonitor
 	}
 
 
-	HRESULT WINAPI MonitorSink::QueryIAuthenticate(void* pv, REFIID riid, LPVOID* ppv, DWORD dw)
+	HRESULT WINAPI MonitorSink::QueryIAuthenticate(void* pv, REFIID riid, LPVOID* ppv, DWORD_PTR dw)
 	{
 		* ppv = NULL;
 
