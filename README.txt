@@ -1,15 +1,20 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * This Source Code is subject to the terms of the Mozilla Public License
- * version 2.0 (the "License"). You can obtain a copy of the License at
- * http://mozilla.org/MPL/2.0/.
- *
- * We borrowed much code from IE Tab+(http://coralietab.mozdev.org/) and 
- * IE Tab(http://code.google.com/p/ietab/). 
- *
- * Contributor(s):
- *  Yuan Xulei <hi@yxl.name>
- *
- * ***** END LICENSE BLOCK ***** */
+----------------- BEGIN LICENSE BLOCK -------------------------
+Fire-IE is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Fire-IE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+   Contributor(s):
+    Yuan Xulei <hi@yxl.name>
+    Wei Deng
+------------------- END LICENSE BLOCK -------------------------
  
 A Firefox add-on let you switch to IE engine in one click and give up your Internet Explorer.
 
