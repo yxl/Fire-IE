@@ -17,10 +17,14 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "StdAfx.h"
 #include "AtlDepHook.h"
 
-#include "external\detours.h"
-#pragma comment(lib, "external\\lib\\detours.lib")
+#include "external\MinHook.h"
+#if defined _M_X64
+#pragma comment(lib, "external\\MinHook.64.lib")
+#elif defined _M_IX86
+#pragma comment(lib, "external\\MinHook.32.lib")
+#endif
 
-#define DEFINE_FUNCTION_INFO(module, func) {module, #func, (PVOID *)&func##_original, (PVOID)func##_hook, FALSE}
+#define DEFINE_FUNCTION_INFO(module, func) {module, #func, NULL, (PVOID *)&func##_original, (PVOID)func##_hook, FALSE}
 
 namespace BrowserHook
 {
@@ -58,6 +62,7 @@ namespace BrowserHook
 	{
 		LPCSTR  szFunctionModule;
 		LPCSTR  szFunctionName;
+		PVOID   pTargetFunction;
 		PVOID*  ppOriginalFunction;
 		PVOID   pHookFunction;
 		BOOL    bSucceeded;
@@ -124,8 +129,10 @@ namespace BrowserHook
 
 	void AtlDepHook::Install(void)
 	{
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
+		if (MH_Initialize() != MH_OK)
+		{
+			return;
+		}
 
 		for(int i = 0; i < s_FunctionsCount; ++i)
 		{
@@ -144,38 +151,39 @@ namespace BrowserHook
 				continue;
 			}
 
-			*(info.ppOriginalFunction) = GetProcAddress(hModule, info.szFunctionName);
-			if (*(info.ppOriginalFunction) == NULL)
+			info.pTargetFunction = GetProcAddress(hModule, info.szFunctionName);
+			if (info.pTargetFunction == NULL)
 			{
 				TRACE("[fireie] Cannot GetProcAddress of %s", info.szFunctionName);
 				continue;
 			}
-
-			if (NO_ERROR != DetourAttach(info.ppOriginalFunction, info.pHookFunction))
+			if (MH_CreateHook(info.pTargetFunction, info.pHookFunction, info.ppOriginalFunction) != MH_OK)
 			{
-				TRACE("[fireie] DetourAttach failed! Module: %s  Function: %s", info.szFunctionModule, info.szFunctionName);
+				TRACE("[fireie] MH_CreateHook failed! Module: %s  Function: %s", info.szFunctionModule, info.szFunctionName);
+				continue;
+			}
+			// Enable the hook
+			if (MH_EnableHook(info.pTargetFunction) != MH_OK)
+			{
+				TRACE("[fireie] MH_EnableHook failed! Module: %s  Function: %s", info.szFunctionModule, info.szFunctionName);
 				continue;
 			}
 			info.bSucceeded = TRUE;
 		}
 
-		DetourTransactionCommit();
 	}
 
 	void AtlDepHook::Uninstall(void)
 	{
-		DetourTransactionBegin();
-		DetourUpdateThread(GetCurrentThread());
-
 		for(int i = 0; i < s_FunctionsCount; ++i)
 		{
 			FunctionInfo& info = s_Functions[i];
 			if (*info.ppOriginalFunction != NULL)
 			{
-				DetourDetach(info.ppOriginalFunction, info.pHookFunction);
+				MH_DisableHook(info.pTargetFunction);
 			}
 		}
 
-		DetourTransactionCommit();
+		MH_Uninitialize();
 	}
 }
