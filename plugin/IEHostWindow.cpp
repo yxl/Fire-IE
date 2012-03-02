@@ -211,7 +211,6 @@ BOOL CIEHostWindow::OnInitDialog()
 
 void CIEHostWindow::InitIE()
 {
-	SetProcessDEPPolicy(2);
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Add(GetSafeHwnd(), this);
 	s_csIEWindowMap.Unlock();
