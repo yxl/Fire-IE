@@ -56,7 +56,7 @@ let InternetSetCookieW = wininetDll.declare('InternetSetCookieW',
     WinABI,
     ctypes.int32_t,            // BOOL
     ctypes.jschar.ptr,  // LPCTSTR lpszUrl
-    ctypes.jschar.ptr,  // LPCTSTR lpszCookieName
+    ctypes.int32_t,  // LPCTSTR lpszCookieName
     ctypes.jschar.ptr   // LPCTSTR lpszCookieData
 );
 
@@ -72,14 +72,13 @@ FireIE.IECookieManager = {
      * http://baidu.com才能识别
      */
     let url = 'http://' + hostname + cookie2.path;
-    let cookieName = ""; // cookieName不能为null
-    let cookieData = cookie2.name + "=" + cookie2.value +
+    let cookieData = cookie2.name + "=" + decodeURI(cookie2.value) +
       "; domain=" + cookie2.host + 
       "; path=" + cookie2.path;
     if (cookie2.expires > 1) {
       cookieData += "; expires=" + this.getExpiresString(cookie2.expires);
     }
-    let ret = InternetSetCookieW(url, cookieName, cookieData);
+    let ret = InternetSetCookieW(url, 0, cookieData);
     if (!ret) {
       fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' name:'+ cookieName + ' data:' + cookieData);
     }
@@ -149,7 +148,7 @@ FireIE.CookieObserver = {
     
   logCookie: function(tag, cookie2) {
     fireieUtils.LOG('[logCookie ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path +
-                    " name:" + cookie2.name + " value:" + cookie2.value +
+                    " name:" + cookie2.name + " value:" + decodeURI(cookie2.value) +
                     " expires:" + new Date(cookie2.expires*1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly +
                     " isSession:" + cookie2.isSession);
   }
