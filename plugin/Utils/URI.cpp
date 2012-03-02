@@ -2,7 +2,7 @@
 #include "URI.h"
 
 
-namespace Utility
+namespace Utils
 {
 	URI::URI()
 		:_port(0)

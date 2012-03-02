@@ -49,9 +49,12 @@
 #include "HttpMonitorAPP.h"
 #include "WindowMessageHook.h"
 #include "AtlDepHook.h"
+#include "OS.h"
 
 namespace Plugin
 {
+	using namespace Utils;
+
 	/** 用于监视HTTP和HTTPS请求, 同步Cookie */
 	CComPtr<IClassFactory> g_spCFHTTP;
 	CComPtr<IClassFactory> g_spCFHTTPS;
@@ -88,7 +91,11 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
-		BrowserHook::AtlDepHook::s_instance.Install();
+
+		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
+		{
+			BrowserHook::AtlDepHook::s_instance.Install();
+		}
 
 		return NPERR_NO_ERROR;
 	}
@@ -111,7 +118,10 @@ namespace Plugin
 				g_spCFHTTPS.Release();
 			}
 		}
-		BrowserHook::AtlDepHook::s_instance.Uninstall();
+		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
+		{
+			BrowserHook::AtlDepHook::s_instance.Uninstall();
+		}
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
 	}
 

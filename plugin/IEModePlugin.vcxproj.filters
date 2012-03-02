@@ -29,15 +29,18 @@
     <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp">
       <Filter>Plugin</Filter>
     </ClCompile>
-    <ClCompile Include="Utility\URI.cpp">
-      <Filter>Utility</Filter>
-    </ClCompile>
     <ClCompile Include="PluginApp.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
     <ClCompile Include="BrowserHook\AtlDepHook.cpp">
       <Filter>BrowserHook</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\URI.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\OS.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,9 +94,6 @@
     <ClInclude Include="Plugin\ScriptablePluginObject.h">
       <Filter>Plugin</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\URI.h">
-      <Filter>Utility</Filter>
-    </ClInclude>
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="PluginApp.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h">
@@ -101,6 +101,12 @@
     </ClInclude>
     <ClInclude Include="BrowserHook\AtlDepHook.h">
       <Filter>BrowserHook</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\URI.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\OS.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -129,14 +135,14 @@
     <Filter Include="Plugin">
       <UniqueIdentifier>{13f3dee4-b322-474d-b10d-b4269b300717}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utility">
-      <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="BrowserHook">
       <UniqueIdentifier>{e9cf651e-492b-4a66-bd8a-9be8e0a77e3c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Cookie">
       <UniqueIdentifier>{f08b1100-713c-4a7b-ae7d-ae40404ddb5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

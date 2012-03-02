@@ -139,7 +139,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -177,7 +177,7 @@ buildxpi.bat</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -220,7 +220,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -255,7 +255,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utility;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -279,9 +279,15 @@ buildxpi.bat</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
     <Link />
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <Link />
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
@@ -304,7 +310,8 @@ buildxpi.bat</Command>
     <ClCompile Include="Plugin\plugin.cpp" />
     <ClCompile Include="Plugin\ScriptablePluginObject.cpp" />
     <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp" />
-    <ClCompile Include="Utility\URI.cpp" />
+    <ClCompile Include="Utils\OS.cpp" />
+    <ClCompile Include="Utils\URI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
@@ -331,7 +338,8 @@ buildxpi.bat</Command>
     <ClInclude Include="Plugin\pluginbase.h" />
     <ClInclude Include="Plugin\ScriptablePluginObject.h" />
     <ClInclude Include="Plugin\ScriptablePluginObjectBase.h" />
-    <ClInclude Include="Utility\URI.h" />
+    <ClInclude Include="Utils\OS.h" />
+    <ClInclude Include="Utils\URI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
@@ -348,7 +356,7 @@ buildxpi.bat</Command>
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="IEModePlugin.rc" _x007B_8856F961-340A-11D0-A96B-00C04FD705A2_x007D_="CIECtrl" />
+      <UserProperties RESOURCE_FILE="" _x007B_8856F961-340A-11D0-A96B-00C04FD705A2_x007D_="CIECtrl" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

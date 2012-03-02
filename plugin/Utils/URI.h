@@ -3,7 +3,7 @@
 #include <vector>
 
 
-namespace Utility 
+namespace Utils 
 {
 
 	class URI

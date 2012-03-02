@@ -151,7 +151,7 @@ void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 	if (hwnd)
 	{
 		LParamSetFirefoxCookie param = {strURL, strCookie};
-		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+		::PostMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
 	}
 }
 
