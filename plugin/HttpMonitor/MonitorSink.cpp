@@ -184,7 +184,7 @@ namespace HttpMonitor
 			{
 				if (!m_strURL.IsEmpty())
 				{
-					ImportCookies();
+					//ImportCookies();
 				}
 
 				// 如果有 m_strUrlContext, 说明这是新窗口, 需要替 IE 加上 Referer
