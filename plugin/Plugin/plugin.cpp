@@ -642,7 +642,7 @@ namespace Plugin
 	{
 		char* url = CStringToNPStringCharacters(strURL);
 		char* cookie = CStringToNPStringCharacters(strCookie);
-		if (NPN_SetValueForURL(m_pNPInstance, NPNURLVCookie, url, cookie, strlen(cookie)) != NPERR_NO_ERROR)
+		if (NPN_SetValueForURL(m_pNPInstance, NPNURLVCookie, url, cookie, (uint32_t)strlen(cookie)) != NPERR_NO_ERROR)
 		{
 			TRACE(_T("[CPlugin::SetURLCookie] NPN_SetValueForURL failed! URL: %s"), strURL);
 		}

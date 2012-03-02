@@ -1,0 +1,677 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+	<title>MinHook - The Minimalistic x86/x64 API Hooking Library - CodeProject®</title> 
+	<link type="text/css" rel="stylesheet" href="ReadMe_files/CodeProject.css">
+<link type="text/css" rel="stylesheet" href="ReadMe_files/print.css">
+
+	
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Description" content="Provides the basic part of Microsoft Detours functionality for both x64/x86 environments.; Author: Tsuda Kageyu; Updated: 28 Nov 2009; Section: Win32/64 SDK &amp; OS; Chapter: Platforms, Frameworks &amp; Libraries; Updated: 28 Nov 2009">
+<meta name="Keywords" content="WinXP, Vista, C++, Windows, Win32, Win64, Dev, Intermediate, Advanced, VC9.0, Hardware, Win7,Win32/64 SDK &amp; OS,Platforms, Frameworks &amp; Libraries,Free source code, tutorials">
+<meta name="Author" content="Tsuda Kageyu">
+<meta name="Rating" content="General">
+<meta name="Robots" content="index, follow, NOODP">
+<meta name="Revisit-After" content="1 days">
+<meta name="application-name" content="The Code Project">
+<meta name="google-site-verification" content="RP2bNCUeOmNkkJesEnU8X3UyTbqIcCKP0CmdwU8in5k">
+
+<meta name="msapplication-navbutton-color" content="#FF9900">
+<meta name="msapplication-tooltip" content="Your Development Resource.">
+<meta name="msapplication-starturl" content="http://www.codeproject.com/?pinned=true">
+<meta name="msapplication-task" content="name=Homepage;action-uri=http://www.codeproject.com/;icon-uri=http://www.codeproject.com/favico.ico">
+<meta name="msapplication-task" content="name=Latest Articles;action-uri=http://www.codeproject.com/script/articles/Latest.aspx;icon-uri=http://www.codeproject.com/favico.ico">
+<meta name="msapplication-task" content="name=Questions and Answers;action-uri=http://www.codeproject.com/script/Answers/;icon-uri=http://www.codeproject.com/favico.ico">
+<meta name="msapplication-task" content="name=The Lounge;action-uri=http://www.codeproject.com/Lounge.aspx;icon-uri=http://www.codeproject.com/favico.ico">
+
+<link rel="dns-prefetch" href="http://ajax.googleapis.com/"> 
+<link rel="canonical" href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra">
+
+
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - All Topics" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=1">
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - MFC/C++" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=2">
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - C#" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=3">
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - VB.NET" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=6">
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - Mobile" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=18">
+<link rel="alternate" type="application/rss+xml" title="CodeProject Latest articles - ASP.NET" href="http://www.codeproject.com/WebServices/ArticleRSS.aspx?cat=4">
+
+<link rel="alternate" type="application/rss+xml" title="CodeProject Lounge Postings" href="http://www.codeproject.com/webservices/LoungeRSS.aspx">
+<link rel="search" type="application/opensearchdescription+xml" title="CodeProject" href="http://www.codeproject.com/info/OpenSearch.xml">
+
+	<!-- base href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra?display=Print" -->
+	<link rel="icon" href="http://www.codeproject.com/favicon.ico" type="image/ico">
+<link rel="shortcut icon" href="http://www.codeproject.com/favicon.ico" type="image/ico">
+<link rel="apple-touch-icon" href="http://www.codeproject.com/images/FavIcon-Apple.png" type="image/png">
+<script type="text/javascript" language="Javascript">//<![CDATA[
+if(top!=self && !/https?:\/\/([a-zA-Z]+\.)?facebook.com\//gi.test(top.location.href))top.location.href=location.href; if(typeof(DemoUrl)!='undefined')document.write(unescape('%3Cme')+'ta http'+'-equiv="re'+'fresh" con'+'tent="1;url='+DemoUrl+unescape('"%3CE'));
+
+//]]>
+</script>
+
+<script src="ReadMe_files/ga.js" async="" type="text/javascript"></script></head>	
+
+<body class="firefox firefox10">
+
+
+
+
+<a href="#Main"><img alt="Click here to Skip to main content" class="access-link" src="ReadMe_files/t.gif"></a>
+
+
+<div class="page-background">
+	<div id="A" class="container-content fluid print">
+
+		
+		
+
+		
+
+		
+		
+		
+
+		
+		<table border="0" cellpadding="0" cellspacing="0" width="100%">
+		<tbody><tr>
+			<td class="page-header"><a href="http://www.codeproject.com/"><img id="ctl00_Logo" title="The Code Project" src="ReadMe_files/logo225x90.gif" alt="Home" style="border-width: 0px;"></a></td>
+			<td class="page-header" align="right">
+				
+			</td>
+		</tr></tbody></table>
+
+		<table class="contrast1-background extended" cellpadding="0" cellspacing="0"><tbody><tr><td nowrap="nowrap">
+			
+		</td><td align="right">
+			
+		</td></tr></tbody></table>
+		
+
+		
+		<div class="container-article hreview-aggregate"> 
+		
+			
+			<div class="container-header">
+				<div id="ctl00_Header" class="header tight">
+
+					<a name="Main"></a>
+
+					
+					<a name="_articleTop" id="_articleTop"></a>
+					
+
+<div class="clearfix hover-container">
+
+	
+	<div class="float-right action-links"> 
+		
+	</div>
+
+	<div class="container">
+		
+		<div class="breadcrumb float-left"><a href="http://www.codeproject.com/script/Content/SiteMap.aspx"><span class="sitemap-anchor" onmouseover="ShowMap(this,'map');"><img src="ReadMe_files/sitemap16.png" alt="Site map" style="vertical-align: middle;" border="0" height="16px" width="16px"><div id="map" class="tooltip-flyout"><img src="ReadMe_files/animated.gif" style="margin: 150px; width: 100px; height: 100px; border: 0pt none;"></div></span></a> » <a href="http://www.codeproject.com/Chapters/8/Platforms-Frameworks-Libraries.aspx">Platforms, Frameworks &amp; Libraries</a> » <a href="http://www.codeproject.com/KB/winsdk/">Win32/64 SDK &amp; OS</a> » <a href="http://www.codeproject.com/KB/winsdk/#General">General</a></div>
+	</div>
+
+	
+	<div id="ctl00_TitleArea_InfoArea" class="float-right pad-top">
+		
+
+<div class="infobox">
+	<table class="tight small-text" cellpadding="0" cellspacing="1">
+	<tbody><tr><td>Licence&nbsp;</td><td><a href="http://www.opensource.org/licenses/bsd-license.php" title="The BSD License">BSD</a></td></tr>
+	
+	<tr><td>First Posted&nbsp;</td><td nowrap="nowrap"><b>22 Nov 2009</b></td></tr>
+	<tr><td>Views&nbsp;</td><td><b>42,763</b></td></tr>
+	
+	<tr><td>Downloads&nbsp;</td><td><b>2,653</b></td></tr>
+		
+	
+	<tr><td>Bookmarked&nbsp;</td><td><b>101 times</b></td></tr>
+	
+
+	
+	
+	</tbody></table>
+</div>	
+	</div>
+
+	
+	<div class="item">
+	<h1 id="ctl00_TitleArea_ArticleTitle" class="fn">MinHook - The Minimalistic x86/x64 API Hooking Library</h1> 
+	</div>
+
+	
+	<div class="author">
+		By <b><a href="http://www.codeproject.com/script/Membership/View.aspx?mid=5207992">Tsuda Kageyu</a></b> | 
+		28 Nov 2009 
+		
+
+		
+		
+	</div>
+	
+	<div class="tags">
+	<span id="ctl00_TitleArea_TagsList_TagWrp" class="tags">
+	
+	
+	
+	<span id="ctl00_TitleArea_TagsList_VisibleTags"><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=24">WinXP</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=27">Vista</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=78">C++</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=94">Windows</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=99">Win32</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=100">Win64</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=118">Dev</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=153">Intermediate</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=154">Advanced</a></span><span class="t"><a href="http://www.codeproject.com/search.aspx?aidlst=239">VC9.0</a></span></span><acronym id="ctl00_TitleArea_TagsList_HiddenTags" title="plus: Hardware, Win7">, +</acronym> 
+
+	
+	
+</span>
+
+	</div>
+
+	
+	<div class="abstract summary"><span id="ctl00_TitleArea_ArticleDescr">Provides the basic part of Microsoft Detours functionality for both x64/x86 environments.</span></div>
+</div>
+
+
+
+					
+
+				</div>
+
+				
+
+			</div>
+			
+
+			
+			<div id="ctl00_Nav" class="container-nav">
+				<div id="ctl00_TabContainer" class="tabs-container clearfix tight">
+
+					<div class="float-left">
+						
+						
+
+						
+						<div class="float-left" style="margin-left:15px">
+							<div id="ctl00_CurRat" class="tooltip">
+								
+
+<table class="small-text" cellpadding="0" cellspacing="0">
+<tbody><tr>
+	
+	<td class="nowrap">
+
+		<span id="ctl00_ArticleRating_VI">
+		<div class="nowrap rating-stars" style="height:24px;width:120px;position:relative;">
+	<div class="clipped align-left float-left" style="height:24px;width:118px;">
+		<img src="ReadMe_files/stars-fill.png" style="border-width: 0px;">
+	</div><div class="clipped" style="height:24px;width:2px;position:relative;">
+		<img src="ReadMe_files/stars-empty.png" style="border-width: 0px; position: absolute; top: 0pt; right: 0pt;">
+	</div>
+</div>
+		</span>
+
+		
+	</td>
+	
+	<td id="ctl00_ArticleRating_VR" class="nowrap">
+		&nbsp;
+		<span id="ctl00_ArticleRating_VotesR">&nbsp;<span class="rating">4.93</span> (<span class="count">37 votes</span>)</span>
+		
+	</td>
+
+</tr>
+
+</tbody></table>
+
+								<div id="ctl00_RB" class="speech-bubble-container-up">
+									<div class="speech-bubble-up" style="width:150px !important">
+										            
+<div>
+<table class="feature" title="Voting Distribution. Recent data only" cellpadding="0" cellspacing="0" height="20px" width="100%"><tbody><tr><td class="chart-column rating-ignore-vote" title="Outside deviation limits - not included in score."><img src="ReadMe_files/t_002.gif" alt="" title="" border="0px" height="1px" width="20pxpx"><br><span title="0 votes">1</span></td>
+<td class="chart-column rating-ignore-vote" title="Outside deviation limits - not included in score."><img src="ReadMe_files/pollcol.gif" alt="1 vote, 2.7%" title="1 vote, 2.7%" border="0px" height="1px" width="20pxpx"><br><span title="1 vote">2</span></td>
+<td class="chart-column rating-ignore-vote" title="Outside deviation limits - not included in score."><img src="ReadMe_files/pollcol.gif" alt="1 vote, 2.7%" title="1 vote, 2.7%" border="0px" height="1px" width="20pxpx"><br><span title="1 vote">3</span></td>
+<td class="chart-column"><img src="ReadMe_files/pollcol.gif" alt="2 votes, 5.4%" title="2 votes, 5.4%" border="0px" height="1px" width="20pxpx"><br><span title="2 votes">4</span></td>
+<td class="chart-column"><img src="ReadMe_files/pollcol.gif" alt="33 votes, 89.2%" title="33 votes, 89.2%" border="0px" height="20px" width="20pxpx"><br><span title="33 votes">5</span></td>
+</tr></tbody></table><div class="small-text align-center">4.93/5 - 37 votes</div><div class="small-text align-center subdue">2 removed</div><div class="small-text align-center subdue">μ 4.79, σ<sub>a</sub> 1.08 [<a href="http://www.codeproject.com/KB/FAQs/RatingReputationFAQ.aspx#noisefilter">?</a>]</div>
+</div>
+									</div>
+									<div class="speech-bubble-pointer-up">
+										<div class="speech-bubble-pointer-up-inner"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="float-left">
+							&nbsp; 
+						</div>
+
+					</div>
+
+				</div>
+
+				
+			</div>
+			
+
+			
+			<div class="container-text">
+
+				<div id="AT" class="text fluid tight">
+					
+					
+					
+					
+
+					   
+
+						
+							
+			
+					<form name="aspnetForm" method="post" action="/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra?display=Print" id="aspnetForm" style="margin:0;padding:0">
+<div>
+<input name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKMjExOTQzNjk4Mw9kFgJmD2QWAgIGDxYCHgVjbGFzcwUdY29udGFpbmVyLWNvbnRlbnQgZmx1aWQgcHJpbnQWCgIPDxYCHwAFDGhlYWRlciB0aWdodGQCEQ8WAh4HVmlzaWJsZWgWAgIBDw8WAh8BaGQWBmYPDxYCHgtOYXZpZ2F0ZVVybAUyL3NjcmlwdC9BcnRpY2xlcy9BZG1pbi9FZGl0b3JDaG9pY2UuYXNweD9haWQ9NDQzMjZkZAICDw8WAh8CBTgvc2NyaXB0L0F3YXJkcy9BZG1pbi9Bd2FyZE9iamVjdC5hc3B4P29iaWQ9NDQzMjYmb2J0aWQ9MmRkAgoPDxYCHwIFLy9zY3JpcHQvQXJ0aWNsZXMvQWRtaW4vUXVldWVFZGl0LmFzcHg/YWlkPTQ0MzI2ZGQCEw9kFgICAQ8WAh8ABR10YWJzLWNvbnRhaW5lciBjbGVhcmZpeCB0aWdodGQCFQ8WAh8ABRB0ZXh0IGZsdWlkIHRpZ2h0FgICDQ9kFggCAg8WAh4GYWN0aW9uBVAvQXJ0aWNsZXMvNDQzMjYvTWluSG9vay1UaGUtTWluaW1hbGlzdGljLXg4Ni14NjQtQVBJLUhvb2tpbmctTGlicmE/ZGlzcGxheT1QcmludBYIAgMPZBYCAgEPFgIfAWhkAgUPZBYCAgIPZBYCAgEPEGRkFgBkAgsPFgIeC18hSXRlbUNvdW50AgFkAg0PFgIfAWhkAgYPZBYEAgEPDxYCHwFoZGQCAg8WAh8BZxYGAgEPFgIeBFRleHQFNDxiPjQxIG1lc3NhZ2VzPC9iPiBoYXZlIGJlZW4gcG9zdGVkIGZvciB0aGlzIGFydGljbGVkAgMPDxYEHwIFQi9BcnRpY2xlcy80NDMyNi9NaW5Ib29rLVRoZS1NaW5pbWFsaXN0aWMteDg2LXg2NC1BUEktSG9va2luZy1MaWJyYR8FBVxodHRwOi8vd3d3LmNvZGVwcm9qZWN0LmNvbS9BcnRpY2xlcy80NDMyNi9NaW5Ib29rLVRoZS1NaW5pbWFsaXN0aWMteDg2LXg2NC1BUEktSG9va2luZy1MaWJyYWRkAgUPDxYCHwIFUy9BcnRpY2xlcy80NDMyNi9NaW5Ib29rLVRoZS1NaW5pbWFsaXN0aWMteDg2LXg2NC1BUEktSG9va2luZy1MaWJyYT9kaXNwbGF5PVByaW50QWxsZGQCCQ8PFgQfBQUJUGVybWFsaW5rHwIFQi9BcnRpY2xlcy80NDMyNi9NaW5Ib29rLVRoZS1NaW5pbWFsaXN0aWMteDg2LXg2NC1BUEktSG9va2luZy1MaWJyYWRkAhgPFgIfBQUeQ29weXJpZ2h0IDIwMDkgYnkgVHN1ZGEgS2FnZXl1ZAIXDxYCHwFoFgICBQ8PFgIfAWhkZGSP5FErKd73OJBz7uip7DIUGheVWg==" type="hidden">
+</div>
+
+
+						
+
+						<!-- Article Text Start -->
+						<div id="contentdiv">
+						
+
+
+
+
+<ul class="download">
+<li><a href="http://www.codeproject.com/KB/winsdk/LibMinHook/MinHook_110_bin.zip">Download binary - 828.88 KB</a></li>
+
+<li><a href="http://www.codeproject.com/KB/winsdk/LibMinHook/MinHook_110_src.zip">Download source - 795.73 KB</a> (You need Boost 1.40.0 to build this.)</li>
+</ul>
+
+<h2>Background</h2>
+
+<p>As people who are interested in Windows API hooking know, there is an excellent library for it by Microsoft named '<a title="Detours" href="http://research.microsoft.com/en-us/projects/detours/">Detours</a>'.
+ It's really useful, but its free edition (called 'Express') doesn't 
+support x64. Its commercial edition (called 'Professional') supports 
+x64, but it's too expensive for me. It costs US$ 10,000, Microsoft says.</p>
+
+<p>So I decided to write my own library from scratch. But I haven't 
+designed my library as the perfect clone of Detours. It has just the API
+ hooking functionality because that's all I want.</p>
+
+<h2>Using the Library</h2>
+
+<p>Look at the sample code below. That's all. Once, I fixed a serious bug, and have changed the interface. It hooks the <code>MessageBoxW()</code> function and modifies its text. It's included in the source archive. Please try it in both x64 and x86 modes.</p>
+
+<pre lang="C++"><span class="code-preprocessor">#include</span><span class="code-preprocessor"> <span class="code-keyword">&lt;</span><span class="code-leadattribute">Windows.h</span><span class="code-keyword">&gt;</span>
+</span><span class="code-preprocessor">#include</span><span class="code-preprocessor"> <span class="code-string">"</span><span class="code-string">MinHook.h"</span>
+</span>
+<span class="code-preprocessor">#if</span> defined _M_X64
+<span class="code-preprocessor">#pragma</span> comment(lib, <span class="code-string">"</span><span class="code-string">libMinHook.x64.lib"</span>)
+<span class="code-preprocessor">#elif</span> defined _M_IX86
+<span class="code-preprocessor">#pragma</span> comment(lib, <span class="code-string">"</span><span class="code-string">libMinHook.x86.lib"</span>)
+<span class="code-preprocessor">#endif</span>
+
+<span class="code-keyword">typedef</span> <span class="code-keyword">int</span> (WINAPI *MESSAGEBOXW)(HWND, LPCWSTR, LPCWSTR, UINT);
+
+<span class="code-comment">//</span><span class="code-comment"> Pointer for calling original MessageBoxW.
+</span>MESSAGEBOXW fpMessageBoxW = NULL;
+
+<span class="code-comment">//</span><span class="code-comment"> Detour function which overrides MessageBoxW.
+</span><span class="code-keyword">int</span> WINAPI DetourMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType)
+{
+    <span class="code-keyword">return</span> fpMessageBoxW(hWnd, L<span class="code-string">"</span><span class="code-string">Hooked!"</span>, lpCaption, uType);
+}
+
+<span class="code-keyword">int</span> main()
+{
+    <span class="code-comment">//</span><span class="code-comment"> Initialize MinHook.
+</span>    <span class="code-keyword">if</span> (MH_Initialize() != MH_OK)
+    {
+        <span class="code-keyword">return</span> <span class="code-digit">1</span>;
+    }
+
+    <span class="code-comment">//</span><span class="code-comment"> Create a hook for MessageBoxW, in disabled state.
+</span>    <span class="code-keyword">if</span> (MH_CreateHook(&amp;MessageBoxW, &amp;DetourMessageBoxW, 
+	<span class="code-keyword">reinterpret_cast</span>&lt;<span class="code-keyword">void</span>**&gt;(&amp;fpMessageBoxW)) != MH_OK)
+    {
+        <span class="code-keyword">return</span> <span class="code-digit">1</span>;
+    }
+
+    <span class="code-comment">//</span><span class="code-comment"> Enable the hook for MessageBoxW.
+</span>    <span class="code-keyword">if</span> (MH_EnableHook(&amp;MessageBoxW) != MH_OK)
+    {
+        <span class="code-keyword">return</span> <span class="code-digit">1</span>;
+    }
+
+    <span class="code-comment">//</span><span class="code-comment"> Expected to tell "Hooked!".
+</span>    MessageBoxW(NULL, L<span class="code-string">"</span><span class="code-string">Not hooked..."</span>, L<span class="code-string">"</span><span class="code-string">MinHook Sample"</span>, MB_OK);
+
+    <span class="code-comment">//</span><span class="code-comment"> Disable the hook for MessageBoxW.
+</span>    <span class="code-keyword">if</span> (MH_DisableHook(&amp;MessageBoxW) != MH_OK)
+    {
+        <span class="code-keyword">return</span> <span class="code-digit">1</span>;
+    }
+
+    <span class="code-comment">//</span><span class="code-comment"> Expected to tell "Not hooked...".
+</span>    MessageBoxW(NULL, L<span class="code-string">"</span><span class="code-string">Not hooked..."</span>, L<span class="code-string">"</span><span class="code-string">MinHook Sample"</span>, MB_OK);
+
+    <span class="code-comment">//</span><span class="code-comment"> Uninitialize MinHook.
+</span>    <span class="code-keyword">if</span> (MH_Uninitialize() != MH_OK)
+    {
+        <span class="code-keyword">return</span> <span class="code-digit">1</span>;
+    }
+
+    <span class="code-keyword">return</span> <span class="code-digit">0</span>;
+}</pre>
+
+<h2>How It Works</h2>
+
+<p>The basic idea of this software is the same as Microsoft Detours and <a href="http://www.codeproject.com/KB/winsdk/MemberArticles.aspx" ?amid="1531736&quot;">Mr. Daniel Pistelli</a>'s <a href="http://www.codeproject.com/KB/system/mini_hook_engine.aspx">Hook-Engine</a>. It replaces the prologue of the target function with the <code lang="asm">JMP</code> (unconditional jump) instruction to the detour function. It's safe, stable, and a proven method.</p>
+
+<h4>Overwriting the Target Function</h4>
+
+<p>In the x64/x86 instruction set, there are some forms of the <code>JMP</code> instruction. I decided to always use a 32 bit relative <code>JMP</code> of 5 bytes. It's the shortest form that can be used in reality. In this case, shorter is better.</p>
+
+<p>In x86 mode, 32bit relative <code>JMP</code> covers the whole address
+ space. Because the overflown bits are just ignored in the relative 
+address arithmetic, in x86 mode, the function addresses don't matter.</p>
+
+<pre lang="asm"><span class="code-comment">;</span><span class="code-comment"> x86 mode (assumed that the target function is at 0x40000000)
+</span>
+<span class="code-comment">;</span><span class="code-comment"> 32bit relative JMPs of 5 bytes cover whole address space
+</span>0x40000000:  E9 FBFFFFBF      JMP 0x0        (EIP+0xBFFFFFFB)
+0x40000000:  E9 FAFFFFBF      JMP 0xFFFFFFFF (EIP+0xBFFFFFFA)
+
+<span class="code-comment">;</span><span class="code-comment"> Shorter forms are useless in this case
+</span><span class="code-comment">;</span><span class="code-comment"> 8bit JMPs of 2 bytes cover -126 ~ +129 bytes
+</span>0x40000000:  EB <span class="code-digit">80</span>            JMP 0x3FFFFF82 (EIP-0x80)
+0x40000000:  EB 7F            JMP 0x40000081 (EIP+0x7F)
+<span class="code-comment">;</span><span class="code-comment"> 16bit JMPs of 4 bytes cover -32764 ~ +32771 bytes
+</span>0x40000000:  66E9 <span class="code-digit">0080</span>        JMP 0x3FFF8004 (EIP-0x8000)
+0x40000000:  66E9 FF7F        JMP 0x40008003 (EIP+0x7FFF)</pre>
+
+<p>But, in x64 mode, it's a problem. It only covers the very narrow 
+range in comparison with the whole address space. So I introduced a new 
+function called 'Relay Function' which just has a 64 bit jump to the 
+detour function and is placed near the target function. Fortunately, the
+ <code>VirtualAlloc()</code> API function can accept the address to allocate, and it's an easy job to look for unallocated regions near the target function.</p>
+
+<pre lang="asm"><span class="code-comment">;</span><span class="code-comment"> x64 mode (assumed that the target function is at 0x140000000)
+</span>
+<span class="code-comment">;</span><span class="code-comment"> 32bit relative JMPs of 5 bytes cover about -2GB ~ +2GB
+</span>0x140000000: E9 <span class="code-digit">00000080</span>      JMP 0xC0000005  (RIP-0x80000000)
+0x140000000: E9 FFFFFF7F      JMP 0x1C0000004 (RIP+0x7FFFFFFF)
+
+<span class="code-comment">;</span><span class="code-comment"> Target function (Jump to the Relay Function)
+</span>0x140000000: E9 FBFF0700      JMP 0x140080000 (RIP+0x7FFFB)
+
+<span class="code-comment">;</span><span class="code-comment"> Relay function (Jump to the Detour Function)
+</span>0x140080000: FF25 FAFF0000    JMP [0x140090000 (RIP+0xFFFA)]
+0x140090000: xxxxxxxxxxxxxxxx <span class="code-comment">;</span><span class="code-comment"> 64bit address of the Detour Function</span></pre>
+
+<h4>Building the Trampoline Function </h4>
+
+<p>The target function is overwritten to detour. And, how do we call the
+ original target function? There is a function called 'Trampoline 
+Function' in Microsoft Detours (and called 'Bridge Function' by Mr. 
+Pistelli). This is a clone of the prologue of the original function with
+ the trailing unconditional jump for resuming into the original 
+function. The real world examples are here. They are what <code>MinHook</code> creates internally in reality.</p>
+
+<p>We should disassemble the original function to know the instructions boundary and the instructions to be copied. I adopted <a href="http://patkov-site.narod.ru/">Mr. Vyacheslav Patkov</a>'s
+ 'Hacker Disassembler Engine (HDE)' as the disassembler. It's small, 
+light-weight, and suitable for my purpose. I disassembled thousands of 
+API functions on Windows XP, Vista, and 7 for examination purposes, and 
+built the trampoline function for them.</p>
+
+<pre lang="asm"><span class="code-comment">;</span><span class="code-comment"> Original "USER32.dll!MessageBoxW" in x64 mode
+</span>0x770E11E4: 4883EC <span class="code-digit">38</span>         SUB <span class="code-keyword">RSP</span>, 0x38
+0x770E11E8: 4533DB            XOR R11D, R11D
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span>0x77064BD0: 4883EC <span class="code-digit">38</span>         SUB <span class="code-keyword">RSP</span>, 0x38
+0x77064BD4: 4533DB            XOR R11D, R11D
+0x77064BD7: FF25 5BE8FEFF     JMP QWORD NEAR [0x77053438 (RIP-0x117A5)]
+<span class="code-comment">;</span><span class="code-comment"> Address Table
+</span>0x77053438: EB110E7700000000  <span class="code-comment">;</span><span class="code-comment"> Address of the Target Function +7 (for resuming)
+</span>
+<span class="code-comment">;</span><span class="code-comment"> Original "USER32.dll!MessageBoxW" in x86 mode
+</span>0x7687FECF: 8BFF              MOV <span class="code-keyword">EDI</span>, <span class="code-keyword">EDI</span>
+0x7687FED1: <span class="code-digit">55</span>                PUSH <span class="code-keyword">EBP</span>
+0x7687FED2: 8BEC              MOV <span class="code-keyword">EBP</span>, <span class="code-keyword">ESP</span>
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span>0x0014BE10: 8BFF              MOV <span class="code-keyword">EDI</span>, <span class="code-keyword">EDI</span>
+0x0014BE12: <span class="code-digit">55</span>                PUSH <span class="code-keyword">EBP</span>
+0x0014BE13: 8BEC              MOV <span class="code-keyword">EBP</span>, <span class="code-keyword">ESP</span>
+0x0014BE15: E9 BA407376       JMP 0x7687FED4</pre>
+
+<p>What if the original function contains the branch instructions? Of 
+course, they should be modified to point to the same address as the 
+original.</p>
+
+<pre lang="asm"><span class="code-comment">;</span><span class="code-comment"> Original "kernel32.dll!IsProcessorFeaturePresent" in x64 mode
+</span>0x771BD130: 83F9 <span class="code-digit">03</span>           CMP <span class="code-keyword">ECX</span>, 0x3
+0x771BD133: <span class="code-digit">7414</span>              JE 0x771BD149
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span><span class="code-comment">;</span><span class="code-comment"> (Became a little complex, because 64 bit version of JE doesn't exist)
+</span>0x77069860: 83F9 <span class="code-digit">03</span>           CMP <span class="code-keyword">ECX</span>, 0x3
+0x77069863: <span class="code-digit">74</span> <span class="code-digit">02</span>             JE 0x77069867
+0x77069865: EB <span class="code-digit">06</span>             JMP 0x7706986D
+0x77069867: FF25 1BE1FEFF     JMP QWORD NEAR [0x77057988 (RIP-0x11EE5)]
+0x7706986D: FF25 1DE1FEFF     JMP QWORD NEAR [0x77057990 (RIP-0x11EE3)]
+<span class="code-comment">;</span><span class="code-comment"> Address Table
+</span>0x77057988: 49D11B7700000000  <span class="code-comment">;</span><span class="code-comment"> Where the original JE points.
+</span>0x77057990: 35D11B7700000000  <span class="code-comment">;</span><span class="code-comment"> Address of the Target Function +5 (for resuming)
+</span>
+<span class="code-comment">;</span><span class="code-comment"> Original "gdi32.DLL!GdiFlush" in x86 mode
+</span>0x76479FF4: E8 DDFFFFFF       CALL 0x76479FD6
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span>0x00147D64: E8 6D223376       CALL 0x76479FD6
+0x00147D69: E9 8B223376       JMP 0x76479FF9
+
+<span class="code-comment">;</span><span class="code-comment"> Original "kernel32.dll!CloseProfileUserMapping" in x86 mode
+</span>0x763B7918: 33C0              XOR <span class="code-keyword">EAX</span>, <span class="code-keyword">EAX</span>
+0x763B791A: <span class="code-digit">40</span>                INC <span class="code-keyword">EAX</span>
+0x763B791B: C3                RET
+0x763B791C: <span class="code-digit">90</span>                NOP
+<span class="code-comment">;</span><span class="code-comment"> Trampoline (Additional jump is not required, because this is a perfect function)
+</span>0x0014585C: 33C0              XOR <span class="code-keyword">EAX</span>, <span class="code-keyword">EAX</span>
+0x0014585E: <span class="code-digit">40</span>                INC <span class="code-keyword">EAX</span>
+0x0014585F: C3                RET </pre>
+
+<p>The RIP relative addressing mode is also a problem in the x64 mode. 
+Their relative addresses should be modified to point to the same 
+addresses. </p>
+
+<pre lang="asm"><span class="code-comment">;</span><span class="code-comment"> Original "kernel32.dll!GetConsoleInputWaitHandle" in x64 mode
+</span>0x771B27F0: 488B05 11790C00   MOV <span class="code-keyword">RAX</span>, [0x7727A108 (RIP+0xC7911)]
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span>0x77067EB8: 488B05 <span class="code-digit">49222100</span>   MOV <span class="code-keyword">RAX</span>, [0x7727A108 (RIP+0x212249)]
+0x77067EBF: FF25 4BE3FEFF     JMP QWORD NEAR [0x77056210 (RIP-0x11CB5)]
+<span class="code-comment">;</span><span class="code-comment"> Address Table
+</span>0x77056210: F7271B7700000000  <span class="code-comment">;</span><span class="code-comment"> Address of the Target Function +7 (for resuming)
+</span>
+<span class="code-comment">;</span><span class="code-comment"> Original "user32.dll!TileWindows" in x64 mode
+</span>0x770E023C: 4883EC <span class="code-digit">38</span>         SUB <span class="code-keyword">RSP</span>, 0x38
+0x770E0240: 488D05 71FCFFFF   LEA <span class="code-keyword">RAX</span>, [0x770DFEB8 (RIP-0x38F)]
+<span class="code-comment">;</span><span class="code-comment"> Trampoline
+</span>0x77064A80: 4883EC <span class="code-digit">38</span>         SUB <span class="code-keyword">RSP</span>, 0x38
+0x77064A84: 488D05 2DB40700   LEA <span class="code-keyword">RAX</span>, [0x770DFEB8 (RIP+0x7B42D)]
+0x77064A8B: FF25 CFE8FEFF     JMP QWORD NEAR [0x77053360 (RIP-0x11731)]
+<span class="code-comment">;</span><span class="code-comment"> Address Table
+</span>0x77053360: 47020E7700000000 <span class="code-comment">;</span><span class="code-comment"> Address of the Target Function +11 (for resuming)</span></pre>
+
+<h2>Conclusion</h2>
+
+<p>Though this library is small and simple, I think it's practical enough. Please enjoy!</p>
+
+<h2>History</h2>
+
+<ul>
+<li>22<sup>nd</sup> November, 2009: Initial post</li>
+
+<li>23<sup>rd</sup> November, 2009: Updated source and binary files</li>
+
+<ol>
+<li>Fixed small bugs (internal type mismatch etc)</li>
+
+<li>Separated the <em>.LIB</em>s from the <em>.DLL</em>s</li>
+
+<li>Added the sample executables</li>
+</ol>
+
+<li>26<sup>th</sup> November, 2009: Updated source, binary files and sample code</li>
+
+<ol>
+<li>Fixed a serious bug (thanks to xliqz)</li>
+
+<li>Changed the interface with the bug fix</li>
+</ol>
+</ul>
+
+
+
+
+						</div>
+						<!-- Article Text End -->
+
+						
+						
+						<h2>License</h2>
+						<div id="LicenseTerms"><p>This article, along with any associated source code and files, is licensed under <a href="http://www.opensource.org/licenses/bsd-license.php" rel="license">The BSD License</a></p></div>
+						
+
+						
+						<h2 id="ctl00_AboutHeading">About the Author</h2>
+
+						<div class="float-right">
+						
+						</div>
+
+						
+						
+<table border="0" cellpadding="0" cellspacing="5">
+<tbody><tr valign="top">
+<td id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberPhotoTable" style="width: 155px;" valign="top">
+	<b><a id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberProfileLink" href="http://www.codeproject.com/Members/Tsuda-Kageyu">Tsuda Kageyu</a></b><br><br>
+	<center><img id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberPhoto" src="ReadMe_files/87c08b75-7fb7-4497-9c9e-91a334e3f12f.jpg" style="border-width: 0px;"></center>
+
+	<div class="small-text">
+		<span id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberJobTitle">Software Developer</span><br>
+		<span id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberCompany"></span><br>
+		<span id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberLocation"><img src="ReadMe_files/JP.gif" alt="Japan" height="11px" width="16px"> Japan</span><br>
+		<br>
+		<span id="ctl00_AboutAuthorRptr_ctl00_AboutAuthor_memberType">Member</span><br>
+		
+
+		
+	</div>
+</td>
+
+<td>
+	In 1985, I got my first computer Casio MX-10, the cheapest one of the 
+MSX computers. Then I began programming in BASIC and assembly language, 
+and have experienced over ten languages from that time on.<br>
+Now, my primary languages are C++ and C#. Working for a small company in my home town, the countryside of Japan.<br>	
+</td>
+</tr>
+</tbody></table><br>
+						
+						
+
+						<div class="clearfix"></div>
+
+						
+						
+						
+
+					</form>
+
+					
+					<div style="margin:auto;padding:0px 10px;white-space:nowrap;overflow:hidden;width:468px;height:60px">		  
+						
+						
+					</div>
+					
+
+					
+					
+					<h2>Comments and Discussions</h2>
+					
+					<p><img alt="Comment" src="ReadMe_files/NewComment.gif" height="16px" width="12px">
+					<b>41 messages</b> have been posted for this article 
+					Visit <b><a id="ctl00_ArticleLink" href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra">http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra</a></b> to post and view comments on 
+					this article, or click <b><a id="ctl00_PrintWithMessage" href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra?display=PrintAll">here</a></b> 
+					to get a print view with messages.</p>
+					
+
+					
+					<div class="theme1-background" style="height:2px"></div>
+
+					<div class="extended tiny-text">
+						<div class="row">
+							<div class="float-left">
+								<a id="ctl00_PermaLink" href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra">Permalink</a> | 
+								<a id="ctl00_AdvertiseLink" href="http://lakequincy.com/">Advertise </a> |
+								<a id="ctl00_PrivacyLink" href="http://www.codeproject.com/info/privacy.aspx">Privacy</a> |
+								<a id="ctl00_Mobile" rel="nofollow" href="http://www.codeproject.com/Articles/44326/MinHook-The-Minimalistic-x86-x64-API-Hooking-Libra/?display=Mobile">Mobile</a>
+								<br>
+								
+								Web02 |
+								2.5.120228.1 |
+								Last Updated 28 Nov 2009								
+							</div>
+							<div class="float-right align-right">
+								Article Copyright 2009 by Tsuda Kageyu<br>Everything else
+								Copyright © <a href="mailto:webmaster@codeproject.com">CodeProject</a>, 1999-2012 <br>
+								<a id="ctl00_TermsOfUseLink" href="http://www.codeproject.com/info/TermsOfUse.aspx">Terms of Use</a>
+							</div>
+
+							
+
+						</div>
+					</div>
+					
+
+				<br clear="all">
+		
+				
+				</div>
+
+				
+
+			</div>
+			
+
+		</div>
+		
+
+	</div>
+</div>
+
+
+<div style="display:none;" id="lqm_AdTable">
+	
+</div>
+
+<script type="text/javascript" language="Javascript" src="ReadMe_files/jquery.js"></script><script type="text/javascript">//<![CDATA[
+if (typeof jQuery == 'undefined') {
+    document.write(unescape("%3Cscript src='/script/JS/jquery-1.6.2.min.js' type='text/javascript' %3E%3C/script%3E"));
+}//]]></script>
+
+
+
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-1735123-1']);
+	_gaq.push(['_trackPageview']);
+	_gaq.push(['_setDomainName', 'www.codeproject.com']);
+	_gaq.push(['_setSessionTimeout', '1200']); 
+
+	(function () {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+	})(); 
+</script>
+
+
+
+</body></html>

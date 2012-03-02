@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{02cb38f3-425b-4077-87dc-36ea5f31c41f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\HDE32">
+      <UniqueIdentifier>{dcadd323-055b-48d8-b918-0162be86b1cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\HDE64">
+      <UniqueIdentifier>{d47a7b48-f6c2-40d0-ba9f-9c97a61acf22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Source Files">
+      <UniqueIdentifier>{903c9973-7a51-4e2b-8c2f-a1e9ab967609}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Header Files">
+      <UniqueIdentifier>{ac40c390-3d3a-413a-a665-362fd8b9b61a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\HDE32\hde32.c">
+      <Filter>src\HDE32</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDE64\src\hde64.c">
+      <Filter>src\HDE64</Filter>
+    </ClCompile>
+    <ClCompile Include="src\buffer.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\export.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hook.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\thread.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\trampoline.cpp">
+      <Filter>src\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\HDE32\hde32.h">
+      <Filter>src\HDE32</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE32\table32.h">
+      <Filter>src\HDE32</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE64\include\hde64.h">
+      <Filter>src\HDE64</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE64\src\table64.h">
+      <Filter>src\HDE64</Filter>
+    </ClInclude>
+    <ClInclude Include="src\buffer.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hook.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pstdint.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\thread.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\trampoline.h">
+      <Filter>src\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="COPYING.txt" />
+  </ItemGroup>
+</Project>

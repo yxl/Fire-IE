@@ -263,7 +263,7 @@ void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 	}
 }
 
-HRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
+LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 {
 	using namespace UserMessage;
 	switch(wParam)
@@ -308,7 +308,7 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 {
 	HRESULT hr;
 	LPSAFEARRAY psa;
-	UINT cElems = strlen(szSrc);
+	ULONG cElems = (ULONG)strlen(szSrc);
 	LPSTR pPostData;
 
 	psa = SafeArrayCreateVector(VT_UI1, 0, cElems);

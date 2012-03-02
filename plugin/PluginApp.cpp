@@ -123,7 +123,7 @@ CString UTF8ToCString(const char* szUTF8)
 	USES_CONVERSION;
 	CString str;
 	if (szUTF8 == NULL) return str;
-	int len = strlen(szUTF8) + 1;
+	int len = (int)strlen(szUTF8) + 1;
 	int nWide =  MultiByteToWideChar(CP_UTF8, 0, szUTF8, len, NULL, 0);
 	if (nWide == 0)
 		return str;
