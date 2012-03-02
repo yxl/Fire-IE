@@ -25,8 +25,10 @@ namespace Utils
 		OSVERSIONINFOEX versionInfo;
 		versionInfo.dwOSVersionInfoSize = sizeof versionInfo;
 		GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&versionInfo));
-		if (versionInfo.dwMajorVersion == 5) {
-			switch (versionInfo.dwMinorVersion) {
+		if (versionInfo.dwMajorVersion == 5) 
+		{
+			switch (versionInfo.dwMinorVersion) 
+			{
 			case 0:
 				s_version = NOT_SUPPORTED; // Win2000
 				break;
@@ -37,7 +39,8 @@ namespace Utils
 				s_version = WIN2003;
 				break;
 			}
-		} else if (versionInfo.dwMajorVersion == 6) 
+		} 
+		else if (versionInfo.dwMajorVersion == 6) 
 		{
 
 			if (versionInfo.dwMinorVersion == 0) 
@@ -49,7 +52,8 @@ namespace Utils
 				s_version = WIN7;
 			}
 
-		} else if (versionInfo.dwMajorVersion > 6) 
+		} 
+		else if (versionInfo.dwMajorVersion > 6) 
 		{
 			s_version = WIN7;
 		}
