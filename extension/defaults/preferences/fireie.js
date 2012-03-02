@@ -1,4 +1,5 @@
-pref("dom.ipc.plugins.enabled.npfireie.dll", false);
+pref("dom.ipc.plugins.enabled.npfireie32.dll", false);
+pref("dom.ipc.plugins.enabled.npfireie64.dll", false);
 pref("extensions.fireie.privatebrowsingwarning", true);
 
 pref("extensions.fireie.filter", true);
