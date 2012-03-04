@@ -274,27 +274,27 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::UpdateUI(void)
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::EnableModeless(BOOL fEnable)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_FALSE;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::OnDocWindowActivate(BOOL fActivate)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_FALSE;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::OnFrameWindowActivate(
 	BOOL fActivate)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_FALSE;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::ResizeBorder(
 	LPCRECT prcBorder, LPOLEINPLACEUIWINDOW pUIWindow, BOOL fFrameWindow)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_OK;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::TranslateAccelerator(
@@ -317,7 +317,7 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::GetDropTarget(
 	LPDROPTARGET pDropTarget, LPDROPTARGET* ppDropTarget)
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
-	return S_FALSE;
+	return E_NOTIMPL;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::TranslateUrl(

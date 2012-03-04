@@ -228,6 +228,11 @@ void CIEHostWindow::InitIE()
 	{
 		CoInternetSetFeatureEnabled(features[i], SET_FEATURE_ON_PROCESS, TRUE);
 	}
+
+	m_ie.put_RegisterAsBrowser(TRUE);
+
+	// 允许打开拖拽到浏览器窗口的文件。
+	m_ie.put_RegisterAsDropTarget(TRUE);
 }
 
 

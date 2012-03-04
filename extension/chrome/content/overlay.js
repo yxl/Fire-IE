@@ -78,7 +78,7 @@ FireIE.getPluginObjectURL = function(aTab) {
 	if (pluginObject && pluginObject.URL && pluginObject.URL != "") {
 		url = (/^file:\/\/.*/.test(url) ? encodeURI(FireIE.convertToUTF8(pluginObject.URL)) : pluginObject.URL);
 	}
-	return url;
+	return FireIE.getActualUrl(url);
 }
 
 /** 获取当前Tab的IE Tab URI
@@ -620,9 +620,7 @@ FireIE.hookCodeAll = function() {
 	FireIE.hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(FireIE.getActualUrl($&.spec))"); // 添加到收藏夹时获取实际URL
 	FireIE.hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(FireIE.getActualUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
 	FireIE.hookCode("gBrowser.addTab", "return t;", "FireIE.hookBrowserGetter(t.linkedBrowser); $&");
-	FireIE.hookCode("nsBrowserAccess.prototype.openURI", " loadflags = isExternal ?", " loadflags = false ?"); // @todo 有什么用?
 	FireIE.hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(FireIE.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
-	FireIE.hookCode("URLBarSetURI", "getWebNavigation()", "getBrowser()"); // @todo 有什么用？
 	FireIE.hookCode("getShortcutOrURI", /return (\S+);/g, "return FireIE.getHandledURL($1);"); // 访问新的URL
 
 	//hook Interface Commands
