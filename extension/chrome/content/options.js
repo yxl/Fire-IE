@@ -32,7 +32,7 @@ if (typeof(FireIE) == "undefined") {
   var FireIE = {};
 }
 
-FireIE.exportSettings = function() {
+FireIE.exportOptions = function() {
   var aOld = FireIE._getAllSettings(false);
   FireIE.setOptions(true);
   var aCurrent = FireIE._getAllSettings(false);
@@ -40,7 +40,7 @@ FireIE.exportSettings = function() {
   FireIE._setAllSettings(aOld);
 }
 
-FireIE.importSettings = function() {
+FireIE.importOptions = function() {
   var aOld = FireIE._getAllSettings(false);
   var [result, aList] = FireIE._loadFromFile();
   if (result) {
