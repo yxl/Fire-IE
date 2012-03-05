@@ -28,8 +28,8 @@ namespace BrowserHook
 		void Install(void);
 		void Uninstall(void);
 	private:
-		AtlDepHook(void){};
-		~AtlDepHook(void){};
+		AtlDepHook(void){}
+		~AtlDepHook(void){}
 	};
 }
 

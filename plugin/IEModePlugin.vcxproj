@@ -292,10 +292,12 @@ buildxpi.bat</Command>
   <ItemGroup>
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
+    <ClCompile Include="Cookie\CookieManager.cpp" />
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
     <ClCompile Include="IEHostWindow.cpp" />
     <ClCompile Include="PluginApp.cpp" />
+    <ClCompile Include="Plugin\PluginGlobal.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -316,10 +318,12 @@ buildxpi.bat</Command>
   <ItemGroup>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
+    <ClInclude Include="Cookie\CookieManager.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />
     <ClInclude Include="IEHostWindow.h" />
     <ClInclude Include="PluginApp.h" />
+    <ClInclude Include="Plugin\PluginGlobal.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

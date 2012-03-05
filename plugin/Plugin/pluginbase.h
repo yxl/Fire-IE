@@ -52,7 +52,7 @@ namespace Plugin
 		NPSavedData* saved;
 	};
 
-	class nsPluginInstanceBase
+	class nsPluginBase
 	{
 	public:
 		// these three methods must be implemented in the derived
@@ -78,9 +78,5 @@ namespace Plugin
 		virtual NPError GetValue(NPPVariable variable, void *value)       { return NPERR_NO_ERROR; }
 		virtual NPError SetValue(NPNVariable variable, void *value)       { return NPERR_NO_ERROR; }
 	};
-
-	// global plugin initialization and shutdown
-	NPError NS_PluginInitialize();
-	void NS_PluginShutdown();
 
 }

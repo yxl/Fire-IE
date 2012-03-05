@@ -44,20 +44,14 @@
 
 class CIEHostWindow;
 
-namespace HttpMonitor
-{
-	class MonitorSink;
-}
-
 namespace Plugin
 {
-	class CPlugin:public nsPluginInstanceBase
+	class CPlugin: public nsPluginBase
 	{
-		friend class HttpMonitor::MonitorSink;
 	public: 
 		// Overrides
 
-		CPlugin(NPP pNPInstance, int16_t argc, char* argn[], char* argv[]);
+		CPlugin(const nsPluginCreateData& data);
 		~CPlugin();
 		// 初始化Plugin窗口
 		NPBool init(NPWindow* pNPWindow);
@@ -113,11 +107,6 @@ namespace Plugin
 		*  完整的代码 window.IMode.getZoomLevel()
 		*/
 		double GetZoomLevel();
-
-		/** 获取Firefox的Cookie
-		*  返回的 cookie 的格式是 cookie1=value1;cookie2=value2;cookie3=value3
-		*/
-		CString GetURLCookie(const CString& strURL);
 
 		/** 设置Firefox的Cookie
 		* @param strCookie Cookie字符串值, 格式是 cookie1=value1;cookie2=value2;cookie3=value3

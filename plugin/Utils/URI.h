@@ -18,7 +18,7 @@ namespace Utils
 		/// all URIs and URI parts passed to it:
 		///   * scheme identifiers are converted to lower case.
 		///   * percent-encoded characters are decoded
-		///   * optionally, dot segments are removed from paths (see normalize())
+		///   * optionally, dot segments are removed from paths
 	{
 	public:
 		URI();

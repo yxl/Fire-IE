@@ -155,9 +155,9 @@ void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 	}
 }
 
-CString CIEHostWindow::GetFirefoxCookie(CString strURL)
+CString CIEHostWindow::GetFirefoxUserAgent()
 {
-	CString strCookie;
+	CString strUserAgent;
 	CIEHostWindow *pIEHostWindow = NULL;
 	s_csCookieIEWindowMap.Lock();
 	if (s_CookieIEWindowMap.GetSize() > 0)
@@ -167,10 +167,10 @@ CString CIEHostWindow::GetFirefoxCookie(CString strURL)
 	
 	if (pIEHostWindow && pIEHostWindow->m_pPlugin)
 	{
-		strCookie = pIEHostWindow->m_pPlugin->GetURLCookie(strURL);
+		strUserAgent = pIEHostWindow->m_pPlugin->GetFirefoxUserAgent();
 	}
 	s_csCookieIEWindowMap.Unlock();
-	return strCookie;
+	return strUserAgent;
 }
 
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 

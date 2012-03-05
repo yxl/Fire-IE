@@ -74,7 +74,7 @@ public:
 	static void AddCookieIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
-	static CString GetFirefoxCookie(CString strURL);
+	static CString GetFirefoxUserAgent();
 public:
 	
 	virtual ~CIEHostWindow();

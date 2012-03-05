@@ -42,6 +42,12 @@
     <ClCompile Include="Utils\OS.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Plugin\PluginGlobal.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="Cookie\CookieManager.cpp">
+      <Filter>Cookie</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -107,6 +113,12 @@
     </ClInclude>
     <ClInclude Include="Utils\OS.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\PluginGlobal.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie\CookieManager.h">
+      <Filter>Cookie</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

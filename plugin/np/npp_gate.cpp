@@ -42,6 +42,7 @@
 //
 #include "stdafx.h"
 #include "plugin.h"
+#include "PluginGlobal.h"
 
 #define NPMIMEDESCRIPTION			"application/fireie"
 #define NPPVPLUGINNAMESTRING		"npfireie"
@@ -81,7 +82,8 @@ NPError NPP_New(NPMIMEType pluginType,
 
 	NPError rv = NPERR_NO_ERROR;
 
-	CPlugin * pPlugin = new CPlugin(instance, argc, argn, argv);
+	nsPluginCreateData data = {instance, pluginType, mode, argc, argn, argv, saved};
+	CPlugin * pPlugin = new CPlugin(data);
 	if(pPlugin == NULL)
 		return NPERR_OUT_OF_MEMORY_ERROR;
 

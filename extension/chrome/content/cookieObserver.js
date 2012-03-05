@@ -80,7 +80,7 @@ FireIE.IECookieManager = {
     }
     let ret = InternetSetCookieW(url, 0, cookieData);
     if (!ret) {
-      fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' name:'+ cookieName + ' data:' + cookieData);
+      fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' data:' + cookieData);
     }
     return ret;
   },

@@ -46,88 +46,12 @@
 #include "plugin.h"
 #include "npfunctions.h"
 #include "ScriptablePluginObject.h"
-#include "HttpMonitorAPP.h"
-#include "WindowMessageHook.h"
-#include "AtlDepHook.h"
-#include "OS.h"
 
 namespace Plugin
 {
-	using namespace Utils;
 
-	/** 用于监视HTTP和HTTPS请求, 同步Cookie */
-	CComPtr<IClassFactory> g_spCFHTTP;
-	CComPtr<IClassFactory> g_spCFHTTPS;
-
-	typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
-
-	// global plugin initialization
-	NPError NS_PluginInitialize()
-	{
-		// 监视http和https请求，同步cookie
-		CComPtr<IInternetSession> spSession;
-		HRESULT hret = S_OK;
-		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-		if (MetaFactory::CreateInstance(CLSID_HttpProtocol, &g_spCFHTTP) != S_OK)
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-		if (spSession->RegisterNameSpace(g_spCFHTTP, CLSID_NULL, L"http", 0, 0, 0) != S_OK)
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-		if (MetaFactory::CreateInstance(CLSID_HttpSProtocol, &g_spCFHTTPS) != S_OK)
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-		if (spSession->RegisterNameSpace(g_spCFHTTPS, CLSID_NULL, L"https", 0, 0, 0) != S_OK)
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-		if (!BrowserHook::WindowMessageHook::s_instance.Install())
-		{
-			return NPERR_GENERIC_ERROR;
-		}
-
-		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
-		{
-			BrowserHook::AtlDepHook::s_instance.Install();
-		}
-
-		return NPERR_NO_ERROR;
-	}
-
-	// global shutdown
-	void NS_PluginShutdown()
-	{
-		// 取消监视http和https请求
-		CComPtr<IInternetSession> spSession;
-		if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession )
-		{
-			if (g_spCFHTTP)
-			{
-				spSession->UnregisterNameSpace(g_spCFHTTP, L"http");
-				g_spCFHTTP.Release();
-			}
-			if (g_spCFHTTPS)
-			{
-				spSession->UnregisterNameSpace(g_spCFHTTPS, L"https");
-				g_spCFHTTPS.Release();
-			}
-		}
-		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
-		{
-			BrowserHook::AtlDepHook::s_instance.Uninstall();
-		}
-		BrowserHook::WindowMessageHook::s_instance.Uninstall();
-	}
-
-
-	CPlugin::CPlugin(NPP pNPInstance, int16_t argc, char* argn[], char* argv[]):
-		m_pNPInstance(pNPInstance),
+	CPlugin::CPlugin(const nsPluginCreateData& data):
+		m_pNPInstance(data.instance),
 		m_pNPStream(NULL),
 		m_bInitialized(false),
 		m_pScriptableObject(NULL),
@@ -140,11 +64,11 @@ namespace Plugin
 		// argn[0] = "fireie-cookie-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
 
 		// 从Plugin参数中获取Plugin ID
-		for (int i=0; i<argc; i++)
+		for (int i=0; i<data.argc; i++)
 		{
-			if (_stricmp(argn[i], "id") == 0)
+			if (_stricmp(data.argn[i], "id") == 0)
 			{
-				m_strId = A2T(argv[i]);
+				m_strId = A2T(data.argv[i]);
 				break;
 			}
 		}
@@ -631,21 +555,6 @@ namespace Plugin
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return level;
-	}
-
-	CString CPlugin::GetURLCookie(const CString& strURL)
-	{
-		CString strCookie;
-		char* url = CStringToNPStringCharacters(strURL);
-		char * cookies = NULL;
-		uint32_t len = 0;
-		if (NPN_GetValueForURL(m_pNPInstance, NPNURLVCookie, url, &cookies, &len) == NPERR_NO_ERROR && cookies)
-		{
-			strCookie = UTF8ToCString(cookies);
-			NPN_MemFree(cookies);
-		}
-		NPN_MemFree(url);
-		return strCookie;
 	}
 
 	void CPlugin::SetURLCookie(const CString& strURL, const CString& strCookie)
