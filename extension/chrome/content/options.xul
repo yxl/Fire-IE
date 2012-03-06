@@ -166,9 +166,9 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
     label="&fireie.options.manager;" popup="options">
       <menupopup>
         <menuitem id="import" label="&fireie.options.import;"
-        oncommand="FireIE.importoptions();" />
+        oncommand="FireIE.importOptions();" />
         <menuitem id="export" label="&fireie.options.export;"
-        oncommand="FireIE.exportoptions();" />
+        oncommand="FireIE.exportOptions();" />
         <menuseparator />
         <menuitem id="default" label="&fireie.options.default;"
         oncommand="FireIE.restoreDefaultoptions();" />

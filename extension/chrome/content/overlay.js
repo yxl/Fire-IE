@@ -195,9 +195,6 @@ FireIE.openOptionsDialog = function(url) {
 FireIE.addIeTab = function(url) {
 	let newTab = gBrowser.addTab(FireIE.getfireieURL(url));
 	gBrowser.selectedTab = newTab;
-	if (gURLBar && (url == 'about:blank')) window.setTimeout(function() {
-		gURLBar.focus();
-	}, 0);
 	return newTab;
 }
 
@@ -240,9 +237,6 @@ FireIE.updateUrlBar = function() {
 	
 	if (!gURLBar || !FireIE.isIEEngine()) return;
 	if (gBrowser.userTypedValue) {
-		if (gURLBar.selectionEnd != gURLBar.selectionStart) window.setTimeout(function() {
-			gURLBar.focus();
-		}, 0);
 	} else {
 		var url = FireIE.getPluginObjectURL();
 		if (url == "about:blank") url = "";
@@ -450,7 +444,8 @@ FireIE.delayedGoDoCommand = function(cmd) {
 			pluginObject.SelectAll();
 			break;
 		case "Focus":
-			pluginObject.Focus();
+      pluginObject.focus();
+      pluginObject.Focus();
 			break;
 		case "HandOverFocus":
 			pluginObject.HandOverFocus();
@@ -526,6 +521,7 @@ FireIE.getTabByDocument = function(doc) {
 /** 加载或显示页面时更新界面*/
 FireIE.onPageShowOrLoad = function(e) {
 	FireIE.updateAll();
+  FireIE.focusIE();
 	
 	var doc = e.originalTarget;
 
@@ -646,6 +642,21 @@ FireIE.hookCodeAll = function() {
 	FireIE.hookCode("displaySecurityInfo", /{/, "$& if(FireIE.goDoCommand('DisplaySecurityInfo')) return;");
 }
 
+FireIE.onMouseDown = function(event) {
+  let target = event.target;
+  fireieUtils.LOG("type:" + event.type + " target: " + target.id);
+  // 通过模拟mousedown事件，支持FireGuestures手势
+  if (target.id == "fireie-object") {
+    let evt = document.createEvent("MouseEvents");
+    evt.initMouseEvent("mousedown", true, true, event.view,
+    event.detail, event.screenX, event.screenY + 80, event.clientX, event.clientY + 80, false, false, false, false, 2, null);
+    let container = FireIE.getPluginObject().parentNode;
+    window.setTimeout(function() {
+      container.dispatchEvent(evt);
+      fireieUtils.LOG("container event fired!");
+    }, 200);
+  }
+}
 
 FireIE.addEventAll = function() {
 	FireIE.observerService.addObserver(FireIE.HttpObserver, 'http-on-modify-request', false);
@@ -662,6 +673,8 @@ FireIE.addEventAll = function() {
 
 	FireIE.addEventListener(window, "IeProgressChanged", FireIE.onIEProgressChange);
 	FireIE.addEventListener(window, "NewIETab", FireIE.onNewIETab);
+  
+  FireIE.addEventListener(window, "mousedown", FireIE.onMouseDown);  
 }
 
 FireIE.removeEventAll = function() {
@@ -679,6 +692,8 @@ FireIE.removeEventAll = function() {
 
 	FireIE.removeEventListener(window, "ProgressChanged", FireIE.onIEProgressChange);
 	FireIE.removeEventListener(window, "NewIETab", FireIE.onNewIETab);
+  
+  FireIE.removeEventListener(window, "mousedown", FireIE.onMouseDown);  
 }
 
 FireIE.init = function() {
