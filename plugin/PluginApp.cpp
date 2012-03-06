@@ -136,68 +136,6 @@ CString UTF8ToCString(const char* szUTF8)
 	return str;
 }
 
-/**
-* 模糊匹配两个 URL.
-* http://my.com/path/file.html#123 和 http://my.com/path/file.html 会认为是同一个 URL
-* http://my.com/path/query?p=xyz 和 http://my.com/path/query 不认为是同一个 URL
-*/
-BOOL FuzzyUrlCompare (LPCTSTR lpszUrl1, LPCTSTR lpszUrl2)
-{
-	static const TCHAR ANCHOR = _T('#');
-	static const TCHAR FILE_PROTOCOL [] = _T("file://");
-	static const size_t FILE_PROTOCOL_LENGTH = _tcslen(FILE_PROTOCOL);
-
-	BOOL bMatch = TRUE;
-
-	if ( lpszUrl1 && lpszUrl2 )
-	{
-		TCHAR szDummy1[MAX_PATH];
-		TCHAR szDummy2[MAX_PATH];
-
-		if ( _tcsncmp( lpszUrl1, FILE_PROTOCOL, FILE_PROTOCOL_LENGTH ) == 0 )
-		{
-			DWORD dwLen = MAX_PATH;
-			if ( PathCreateFromUrl( lpszUrl1, szDummy1, & dwLen, 0 ) == S_OK )
-			{
-				lpszUrl1 = szDummy1;
-			}
-		}
-
-		if ( _tcsncmp( lpszUrl2, FILE_PROTOCOL, FILE_PROTOCOL_LENGTH ) == 0 )
-		{
-			DWORD dwLen = MAX_PATH;
-			if ( PathCreateFromUrl( lpszUrl2, szDummy2, & dwLen, 0 ) == S_OK )
-			{
-				lpszUrl2 = szDummy2;
-			}
-		}
-
-		do
-		{
-			if ( *lpszUrl1 != *lpszUrl2 )
-			{
-				if ( ( ( ANCHOR == *lpszUrl1 ) && ( 0 == *lpszUrl2 ) ) ||
-					( ( ANCHOR == *lpszUrl2 ) && ( 0 == *lpszUrl1 ) ) )
-				{
-					bMatch = TRUE;
-				}
-				else
-				{
-					bMatch = FALSE;
-				}
-
-				break;
-			}
-
-			lpszUrl1++;
-			lpszUrl2++;
-
-		} while ( *lpszUrl1 || *lpszUrl2 );
-	}
-
-	return bMatch;
-}
-
 // CPluginApp initialization
 
 BOOL CPluginApp::InitInstance()

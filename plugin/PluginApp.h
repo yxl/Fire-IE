@@ -40,13 +40,6 @@ CString UTF8ToCString(const char* szUTF8);
 // See PluginApp.cpp for the implementation of this class
 //
 
-/**
-* 模糊匹配两个 URL.
-* http://my.com/path/file.html#123 和 http://my.com/path/file.html 会认为是同一个 URL
-* http://my.com/path/query?p=xyz 和 http://my.com/path/query 不认为是同一个 URL
-*/
-BOOL FuzzyUrlCompare (LPCTSTR lpszUrl1, LPCTSTR lpszUrl2);
-
 class CPluginApp : public CWinApp
 {
 public:

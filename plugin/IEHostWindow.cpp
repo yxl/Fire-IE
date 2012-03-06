@@ -66,23 +66,6 @@ CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 	return pInstance;
 }
 
-/** 根据 URL 寻找对应的 CIEHostWindow 对象 */
-CIEHostWindow* CIEHostWindow::GetInstance(const CString& URL)
-{
-	CIEHostWindow *pInstance = NULL;
-	s_csIEWindowMap.Lock();
-	for (int i=0; i<s_IEWindowMap.GetSize(); i++)
-	{
-		CIEHostWindow* p = s_IEWindowMap.GetValueAt(i);
-		if (FuzzyUrlCompare( p->m_strLoadingUrl, URL))
-		{
-			pInstance = p;
-			break;
-		}
-	}
-	s_csIEWindowMap.Unlock();
-	return pInstance;
-}
 /** 根据Internet Explorer_Server找到对应的 CIEHostWindow 对象*/
 CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 {

@@ -139,7 +139,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -177,7 +177,7 @@ buildxpi.bat</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -220,7 +220,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -255,7 +255,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -280,13 +280,13 @@ buildxpi.bat</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
     <Link />
     <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <Link />
     <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -15,9 +15,12 @@ namespace Utils
 			WIN2003,
 			VISTA,
 			WIN7,
-			NOT_SUPPORTED
+			NOT_SUPPORTED  // Windows 2000及以下
 		};
 
+		/**
+		 * 获取操作系统版本
+		 */
 		static Version GetVersion();
 
 	private:
