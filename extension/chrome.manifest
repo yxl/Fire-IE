@@ -5,5 +5,9 @@ resource fireie modules/
 overlay	chrome://browser/content/browser.xul chrome://fireie/content/overlay.xul
 style	chrome://global/content/customizeToolbar.xul chrome://fireie/skin/fireie.css
 
+component {FB0B7EA5-CF43-4470-A48B-9460B38CF37E} components/nsWatchFactory.js
+contract @mozilla.com.cn/coba;1 {FB0B7EA5-CF43-4470-A48B-9460B38CF37E}
+category profile-after-change watchFactoryClass @mozilla.com.cn/coba;1
+
 locale	fireie	en-US	chrome/locale/en-US/
 locale	fireie	zh-CN	chrome/locale/zh-CN/

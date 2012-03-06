@@ -28,6 +28,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugin.h"
 
 
+CString g_csIECookieDir = TEXT("");
+CString g_csIECtlCookieDir = TEXT("d:\\cookies");
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
@@ -802,6 +804,13 @@ BOOL CIEHostWindow::DestroyWindow()
 	UninitIE();
 
 	return CDialog::DestroyWindow();
+}
+
+BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
+{
+	//g_csIECookieDir = Cookie::CookieManager::ReadIECtrlCookieReg();	
+	//Cookie::CookieManager::SetIECtrlCookieReg(g_csIECtlCookieDir);
+	return CDialog::Create(nIDTemplate,pParentWnd);
 }
 
 

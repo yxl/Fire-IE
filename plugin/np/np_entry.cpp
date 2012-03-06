@@ -42,7 +42,7 @@
 #include "stdafx.h"
 #include "npapi.h"
 #include "npfunctions.h"
-
+#include "../Cookie/CookieManager.h"
 #ifndef HIBYTE
 #define HIBYTE(x) ((((uint32_t)(x)) & 0xff00) >> 8)
 #endif
@@ -73,6 +73,14 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
   pFuncs->getvalue      = NPP_GetValue;
   pFuncs->setvalue      = NPP_SetValue;
   NPError result = NPP_Initialize();
+ 
+  /*
+  using namespace Cookie;
+  CString cs = CookieManager::ReadIECtrlCookieReg();
+  CookieManager::SetIECtrlCookieReg(cs);
+  */
+//  CString csCookie = TEXT("d:\\cookies");
+ // Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
 
   return result;
 }

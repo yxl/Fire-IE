@@ -20,6 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "PluginApp.h"
+#include "CookieManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,8 +61,6 @@ END_MESSAGE_MAP()
 
 CPluginApp::CPluginApp()
 {
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
 }
 
 
@@ -203,6 +202,9 @@ BOOL FuzzyUrlCompare (LPCTSTR lpszUrl1, LPCTSTR lpszUrl2)
 
 BOOL CPluginApp::InitInstance()
 {
+	//using namespace Cookie;
+	//CString csCookie = TEXT("d:\\cookies");
+	//Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
 	AfxOleInit();
 	SetClassName(STR_WINDOW_CLASS_NAME);
 	CWinApp::InitInstance();
