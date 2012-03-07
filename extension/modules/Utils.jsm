@@ -16,8 +16,10 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 let sidebarParams = null;
+
 
 /**
  * Provides a bunch of utility functions.
@@ -25,6 +27,8 @@ let sidebarParams = null;
  */
 var Utils =
 {
+	_addonVersion: "0.0.9",
+	
 	/**
 	 * Returns the add-on ID used by Adblock Plus
 	 */
@@ -38,8 +42,7 @@ var Utils =
 	 */
 	get addonVersion()
 	{
-		let version = "0.0.9";
-		return (version[0] == "{" ? "99.9" : version);
+		return this._addonVersion;
 	},
 
 	/**
@@ -638,6 +641,11 @@ var Utils =
 		}
 	}
 };
+
+// Get the addon's version
+AddonManager.getAddonByID(Utils.addonID, function(addon) {
+	Utils._addonVersion = addon.version;
+}); 
 
 /**
  * A cache with a fixed capacity, newer entries replace entries that have been

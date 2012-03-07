@@ -2,6 +2,15 @@
  * This Source Code is subject to the terms of the Mozilla Public License
  * version 2.0 (the "License"). You can obtain a copy of the License at
  * http://mozilla.org/MPL/2.0/.
+ * The Original Code is Adblock Plus.
+ *
+ * The Initial Developer of the Original Code is
+ * Wladimir Palant.
+ * Portions created by the Initial Developer are Copyright (C) 2006-2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * 	Yuan Xulei(hi@yxl.name)
  */
 
 /**
@@ -412,11 +421,6 @@ DownloadableSubscription.prototype =
 	_lastCheck: 0,
 	_errors: 0,
 
-	/**
-	 * Next URL the downloaded should be attempted from (in case of redirects)
-	 * @type String
-	 */
-	nextURL: null,
 
 	/**
 	 * Status of the last download (ID of a string)
@@ -468,12 +472,6 @@ DownloadableSubscription.prototype =
 	expires: 0,
 
 	/**
-	 * Soft expiration time of the filter subscription (in seconds since the beginning of the epoch)
-	 * @type Number
-	 */
-	softExpiration: 0,
-
-	/**
 	 * Number of download failures since last success
 	 * @type Number
 	 */
@@ -502,20 +500,11 @@ DownloadableSubscription.prototype =
 	upgradeRequired: false,
 
 	/**
-	 * Value of the X-Alternative-Locations header: comma-separated list of URLs
-	 * with their weighting factors, e.g.: http://foo.example.com/;q=0.5,http://bar.example.com/;q=2
-	 * @type String
-	 */
-	alternativeLocations: null,
-
-	/**
 	 * See Subscription.serialize()
 	 */
 	serialize: function(buffer)
 	{
 		RegularSubscription.prototype.serialize.call(this, buffer);
-		if (this.nextURL)
-			buffer.push("nextURL=" + this.nextURL);
 		if (this.downloadStatus)
 			buffer.push("downloadStatus=" + this.downloadStatus);
 		if (this.lastModified)
@@ -526,13 +515,9 @@ DownloadableSubscription.prototype =
 			buffer.push("lastCheck=" + this.lastCheck);
 		if (this.expires)
 			buffer.push("expires=" + this.expires);
-		if (this.softExpiration)
-			buffer.push("softExpiration=" + this.softExpiration);
 		if (this.errors)
 			buffer.push("errors=" + this.errors);
 		if (this.requiredVersion)
 			buffer.push("requiredVersion=" + this.requiredVersion);
-		if (this.alternativeLocations)
-			buffer.push("alternativeLocations=" + this.alternativeLocations);
 	}
 };

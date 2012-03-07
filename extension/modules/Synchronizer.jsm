@@ -2,6 +2,15 @@
  * This Source Code is subject to the terms of the Mozilla Public License
  * version 2.0 (the "License"). You can obtain a copy of the License at
  * http://mozilla.org/MPL/2.0/.
+ * The Original Code is Adblock Plus.
+ *
+ * The Initial Developer of the Original Code is
+ * Wladimir Palant.
+ * Portions created by the Initial Developer are Copyright (C) 2006-2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * 	Yuan Xulei(hi@yxl.name)
  */
 
 /**
@@ -97,65 +106,8 @@ var Synchronizer =
 		if (url in executing)
 			return;
 
-		let newURL = subscription.nextURL;
-		let hadTemporaryRedirect = false;
-		subscription.nextURL = null;
-
-		let curVersion = Utils.addonVersion;
-		let loadFrom = newURL;
-		let isBaseLocation = true;
-		if (!loadFrom)
-			loadFrom = url;
-		if (loadFrom == url)
-		{
-			if (subscription.alternativeLocations)
-			{
-				// We have alternative download locations, choose one. "Regular"
-				// subscription URL always goes in with weight 1.
-				let options = [[1, url]];
-				let totalWeight = 1;
-				for each (let alternative in subscription.alternativeLocations.split(','))
-				{
-					if (!/^https?:\/\//.test(alternative))
-						continue;
-
-					let weight = 1;
-					let weightingRegExp = /;q=([\d\.]+)$/;
-					if (weightingRegExp.test(alternative))
-					{
-						weight = parseFloat(RegExp.$1);
-						if (isNaN(weight) || !isFinite(weight) || weight < 0)
-							weight = 1;
-						if (weight > 10)
-							weight = 10;
-
-						alternative = alternative.replace(weightingRegExp, "");
-					}
-					options.push([weight, alternative]);
-					totalWeight += weight;
-				}
-
-				let choice = Math.random() * totalWeight;
-				for each (let [weight, alternative] in options)
-				{
-					choice -= weight;
-					if (choice < 0)
-					{
-						loadFrom = alternative;
-						break;
-					}
-				}
-
-				isBaseLocation = (loadFrom == url);
-			}
-		}
-		else
-		{
-			// Ignore modification date if we are downloading from a different location
-			forceDownload = true;
-		}
-		loadFrom = loadFrom.replace(/%VERSION%/, "ABP" + curVersion);
-
+		let loadFrom = url;
+		
 		let request = null;
 		function errorCallback(error)
 		{
@@ -169,7 +121,7 @@ var Synchronizer =
 			{
 				responseStatus = request.channel.QueryInterface(Ci.nsIHttpChannel).responseStatus;
 			} catch (e) {}
-			setError(subscription, error, channelStatus, responseStatus, loadFrom, isBaseLocation, manual);
+			setError(subscription, error, channelStatus, responseStatus, manual);
 		}
 
 		try
@@ -190,10 +142,6 @@ var Synchronizer =
 																	request.channel.INHIBIT_CACHING |
 																	request.channel.VALIDATE_ALWAYS;
 
-			// Override redirect limit from preferences, user might have set it to 1
-			if (request.channel instanceof Ci.nsIHttpChannel)
-				request.channel.redirectionLimit = 5;
-
 			request.channel.notificationCallbacks =
 			{
 				QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor, Ci.nsIChannelEventSink]),
@@ -208,7 +156,6 @@ var Synchronizer =
 					throw Cr.NS_ERROR_NO_INTERFACE;
 				},
 
-				// New (Gecko 2.0) version
 				asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback)
 				{
 					this.onChannelRedirect(oldChannel, newChannel, flags);
@@ -260,8 +207,6 @@ var Synchronizer =
 				subscription.lastModified = request.getResponseHeader("Last-Modified");
 			}
 
-			if (isBaseLocation && !hadTemporaryRedirect)
-				subscription.alternativeLocations = request.getResponseHeader("X-Alternative-Locations");
 			subscription.lastSuccess = subscription.lastDownload = Math.round(Date.now() / MILLISECONDS_IN_SECOND);
 			subscription.downloadStatus = "synchronize_ok";
 			subscription.errors = 0;
@@ -291,9 +236,6 @@ var Synchronizer =
 			// Hard expiration: download immediately after twice the expiration interval
 			subscription.expires = (subscription.lastDownload + expirationInterval * 2);
 
-			// Soft expiration: use random interval factor between 0.8 and 1.2
-			subscription.softExpiration = (subscription.lastDownload + Math.round(expirationInterval * (Math.random() * 0.4 + 0.8)));
-
 			// Process some special filters and remove them
 			if (newFilters)
 			{
@@ -305,12 +247,7 @@ var Synchronizer =
 						let keyword = RegExp.$1.toLowerCase();
 						let value = RegExp.$2;
 						let known = true;
-						if (keyword == "redirect")
-						{
-							if (isBaseLocation && value != url)
-								subscription.nextURL = value;
-						}
-						else if (keyword == "homepage")
+						if (keyword == "homepage")
 						{
 							let uri = Utils.makeURI(value);
 							if (uri && (uri.scheme == "http" || uri.scheme == "https"))
@@ -323,29 +260,6 @@ var Synchronizer =
 							newFilters.splice(i--, 1);
 					}
 				}
-			}
-
-			if (isBaseLocation && newURL && newURL != url)
-			{
-				let listed = (subscription.url in FilterStorage.knownSubscriptions);
-				if (listed)
-					FilterStorage.removeSubscription(subscription);
-
-				url = newURL;
-
-				let newSubscription = Subscription.fromURL(url);
-				for (let key in newSubscription)
-					delete newSubscription[key];
-				for (let key in subscription)
-					newSubscription[key] = subscription[key];
-
-				delete Subscription.knownSubscriptions[subscription.url];
-				newSubscription.oldSubscription = subscription;
-				subscription = newSubscription;
-				subscription.url = url;
-
-				if (!(subscription.url in FilterStorage.knownSubscriptions) && listed)
-					FilterStorage.addSubscription(subscription);
 			}
 
 			if (newFilters)
@@ -384,23 +298,14 @@ function checkSubscriptions()
 		if (!(subscription instanceof DownloadableSubscription))
 			continue;
 
-		if (subscription.lastCheck && time - subscription.lastCheck > MAX_ABSENSE_INTERVAL)
-		{
-			// No checks for a long time interval - user must have been offline, e.g.
-			// during a weekend. Increase soft expiration to prevent load peaks on the
-			// server.
-			subscription.softExpiration += time - subscription.lastCheck;
-		}
 		subscription.lastCheck = time;
 
 		// Sanity check: do expiration times make sense? Make sure people changing
 		// system clock don't get stuck with outdated subscriptions.
 		if (subscription.expires - time > MAX_EXPIRATION_INTERVAL)
 			subscription.expires = time + MAX_EXPIRATION_INTERVAL;
-		if (subscription.softExpiration - time > MAX_EXPIRATION_INTERVAL)
-			subscription.softExpiration = time + MAX_EXPIRATION_INTERVAL;
 
-		if (subscription.softExpiration > time && subscription.expires > time)
+		if (subscription.expires > time)
 			continue;
 
 		// Do not retry downloads more often than MIN_EXPIRATION_INTERVAL
@@ -419,7 +324,7 @@ function checkSubscriptions()
 function readFilters(subscription, text, errorCallback)
 {
 	let lines = text.split(/[\r\n]+/);
-	if (!/\[Adblock(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
+	if (!/\[fireie(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
 	{
 		errorCallback("synchronize_invalid_data");
 		return null;
@@ -470,21 +375,14 @@ function readFilters(subscription, text, errorCallback)
  * @param {DownloadableSubscription} subscription  subscription that failed to download
  * @param {Integer} channelStatus result code of the download channel
  * @param {String} responseStatus result code as received from server
- * @param {String} downloadURL the URL used for download
  * @param {String} error error ID in global.properties
- * @param {Boolean} isBaseLocation false if the subscription was downloaded from a location specified in X-Alternative-Locations header
  * @param {Boolean} manual  true for a manually started download (should not trigger fallback requests)
  */
-function setError(subscription, error, channelStatus, responseStatus, downloadURL, isBaseLocation, manual)
+function setError(subscription, error, channelStatus, responseStatus, manual)
 {
-	// If download from an alternative location failed, reset the list of
-	// alternative locations - have to get an updated list from base location.
-	if (!isBaseLocation)
-		subscription.alternativeLocations = null;
-
 	try {
-		Cu.reportError("Adblock Plus: Downloading filter subscription " + subscription.title + " failed (" + Utils.getString(error) + ")\n" +
-									 "Download address: " + downloadURL + "\n" +
+		Cu.reportError("Fire-IE: Downloading filter subscription " + subscription.title + " failed (" + Utils.getString(error) + ")\n" +
+									 "Download address: " + subscription.url + "\n" +
 									 "Channel status: " + channelStatus + "\n" +
 									 "Server response: " + responseStatus);
 	} catch(e) {}
@@ -510,7 +408,6 @@ function setError(subscription, error, channelStatus, responseStatus, downloadUR
 			let fallbackURL = Prefs.subscriptions_fallbackurl;
 			fallbackURL = fallbackURL.replace(/%VERSION%/g, encodeURIComponent(Utils.addonVersion));
 			fallbackURL = fallbackURL.replace(/%SUBSCRIPTION%/g, encodeURIComponent(subscription.url));
-			fallbackURL = fallbackURL.replace(/%URL%/g, encodeURIComponent(downloadURL));
 			fallbackURL = fallbackURL.replace(/%ERROR%/g, encodeURIComponent(error));
 			fallbackURL = fallbackURL.replace(/%CHANNELSTATUS%/g, encodeURIComponent(channelStatus));
 			fallbackURL = fallbackURL.replace(/%RESPONSESTATUS%/g, encodeURIComponent(responseStatus));
@@ -527,11 +424,9 @@ function setError(subscription, error, channelStatus, responseStatus, downloadUR
 				if (!(subscription.url in FilterStorage.knownSubscriptions))
 					return;
 
-				if (/^301\s+(\S+)/.test(request.responseText))  // Moved permanently    
-					subscription.nextURL = RegExp.$1;
-				else if (/^410\b/.test(request.responseText))   // Gone
+				if (/^410\b/.test(request.responseText))   // Gone
 				{
-					let data = "[Adblock]\n" + subscription.filters.map(function(f) f.text).join("\n");
+					let data = "[fireie]\n" + subscription.filters.map(function(f) f.text).join("\n");
 					let url = "data:text/plain," + encodeURIComponent(data);
 					let newSubscription = Subscription.fromURL(url);
 					newSubscription.title = subscription.title;
