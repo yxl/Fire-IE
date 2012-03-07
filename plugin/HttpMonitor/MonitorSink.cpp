@@ -27,8 +27,6 @@ namespace HttpMonitor
 		}
 	}
 
-
-	// @todo 有什么用？
 	LPWSTR ExtractFieldValue(LPCWSTR szHeader, LPCWSTR szFieldName, LPWSTR * pFieldValue, size_t * pSize )
 	{
 		LPWSTR r = NULL;
@@ -105,7 +103,7 @@ namespace HttpMonitor
 			CString strHeaders(W2T(*pszAdditionalHeaders));
 
 			static const BOOL SYNC_USER_AGENT = TRUE;
-			if (SYNC_USER_AGENT)
+			if (SYNC_USER_AGENT && m_strURL.Find(_T("cmbchina.com")) == -1)
 			{
 				// 增加 User-Agent
 				CString strUserAgent;
@@ -145,9 +143,6 @@ namespace HttpMonitor
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
-			// 在这里导入 Cookies, 可能会有安全性问题, 把一些不符合 Cookie Policy 的 Cookie 也放过去
-			// ReportProgress() 里面看文档有个 BINDSTATUS_SESSION_COOKIES_ALLOWED, 感觉要更安全一些, 但是实际运行时一直没有到过这个状态
-			// 也许 Firefox 自己会处理？
 			ExportCookies(szResponseHeaders);
 		}
 		return hr;
