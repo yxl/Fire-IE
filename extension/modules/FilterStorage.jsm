@@ -2,6 +2,15 @@
  * This Source Code is subject to the terms of the Mozilla Public License
  * version 2.0 (the "License"). You can obtain a copy of the License at
  * http://mozilla.org/MPL/2.0/.
+ * The Original Code is Adblock Plus.
+ *
+ * The Initial Developer of the Original Code is
+ * Wladimir Palant.
+ * Portions created by the Initial Developer are Copyright (C) 2006-2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * 	Yuan Xulei(hi@yxl.name)
  */
 
 /**
@@ -28,7 +37,7 @@ Cu.import(baseURL.spec + "FilterNotifier.jsm");
  * Version number of the filter storage file format.
  * @type Integer
  */
-const formatVersion = 4;
+const formatVersion = 0;
 
 /**
  * This class reads user's filters from disk, manages them in memory and writes them back.
@@ -48,32 +57,25 @@ var FilterStorage =
 	 */
 	get sourceFile()
 	{
-		let file = null;
-		if (Prefs.patternsfile)
+		// Place the file in the data dir
+		let file = Utils.resolveFilePath(Prefs.data_directory);;
+		if (file)
 		{
-			// Override in place, use it instead of placing the file in the regular data dir
-			file = Utils.resolveFilePath(Prefs.patternsfile);
+			file.append("patterns.ini");
 		}
-		if (!file)
-		{
-			// Place the file in the data dir
-			file = Utils.resolveFilePath(Prefs.data_directory);
-			if (file)
-				file.append("patterns.ini");
-		}
-		if (!file)
+		else
 		{
 			// Data directory pref misconfigured? Try the default value
 			try
 			{
 				file = Utils.resolveFilePath(Prefs.defaultBranch.getCharPref("data_directory"));
 				if (file)
-					FilterStorage.sourceFile.append("patterns.ini");
+					file.append("patterns.ini");
 			} catch(e) {}
 		}
 
 		if (!file)
-			Cu.reportError("Adblock Plus: Failed to resolve filter file location from extensions.adblockplus.patternsfile preference");
+			Cu.reportError("Fire-IE: Failed to resolve filter file location from extensions.adblockplus.patternsfile preference");
 
 		this.__defineGetter__("sourceFile", function() file);
 		return this.sourceFile;
@@ -364,7 +366,7 @@ var FilterStorage =
 			if (!sourceFile || !sourceFile.exists())
 			{
 				// patterns.ini doesn't exist - but maybe we have a default one?
-				let patternsURL = Utils.ioService.newURI("chrome://adblockplus-defaults/content/patterns.ini", null, null);
+				let patternsURL = Utils.ioService.newURI("chrome://fireie/content/patterns.ini", null, null);
 				patternsURL = Utils.chromeRegistry.convertChromeURL(patternsURL);
 				if (patternsURL instanceof Ci.nsIFileURL)
 					sourceFile = patternsURL.file;
@@ -389,7 +391,7 @@ var FilterStorage =
 					stream.init(fileStream, "UTF-8", 16384, 0);
 					stream = stream.QueryInterface(Ci.nsIUnicharLineInputStream);
 
-					userFilters = parseIniFile(stream);
+					parseIniFile(stream);
 					stream.close();
 
 					if (!FilterStorage.subscriptions.length)
@@ -405,7 +407,7 @@ var FilterStorage =
 			}
 			catch (e)
 			{
-				Cu.reportError("Adblock Plus: Failed to read filters from file " + sourceFile.path);
+				Cu.reportError("Fire-IE: Failed to read filters from file " + sourceFile.path);
 				Cu.reportError(e);
 			}
 
@@ -430,9 +432,8 @@ var FilterStorage =
 		}
 
 
-
 		// Old special groups might have been converted, remove them if they are empty
-		for each (let specialSubscription in ["~il~", "~wl~", "~fl~", "~eh~"])
+		for each (let specialSubscription in ["~exceptional~", "~custom~"])
 		{
 			if (specialSubscription in FilterStorage.knownSubscriptions)
 			{
@@ -441,17 +442,6 @@ var FilterStorage =
 					FilterStorage.removeSubscription(subscription, true);
 			}
 		}
-
-		if (userFilters)
-		{
-			for each (let filter in userFilters)
-			{
-				filter = Filter.fromText(filter);
-				if (filter)
-					FilterStorage.addFilter(filter, null, undefined, true);
-			}
-		}
-
 
 		if (!silent)
 			FilterNotifier.triggerListeners("load");
@@ -472,9 +462,7 @@ var FilterStorage =
 		}
 		if (!targetFile)
 			return;
-
-
-
+			
 		try {
 			targetFile.normalize();
 		} catch (e) {}
@@ -497,14 +485,11 @@ var FilterStorage =
 		catch (e)
 		{
 			Cu.reportError(e);
-
 			return;
 		}
-
-
-
+		
 		const maxBufLength = 1024;
-		let buf = ["# Adblock Plus preferences", "version=" + formatVersion];
+		let buf = ["# Fire-IE preferences", "version=" + formatVersion];
 		let lineBreak = Utils.getLineBreak();
 		function writeBuffer()
 		{
@@ -533,7 +518,6 @@ var FilterStorage =
 			}
 		}
 
-
 		// Save subscriptions
 		for each (let subscription in FilterStorage.subscriptions)
 		{
@@ -552,7 +536,6 @@ var FilterStorage =
 				writeBuffer();
 		}
 
-
 		try
 		{
 			stream.writeString(buf.join(lineBreak) + lineBreak);
@@ -565,7 +548,6 @@ var FilterStorage =
 
 			return;
 		}
-
 
 		if (!explicitFile && targetFile.exists())
 		{
@@ -675,9 +657,7 @@ function removeSubscriptionFilters(subscription)
 }
 
 /**
- * Parses filter data from a stream. If the data contains user filters outside of filter
- * groups (Adblock Plus 0.7.x data) these filters are returned - they need to be added
- * separately.
+ * Parses filter data from a stream. 
  */
 function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*/
 {
@@ -687,7 +667,6 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 	let curSection = null;
 	let line = {};
 	let haveMore = true;
-	let userFilters = null;
 	while (true)
 	{
 		if (haveMore)
@@ -707,7 +686,6 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 				switch (curSection)
 				{
 					case "filter":
-					case "pattern":
 						if ("text" in curObj)
 							Filter.fromObject(curObj);
 						break;
@@ -717,7 +695,6 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 							FilterStorage.addSubscription(subscription, true);
 						break;
 					case "subscription filters":
-					case "subscription patterns":
 						if (FilterStorage.subscriptions.length)
 						{
 							let subscription = FilterStorage.subscriptions[FilterStorage.subscriptions.length - 1];
@@ -732,9 +709,6 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 							}
 						}
 						break;
-					case "user patterns":
-						userFilters = curObj;
-						break;
 				}
 			}
 
@@ -745,14 +719,11 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 			switch (curSection)
 			{
 				case "filter":
-				case "pattern":
 				case "subscription":
 					wantObj = true;
 					curObj = {};
 					break;
 				case "subscription filters":
-				case "subscription patterns":
-				case "user patterns":
 					wantObj = false;
 					curObj = [];
 					break;
@@ -764,5 +735,4 @@ function parseIniFile(/**nsIUnicharLineInputStream*/ stream) /**Array of String*
 		else if (wantObj === false && val)
 			curObj.push(val.replace(/\\\[/g, "["));
 	}
-	return userFilters;
 }

@@ -20,7 +20,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import(baseURL.spec + "FilterStorage.jsm");
 Cu.import(baseURL.spec + "FilterNotifier.jsm");
-Cu.import(baseURL.spec + "ElemHide.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
 Cu.import(baseURL.spec + "FilterClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
