@@ -41,7 +41,7 @@ function Subscription(url, title)
 {
 	this.url = url;
 	this.filters = [];
-	this._title = title || Utils.getString("newGroup_title");
+	this._title = title || Utils.getString("newGroup.title");
 	Subscription.knownSubscriptions[url] = this;
 }
 Subscription.prototype =
@@ -163,8 +163,6 @@ Subscription.fromObject = function(obj)
 
 		// URL is valid - this is a downloadable subscription
 		result = new DownloadableSubscription(obj.url, obj.title);
-		if ("nextURL" in obj)
-			result.nextURL = obj.nextURL;
 		if ("downloadStatus" in obj)
 			result._downloadStatus = obj.downloadStatus;
 		if ("lastModified" in obj)
@@ -175,8 +173,6 @@ Subscription.fromObject = function(obj)
 			result._lastCheck = parseInt(obj.lastCheck) || 0;
 		if ("expires" in obj)
 			result.expires = parseInt(obj.expires) || 0;
-		if ("softExpiration" in obj)
-			result.softExpiration = parseInt(obj.softExpiration) || 0;
 		if ("errors" in obj)
 			result._errors = parseInt(obj.errors) || 0;
 		if ("requiredVersion" in obj)
@@ -185,8 +181,6 @@ Subscription.fromObject = function(obj)
 			if (Utils.versionComparator.compare(result.requiredVersion, Utils.addonVersion) > 0)
 				result.upgradeRequired = true;
 		}
-		if ("alternativeLocations" in obj)
-			result.alternativeLocations = obj.alternativeLocations;
 		if ("homepage" in obj)
 			result._homepage = obj.homepage;
 		if ("lastDownload" in obj)
@@ -199,14 +193,12 @@ Subscription.fromObject = function(obj)
 		{
 			// Backwards compatibility - titles and filter types were originally
 			// determined by group identifier.
-			if (obj.url == "~wl~")
-				obj.defaults = "whitelist";
-			else if (obj.url == "~fl~")
-				obj.defaults = "blocking";
-			else if (obj.url == "~eh~")
-				obj.defaults = "elemhide";
+			if (obj.url == "~exceptional~")
+				obj.defaults = "exceptional";
+			else if (obj.url == "~custom~")
+				obj.defaults = "custom";
 			if ("defaults" in obj)
-				obj.title = Utils.getString(obj.defaults + "Group_title");
+				obj.title = Utils.getString(obj.defaults + "Group.title");
 		}
 		result = new SpecialSubscription(obj.url, obj.title);
 		if ("defaults" in obj)
@@ -276,9 +268,8 @@ SpecialSubscription.prototype =
 
 SpecialSubscription.defaultsMap = {
 	__proto__: null,
-	"whitelist": WhitelistFilter,
-	"blocking": BlockingFilter,
-	"elemhide": ElemHideFilter
+	"exceptional": ExceptionalFilter,
+	"custom": CustomFilter
 };
 
 /**
@@ -310,8 +301,8 @@ SpecialSubscription.createForFilter = function(/**Filter*/ filter) /**SpecialSub
 			subscription.defaults = [type];
 	}
 	if (!subscription.defaults)
-		subscription.defaults = ["blocking"];
-	subscription.title = Utils.getString(subscription.defaults[0] + "Group_title");
+		subscription.defaults = ["custom"];
+	subscription.title = Utils.getString(subscription.defaults[0] + "Group.title");
 	return subscription;
 };
 

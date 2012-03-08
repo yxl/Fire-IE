@@ -132,7 +132,7 @@ var Synchronizer =
 		}
 		catch (e)
 		{
-			errorCallback("synchronize_invalid_url");
+			errorCallback("Synchronizer.invalidUrl");
 			return;
 		}
 
@@ -180,7 +180,7 @@ var Synchronizer =
 				request.channel.notificationCallbacks = null;
 			} catch (e) {}
 
-			errorCallback("synchronize_connection_error");
+			errorCallback("Synchronizer.connectionError");
 		}, false);
 
 		request.addEventListener("load", function(ev)
@@ -193,7 +193,7 @@ var Synchronizer =
 			// Status will be 0 for non-HTTP requests
 			if (request.status && request.status != 200 && request.status != 304)
 			{
-				errorCallback("synchronize_connection_error");
+				errorCallback("Synchronizer.connectionError");
 				return;
 			}
 
@@ -277,7 +277,7 @@ var Synchronizer =
 		catch (e)
 		{
 			delete executing[url];
-			errorCallback("synchronize_connection_error");
+			errorCallback("Synchronizer.connectionError");
 			return;
 		}
 	}
@@ -326,7 +326,7 @@ function readFilters(subscription, text, errorCallback)
 	let lines = text.split(/[\r\n]+/);
 	if (!/\[fireie(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
 	{
-		errorCallback("synchronize_invalid_data");
+		errorCallback("Synchronizer.invalidData");
 		return null;
 	}
 	let minVersion = RegExp.$1;
@@ -341,7 +341,7 @@ function readFilters(subscription, text, errorCallback)
 
 			if (checksum && checksum != checksumExpected)
 			{
-				errorCallback("synchronize_checksum_mismatch");
+				errorCallback("Synchronizer.checksumMismatch");
 				return null;
 			}
 
