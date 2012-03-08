@@ -82,7 +82,7 @@ namespace BrowserHook
 			HWND hwnd = pMsg->hwnd;
 
 			// 只处理键盘消息
-			if ((pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST) && (pMsg->message < WM_RBUTTONDOWN && pMsg->message > WM_RBUTTONDBLCLK)  || hwnd == NULL)
+			if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST || hwnd == NULL)
 			{
 				goto Exit;
 			}
@@ -107,16 +107,6 @@ namespace BrowserHook
 			if (pIEHostWindow == NULL) 
 			{
 				goto Exit;
-			}
-
-			if (pMsg->message >= WM_RBUTTONDOWN && pMsg->message <= WM_RBUTTONDBLCLK)
-			{
-				HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
-				if (hwndMessageTarget)
-				{
-					::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, pMsg->lParam);
-					goto Exit;
-				}
 			}
 
 			if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)

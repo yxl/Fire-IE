@@ -105,7 +105,7 @@ namespace HttpMonitor
 			CString strHeaders(W2T(*pszAdditionalHeaders));
 
 			static const BOOL SYNC_USER_AGENT = TRUE;
-			if (SYNC_USER_AGENT)
+			if (SYNC_USER_AGENT && m_strURL.Find(_T("cmbchina.com")) == -1)
 			{
 				// Ôö¼Ó User-Agent
 				CString strUserAgent;
