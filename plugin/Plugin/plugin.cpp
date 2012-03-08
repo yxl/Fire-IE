@@ -171,6 +171,7 @@ namespace Plugin
 				throw CString(_T("Cannot Create CIEHostWindow!"));
 			}
 			pIEHostWindow->SetPlugin(this);
+			//FireEvent(_T("RestoreIECtrlCookie"), _T(""));
 			pIEHostWindow->SetParent(&parent);
 			CRect rect;
 			parent.GetClientRect(rect);

@@ -8,7 +8,7 @@ namespace Cookie
 	{
 		TCHAR value[4096];
 		DWORD dwSzie= sizeof(value);
-		long ret = RegGetValue(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"),TEXT("Cookies"),
+		long ret = RegGetValue(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"),TEXT("CookiesOld"),
 		RRF_RT_ANY|RRF_NOEXPAND,NULL,value,&dwSzie);
 		return value;
 	}
@@ -17,7 +17,7 @@ namespace Cookie
 		HKEY key;
 		if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"), 0, KEY_SET_VALUE, &key))
 		{
-			RegSetValueEx(key, TEXT("Cookies"), 0, REG_SZ, (LPBYTE)csCookie.GetBuffer(), 1024);
+			RegSetValueEx(key, TEXT("Cookies"), 0, REG_EXPAND_SZ, (LPBYTE)csCookie.GetBuffer(), 1024);
 			csCookie.ReleaseBuffer();
 			RegCloseKey(key);
 		}

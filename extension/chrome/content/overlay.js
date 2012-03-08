@@ -673,8 +673,9 @@ FireIE.addEventAll = function() {
 
 	FireIE.addEventListener(window, "IeProgressChanged", FireIE.onIEProgressChange);
 	FireIE.addEventListener(window, "NewIETab", FireIE.onNewIETab);
+	FireIE.addEventListener(window, "RestoreIECtrlCookie", FireIE.onRestoreIECtrlCookie);
   
-  FireIE.addEventListener(window, "mousedown", FireIE.onMouseDown);  
+	FireIE.addEventListener(window, "mousedown", FireIE.onMouseDown);
 }
 
 FireIE.removeEventAll = function() {
@@ -692,6 +693,8 @@ FireIE.removeEventAll = function() {
 
 	FireIE.removeEventListener(window, "ProgressChanged", FireIE.onIEProgressChange);
 	FireIE.removeEventListener(window, "NewIETab", FireIE.onNewIETab);
+	FireIE.removeEventListener(window, "RestoreIECtrlCookie", FireIE.onRestoreIECtrlCookie);
+
   
   FireIE.removeEventListener(window, "mousedown", FireIE.onMouseDown);  
 }
@@ -724,6 +727,10 @@ FireIE.init = function() {
 	
 	FireIE.setupShortcut();
 	FireIE.setupUrlBar();
+}
+
+FireIE.onRestoreIECtrlCookie = function() {
+	Services.obs.notifyObservers(null, "restored-iectrl-cookie", null);
 }
 
 FireIE.destroy = function() {
