@@ -88,7 +88,7 @@ var Policy =
 	 */
 	checkEngineFilter: function(url)
 	{
-		let docDomain = getHostname(wndLocation);
+		let docDomain = getHostname(url);
 		let match = engineMatcher.matchesAny(url, docDomain);
 		if (match)
 		{
@@ -104,7 +104,7 @@ var Policy =
 	 */
 	checkUserAgentFilter: function(url)
 	{
-		let docDomain = getHostname(wndLocation);
+		let docDomain = getHostname(url);
 		let match = userAgentMatcher.matchesAny(url, docDomain);
 		if (match)
 		{
