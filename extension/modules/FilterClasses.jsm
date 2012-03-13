@@ -16,7 +16,7 @@
 /** * @fileOverview Definition of Filter class and its subclasses.
  */
 
-var EXPORTED_SYMBOLS = ["Filter", "InvalidFilter", "CommentFilter", "ActiveFilter", "RegExpFilter", "BlockingFilter", "WhitelistFilter", "ElemHideFilter"];
+var EXPORTED_SYMBOLS = ["Filter", "InvalidFilter", "CommentFilter", "ActiveFilter", "RegExpFilter", "BlockingFilter", "WhitelistFilter", "UserAgentFilter", "UserAgentExceptionalFilter"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -563,7 +563,7 @@ RegExpFilter.fromText = function(text)
 	{
 		if (blocking) {
 			if (userAgent) {
-				return new UserAgentSwitchFilter(origText, text, matchCase, domains);
+				return new UserAgentFilter(origText, text, matchCase, domains);
 			} else {
 				return new BlockingFilter(origText, text, matchCase, domains);
 			}
@@ -609,11 +609,11 @@ BlockingFilter.prototype =
  * @constructor
  * @augments RegExpFilter
  */
-function UserAgentSwitchFilter(text, regexpSource, matchCase, domains)
+function UserAgentFilter(text, regexpSource, matchCase, domains)
 {
 	RegExpFilter.call(this, text, regexpSource, matchCase, domains);
 }
-UserAgentSwitchFilter.prototype =
+UserAgentFilter.prototype =
 {
 	__proto__: RegExpFilter.prototype,
 };

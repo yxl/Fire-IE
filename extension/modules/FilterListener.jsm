@@ -5,7 +5,7 @@
  */
 
 /**
- * @fileOverview Component synchronizing filter storage with Matcher instances and ElemHide.
+ * @fileOverview Component synchronizing filter storage with Matcher instances.
  */
 
 var EXPORTED_SYMBOLS = ["FilterListener"];
@@ -66,8 +66,6 @@ var FilterListener =
 				onGenericChange(action, item);
 		});
 
-		ElemHide.init();
-
 		let initialized = false;
 		let cacheFile = Utils.resolveFilePath(Prefs.data_directory);
 		cacheFile.append("cache.js");
@@ -87,8 +85,8 @@ var FilterListener =
 
 				if (cache.version == cacheVersion && cache.patternsTimestamp == FilterStorage.sourceFile.clone().lastModifiedTime)
 				{
-					defaultMatcher.fromCache(cache);
-					ElemHide.fromCache(cache);
+					engineMatcher.fromCache(cache.engineMatcher);
+					userAgentMatcher.fromCache(cache.userAgentMatcher);
 
 					// We still need to load patterns.ini if certain properties are accessed
 					var loadDone = false;
@@ -128,9 +126,6 @@ var FilterListener =
 					trapProperty(Subscription, "knownSubscriptions");
 
 					initialized = true;
-
-
-					ElemHide.apply();
 				}
 			}
 			catch (e)
@@ -143,12 +138,7 @@ var FilterListener =
 		if (!initialized)
 			FilterStorage.loadFromDisk();
 
-
-
 		Utils.observerService.addObserver(FilterListenerPrivate, "browser:purge-session-history", true);
-
-
-
 	},
 
 	/**
@@ -173,7 +163,6 @@ var FilterListener =
 	set batchMode(value)
 	{
 		batchMode = value;
-		flushElemHide();
 	},
 
 	/**
@@ -215,27 +204,6 @@ var FilterListenerPrivate =
 	QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
 };
 
-let elemhideFlushScheduled = false;
-
-/**
- * Calls ElemHide.apply() if necessary. Executes delayed to prevent multiple
- * subsequent calls.
- */
-function flushElemHide()
-{
-	if (elemhideFlushScheduled)
-		return;
-
-	Utils.runAsync(flushElemHideInternal);
-	elemhideFlushScheduled = true;
-}
-
-function flushElemHideInternal()
-{
-	elemhideFlushScheduled = false;
-	if (!batchMode && ElemHide.isDirty)
-		ElemHide.apply();
-}
 
 let filtersFlushScheduled = false;
 
@@ -246,7 +214,7 @@ function flushFiltersInternal()
 }
 
 /**
- * Notifies Matcher instances or ElemHide object about a new filter
+ * Notifies Matcher instances about a new filter
  * if necessary.
  * @param {Filter} filter filter that has been added
  */
@@ -262,14 +230,14 @@ function addFilter(filter)
 	if (!hasEnabled)
 		return;
 
-	if (filter instanceof RegExpFilter)
-		defaultMatcher.add(filter);
-	else if (filter instanceof ElemHideFilter)
-		ElemHide.add(filter);
+	if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
+		engineMatcher.add(filter);
+	else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
+		userAgentMatcher.add(filter);
 }
 
 /**
- * Notifies Matcher instances or ElemHide object about removal of a filter
+ * Notifies Matcher instances about removal of a filter
  * if necessary.
  * @param {Filter} filter filter that has been removed
  */
@@ -288,10 +256,10 @@ function removeFilter(filter)
 			return;
 	}
 
-	if (filter instanceof RegExpFilter)
-		defaultMatcher.remove(filter);
-	else if (filter instanceof ElemHideFilter)
-		ElemHide.remove(filter);
+	if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
+		engineMatcher.remove(filter);
+	else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
+		userAgentMatcher.remove(filter);
 }
 
 /**
@@ -330,8 +298,6 @@ function onSubscriptionChange(action, subscription, newValue, oldValue)
 		subscription.oldFilters.forEach(removeFilter);
 		subscription.filters.forEach(addFilter);
 	}
-
-	flushElemHide();
 }
 
 /**
@@ -359,7 +325,6 @@ function onFilterChange(action, filter, newValue, oldValue)
 		addFilter(filter);
 	else
 		removeFilter(filter);
-	flushElemHide();
 }
 
 /**
@@ -371,20 +336,19 @@ function onGenericChange(action)
 	{
 		isDirty = 0;
 
-		defaultMatcher.clear();
-		ElemHide.clear();
+		engineMatcher.clear();
+		userAgentMatcher.clear();
 		for each (let subscription in FilterStorage.subscriptions)
 			if (!subscription.disabled)
 				subscription.filters.forEach(addFilter);
-		flushElemHide();
 	}
 	else if (action == "save")
 	{
 		isDirty = 0;
 
-		let cache = {version: cacheVersion, patternsTimestamp: FilterStorage.sourceFile.clone().lastModifiedTime};
-		defaultMatcher.toCache(cache);
-		ElemHide.toCache(cache);
+		let cache = {version: cacheVersion, patternsTimestamp: FilterStorage.sourceFile.clone().lastModifiedTime, engineMatcher: {}, userAgentMatcher:{}};
+		engineMatcher.toCache(cache.engineMatcher);
+		userAgentMatcher.toCache(cache.userAgentMatcher);
 
 		let cacheFile = Utils.resolveFilePath(Prefs.data_directory);
 		cacheFile.append("cache.js");

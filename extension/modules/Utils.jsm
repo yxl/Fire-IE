@@ -65,17 +65,6 @@ var Utils =
 	},
 
 	/**
-	 * Returns whether we are running in Fennec, for Fennec-specific hacks
-	 * @type Boolean
-	 */
-	get isFennec()
-	{
-		let result = (this.appID == "{a23983c0-fd0e-11dc-95ff-0800200c9a66}");
-		Utils.__defineGetter__("isFennec", function() result);
-		return result;
-	},
-
-	/**
 	 * Returns the user interface locale selected for adblockplus chrome package.
 	 */
 	get appLocale()
@@ -515,12 +504,6 @@ var Utils =
 	},
 
 	/**
-	 * Randomly generated class for collapsed nodes.
-	 * @type String
-	 */
-	collapsedClass: null,
-
-	/**
 	 * Nodes scheduled for post-processing (might be null).
 	 * @type Array of Node
 	 */
@@ -571,73 +554,6 @@ var Utils =
 			}
 			else
 				node.className += " " + Utils.collapsedClass;
-		}
-	},
-
-	/**
-	 * Verifies RSA signature. The public key and signature should be base64-encoded.
-	 */
-	verifySignature: function(/**String*/ key, /**String*/ signature, /**String*/ data) /**Boolean*/
-	{
-		if (!Utils.crypto)
-			return false;
-
-		// Maybe we did the same check recently, look it up in the cache
-		if (!("_cache" in Utils.verifySignature))
-			Utils.verifySignature._cache = new Cache(5);
-		let cache = Utils.verifySignature._cache;
-		let cacheKey = key + " " + signature + " " + data;
-		if (cacheKey in cache.data)
-			return cache.data[cacheKey];
-		else
-			cache.add(cacheKey, false);
-
-		let keyInfo, pubKey, context;
-		try
-		{
-			let keyItem = Utils.crypto.getSECItem(atob(key));
-			keyInfo = Utils.crypto.SECKEY_DecodeDERSubjectPublicKeyInfo(keyItem.address());
-			if (keyInfo.isNull())
-				throw new Error("SECKEY_DecodeDERSubjectPublicKeyInfo failed");
-
-			pubKey = Utils.crypto.SECKEY_ExtractPublicKey(keyInfo);
-			if (pubKey.isNull())
-				throw new Error("SECKEY_ExtractPublicKey failed");
-
-			let signatureItem = Utils.crypto.getSECItem(atob(signature));
-
-			context = Utils.crypto.VFY_CreateContext(pubKey, signatureItem.address(), Utils.crypto.SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE, null);
-			if (context.isNull())
-				return false;   // This could happen if the signature is invalid
-
-			let error = Utils.crypto.VFY_Begin(context);
-			if (error < 0)
-				throw new Error("VFY_Begin failed");
-
-			error = Utils.crypto.VFY_Update(context, data, data.length);
-			if (error < 0)
-				throw new Error("VFY_Update failed");
-
-			error = Utils.crypto.VFY_End(context);
-			if (error < 0)
-				return false;
-
-			cache.data[cacheKey] = true;
-			return true;
-		}
-		catch (e)
-		{
-			Cu.reportError(e);
-			return false;
-		}
-		finally
-		{
-			if (keyInfo && !keyInfo.isNull())
-				Utils.crypto.SECKEY_DestroySubjectPublicKeyInfo(keyInfo);
-			if (pubKey && !pubKey.isNull())
-				Utils.crypto.SECKEY_DestroyPublicKey(pubKey);
-			if (context && !context.isNull())
-				Utils.crypto.VFY_DestroyContext(context, true);
 		}
 	}
 };
@@ -722,7 +638,6 @@ XPCOMUtils.defineLazyServiceGetter(Utils, "threadManager", "@mozilla.org/thread-
 XPCOMUtils.defineLazyServiceGetter(Utils, "promptService", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
 XPCOMUtils.defineLazyServiceGetter(Utils, "effectiveTLD", "@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService");
 XPCOMUtils.defineLazyServiceGetter(Utils, "netUtils", "@mozilla.org/network/util;1", "nsINetUtil");
-XPCOMUtils.defineLazyServiceGetter(Utils, "styleService", "@mozilla.org/content/style-sheet-service;1", "nsIStyleSheetService");
 XPCOMUtils.defineLazyServiceGetter(Utils, "prefService", "@mozilla.org/preferences-service;1", "nsIPrefService");
 XPCOMUtils.defineLazyServiceGetter(Utils, "versionComparator", "@mozilla.org/xpcom/version-comparator;1", "nsIVersionComparator");
 XPCOMUtils.defineLazyServiceGetter(Utils, "windowMediator", "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");

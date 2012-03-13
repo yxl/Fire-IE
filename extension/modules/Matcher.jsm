@@ -19,7 +19,7 @@
  * the matching algorithms.
  */
 
-var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "defaultMatcher"];
+var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "engineMatcher", "userAgentMatcher"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -309,7 +309,6 @@ function CombinedMatcher()
 {
 	this.blacklist = new Matcher();
 	this.whitelist = new Matcher();
-	this.keys = {__proto__: null};
 	this.resultCache = {__proto__: null};
 }
 
@@ -334,12 +333,6 @@ CombinedMatcher.prototype =
 	whitelist: null,
 
 	/**
-	 * Exception rules that are limited by public keys, mapped by the corresponding keys.
-	 * @type Object
-	 */
-	keys: null,
-
-	/**
 	 * Lookup table of previous matchesAny results
 	 * @type Object
 	 */
@@ -358,7 +351,6 @@ CombinedMatcher.prototype =
 	{
 		this.blacklist.clear();
 		this.whitelist.clear();
-		this.keys = {__proto__: null};
 		this.resultCache = {__proto__: null};
 		this.cacheEntries = 0;
 	},
@@ -370,16 +362,12 @@ CombinedMatcher.prototype =
 	{
 		if (filter instanceof WhitelistFilter)
 		{
-			if (filter.siteKeys)
-			{
-				for (let i = 0; i < filter.siteKeys.length; i++)
-					this.keys[filter.siteKeys[i]] = filter.text;
-			}
-			else
-				this.whitelist.add(filter);
+			this.whitelist.add(filter);
 		}
 		else
+		{
 			this.blacklist.add(filter);
+		}
 
 		if (this.cacheEntries > 0)
 		{
@@ -395,16 +383,12 @@ CombinedMatcher.prototype =
 	{
 		if (filter instanceof WhitelistFilter)
 		{
-			if (filter.siteKeys)
-			{
-				for (let i = 0; i < filter.siteKeys.length; i++)
-					delete this.keys[filter.siteKeys[i]];
-			}
-			else
-				this.whitelist.remove(filter);
+			this.whitelist.remove(filter);
 		}
 		else
+		{
 			this.blacklist.remove(filter);
+		}
 
 		if (this.cacheEntries > 0)
 		{
@@ -510,29 +494,11 @@ CombinedMatcher.prototype =
 	},
 
 	/**
-	 * Looks up whether any filters match the given website key.
-	 */
-	matchesByKey: function(/**String*/ location, /**String*/ key, /**String*/ docDomain)
-	{
-		key = key.toUpperCase();
-		if (key in this.keys)
-		{
-			let filter = Filter.knownFilters[this.keys[key]];
-			if (filter && filter.matches(location, "DOCUMENT", docDomain, false))
-				return filter;
-			else
-				return null;
-		}
-		else
-			return null;
-	},
-
-	/**
 	 * Stores current state in a JSON'able object.
 	 */
 	toCache: function(/**Object*/ cache)
 	{
-		cache.matcher = {whitelist: {}, blacklist: {}, keys: this.keys};
+		cache.matcher = {whitelist: {}, blacklist: {} };
 		this.whitelist.toCache(cache.matcher.whitelist);
 		this.blacklist.toCache(cache.matcher.blacklist);
 	},
@@ -544,12 +510,17 @@ CombinedMatcher.prototype =
 	{
 		this.whitelist.fromCache(cache.matcher.whitelist);
 		this.blacklist.fromCache(cache.matcher.blacklist);
-		this.keys = cache.matcher.keys;
 	}
 }
 
 /**
- * Shared CombinedMatcher instance that should usually be used.
+ * Shared CombinedMatcher instance for engine switching.
  * @type CombinedMatcher
  */
-var defaultMatcher = new CombinedMatcher();
+var engineMatcher = new CombinedMatcher();
+
+/**
+ * Shared CombinedMatcher instance for user agent switching.
+ * @type CombinedMatcher
+ */
+var userAgentMatcher = new CombinedMatcher();
