@@ -25,7 +25,6 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "FilterClasses.jsm");
 Cu.import(baseURL.spec + "FilterNotifier.jsm");
@@ -44,6 +43,7 @@ function Subscription(url, title)
 	this._title = title || Utils.getString("newGroup.title");
 	Subscription.knownSubscriptions[url] = this;
 }
+
 Subscription.prototype =
 {
 	/**
@@ -268,8 +268,8 @@ SpecialSubscription.prototype =
 
 SpecialSubscription.defaultsMap = {
 	__proto__: null,
-	"exceptional": ExceptionalFilter,
-	"custom": CustomFilter
+	"exceptional": WhitelistFilter,
+	"custom": BlockingFilter
 };
 
 /**
@@ -512,3 +512,4 @@ DownloadableSubscription.prototype =
 			buffer.push("requiredVersion=" + this.requiredVersion);
 	}
 };
+
