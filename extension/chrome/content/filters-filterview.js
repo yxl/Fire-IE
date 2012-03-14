@@ -737,7 +737,7 @@ var FilterView =
 
 		let item = this.data[row];
 		let position = (orientation == Ci.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
-		return FilterActions.drop(position, dataTransfer);
+		FilterActions.drop(position, dataTransfer);
 	},
 
 	isEditable: function(row, col)
