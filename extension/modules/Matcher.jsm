@@ -19,7 +19,7 @@
  * the matching algorithms.
  */
 
-var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "engineMatcher", "userAgentMatcher"];
+var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "engineMatcher", "userAgentMatcher", "AllMatcher"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -524,3 +524,110 @@ var engineMatcher = new CombinedMatcher();
  * @type CombinedMatcher
  */
 var userAgentMatcher = new CombinedMatcher();
+
+var AllMatcher = {
+  _getFilterMatch: function(filter) {
+		let matcher = null;
+		if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
+			matcher = engineMatcher;
+		else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
+			matcher = userAgentMatcher;
+		return matcher;
+	},
+	/**
+	 */
+	clear: function()
+	{
+		engineMatcher.clear();
+		userAgentMatcher.clear();
+	},
+
+	/**
+	 */
+	add: function(filter)
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			matcher.add(filter);
+		}
+	},
+
+	/**
+	 */
+	remove: function(filter)
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			matcher.remove(filter);
+		}
+	},
+
+
+	/**
+	 * @see Matcher#findKeyword
+	 */
+	findKeyword: function(filter)
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			return matcher.findKeyword(filter);
+		}	
+		return null; 
+	},
+
+	/**
+	 * @see Matcher#hasFilter
+	 */
+	hasFilter: function(filter)
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			return matcher.hasFilter(filter);
+		}
+		return false;
+	},
+
+	/**
+	 * @see Matcher#getKeywordForFilter
+	 */
+	getKeywordForFilter: function(filter)
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			return matcher.getKeywordForFilter(filter);
+		}	
+		return "";
+	},
+
+	/**
+	 * Checks whether a particular filter is slow
+	 */
+	isSlowFilter: function(/**RegExpFilter*/ filter) /**Boolean*/
+	{
+		let matcher = this._getFilterMatch(filter);
+		if (matcher) {
+			return matcher.isSlowFilter(filter);
+		}	
+		return false;
+	},
+
+	/**
+	 * Stores current state in a JSON'able object.
+	 */
+	toCache: function(/**Object*/ cache)
+	{
+		cache.engineMatcher = {};
+		cache.userAgentMatcher = {};
+		engineMatcher.toCache(cache.engineMatcher);
+		userAgentMatcher.toCache(cache.userAgentMatcher);
+	},
+
+	/**
+	 * Restores current state from an object.
+	 */
+	fromCache: function(/**Object*/ cache)
+	{
+		engineMatcher.fromCache(cache.engineMatcher);
+		userAgentMatcher.fromCache(cache.userAgentMatcher);	
+	}
+};

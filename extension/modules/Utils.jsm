@@ -72,7 +72,7 @@ var Utils =
 		let locale = "en-US";
 		try
 		{
-			locale = Utils.chromeRegistry.getSelectedLocale("adblockplus");
+			locale = Utils.chromeRegistry.getSelectedLocale("fireie");
 		}
 		catch (e)
 		{

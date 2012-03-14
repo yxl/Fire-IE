@@ -55,7 +55,8 @@
 <popupset>
 	<!-- Switch button context menu -->
 	<menupopup id="fireie-switch-button-context-menu">
-		<menuitem label="&fireie.options.title;" oncommand="FireIE.openOptionsDialog()"/>
+		<menuitem label="&fireie.options.title;" oncommand="FireIE.openOptionsDialog();"/>
+		<menuitem label="Switch Rules" oncommand="FireIE.openFiltersDialog();" />
 	</menupopup>
 </popupset>
 

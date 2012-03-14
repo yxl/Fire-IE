@@ -324,7 +324,7 @@ function checkSubscriptions()
 function readFilters(subscription, text, errorCallback)
 {
 	let lines = text.split(/[\r\n]+/);
-	if (!/\[fireie(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
+	if (!/\[Adblock(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
 	{
 		errorCallback("Synchronizer.invalidData");
 		return null;

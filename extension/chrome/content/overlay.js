@@ -187,8 +187,12 @@ FireIE.switchEngine = function() {
 /** 打开配置对话框 */
 FireIE.openOptionsDialog = function(url) {
 	if (!url) url = FireIE.getPluginObjectURL();
-	var icon = document.getElementById('ietab-status');
-	window.openDialog('chrome://fireie/content/options.xul', "fireieOptionsDialog", 'chrome,centerscreen', FireIE.getUrlDomain(url), icon);
+	window.openDialog('chrome://fireie/content/options.xul', "fireieOptionsDialog", 'chrome,centerscreen', FireIE.getUrlDomain(url));
+}
+
+/** 打开切换规则对话框 */
+FireIE.openFiltersDialog = function(url) {
+	window.openDialog('chrome://fireie/content/filters.xul', "fireieFilterDialog", 'chrome,centerscreen');
 }
 
 /** 新建一个ie标签*/

@@ -85,8 +85,7 @@ var FilterListener =
 
 				if (cache.version == cacheVersion && cache.patternsTimestamp == FilterStorage.sourceFile.clone().lastModifiedTime)
 				{
-					engineMatcher.fromCache(cache.engineMatcher);
-					userAgentMatcher.fromCache(cache.userAgentMatcher);
+					AllMatcher.fromCache(cache);
 
 					// We still need to load patterns.ini if certain properties are accessed
 					var loadDone = false;
@@ -230,10 +229,8 @@ function addFilter(filter)
 	if (!hasEnabled)
 		return;
 
-	if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
-		engineMatcher.add(filter);
-	else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
-		userAgentMatcher.add(filter);
+	if (filter instanceof RegExpFilter)
+		AllMatcher.add(filter);
 }
 
 /**
@@ -256,10 +253,9 @@ function removeFilter(filter)
 			return;
 	}
 
-	if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
-		engineMatcher.remove(filter);
-	else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
-		userAgentMatcher.remove(filter);
+	if (filter instanceof RegExpFilter) {
+		AllMatcher.remove(filter);
+	}
 }
 
 /**
@@ -336,8 +332,7 @@ function onGenericChange(action)
 	{
 		isDirty = 0;
 
-		engineMatcher.clear();
-		userAgentMatcher.clear();
+		AllMatcher.clear();
 		for each (let subscription in FilterStorage.subscriptions)
 			if (!subscription.disabled)
 				subscription.filters.forEach(addFilter);
@@ -346,9 +341,8 @@ function onGenericChange(action)
 	{
 		isDirty = 0;
 
-		let cache = {version: cacheVersion, patternsTimestamp: FilterStorage.sourceFile.clone().lastModifiedTime, engineMatcher: {}, userAgentMatcher:{}};
-		engineMatcher.toCache(cache.engineMatcher);
-		userAgentMatcher.toCache(cache.userAgentMatcher);
+		let cache = {version: cacheVersion, patternsTimestamp: FilterStorage.sourceFile.clone().lastModifiedTime};
+		AllMatcher.toCache(cache);
 
 		let cacheFile = Utils.resolveFilePath(Prefs.data_directory);
 		cacheFile.append("cache.js");

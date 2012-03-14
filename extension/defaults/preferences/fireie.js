@@ -6,6 +6,8 @@ pref("extensions.fireie.subscriptions_autoupdate", true);
 pref("extensions.fireie.subscriptions_listurl", "https://adblockplus.org/subscriptions2.xml");
 pref("extensions.fireie.subscriptions_fallbackurl", "https://adblockplus.org/getSubscription?version=%VERSION%&url=%SUBSCRIPTION%&downloadURL=%URL%&error=%ERROR%&channelStatus=%CHANNELSTATUS%&responseStatus=%RESPONSESTATUS%");
 pref("extensions.fireie.subscriptions_fallbackerrors", 5);
+pref("extensions.fireie.subscriptions_exceptionsurl", "https://easylist-downloads.adblockplus.org/exceptionrules.txt");
+pref("extensions.fireie.subscriptions_exceptionscheckbox", true);
 pref("extensions.fireie.data_directory", "fireie");
 pref("extensions.fireie.autoswitch_whitelistschemes", "about chrome file irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
 pref("extensions.fireie.autoswitch_enabled", true);
