@@ -1,60 +1,51 @@
 <!ENTITY dialog.title                         "Fire-IE Switch Rules Preferences">
 
-<!ENTITY subscriptions.tab.label              "Filter subscriptions">
-<!ENTITY filters.tab.label                    "Custom filters">
+<!ENTITY subscriptions.tab.label              "Rule subscriptions">
+<!ENTITY filters.tab.label                    "Custom rules">
 
-<!ENTITY addSubscription.label                "Add filter subscription">
+<!ENTITY addSubscription.label                "Add rule subscription">
 <!ENTITY addSubscription.accesskey            "f">
 
 <!ENTITY addSubscriptionAdd.label             "Add">
 <!ENTITY addSubscriptionCancel.label          "Cancel">
 <!ENTITY addSubscriptionOther.label           "Add a different subscription">
 
-<!ENTITY noSubscriptions.text                 "
-	You haven't added any filter subscriptions yet. Adblock Plus won't block
-	anything without filters, please use &quot;Add filter subscription&quot; to
-	add some.
-">
+<!ENTITY noSubscriptions.text                 "You haven't added any rule subscriptions yet. Fire IE won't automatically switch browser engine and synchronize cookie without rules, please use &quot;Add rule subscription&quot; toadd some.">
 <!ENTITY subscription.homepage.label          "Homepage">
 <!ENTITY subscription.external.label          "Updated by another extension">
-<!ENTITY subscription.source.label            "Filter list">
+<!ENTITY subscription.source.label            "Rule list">
 <!ENTITY subscription.enabled.label           "Enabled">
 <!ENTITY subscription.lastDownload.label      "Last download:">
 <!ENTITY subscription.lastDownload.inProgress "Downloading…">
 <!ENTITY subscription.lastDownload.unknown    "N/A">
 <!ENTITY subscription.lastDownload.invalidURL "Failed, not a valid address">
 <!ENTITY subscription.lastDownload.connectionError "Failed, download failure">
-<!ENTITY subscription.lastDownload.invalidData "Failed, not a valid filters list">
+<!ENTITY subscription.lastDownload.invalidData "Failed, not a valid rules list">
 <!ENTITY subscription.lastDownload.checksumMismatch "Failed, checksum mismatch">
 <!ENTITY subscription.lastDownload.success    "Success">
-<!ENTITY subscription.minVersion.warning      "This filter subscription requires a newer Adblock Plus version, you should update to the latest Adblock Plus version.">
-<!ENTITY subscription.disabledFilters.warning "Some filters in this subscription are disabled.">
-<!ENTITY subscription.disabledFilters.enable  "Enable disabled filters">
+<!ENTITY subscription.minVersion.warning      "This rule subscription requires a newer Fire IE version, you should update to the latest Fire IE version.">
+<!ENTITY subscription.disabledFilters.warning "Some rules in this subscription are disabled.">
+<!ENTITY subscription.disabledFilters.enable  "Enable disabled rules">
 
 <!ENTITY subscription.actions.label           "Actions">
-<!ENTITY subscription.update.label            "Update filters">
+<!ENTITY subscription.update.label            "Update rules">
 <!ENTITY subscription.editTitle.label         "Edit title">
 <!ENTITY subscription.delete.label            "Delete">
-<!ENTITY subscription.showHideFilters.label   "Show/hide filters">
+<!ENTITY subscription.showHideFilters.label   "Show/hide details">
 <!ENTITY subscription.moveUp.label            "Move up">
 <!ENTITY subscription.moveDown.label          "Move down">
 
-<!ENTITY acceptableAds2.label                 "Allow some non-intrusive advertising">
-<!ENTITY acceptableAds2.accesskey             "i">
 <!ENTITY viewList.label                       "View list">
-<!ENTITY readMore.label                       "Read more">
 
-<!ENTITY addGroup.label                       "Add filter group">
+<!ENTITY addGroup.label                       "Add rule group">
 <!ENTITY addGroup.accesskey                   "g">
 
-<!ENTITY noFilters.text                       "
-	You don't have any custom filters yet.
-">
+<!ENTITY noFilters.text                       "You don't have any custom rules yet.">
 
-<!ENTITY addFilter.label                      "Add filter">
+<!ENTITY addFilter.label                      "Add rule">
 <!ENTITY addFilter.accesskey                  "d">
 
-<!ENTITY filter.actions.label                 "Filter actions">
+<!ENTITY filter.actions.label                 "Rule actions">
 <!ENTITY filter.edit.label                    "Edit">
 <!ENTITY filter.cut.label                     "Cut">
 <!ENTITY filter.copy.label                    "Copy">
@@ -66,9 +57,9 @@
 <!ENTITY filter.moveDown.label                "Move down">
 <!ENTITY viewMenu.label                       "View">
 
-<!ENTITY filter.column                        "Filter rule">
+<!ENTITY filter.column                        "Switch rule">
 <!ENTITY filter.accesskey                     "F">
-<!ENTITY slow.column                          "Slow filters">
+<!ENTITY slow.column                          "Slow rules">
 <!ENTITY slow.accesskey                       "w">
 <!ENTITY enabled.column                       "Enabled">
 <!ENTITY enabled.accesskey                    "n">
@@ -86,10 +77,10 @@
 <!ENTITY sort.descending.label                "Z > A sort order">
 <!ENTITY sort.descending.accesskey            "Z">
 
-<!ENTITY noGroupSelected.text                 "You need to select a filter group before its filters can be displayed.">
+<!ENTITY noGroupSelected.text                 "You need to select a rule group before its rules can be displayed.">
 <!ENTITY noFiltersInGroup.text                "The selected group is empty.">
 
-<!ENTITY filters.remove.warning               "Do you really want to remove all selected filters?">
+<!ENTITY filters.remove.warning               "Do you really want to remove all selected rules?">
 
 <!ENTITY backupButton.label                   "Backup and Restore">
 <!ENTITY backupButton.accesskey               "B">
@@ -99,14 +90,14 @@
 <!ENTITY restore.default.label                "Restore backup from ?1?">
 <!ENTITY restore.own.label                    "Restore own backup">
 
-<!ENTITY backup.complete.title                "All filters and subscriptions">
-<!ENTITY backup.custom.title                  "Custom filters only">
+<!ENTITY backup.complete.title                "All rules and subscriptions">
+<!ENTITY backup.custom.title                  "Custom rules only">
 
-<!ENTITY backup.error                         "There was an error writing filters to the file. Make sure that the file isn't write protected or in use by another application.">
-<!ENTITY restore.error                        "The file's data could not be processed, maybe this isn't an Adblock Plus backup file?">
-<!ENTITY restore.complete.warning             "All your filter preferences will be replaced by the contents of the selected file. Do you want to proceeed?">
-<!ENTITY restore.custom.warning               "All your custom filters will be replaced by the contents of the selected file. Do you want to proceeed?">
-<!ENTITY restore.minVersion.warning           "Warning: the file has been created with a newer Adblock Plus version. You should update to the latest Adblock Plus version before restoring from this file.">
+<!ENTITY backup.error                         "There was an error writing rules to the file. Make sure that the file isn't write protected or in use by another application.">
+<!ENTITY restore.error                        "The file's data could not be processed, maybe this isn't a Fire IE backup file?">
+<!ENTITY restore.complete.warning             "All your rule preferences will be replaced by the contents of the selected file. Do you want to proceeed?">
+<!ENTITY restore.custom.warning               "All your custom rules will be replaced by the contents of the selected file. Do you want to proceeed?">
+<!ENTITY restore.minVersion.warning           "Warning: the file has been created with a newer Fire IE version. You should update to the latest Fire IE version before restoring from this file.">
 
 <!ENTITY find.label                           "Find">
 <!ENTITY find.accesskey                       "n">

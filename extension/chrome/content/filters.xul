@@ -133,6 +133,7 @@
 			<tab label="&filters.tab.label;"/>
 		</tabs>
 		<tabpanels flex="1">
+		  <!-- 订阅的切换规则 -->	
 			<tabpanel id="subscriptionsTab" orient="vertical" flex="1">
 				<hbox pack="end">
 					<button id="selectSubscriptionButton" label="&addSubscription.label;" accesskey="&addSubscription.accesskey;" command="subscription-add-command"/>
@@ -256,13 +257,8 @@
 							onkeypress="SubscriptionActions.keyPress(event);">
 					</richlistbox>
 				</deck>
-
-				<description>
-					<checkbox id="acceptableAds" label="&acceptableAds2.label;" accesskey="&acceptableAds2.accesskey;" oncommand="ListManager.allowAcceptableAds(this.checked);"/>
-					<label class="text-link" value="&viewList.label;" onclick="Utils.loadInBrowser(Prefs.subscriptions_exceptionsurl);"/>
-					<label class="text-link" value="&readMore.label;" onclick="Utils.loadDocLink('acceptable_ads');"/>
-				</description>
 			</tabpanel>
+			<!-- 自定义的切换规则 -->	
 			<tabpanel id="filtersTab" orient="vertical" flex="1">
 				<hbox pack="end">
 					<button id="addGroupButton" label="&addGroup.label;" accesskey="&addGroup.accesskey;" command="group-add-command"/>

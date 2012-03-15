@@ -158,9 +158,6 @@ ListManager.prototype =
 	 */
 	_onChange: function(action, item, param1, param2)
 	{
-		if ((action == "subscription.added" || action == "subscription.removed") && item.url == Prefs.subscriptions_exceptionsurl)
-			E("acceptableAds").checked = FilterStorage.subscriptions.some(function(s) s.url == Prefs.subscriptions_exceptionsurl);
-
 		if (action == "filter.disabled")
 		{
 			if (this._scheduledUpdateDisabled == null)
@@ -274,41 +271,12 @@ ListManager.init = function()
 {
 	new ListManager(E("subscriptions"),
 									E("subscriptionTemplate"),
-									function(s) s instanceof RegularSubscription && !(ListManager.acceptableAdsCheckbox && s.url == Prefs.subscriptions_exceptionsurl),
+									function(s) s instanceof RegularSubscription,
 									SubscriptionActions.updateCommands);
 	new ListManager(E("groups"),
 									E("groupTemplate"),
 									function(s) s instanceof SpecialSubscription,
 									SubscriptionActions.updateCommands);
-	E("acceptableAds").checked = FilterStorage.subscriptions.some(function(s) s.url == Prefs.subscriptions_exceptionsurl);
-	E("acceptableAds").parentNode.hidden = !ListManager.acceptableAdsCheckbox;
-};
-
-/**
- * Defines whether the "acceptable ads" subscription needs special treatment.
- * @type Boolean
- */
-ListManager.acceptableAdsCheckbox = Prefs.subscriptions_exceptionscheckbox;
-
-/**
- * Adds or removes filter subscription allowing acceptable ads.
- */
-ListManager.allowAcceptableAds = function(/**Boolean*/ allow)
-{
-	let subscription = Subscription.fromURL(Prefs.subscriptions_exceptionsurl);
-	if (!subscription)
-		return;
-
-	subscription.disabled = false;
-	subscription.title = "Allow non-intrusive advertising";
-	if (allow)
-	{
-		FilterStorage.addSubscription(subscription);
-		if (subscription instanceof DownloadableSubscription && !subscription.lastDownload)
-			Synchronizer.execute(subscription);
-	}
-	else
-		FilterStorage.removeSubscription(subscription);
 };
 
 window.addEventListener("load", ListManager.init, false);
