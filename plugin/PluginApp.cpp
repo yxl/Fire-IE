@@ -63,9 +63,21 @@ CPluginApp::CPluginApp()
 {
 	using namespace Cookie;
 	CString csCookie = Cookie::CookieManager::ReadIECtrlReg(TEXT("CookiesOld"));
-	Cookie::CookieManager::SetIECtrlReg(TEXT("Cookies"),csCookie);
+	if (!csCookie.IsEmpty())
+	{
+		int index = csCookie.Find(_T("AppData"));
+		if (index > 0)
+			csCookie = _T("%USERPROFILE%") + csCookie.Right(csCookie.GetLength() - index +1 );
+		Cookie::CookieManager::SetIECtrlReg(TEXT("Cookies"),csCookie);
+	}
 	CString csCache = Cookie::CookieManager::ReadIECtrlReg(TEXT("CacheOld"));
-	Cookie::CookieManager::SetIECtrlReg(TEXT("Cache"),csCache);
+	if(!csCache.IsEmpty())
+	{
+		int index = csCache.Find(_T("AppData"));
+		if(index > 0)
+			csCache = _T("%USERPROFILE%") + csCache.Right(csCookie.GetLength() - index +1 );
+		Cookie::CookieManager::SetIECtrlReg(TEXT("Cache"),csCache);
+	}
 }
 
 

@@ -6,7 +6,7 @@ namespace Cookie
 	CookieManager CookieManager::s_instance;
 	CString CookieManager::ReadIECtrlReg(CString csRegName)
 	{
-		TCHAR value[4096];
+		TCHAR value[4096]={0};
 		DWORD dwSzie= sizeof(value);
 		long ret = RegGetValue(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"),csRegName,
 		RRF_RT_ANY|RRF_NOEXPAND,NULL,value,&dwSzie);
