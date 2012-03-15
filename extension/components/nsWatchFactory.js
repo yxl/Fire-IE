@@ -79,74 +79,51 @@ watchFactoryClass.prototype = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
     case "profile-after-change":
-		//this.onAppStartup();
 		SetReg();
-		//LOG("The original cookie dir is " + this.cookieDir);
-		//SetIECtrlCookieReg();
-		//StoreIECtrlCookieReg(this.cookieDir);
 	  break;
-
-/*	  case "restored-iectrl-cookie":
-		//RestoreIECtrlCookieReg(this.cookieDir);
-	  break;
-	 case "sessionstore-windows-restored":
-		//RestoreIECtrlCookieReg(this.cookieDir);
-	  break;*/
     };
   }
-  /*
-  	onAppStartup: function() {
-		var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-		//observerService.addObserver(this, 'final-ui-startup', false);
-		//observerService.addObserver(this, 'sessionstore-windows-restored', false);
-		observerService.addObserver(this, 'restored-iectrl-cookie', false);
-	}
-	*/
 }
 
-function SetIECtrlCookieReg() {
+function SetIECtrlReg(regName) {
   var file = Components.classes["@mozilla.org/file/directory_service;1"].   
            getService(Components.interfaces.nsIProperties).   
            get("ProfD", Components.interfaces.nsIFile);   
-  var cookieDir = file.path +"\\extensions\\fireie\\Cookies";
+  var regDir = file.path +"\\extensions\\fireie\\" + regName;
  
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
-  //let cookieDir = wrk.readStringValue("Cookies");
-  wrk.writeStringValue("Cookies", cookieDir);
+  wrk.writeStringValue(regName, regDir);
   wrk.close();
-  LOG("Writing Cookie Path ..." + file.path +"\\extensions\\fireie\\Cookies");
-  //return cookieDir;
+
 }
 
-function GetDefIECtrlCookieReg(){
+function GetDefIECtrlReg(regName){
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
-  let dir = wrk.readStringValue("Cookies");
+  let dir = wrk.readStringValue(regName);
   wrk.close();
+  LOG("Get Defualt " + regName + " dir: " + dir);
   return dir;
 }
-
-/*
-function StoreIECtrlCookieReg(path) {
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
-  wrk.writeStringValue("CookiesOld", path);
-  wrk.close();
-  LOG("Store Cookie Path ..." + path);
-}
-*/
 
 function SetReg(){
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
   if(!wrk.hasValue("CookiesOld")){
-    let dir = GetDefIECtrlCookieReg();
-	wrk.writeStringValue("CookiesOld",dir);
-	LOG("NOT FOUND");
-  }else{ LOG("FOUND");}
+      let dir = GetDefIECtrlReg("Cookies");
+	  wrk.writeStringValue("CookiesOld",dir);
+	}
   wrk.close();
-  SetIECtrlCookieReg();
+  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
+  if(!wrk.hasValue("CacheOld")){
+    let dir = GetDefIECtrlReg("Cache");
+	wrk.writeStringValue("CacheOld",dir);
+  }
+  wrk.close();
+  SetIECtrlReg("Cookies");
+  SetIECtrlReg("Cache");
  }
 
 var NSGetFactory = XPCOMUtils.generateNSGetFactory([watchFactoryClass]);

@@ -7,8 +7,8 @@ namespace Cookie
 	{
 	public:
 		static CookieManager s_instance;
-		static CString ReadIECtrlCookieReg();
-		static void SetIECtrlCookieReg(CString& csCookie);
+		static CString ReadIECtrlReg(CString csRegName);
+		static void SetIECtrlReg(CString csRegName,CString& csCookie);
 		//static void RestoreIECookieReg(CString& csIECookie);
 	private:
 		CookieManager(void){}

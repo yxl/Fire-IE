@@ -4,20 +4,20 @@
 namespace Cookie
 {
 	CookieManager CookieManager::s_instance;
-	CString CookieManager::ReadIECtrlCookieReg()
+	CString CookieManager::ReadIECtrlReg(CString csRegName)
 	{
 		TCHAR value[4096];
 		DWORD dwSzie= sizeof(value);
-		long ret = RegGetValue(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"),TEXT("CookiesOld"),
+		long ret = RegGetValue(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"),csRegName,
 		RRF_RT_ANY|RRF_NOEXPAND,NULL,value,&dwSzie);
 		return value;
 	}
-	void CookieManager::SetIECtrlCookieReg(CString& csCookie)
+	void CookieManager::SetIECtrlReg(CString csRegName,CString& csCookie)
 	{
 		HKEY key;
 		if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"), 0, KEY_SET_VALUE, &key))
 		{
-			RegSetValueEx(key, TEXT("Cookies"), 0, REG_EXPAND_SZ, (LPBYTE)csCookie.GetBuffer(), 1024);
+			RegSetValueEx(key, csRegName, 0, REG_EXPAND_SZ, (LPBYTE)csCookie.GetBuffer(), 1024);
 			csCookie.ReleaseBuffer();
 			RegCloseKey(key);
 		}

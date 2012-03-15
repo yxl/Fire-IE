@@ -62,9 +62,10 @@ END_MESSAGE_MAP()
 CPluginApp::CPluginApp()
 {
 	using namespace Cookie;
-	CString csCookie = Cookie::CookieManager::ReadIECtrlCookieReg();
-	Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
-
+	CString csCookie = Cookie::CookieManager::ReadIECtrlReg(TEXT("CookiesOld"));
+	Cookie::CookieManager::SetIECtrlReg(TEXT("Cookies"),csCookie);
+	CString csCache = Cookie::CookieManager::ReadIECtrlReg(TEXT("CacheOld"));
+	Cookie::CookieManager::SetIECtrlReg(TEXT("Cache"),csCache);
 }
 
 

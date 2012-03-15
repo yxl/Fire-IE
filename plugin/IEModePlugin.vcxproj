@@ -160,6 +160,7 @@
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <UACExecutionLevel>HighestAvailable</UACExecutionLevel>
+      <AdditionalDependencies>kernel32.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
