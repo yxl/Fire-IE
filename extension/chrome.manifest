@@ -9,5 +9,10 @@ component {FB0B7EA5-CF43-4470-A48B-9460B38CF37E} components/nsWatchFactory.js
 contract @mozilla.com.cn/coba;1 {FB0B7EA5-CF43-4470-A48B-9460B38CF37E}
 category profile-after-change watchFactoryClass @mozilla.com.cn/coba;1
 
+# Component registration
+component {4CD0BB64-942B-4EBA-A260-BCB721EAECBE} components/Initializer.js
+contract @fireie.org/fireie/startup;1 {4CD0BB64-942B-4EBA-A260-BCB721EAECBE}
+category profile-after-change @fireie.org/fireie/startup;1 @fireie.org/fireie/startup;1
+
 locale	fireie	en-US	chrome/locale/en-US/
 locale	fireie	zh-CN	chrome/locale/zh-CN/

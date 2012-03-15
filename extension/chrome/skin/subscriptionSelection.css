@@ -1,0 +1,58 @@
+/*
+ * This Source Code is subject to the terms of the Mozilla Public License
+ * version 2.0 (the "License"). You can obtain a copy of the License at
+ * http://mozilla.org/MPL/2.0/.
+ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+dialog
+{
+	width: 550px;
+}
+
+*[invisible="true"]
+{
+	visibility: hidden;
+}
+
+#supplementMessage
+{
+	color: #F00000;
+}
+
+.localeMatch
+{
+	font-weight: bold;
+}
+
+#all-subscriptions-loading
+{
+	margin: 50px;
+}
+
+#all-subscriptions
+{
+	min-height: 200px;
+}
+#all-subscriptions  > richlistitem > .variant
+{
+	width: 200px;
+}
+#all-subscriptions > richlistitem:not(:first-child) > .subscriptionTitle,
+#all-subscriptions > richlistitem:not(:first-child) > .subscriptionTitle + .variant
+{
+	border-top: 1px dashed black;
+	margin-top: 0px;
+	padding-top: 4px;
+}
+
+#supplementMessage
+{
+	margin-top: 5px;
+}
+#supplementMessage > label
+{
+	margin-left: 0px;
+	margin-right: 0px;
+}
