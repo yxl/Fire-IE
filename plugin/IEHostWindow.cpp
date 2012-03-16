@@ -27,9 +27,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IEHostWindow.h"
 #include "plugin.h"
 
-
-CString g_csIECookieDir = TEXT("");
-CString g_csIECtlCookieDir = TEXT("d:\\cookies");
+// CIEHostWindow类变量初始化
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
@@ -37,6 +35,7 @@ CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_CookieIEWindowMap;
 CCriticalSection CIEHostWindow::s_csCookieIEWindowMap;
+CString CIEHostWindow::s_strIEUserAgent = _T("");
 
 // CIEHostWindow dialog
 
@@ -780,6 +779,42 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 			Zoom(level);
 		}
 	}
+
+	/**
+	 * 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
+	 * 文档中获取UserAgent。
+	 */
+	if (s_strIEUserAgent.IsEmpty())
+	{
+		s_strIEUserAgent = GetDocumentUserAgent();
+	}
+}
+
+// 从IE控件的HTML文档中获取UserAgent
+CString CIEHostWindow::GetDocumentUserAgent()
+{
+	CString strUserAgent(_T(""));
+	CComQIPtr<IHTMLDocument2> pDoc = m_ie.get_Document();
+	if (!pDoc)
+	{
+		return strUserAgent;
+	}
+	CComQIPtr<IHTMLWindow2> pWindow;
+	if (FAILED(pDoc->get_parentWindow(&pWindow)) || pWindow == NULL)
+	{
+		return strUserAgent;
+	}
+	CComQIPtr<IOmNavigator> pNavigator;
+	if (FAILED(pWindow->get_clientInformation(&pNavigator)) || pNavigator == NULL) 
+	{
+		return strUserAgent;
+	}
+	CComBSTR bstrUserAgent;
+	if (SUCCEEDED(pNavigator->get_userAgent(&bstrUserAgent))) 
+	{
+		strUserAgent = bstrUserAgent;
+	}
+	return strUserAgent;
 }
 
 BOOL CIEHostWindow::DestroyWindow()
@@ -791,8 +826,6 @@ BOOL CIEHostWindow::DestroyWindow()
 
 BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 {
-	//g_csIECookieDir = Cookie::CookieManager::ReadIECtrlCookieReg();	
-	//Cookie::CookieManager::SetIECtrlCookieReg(g_csIECtlCookieDir);
 	return CDialog::Create(nIDTemplate,pParentWnd);
 }
 

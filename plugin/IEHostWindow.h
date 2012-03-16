@@ -59,7 +59,7 @@ class CIEHostWindow : public CDialog
 
 	friend class HttpMonitor::MonitorSink;
 	friend class Cookie::CookieManager;
-
+	
 public:
 	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
 
@@ -72,7 +72,18 @@ public:
 	static void AddCookieIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
+
+	/** 获取Firefox UserAgent*/
 	static CString GetFirefoxUserAgent();
+
+	/** 
+	 * 获取IE控件UserAgent
+	 * 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
+	 * 文档中获取UserAgent。
+	 * @return 在IE控件首次加载完毕后，该类函数才能返回正确的UserAgent;否则返回空字符串。
+	 */
+	static CString GetIEUserAgentString() {return s_strIEUserAgent;}
+		
 public:
 	
 	virtual ~CIEHostWindow();
@@ -110,9 +121,15 @@ protected:
 
 	/** 与 s_CookieIEWindowMap 配对使用的, 保证线程安全 */
 	static CCriticalSection s_csCookieIEWindowMap;
+
+	/** IE控件的UserAgent */
+	static CString s_strIEUserAgent;
 	
 	void InitIE();
 	void UninitIE();
+
+	// 从IE控件的HTML文档中获取UserAgent
+	CString GetDocumentUserAgent();
 
 	// 检测浏览器命令是否可用
 	BOOL IsOleCmdEnabled(OLECMDID cmdID);
