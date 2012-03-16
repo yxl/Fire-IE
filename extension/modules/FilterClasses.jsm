@@ -597,7 +597,7 @@ function BlockingFilter(text, regexpSource, matchCase, domains)
 }
 BlockingFilter.prototype =
 {
-	__proto__: RegExpFilter.prototype,
+	__proto__: RegExpFilter.prototype
 };
 
 /**
@@ -615,7 +615,7 @@ function UserAgentFilter(text, regexpSource, matchCase, domains)
 }
 UserAgentFilter.prototype =
 {
-	__proto__: RegExpFilter.prototype,
+	__proto__: RegExpFilter.prototype
 };
 
 /**
@@ -633,7 +633,7 @@ function WhitelistFilter(text, regexpSource, matchCase, domains)
 }
 WhitelistFilter.prototype =
 {
-	__proto__: RegExpFilter.prototype,
+	__proto__: RegExpFilter.prototype
 }
 
 /**
