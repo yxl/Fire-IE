@@ -704,6 +704,7 @@ WindowWrapper.prototype = {
     catch (ex)
     {
       Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
+	  this.window.gBrowser.mCurrentBrowser.reload();
       return false;
     }
     this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
@@ -764,7 +765,7 @@ WindowWrapper.prototype = {
   onPageShowOrLoad: function(e)
   {
     this.updateInterface();
-
+	
     let doc = e.originalTarget;
 
     let tab = Utils.getTabFromDocument(doc);

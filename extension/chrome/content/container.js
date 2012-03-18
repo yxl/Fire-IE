@@ -14,20 +14,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
-let FireIEContainer = {};
+var FireIEContainer = {};
 
 {
-  let Cc = Components.classes;
-  let Ci = Components.interfaces;
-  let Cr = Components.results;
-  let Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var Cr = Components.results;
+  var Cu = Components.utils;
 
-  let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-  let jsm = {};
+  var baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+  var jsm = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
-  let
+  var
   {
     Utils, Prefs, Services
   } = jsm;
@@ -59,16 +59,16 @@ let FireIEContainer = {};
     }
     window.setTimeout(function()
     {
-      let pluginObject = E(Utils.containerPluginId);
+      var pluginObject = E(Utils.containerPluginId);
       document.title = pluginObject.Title;
     }, 200);
   }
 
   function getNavigateParam(name)
   {
-    let headers = "";
-    let tab = Utils.getTabFromDocument(document);
-    let navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    var headers = "";
+    var tab = Utils.getTabFromDocument(document);
+    var navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
     if (navigateParams && typeof navigateParams[name] != "undefined")
     {
       headers = navigateParams[name];
@@ -83,8 +83,8 @@ let FireIEContainer = {};
 
   function removeNavigateParams()
   {
-    let tab = Utils.getTabFromDocument(document);
-    let navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    var tab = Utils.getTabFromDocument(document);
+    var navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
     if (navigateParams)
     {
       tab.removeAttribute("fireieNavigateParams");
@@ -95,7 +95,7 @@ let FireIEContainer = {};
   {
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
-    let pluginObject = E(Utils.containerPluginId);
+    var pluginObject = E(Utils.containerPluginId);
     if (pluginObject)
     {
       pluginObject.addEventListener("focus", onPluginFocus, false);
