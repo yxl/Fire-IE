@@ -191,7 +191,7 @@ var Backup =
     if (!Utils.confirm(window, warning, E("backupButton").getAttribute("_restoreDialogTitle")))
       return;
 
-    let subscriptions = RuleStorage.subscriptions.rule(function(s) s instanceof SpecialSubscription);
+    let subscriptions = RuleStorage.subscriptions.filter(function(s) s instanceof SpecialSubscription);
     for (let i = 0; i < subscriptions.length; i++)
       RuleStorage.removeSubscription(subscriptions[i]);
 
@@ -265,7 +265,7 @@ var Backup =
    */
   backupCustomRules: function(/**nsIFile*/ file)
   {
-    let subscriptions = RuleStorage.subscriptions.rule(function(s) s instanceof SpecialSubscription);
+    let subscriptions = RuleStorage.subscriptions.filter(function(s) s instanceof SpecialSubscription);
     let list = ["[Adblock Plus 2.0]"];
     for (let i = 0; i < subscriptions.length; i++)
     {

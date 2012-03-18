@@ -244,7 +244,7 @@ SpecialSubscription.prototype = {
   serialize: function(buffer)
   {
     Subscription.prototype.serialize.call(this, buffer);
-    if (this.defaults && this.defaults.length) buffer.push("defaults=" + this.defaults.rule(function(type) type in SpecialSubscription.defaultsMap).join(" "));
+    if (this.defaults && this.defaults.length) buffer.push("defaults=" + this.defaults.filter(function(type) type in SpecialSubscription.defaultsMap).join(" "));
     if (this._lastDownload) buffer.push("lastDownload=" + this._lastDownload);
   }
 };

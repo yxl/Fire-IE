@@ -12,7 +12,7 @@
 <dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&dialog.title;"
-  id="abpRulesWindow"
+  id="fireieRulesWindow"
   onload="init()"
   buttons="accept"
   width="950"

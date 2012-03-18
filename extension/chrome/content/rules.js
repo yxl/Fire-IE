@@ -115,7 +115,7 @@ var Templater =
 
     // Resolve any attributes of the for attr="{obj.foo}"
     let conditionals = [];
-    let nodeIterator = document.createNodeIterator(result, NodeRule.SHOW_ELEMENT, null, false);
+    let nodeIterator = document.createNodeIterator(result, NodeFilter.SHOW_ELEMENT, null, false);
     for (let node = nodeIterator.nextNode(); node; node = nodeIterator.nextNode())
     {
       if (node.localName == "if")

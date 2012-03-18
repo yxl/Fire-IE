@@ -89,9 +89,9 @@ var RuleActions =
   fillActionsPopup: function()
   {
     let editable = RuleView.editable;
-    let items = RuleView.selectedItems.rule(function(i) !i.rule.dummy);
+    let items = RuleView.selectedItems.filter(function(i) !i.rule.dummy);
     items.sort(function(entry1, entry2) entry1.index - entry2.index);
-    let activeItems = items.rule(function(i) i.rule instanceof ActiveRule);
+    let activeItems = items.filter(function(i) i.rule instanceof ActiveRule);
 
     E("rules-edit-command").setAttribute("disabled", !editable || !items.length);
     E("rules-delete-command").setAttribute("disabled", !editable || !items.length);
@@ -130,7 +130,7 @@ var RuleActions =
     if (this.treeElement.editingColumn)
       return;
 
-    let items = RuleView.selectedItems.rule(function(i) i.rule instanceof ActiveRule);
+    let items = RuleView.selectedItems.filter(function(i) i.rule instanceof ActiveRule);
     if (items.length)
     {
       RuleView.boxObject.beginUpdateBatch();
@@ -224,7 +224,7 @@ var RuleActions =
     if (this.treeElement.editingColumn)
       return;
 
-    let items = RuleView.selectedItems.rule(function(i) i.rule instanceof ActiveRule);
+    let items = RuleView.selectedItems.filter(function(i) i.rule instanceof ActiveRule);
     if (items.length)
       RuleStorage.resetHitCounts(items.map(function(i) i.rule));
   },

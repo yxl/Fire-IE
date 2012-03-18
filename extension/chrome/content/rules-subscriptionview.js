@@ -73,7 +73,7 @@ ListManager.prototype =
       this._list.removeChild(this._list.firstChild);
 
     // Now add all subscriptions
-    let subscriptions = RuleStorage.subscriptions.rule(this._rule, this);
+    let subscriptions = RuleStorage.subscriptions.filter(this._rule, this);
     if (subscriptions.length)
     {
       for each (let subscription in subscriptions)
