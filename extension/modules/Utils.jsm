@@ -30,6 +30,7 @@ try
 var Utils =
 {
   _addonVersion: "0.0.9",
+  _ieUserAgent: null,
   
   /**
    * Returns the add-on ID used by Adblock Plus
@@ -94,6 +95,16 @@ var Utils =
     return Utils.platformVersion;
   },
 
+  get ieUserAgent()
+  {
+	return Utils._ieUserAgent;
+  },
+  
+  set ieUserAgent(value)
+  {
+	Utils._ieUserAgent = value;
+  },
+  
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.
    * 

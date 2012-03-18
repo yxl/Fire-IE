@@ -205,10 +205,10 @@ var PolicyPrivate =
 					{
 						domain = Utils.getHostname(wnd.location.href);
 					}
-          if (Policy.checkUserAgentFilter(url, domain))
+          if (Policy.checkUserAgentFilter(url, domain) && Utils.ieUserAgent)
           {
             // Change user agent
-            subject.setRequestHeader("user-agent", "fireie", false);
+            subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
           }
         }
         break;

@@ -50,7 +50,7 @@ var gFireIE = null;
 	  hookCode("BrowserBack", /{/, "$& if(gFireIE.goDoCommand('Back')) return;");
 	  hookCode("BrowserForward", /{/, "$& if(gFireIE.goDoCommand('Forward')) return;");
 	  hookCode("BrowserStop", /{/, "$& if(gFireIE.goDoCommand('Stop')) return;");
-	  //hookCode("BrowserReload", /{/, "$& if(gFireIE.goDoCommand('Refresh')) return;");
+	  hookCode("BrowserReload", /{/, "$& if(gFireIE.goDoCommand('Refresh')) return;");
 	  hookCode("BrowserReloadSkipCache", /{/, "$& if(gFireIE.goDoCommand('Refresh')) return;");
 	
 	  hookCode("saveDocument", /{/, "$& if(gFireIE.goDoCommand('SaveAs')) return;");
