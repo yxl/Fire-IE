@@ -26,8 +26,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-try
-{
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
@@ -307,18 +306,23 @@ WindowWrapper.prototype = {
 
       // 更新地址栏按钮
       let urlbarButton = this.E("fireie-urlbar-switch");
-      urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
-      urlbarButton.style.visibility = "visible";
-      urlbarButton.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
-      let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-      urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
-      let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
-      urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
-
+      if (urlbarButton)
+      {
+        urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
+        urlbarButton.style.visibility = "visible";
+        urlbarButton.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
+        let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+        urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+        let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
+        urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
+      }
       // 工具栏按钮的状态与地址栏状态相同
       let toolbarButton = this.E("fireie-toolbar-palette-button");
-      toolbarButton.disabled = urlbarButton.disabled;
-      toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
+      if (toolbarButton)
+      {
+        toolbarButton.disabled = urlbarButton.disabled;
+        toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
+      }
     }
     //catch (e)
     {
@@ -890,7 +894,3 @@ function addSubscription()
 }
 
 init();
-
-} catch (e) {
-  Cu.reportError(e);
-}

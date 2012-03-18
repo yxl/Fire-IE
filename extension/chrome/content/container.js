@@ -42,7 +42,7 @@ let FireIEContainer = {};
 
   function init()
   {
-    window.removeEventListener('load', init, false);
+    window.removeEventListener('DOMContentLoaded', init, false);
     var container = E('container');
     if (!container)
     {
@@ -133,7 +133,7 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
-  window.addEventListener('load', init, false);
+  window.addEventListener('DOMContentLoaded', init, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
 }
