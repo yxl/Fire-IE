@@ -5,18 +5,18 @@
  */
 
 /**
- * Fills a list of filter groups and keeps it updated.
+ * Fills a list of rule groups and keeps it updated.
  * @param {Element} list  richlistbox element to be filled
  * @param {Node} template  template to use for the groups
- * @param {Function} filter  filter to decide which lists should be included
+ * @param {Function} rule  rule to decide which lists should be included
  * @param {Function} listener  function to be called on changes
  * @constructor
  */
-function ListManager(list, template, filter, listener)
+function ListManager(list, template, rule, listener)
 {
   this._list = list;
   this._template = template;
-  this._filter = filter;
+  this._rule = rule;
   this._listener = listener || function(){};
 
   this._deck = this._list.parentNode;
@@ -29,10 +29,10 @@ function ListManager(list, template, filter, listener)
   {
     return me._onChange.apply(me, arguments);
   };
-  FilterNotifier.addListener(proxy);
+  RuleNotifier.addListener(proxy);
   window.addEventListener("unload", function()
   {
-    FilterNotifier.removeListener(proxy);
+    RuleNotifier.removeListener(proxy);
   }, false);
 }
 ListManager.prototype =
@@ -48,10 +48,10 @@ ListManager.prototype =
    */
   _template: null,
   /**
-   * Filter function to decide which subscriptions should be included.
+   * Rule function to decide which subscriptions should be included.
    * @type Function
    */
-  _filter: null,
+  _rule: null,
   /**
    * Function to be called whenever list contents change.
    * @type Function
@@ -73,7 +73,7 @@ ListManager.prototype =
       this._list.removeChild(this._list.firstChild);
 
     // Now add all subscriptions
-    let subscriptions = FilterStorage.subscriptions.filter(this._filter, this);
+    let subscriptions = RuleStorage.subscriptions.rule(this._rule, this);
     if (subscriptions.length)
     {
       for each (let subscription in subscriptions)
@@ -91,21 +91,21 @@ ListManager.prototype =
   },
 
   /**
-   * Adds a filter subscription to the list.
+   * Adds a rule subscription to the list.
    */
   addSubscription: function(/**Subscription*/ subscription, /**Node*/ insertBefore) /**Node*/
   {
-    let disabledFilters = 0;
-    for (let i = 0, l = subscription.filters.length; i < l; i++)
-      if (subscription.filters[i] instanceof ActiveFilter && subscription.filters[i].disabled)
-        disabledFilters++;
+    let disabledRules = 0;
+    for (let i = 0, l = subscription.rules.length; i < l; i++)
+      if (subscription.rules[i] instanceof ActiveRule && subscription.rules[i].disabled)
+        disabledRules++;
 
     let node = Templater.process(this._template, {
       __proto__: null,
       subscription: subscription,
       isExternal: subscription instanceof ExternalSubscription,
       downloading: Synchronizer.isExecuting(subscription.url),
-      disabledFilters: disabledFilters
+      disabledRules: disabledRules
     });
     if (insertBefore)
       this._list.insertBefore(node, insertBefore);
@@ -115,14 +115,14 @@ ListManager.prototype =
   },
 
   /**
-   * Map indicating subscriptions that need their "disabledFilters" property to
+   * Map indicating subscriptions that need their "disabledRules" property to
    * be updated by next updateDisabled() call.
    * @type Object
    */
   _scheduledUpdateDisabled: null,
 
   /**
-   * Updates subscriptions that had some of their filters enabled/disabled.
+   * Updates subscriptions that had some of their rules enabled/disabled.
    */
   updateDisabled: function()
   {
@@ -135,14 +135,14 @@ ListManager.prototype =
       if (subscriptionNode)
       {
         let data = Templater.getDataForNode(subscriptionNode);
-        let disabledFilters = 0;
-        for (let i = 0, l = subscription.filters.length; i < l; i++)
-          if (subscription.filters[i] instanceof ActiveFilter && subscription.filters[i].disabled)
-            disabledFilters++;
+        let disabledRules = 0;
+        for (let i = 0, l = subscription.rules.length; i < l; i++)
+          if (subscription.rules[i] instanceof ActiveRule && subscription.rules[i].disabled)
+            disabledRules++;
 
-        if (disabledFilters != data.disabledFilters)
+        if (disabledRules != data.disabledRules)
         {
-          data.disabledFilters = disabledFilters;
+          data.disabledRules = disabledRules;
           Templater.update(this._template, subscriptionNode);
 
           if (!document.commandDispatcher.focusedElement)
@@ -154,11 +154,11 @@ ListManager.prototype =
 
   /**
    * Subscriptions change processing.
-   * @see FilterNotifier.addListener()
+   * @see RuleNotifier.addListener()
    */
   _onChange: function(action, item, param1, param2)
   {
-    if (action == "filter.disabled")
+    if (action == "rule.disabled")
     {
       if (this._scheduledUpdateDisabled == null)
       {
@@ -170,7 +170,7 @@ ListManager.prototype =
       return;
     }
 
-    if (action != "load" && !this._filter(item))
+    if (action != "load" && !this._rule(item))
       return;
 
     switch (action)
@@ -182,12 +182,12 @@ ListManager.prototype =
       }
       case "subscription.added":
       {
-        let index = FilterStorage.subscriptions.indexOf(item);
+        let index = RuleStorage.subscriptions.indexOf(item);
         if (index >= 0)
         {
           let insertBefore = null;
-          for (index++; index < FilterStorage.subscriptions.length && !insertBefore; index++)
-            insertBefore = Templater.getNodeForData(this._list, "subscription", FilterStorage.subscriptions[index]);
+          for (index++; index < RuleStorage.subscriptions.length && !insertBefore; index++)
+            insertBefore = Templater.getNodeForData(this._list, "subscription", RuleStorage.subscriptions[index]);
           this.addSubscription(item, insertBefore);
           this._deck.selectedIndex = 1;
           this._listener();
@@ -222,10 +222,10 @@ ListManager.prototype =
         {
           node.parentNode.removeChild(node);
           let insertBefore = null;
-          let index = FilterStorage.subscriptions.indexOf(item);
+          let index = RuleStorage.subscriptions.indexOf(item);
           if (index >= 0)
-            for (index++; index < FilterStorage.subscriptions.length && !insertBefore; index++)
-              insertBefore = Templater.getNodeForData(this._list, "subscription", FilterStorage.subscriptions[index]);
+            for (index++; index < RuleStorage.subscriptions.length && !insertBefore; index++)
+              insertBefore = Templater.getNodeForData(this._list, "subscription", RuleStorage.subscriptions[index]);
           this._list.insertBefore(node, insertBefore);
           this._list.ensureElementIsVisible(node);
           this._listener();

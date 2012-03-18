@@ -32,10 +32,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "ContentPolicy.jsm");
-Cu.import(baseURL.spec + "FilterListener.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleListener.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 
@@ -59,14 +59,14 @@ function init()
   // Process preferences
   reloadPrefs();
 
-  // Listen for pref and filters changes
+  // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
     if (name == "showUrlBarLabel" || name == "shortcut_key" || name == "shortcut_modifiers") reloadPrefs();
   });
-  FilterNotifier.addListener(function(action)
+  RuleNotifier.addListener(function(action)
   {
-    if (/^(filter|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
+    if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
 }
 
@@ -539,7 +539,7 @@ WindowWrapper.prototype = {
   {
     let wnd = Services.wm.getMostRecentWindow("fireie:rules");
     if (wnd) wnd.focus();
-    else this.window.openDialog("chrome://fireie/content/filters.xul", "fireieRulesDialog", "chrome,centerscreen,resizable=no");
+    else this.window.openDialog("chrome://fireie/content/rules.xul", "fireieRulesDialog", "chrome,centerscreen,resizable=no");
 
   },
 
@@ -704,7 +704,7 @@ WindowWrapper.prototype = {
     catch (ex)
     {
       Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
-	  this.window.gBrowser.mCurrentBrowser.reload();
+      this.window.gBrowser.mCurrentBrowser.reload();
       return false;
     }
     this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
@@ -765,7 +765,7 @@ WindowWrapper.prototype = {
   onPageShowOrLoad: function(e)
   {
     this.updateInterface();
-	
+
     let doc = e.originalTarget;
 
     let tab = Utils.getTabFromDocument(doc);
@@ -831,7 +831,7 @@ WindowWrapper.prototype = {
 };
 
 /**
- * Updates displayed status for all application windows (on prefs or filters
+ * Updates displayed status for all application windows (on prefs or rules
  * change).
  */
 function reloadPrefs()
@@ -841,20 +841,20 @@ function reloadPrefs()
 }
 
 /**
- * Executed on first run, adds a filter subscription and notifies that user
+ * Executed on first run, adds a rule subscription and notifies that user
  * about that.
  */
 function addSubscription()
 {
   // Don't add subscription if the user has a subscription already
   let needAdd = true;
-  if (FilterStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription)) needAdd = false;
+  if (RuleStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription)) needAdd = false;
 
-  // Only add subscription if user has no filters
+  // Only add subscription if user has no rules
   if (needAdd)
   {
-    let hasFilters = FilterStorage.subscriptions.some(function(subscription) subscription.filters.length);
-    if (hasFilters) needAdd = false;
+    let hasRules = RuleStorage.subscriptions.some(function(subscription) subscription.rules.length);
+    if (hasRules) needAdd = false;
   }
 
   if (!needAdd) return;
@@ -877,11 +877,11 @@ function addSubscription()
   request.open("GET", "chrome://fireie/content/subscriptions.xml");
   request.addEventListener("load", function()
   {
-    let node = Utils.chooseFilterSubscription(request.responseXML.getElementsByTagName("subscription"));
+    let node = Utils.chooseRuleSubscription(request.responseXML.getElementsByTagName("subscription"));
     let subscription = (node ? Subscription.fromURL(node.getAttribute("url")) : null);
     if (subscription)
     {
-      FilterStorage.addSubscription(subscription);
+      RuleStorage.addSubscription(subscription);
       subscription.disabled = false;
       subscription.title = node.getAttribute("title");
       subscription.homepage = node.getAttribute("homepage");

@@ -7,10 +7,10 @@
 <!ENTITY advancedSection            "Advanced options">
 
 <!ENTITY listSelection1             "
-  The following filter list has been configured to block advertising:
+  The following rule list has been configured to block advertising:
 ">
 
-<!ENTITY noList                     "No filter list">
+<!ENTITY noList                     "No rule list">
 <!ENTITY visitHomepage.label        "Visit list home page">
 
 <!ENTITY acceptableAds2             "
@@ -21,5 +21,5 @@
 <!ENTITY readMore.label             "Read more about this">
 
 <!ENTITY listSelection2             "
-  You can change this selection at any time in the [link]Filter Preferences[/link].
+  You can change this selection at any time in the [link]Rule Preferences[/link].
 ">

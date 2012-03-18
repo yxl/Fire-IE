@@ -15,14 +15,11 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import(baseURL.spec + "Utils.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 
 const externalPrefix = "~external~";
@@ -31,24 +28,22 @@ const externalPrefix = "~external~";
  * Class implementing public Adblock Plus API
  * @class
  */
-var AdblockPlus =
-{
+var AdblockPlus = {
   /**
    * Returns current subscription count
    * @type Integer
    */
   get subscriptionCount()
   {
-    return FilterStorage.subscriptions.length;
+    return RuleStorage.subscriptions.length;
   },
 
   /**
    * Gets a subscription by its URL
    */
-  getSubscription: function(/**String*/ id) /**IAdblockPlusSubscription*/
+  getSubscription: function( /**String*/ id) /**IAdblockPlusSubscription*/
   {
-    if (id in FilterStorage.knownSubscriptions)
-      return createSubscriptionWrapper(FilterStorage.knownSubscriptions[id]);
+    if (id in RuleStorage.knownSubscriptions) return createSubscriptionWrapper(RuleStorage.knownSubscriptions[id]);
 
     return null;
   },
@@ -56,41 +51,36 @@ var AdblockPlus =
   /**
    * Gets a subscription by its position in the list
    */
-  getSubscriptionAt: function(/**Integer*/ index) /**IAdblockPlusSubscription*/
+  getSubscriptionAt: function( /**Integer*/ index) /**IAdblockPlusSubscription*/
   {
-    if (index < 0 || index >= FilterStorage.subscriptions.length)
-      return null;
+    if (index < 0 || index >= RuleStorage.subscriptions.length) return null;
 
-    return createSubscriptionWrapper(FilterStorage.subscriptions[index]);
+    return createSubscriptionWrapper(RuleStorage.subscriptions[index]);
   },
 
   /**
    * Updates an external subscription and creates it if necessary
    */
-  updateExternalSubscription: function(/**String*/ id, /**String*/ title, /**Array of Filter*/ filters) /**String*/
+  updateExternalSubscription: function( /**String*/ id, /**String*/ title, /**Array of Rule*/ rules) /**String*/
   {
-    if (id.substr(0, externalPrefix.length) != externalPrefix)
-      id = externalPrefix + id;
+    if (id.substr(0, externalPrefix.length) != externalPrefix) id = externalPrefix + id;
     let subscription = Subscription.fromURL(id);
-    if (!subscription)
-      subscription = new ExternalSubscription(id, title);
+    if (!subscription) subscription = new ExternalSubscription(id, title);
 
     subscription.lastDownload = parseInt(new Date().getTime() / 1000);
 
-    let newFilters = [];
-    for each (let filter in filters)
+    let newRules = [];
+    for each(let rule in rules)
     {
-      filter = Filter.fromText(Filter.normalize(filter));
-      if (filter)
-        newFilters.push(filter);
+      rule = Rule.fromText(Rule.normalize(rule));
+      if (rule) newRules.push(rule);
     }
 
-    if (id in FilterStorage.knownSubscriptions)
-      FilterStorage.updateSubscriptionFilters(subscription, newFilters);
+    if (id in RuleStorage.knownSubscriptions) RuleStorage.updateSubscriptionRules(subscription, newRules);
     else
     {
-      subscription.filters = newFilters;
-      FilterStorage.addSubscription(subscription);
+      subscription.rules = newRules;
+      RuleStorage.addSubscription(subscription);
     }
 
     return id;
@@ -99,43 +89,40 @@ var AdblockPlus =
   /**
    * Removes an external subscription by its identifier
    */
-  removeExternalSubscription: function(/**String*/ id) /**Boolean*/
+  removeExternalSubscription: function( /**String*/ id) /**Boolean*/
   {
-    if (id.substr(0, externalPrefix.length) != externalPrefix)
-      id = externalPrefix + id;
-    if (!(id in FilterStorage.knownSubscriptions))
-      return false;
+    if (id.substr(0, externalPrefix.length) != externalPrefix) id = externalPrefix + id;
+    if (!(id in RuleStorage.knownSubscriptions)) return false;
 
-    FilterStorage.removeSubscription(FilterStorage.knownSubscriptions[id]);
+    RuleStorage.removeSubscription(RuleStorage.knownSubscriptions[id]);
     return true;
   },
 
   /**
-   * Adds user-defined filters to the list
+   * Adds user-defined rules to the list
    */
-  addPatterns: function(/**Array of String*/ filters)
+  addPatterns: function( /**Array of String*/ rules)
   {
-    for each (let filter in filters)
+    for each(let rule in rules)
     {
-      filter = Filter.fromText(Filter.normalize(filter));
-      if (filter)
+      rule = Rule.fromText(Rule.normalize(rule));
+      if (rule)
       {
-        filter.disabled = false;
-        FilterStorage.addFilter(filter);
+        rule.disabled = false;
+        RuleStorage.addRule(rule);
       }
     }
   },
 
   /**
-   * Removes user-defined filters from the list
+   * Removes user-defined rules from the list
    */
-  removePatterns: function(/**Array of String*/ filters)
+  removePatterns: function( /**Array of String*/ rules)
   {
-    for each (let filter in filters)
+    for each(let rule in rules)
     {
-      filter = Filter.fromText(Filter.normalize(filter));
-      if (filter)
-        FilterStorage.removeFilter(filter);
+      rule = Rule.fromText(Rule.normalize(rule));
+      if (rule) RuleStorage.removeRule(rule);
     }
   },
 
@@ -159,10 +146,9 @@ var AdblockPlus =
 /**
  * Wraps a subscription into IAdblockPlusSubscription structure.
  */
-function createSubscriptionWrapper(/**Subscription*/ subscription) /**IAdblockPlusSubscription*/
+function createSubscriptionWrapper( /**Subscription*/ subscription) /**IAdblockPlusSubscription*/
 {
-  if (!subscription)
-    return null;
+  if (!subscription) return null;
 
   return {
     url: subscription.url,
@@ -177,15 +163,11 @@ function createSubscriptionWrapper(/**Subscription*/ subscription) /**IAdblockPl
     expires: subscription instanceof DownloadableSubscription ? subscription.expires : 0,
     getPatterns: function()
     {
-      let result = subscription.filters.map(function(filter)
+      let result = subscription.rules.map(function(rule)
       {
-        return filter.text;
+        return rule.text;
       });
       return result;
     }
   };
-}
-
-} catch (ex) {
-	Cu.reportError(ex);
 }

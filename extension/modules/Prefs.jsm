@@ -15,9 +15,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -287,9 +284,4 @@ function defineStringProperty(/**String*/ name)
       str.data = newValue;
       branch.setComplexValue(name, Ci.nsISupportsString, str);
     });
-}
-
-
-} catch (ex) {
-	Cu.reportError(ex);
 }

@@ -5,10 +5,10 @@
  */
 
 /**
- * Implementation of the filter search functionality.
+ * Implementation of the rule search functionality.
  * @class
  */
-var FilterSearch =
+var RuleSearch =
 {
   /**
    * Initializes findbar widget.
@@ -16,7 +16,7 @@ var FilterSearch =
   init: function()
   {
     let findbar = E("findbar");
-    findbar.browser = FilterSearch.fakeBrowser;
+    findbar.browser = RuleSearch.fakeBrowser;
 
     findbar.addEventListener("keypress", function(event)
     {
@@ -43,15 +43,15 @@ var FilterSearch =
 
     function findText(text, direction, startIndex)
     {
-      let list = E("filtersTree");
-      let col = list.columns.getNamedColumn("col-filter");
+      let list = E("rulesTree");
+      let col = list.columns.getNamedColumn("col-rule");
       let count = list.view.rowCount;
       for (let i = startIndex + direction; i >= 0 && i < count; i += (direction || 1))
       {
-        let filter = normalizeString(list.view.getCellText(i, col));
-        if (filter.indexOf(text) >= 0)
+        let rule = normalizeString(list.view.getCellText(i, col));
+        if (rule.indexOf(text) >= 0)
         {
-          FilterView.selectRow(i);
+          RuleView.selectRow(i);
           return true;
         }
       }
@@ -61,14 +61,14 @@ var FilterSearch =
     text = normalizeString(text);
 
     // First try to find the entry in the current list
-    if (findText(text, direction, E("filtersTree").currentIndex))
+    if (findText(text, direction, E("rulesTree").currentIndex))
       return Ci.nsITypeAheadFind.FIND_FOUND;
 
     // Now go through the other subscriptions
     let result = Ci.nsITypeAheadFind.FIND_FOUND;
-    let subscriptions = FilterStorage.subscriptions.slice();
+    let subscriptions = RuleStorage.subscriptions.slice();
     subscriptions.sort(function(s1, s2) (s1 instanceof SpecialSubscription) - (s2 instanceof SpecialSubscription));
-    let current = subscriptions.indexOf(FilterView.subscription);
+    let current = subscriptions.indexOf(RuleView.subscription);
     direction = direction || 1;
     for (let i = current + direction; ; i+= direction)
     {
@@ -86,10 +86,10 @@ var FilterSearch =
         break;
 
       let subscription = subscriptions[i];
-      for (let j = 0; j < subscription.filters.length; j++)
+      for (let j = 0; j < subscription.rules.length; j++)
       {
-        let filter = normalizeString(subscription.filters[j].text);
-        if (filter.indexOf(text) >= 0)
+        let rule = normalizeString(subscription.rules[j].text);
+        if (rule.indexOf(text) >= 0)
         {
           let list = E(subscription instanceof SpecialSubscription ? "groups" : "subscriptions");
           let node = Templater.getNodeForData(list, "subscription", subscription);
@@ -107,7 +107,7 @@ var FilterSearch =
             Utils.runAsync(oldFocus.focus, oldFocus);
           }
 
-          Utils.runAsync(findText, null, text, direction, direction == 1 ? -1 : subscription.filters.length);
+          Utils.runAsync(findText, null, text, direction, direction == 1 ? -1 : subscription.rules.length);
           return result;
         }
       }
@@ -119,9 +119,9 @@ var FilterSearch =
 
 /**
  * Fake browser implementation to make findbar widget happy - searches in
- * the filter list.
+ * the rule list.
  */
-FilterSearch.fakeBrowser =
+RuleSearch.fakeBrowser =
 {
   fastFind:
   {
@@ -129,17 +129,17 @@ FilterSearch.fakeBrowser =
     foundLink: null,
     foundEditable: null,
     caseSensitive: false,
-    get currentWindow() FilterSearch.fakeBrowser.contentWindow,
+    get currentWindow() RuleSearch.fakeBrowser.contentWindow,
 
     find: function(searchString, linksOnly)
     {
       this.searchString = searchString;
-      return FilterSearch.search(this.searchString, 0, this.caseSensitive);
+      return RuleSearch.search(this.searchString, 0, this.caseSensitive);
     },
 
     findAgain: function(findBackwards, linksOnly)
     {
-      return FilterSearch.search(this.searchString, findBackwards ? -1 : 1, this.caseSensitive);
+      return RuleSearch.search(this.searchString, findBackwards ? -1 : 1, this.caseSensitive);
     },
 
     // Irrelevant for us
@@ -153,29 +153,29 @@ FilterSearch.fakeBrowser =
   {
     focus: function()
     {
-      E("filtersTree").focus();
+      E("rulesTree").focus();
     },
     scrollByLines: function(num)
     {
-      E("filtersTree").boxObject.scrollByLines(num);
+      E("rulesTree").boxObject.scrollByLines(num);
     },
     scrollByPages: function(num)
     {
-      E("filtersTree").boxObject.scrollByPages(num);
+      E("rulesTree").boxObject.scrollByPages(num);
     },
   },
 
   addEventListener: function(event, handler, capture)
   {
-    E("filtersTree").addEventListener(event, handler, capture);
+    E("rulesTree").addEventListener(event, handler, capture);
   },
   removeEventListener: function(event, handler, capture)
   {
-    E("filtersTree").addEventListener(event, handler, capture);
+    E("rulesTree").addEventListener(event, handler, capture);
   },
 };
 
 window.addEventListener("load", function()
 {
-  FilterSearch.init();
+  RuleSearch.init();
 }, false);

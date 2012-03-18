@@ -1,8 +1,8 @@
-<!ENTITY dialog.title               "Add Adblock Plus filter subscription">
+<!ENTITY dialog.title               "Add Adblock Plus rule subscription">
 
-<!ENTITY subscriptionSelector.label "Please choose a filter subscription from the list:">
+<!ENTITY subscriptionSelector.label "Please choose a rule subscription from the list:">
 
-<!ENTITY viewList.label             "View filters">
+<!ENTITY viewList.label             "View rules">
 <!ENTITY visitHomepage.label        "Visit home page">
 
 <!ENTITY addSubscription.label      "Add subscription">
@@ -11,15 +11,15 @@
 <!ENTITY list.download.retry        "Try again">
 <!ENTITY list.download.website      "View website">
 
-<!ENTITY fromWeb.description        "Please confirm that you want to add this filter subscription. You can change the subscription title or location before adding it.">
+<!ENTITY fromWeb.description        "Please confirm that you want to add this rule subscription. You can change the subscription title or location before adding it.">
 
 <!ENTITY title.label                "Subscription title:">
 <!ENTITY title.accesskey            "t">
-<!ENTITY location.label             "Filter list location:">
+<!ENTITY location.label             "Rule list location:">
 <!ENTITY location.accesskey         "l">
 
-<!-- Note: the placeholder (?1?) will be replaced by the name of the filter subscription required -->
-<!ENTITY supplementMessage          "This filter subscription is meant to be used with the filter subscription &quot;?1?&quot; which you are not using yet.">
-<!-- Note: the placeholder (?1?) will be replaced by the name of the filter subscription required -->
-<!ENTITY addMain.label              "Add filter subscription &quot;?1?&quot; as well">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY supplementMessage          "This rule subscription is meant to be used with the rule subscription &quot;?1?&quot; which you are not using yet.">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY addMain.label              "Add rule subscription &quot;?1?&quot; as well">
 <!ENTITY addMain.accesskey          "s">

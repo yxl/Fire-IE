@@ -7,11 +7,11 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
- * nsITreeView implementation to display filters of a particular filter
+ * nsITreeView implementation to display rules of a particular rule
  * subscription.
  * @class
  */
-var FilterView =
+var RuleView =
 {
   /**
    * Initialization function.
@@ -21,51 +21,51 @@ var FilterView =
     if (this.sortProcs)
       return;
 
-    function compareText(/**Filter*/ filter1, /**Filter*/ filter2)
+    function compareText(/**Rule*/ rule1, /**Rule*/ rule2)
     {
-      if (filter1.text < filter2.text)
+      if (rule1.text < rule2.text)
         return -1;
-      else if (filter1.text > filter2.text)
+      else if (rule1.text > rule2.text)
         return 1;
       else
         return 0;
     }
-    function compareSlow(/**Filter*/ filter1, /**Filter*/ filter2)
+    function compareSlow(/**Rule*/ rule1, /**Rule*/ rule2)
     {
-      let isSlow1 = filter1 instanceof RegExpFilter && AllMatcher.isSlowFilter(filter1);
-      let isSlow2 = filter2 instanceof RegExpFilter && AllMatcher.isSlowFilter(filter2);
+      let isSlow1 = rule1 instanceof RegExpRule && AllMatchers.isSlowRule(rule1);
+      let isSlow2 = rule2 instanceof RegExpRule && AllMatchers.isSlowRule(rule2);
       return isSlow1 - isSlow2;
     }
-    function compareEnabled(/**Filter*/ filter1, /**Filter*/ filter2)
+    function compareEnabled(/**Rule*/ rule1, /**Rule*/ rule2)
     {
-      let hasEnabled1 = (filter1 instanceof ActiveFilter ? 1 : 0);
-      let hasEnabled2 = (filter2 instanceof ActiveFilter ? 1 : 0);
+      let hasEnabled1 = (rule1 instanceof ActiveRule ? 1 : 0);
+      let hasEnabled2 = (rule2 instanceof ActiveRule ? 1 : 0);
       if (hasEnabled1 != hasEnabled2)
         return hasEnabled1 - hasEnabled2;
       else if (hasEnabled1)
-        return (filter2.disabled - filter1.disabled);
+        return (rule2.disabled - rule1.disabled);
       else
         return 0;
     }
-    function compareHitCount(/**Filter*/ filter1, /**Filter*/ filter2)
+    function compareHitCount(/**Rule*/ rule1, /**Rule*/ rule2)
     {
-      let hasHitCount1 = (filter1 instanceof ActiveFilter ? 1 : 0);
-      let hasHitCount2 = (filter2 instanceof ActiveFilter ? 1 : 0);
+      let hasHitCount1 = (rule1 instanceof ActiveRule ? 1 : 0);
+      let hasHitCount2 = (rule2 instanceof ActiveRule ? 1 : 0);
       if (hasHitCount1 != hasHitCount2)
         return hasHitCount1 - hasHitCount2;
       else if (hasHitCount1)
-        return filter1.hitCount - filter2.hitCount;
+        return rule1.hitCount - rule2.hitCount;
       else
         return 0;
     }
-    function compareLastHit(/**Filter*/ filter1, /**Filter*/ filter2)
+    function compareLastHit(/**Rule*/ rule1, /**Rule*/ rule2)
     {
-      let hasLastHit1 = (filter1 instanceof ActiveFilter ? 1 : 0);
-      let hasLastHit2 = (filter2 instanceof ActiveFilter ? 1 : 0);
+      let hasLastHit1 = (rule1 instanceof ActiveRule ? 1 : 0);
+      let hasLastHit2 = (rule2 instanceof ActiveRule ? 1 : 0);
       if (hasLastHit1 != hasLastHit2)
         return hasLastHit1 - hasLastHit2;
       else if (hasLastHit1)
-        return filter1.lastHit - filter2.lastHit;
+        return rule1.lastHit - rule2.lastHit;
       else
         return 0;
     }
@@ -83,25 +83,25 @@ var FilterView =
 
       return function(entry1, entry2)
       {
-        // Comment replacements not bound to a filter always go last
-        let isLast1 = ("origFilter" in entry1 && entry1.filter == null);
-        let isLast2 = ("origFilter" in entry2 && entry2.filter == null);
+        // Comment replacements not bound to a rule always go last
+        let isLast1 = ("origRule" in entry1 && entry1.rule == null);
+        let isLast2 = ("origRule" in entry2 && entry2.rule == null);
         if (isLast1)
           return (isLast2 ? 0 : 1)
         else if (isLast2)
           return -1;
 
-        let ret = cmpFunc(entry1.filter, entry2.filter);
+        let ret = cmpFunc(entry1.rule, entry2.rule);
         if (ret == 0 && fallbackFunc)
-          return fallbackFunc(entry1.filter, entry2.filter);
+          return fallbackFunc(entry1.rule, entry2.rule);
         else
           return factor * ret;
       }
     }
 
     this.sortProcs = {
-      filter: createSortFunction(compareText, null, false),
-      filterDesc: createSortFunction(compareText, null, true),
+      rule: createSortFunction(compareText, null, false),
+      ruleDesc: createSortFunction(compareText, null, true),
       slow: createSortFunction(compareSlow, compareText, true),
       slowDesc: createSortFunction(compareSlow, compareText, false),
       enabled: createSortFunction(compareEnabled, compareText, false),
@@ -117,16 +117,16 @@ var FilterView =
     {
       return me._onChange.apply(me, arguments);
     };
-    FilterNotifier.addListener(proxy);
+    RuleNotifier.addListener(proxy);
     window.addEventListener("unload", function()
     {
-      FilterNotifier.removeListener(proxy);
+      RuleNotifier.removeListener(proxy);
     }, false);
   },
 
   /**
-   * Filter change processing.
-   * @see FilterNotifier.addListener()
+   * Rule change processing.
+   * @see RuleNotifier.addListener()
    */
   _onChange: function(action, item, param1, param2, param3)
   {
@@ -138,36 +138,36 @@ var FilterView =
           this.refresh(true);
         break;
       }
-      case "filter.disabled":
-      case "filter.hitCount":
-      case "filter.lastHit":
+      case "rule.disabled":
+      case "rule.hitCount":
+      case "rule.lastHit":
       {
-        this.updateFilter(item);
+        this.updateRule(item);
         break;
       }
-      case "filter.added":
-      {
-        let subscription = param1;
-        let position = param2;
-        if (subscription == this._subscription)
-          this.addFilterAt(position, item);
-        break;
-      }
-      case "filter.removed":
+      case "rule.added":
       {
         let subscription = param1;
         let position = param2;
         if (subscription == this._subscription)
-          this.removeFilterAt(position);
+          this.addRuleAt(position, item);
         break;
       }
-      case "filter.moved":
+      case "rule.removed":
+      {
+        let subscription = param1;
+        let position = param2;
+        if (subscription == this._subscription)
+          this.removeRuleAt(position);
+        break;
+      }
+      case "rule.moved":
       {
         let subscription = param1;
         let oldPosition = param2;
         let newPosition = param3;
         if (subscription == this._subscription)
-          this.moveFilterAt(oldPosition, newPosition);
+          this.moveRuleAt(oldPosition, newPosition);
         break;
       }
     }
@@ -185,23 +185,23 @@ var FilterView =
   atoms: null,
 
   /**
-   * "Filter" to be displayed if no filter group is selected.
+   * "Rule" to be displayed if no rule group is selected.
    */
   noGroupDummy: null,
 
   /**
-   * "Filter" to be displayed if the selected group is empty.
+   * "Rule" to be displayed if the selected group is empty.
    */
-  noFiltersDummy: null,
+  noRulesDummy: null,
 
   /**
-   * "Filter" to be displayed for a new filter being edited.
+   * "Rule" to be displayed for a new rule being edited.
    */
   editDummy: null,
 
   /**
-   * Displayed list of filters, might be sorted.
-   * @type Filter[]
+   * Displayed list of rules, might be sorted.
+   * @type Rule[]
    */
   data: [],
 
@@ -217,16 +217,16 @@ var FilterView =
    */
   get isEmpty()
   {
-    return !this._subscription || !this._subscription.filters.length;
+    return !this._subscription || !this._subscription.rules.length;
   },
 
   /**
-   * Checks whether the filters in the view can be changed.
+   * Checks whether the rules in the view can be changed.
    * @type Boolean
    */
   get editable()
   {
-    return (FilterView._subscription instanceof SpecialSubscription);
+    return (RuleView._subscription instanceof SpecialSubscription);
   },
 
   /**
@@ -272,7 +272,7 @@ var FilterView =
   _subscription: 0,
 
   /**
-   * Filter subscription being displayed.
+   * Rule subscription being displayed.
    * @type Subscription
    */
   get subscription() this._subscription,
@@ -297,7 +297,7 @@ var FilterView =
    */
   refresh: function(force)
   {
-    if (FilterActions.visible)
+    if (RuleActions.visible)
     {
       if (!force && !this._dirty)
         return;
@@ -375,7 +375,7 @@ var FilterView =
     if (this.boxObject && this.data.length == 0)
     {
       if (this._subscription)
-        this.data.splice(0, 0, this.noFiltersDummy);
+        this.data.splice(0, 0, this.noRulesDummy);
       else
         this.data.splice(0, 0, this.noGroupDummy);
       this.boxObject.rowCountChanged(0, 1);
@@ -395,11 +395,11 @@ var FilterView =
   },
 
   /**
-   * Inserts dummy row when a new filter is being edited.
+   * Inserts dummy row when a new rule is being edited.
    */
   insertEditDummy: function()
   {
-    FilterView.removeDummyRow();
+    RuleView.removeDummyRow();
     let position = this.selection.currentIndex;
     if (position >= this.data.length)
       position = this.data.length - 1;
@@ -423,7 +423,7 @@ var FilterView =
     {
       this.data.splice(position, 1);
       this.boxObject.rowCountChanged(position, -1);
-      FilterView.addDummyRow();
+      RuleView.addDummyRow();
 
       this.selectRow(position);
     }
@@ -443,14 +443,14 @@ var FilterView =
   },
 
   /**
-   * Finds a particular filter in the list and selects it.
+   * Finds a particular rule in the list and selects it.
    */
-  selectFilter: function(/**Filter*/ filter)
+  selectRule: function(/**Rule*/ rule)
   {
     let index = -1;
     for (let i = 0; i < this.data.length; i++)
     {
-      if (this.data[i].filter == filter)
+      if (this.data[i].rule == rule)
       {
         index = i;
         break;
@@ -464,27 +464,27 @@ var FilterView =
   },
 
   /**
-   * Updates value of data property on sorting or filter subscription changes.
+   * Updates value of data property on sorting or rule subscription changes.
    */
   updateData: function()
   {
     let oldCount = this.rowCount;
-    if (this._subscription && this._subscription.filters.length)
+    if (this._subscription && this._subscription.rules.length)
     {
-      this.data = this._subscription.filters.map(function(f, i) ({index: i, filter: f}));
+      this.data = this._subscription.rules.map(function(f, i) ({index: i, rule: f}));
       if (this.sortProc)
       {
-        // Hide comments in the list, they should be sorted like the filter following them
-        let followingFilter = null;
+        // Hide comments in the list, they should be sorted like the rule following them
+        let followingRule = null;
         for (let i = this.data.length - 1; i >= 0; i--)
         {
-          if (this.data[i].filter instanceof CommentFilter)
+          if (this.data[i].rule instanceof CommentRule)
           {
-            this.data[i].origFilter = this.data[i].filter;
-            this.data[i].filter = followingFilter;
+            this.data[i].origRule = this.data[i].rule;
+            this.data[i].rule = followingRule;
           }
           else
-            followingFilter = this.data[i].filter;
+            followingRule = this.data[i].rule;
         }
 
         this.data.sort(this.sortProc);
@@ -492,10 +492,10 @@ var FilterView =
         // Restore comments
         for (let i = 0; i < this.data.length; i++)
         {
-          if ("origFilter" in this.data[i])
+          if ("origRule" in this.data[i])
           {
-            this.data[i].filter = this.data[i].origFilter;
-            delete this.data[i].origFilter;
+            this.data[i].rule = this.data[i].origRule;
+            delete this.data[i].origRule;
           }
         }
       }
@@ -513,21 +513,21 @@ var FilterView =
   },
 
   /**
-   * Called to update the view when a filter property is changed.
+   * Called to update the view when a rule property is changed.
    */
-  updateFilter: function(/**Filter*/ filter)
+  updateRule: function(/**Rule*/ rule)
   {
     for (let i = 0; i < this.data.length; i++)
-      if (this.data[i].filter == filter)
+      if (this.data[i].rule == rule)
         this.boxObject.invalidateRow(i);
   },
 
   /**
-   * Called if a filter has been inserted at the specified position.
+   * Called if a rule has been inserted at the specified position.
    */
-  addFilterAt: function(/**Integer*/ position, /**Filter*/ filter)
+  addRuleAt: function(/**Integer*/ position, /**Rule*/ rule)
   {
-    if (this.data.length == 1 && this.data[0].filter.dummy)
+    if (this.data.length == 1 && this.data[0].rule.dummy)
     {
       this.data.splice(0, 1);
       this.boxObject.rowCountChanged(0, -1);
@@ -550,16 +550,16 @@ var FilterView =
       for (let i = 0; i < this.data.length; i++)
         if (this.data[i].index >= position)
           this.data[i].index++;
-      this.data.splice(position, 0, {index: position, filter: filter});
+      this.data.splice(position, 0, {index: position, rule: rule});
     }
     this.boxObject.rowCountChanged(position, 1);
     this.selectRow(position);
   },
 
   /**
-   * Called if a filter has been removed at the specified position.
+   * Called if a rule has been removed at the specified position.
    */
-  removeFilterAt: function(/**Integer*/ position)
+  removeRuleAt: function(/**Integer*/ position)
   {
     for (let i = 0; i < this.data.length; i++)
     {
@@ -576,9 +576,9 @@ var FilterView =
   },
 
   /**
-   * Called if a filter has been moved within the list.
+   * Called if a rule has been moved within the list.
    */
-  moveFilterAt: function(/**Integer*/ oldPosition, /**Integer*/ newPosition)
+  moveRuleAt: function(/**Integer*/ oldPosition, /**Integer*/ newPosition)
   {
     let dir = (oldPosition < newPosition ? 1 : -1);
     for (let i = 0; i < this.data.length; i++)
@@ -607,12 +607,12 @@ var FilterView =
 
     if (this.boxObject)
     {
-      this.noGroupDummy = {index: 0, filter: {text: this.boxObject.treeBody.getAttribute("noGroupText"), dummy: true}};
-      this.noFiltersDummy = {index: 0, filter: {text: this.boxObject.treeBody.getAttribute("noFiltersText"), dummy: true}};
-      this.editDummy = {filter: {text: ""}};
+      this.noGroupDummy = {index: 0, rule: {text: this.boxObject.treeBody.getAttribute("noGroupText"), dummy: true}};
+      this.noRulesDummy = {index: 0, rule: {text: this.boxObject.treeBody.getAttribute("noRulesText"), dummy: true}};
+      this.editDummy = {rule: {text: ""}};
 
       let atomService = Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
-      let stringAtoms = ["col-filter", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-filterlist", "type-whitelist", "type-elemhide", "type-invalid"];
+      let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-elemhide", "type-invalid"];
       let boolAtoms = ["selected", "dummy", "slow", "disabled"];
 
       this.atoms = {};
@@ -643,20 +643,20 @@ var FilterView =
       return null;
 
     col = col.id;
-    if (col != "col-filter" && col != "col-slow" && col != "col-hitcount" && col != "col-lasthit")
+    if (col != "col-rule" && col != "col-slow" && col != "col-hitcount" && col != "col-lasthit")
       return null;
 
-    let filter = this.data[row].filter;
-    if (col == "col-filter")
-      return filter.text;
+    let rule = this.data[row].rule;
+    if (col == "col-rule")
+      return rule.text;
     else if (col == "col-slow")
-      return (filter instanceof RegExpFilter && AllMatcher.isSlowFilter(filter) ? "!" : null);
-    else if (filter instanceof ActiveFilter)
+      return (rule instanceof RegExpRule && AllMatchers.isSlowRule(rule) ? "!" : null);
+    else if (rule instanceof ActiveRule)
     {
       if (col == "col-hitcount")
-        return filter.hitCount;
+        return rule.hitCount;
       else if (col == "col-lasthit")
-        return (filter.lastHit ? Utils.formatTime(filter.lastHit) : null);
+        return (rule.lastHit ? Utils.formatTime(rule.lastHit) : null);
       else
         return null;
     }
@@ -677,24 +677,24 @@ var FilterView =
     if (row < 0 || row >= this.data.length)
       return;
 
-    let filter = this.data[row].filter;
+    let rule = this.data[row].rule;
     properties.AppendElement(this.atoms["selected-" + this.selection.isSelected(row)]);
-    properties.AppendElement(this.atoms["slow-" + (filter instanceof RegExpFilter && AllMatcher.isSlowFilter(filter))]);
-    if (filter instanceof ActiveFilter)
-      properties.AppendElement(this.atoms["disabled-" + filter.disabled]);
-    properties.AppendElement(this.atoms["dummy-" + ("dummy" in filter)]);
+    properties.AppendElement(this.atoms["slow-" + (rule instanceof RegExpRule && AllMatchers.isSlowRule(rule))]);
+    if (rule instanceof ActiveRule)
+      properties.AppendElement(this.atoms["disabled-" + rule.disabled]);
+    properties.AppendElement(this.atoms["dummy-" + ("dummy" in rule)]);
 
-    if (filter instanceof CommentFilter)
+    if (rule instanceof CommentRule)
       properties.AppendElement(this.atoms["type-comment"]);
-    else if (filter instanceof BlockingFilter)
-      properties.AppendElement(this.atoms["type-filterlist"]);
-    else if (filter instanceof WhitelistFilter)
+    else if (rule instanceof EngineRule)
+      properties.AppendElement(this.atoms["type-rulelist"]);
+    else if (rule instanceof EngineExceptionalRule)
       properties.AppendElement(this.atoms["type-whitelist"]);
-    else if (filter instanceof UserAgentFilter)
+    else if (rule instanceof UserAgentRule)
       properties.AppendElement(this.atoms["type-useragent"]);
-    else if (filter instanceof UserAgentExceptionalFilter)
+    else if (rule instanceof UserAgentExceptionalRule)
       properties.AppendElement(this.atoms["type-useragentexceptional"]);
-    else if (filter instanceof InvalidFilter)
+    else if (rule instanceof InvalidRule)
       properties.AppendElement(this.atoms["type-invalid"]);
   },
 
@@ -727,7 +727,7 @@ var FilterView =
 
     let item = this.data[row];
     let position = (orientation == Ci.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
-    return FilterActions.canDrop(position, dataTransfer);
+    return RuleActions.canDrop(position, dataTransfer);
   },
 
   drop: function(row, orientation, dataTransfer)
@@ -737,7 +737,7 @@ var FilterView =
 
     let item = this.data[row];
     let position = (orientation == Ci.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
-    FilterActions.drop(position, dataTransfer);
+    RuleActions.drop(position, dataTransfer);
   },
 
   isEditable: function(row, col)
@@ -745,33 +745,33 @@ var FilterView =
     if (row < 0 || row >= this.data.length || !this.editable)
       return false;
 
-    let filter = this.data[row].filter;
-    if (col.id == "col-filter")
-      return !("dummy" in filter);
+    let rule = this.data[row].rule;
+    if (col.id == "col-rule")
+      return !("dummy" in rule);
     else
       return false;
   },
 
   setCellText: function(row, col, value)
   {
-    if (row < 0 || row >= this.data.length || col.id != "col-filter")
+    if (row < 0 || row >= this.data.length || col.id != "col-rule")
       return;
 
-    let oldFilter = this.data[row].filter;
+    let oldRule = this.data[row].rule;
     let position = this.data[row].index;
-    value = Filter.normalize(value);
-    if (!value || value == oldFilter.text)
+    value = Rule.normalize(value);
+    if (!value || value == oldRule.text)
       return;
 
     // Make sure we don't get called recursively (see https://adblockplus.org/forum/viewtopic.php?t=9003)
     this.treeElement.stopEditing();
 
-    let newFilter = Filter.fromText(value);
+    let newRule = Rule.fromText(value);
     if (this.data[row] == this.editDummy)
       this.removeEditDummy();
     else
-      FilterStorage.removeFilter(oldFilter, this._subscription, position);
-    FilterStorage.addFilter(newFilter, this._subscription, position);
+      RuleStorage.removeRule(oldRule, this._subscription, position);
+    RuleStorage.addRule(newRule, this._subscription, position);
   },
 
   cycleCell: function(row, col)
@@ -779,9 +779,9 @@ var FilterView =
     if (row < 0 || row >= this.data.length || col.id != "col-enabled")
       return null;
 
-    let filter = this.data[row].filter;
-    if (filter instanceof ActiveFilter)
-      filter.disabled = !filter.disabled;
+    let rule = this.data[row].rule;
+    if (rule instanceof ActiveRule)
+      rule.disabled = !rule.disabled;
   },
 
   isContainer: function(row) false,

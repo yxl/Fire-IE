@@ -11,10 +11,10 @@ const Cu = Components.utils;
 
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import(baseURL.spec + "ContentPolicy.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
-Cu.import(baseURL.spec + "FilterListener.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
+Cu.import(baseURL.spec + "RuleListener.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");

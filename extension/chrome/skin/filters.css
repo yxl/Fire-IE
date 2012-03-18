@@ -65,7 +65,7 @@ splitter
   border-width: 0px !important;
 }
 
-#filtersTooltip
+#rulesTooltip
 {
   max-width: none;
 }
@@ -109,28 +109,28 @@ tree
 }
 
 /*
- * Force left-to-right for filter text but not comments
+ * Force left-to-right for rule text but not comments
  */
-treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-invalid),
-treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-whitelist),
-treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-filterlist),
-treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-elemhide)
+treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-invalid),
+treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-whitelist),
+treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-rulelist),
+treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-elemhide)
 {
   direction: ltr;
   text-align: end;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, dummy-true)
+treechildren::-moz-tree-cell-text(col-rule, dummy-true)
 {
   font-style: italic;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, type-whitelist, selected-false)
+treechildren::-moz-tree-cell-text(col-rule, type-whitelist, selected-false)
 {
   color: #008000;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, type-elemhide, selected-false)
+treechildren::-moz-tree-cell-text(col-rule, type-elemhide, selected-false)
 {
   color: #000080;
 }
@@ -140,18 +140,18 @@ treechildren::-moz-tree-cell-text(col-slow)
   font-size: 0px;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, disabled-true, selected-false)
+treechildren::-moz-tree-cell-text(col-rule, disabled-true, selected-false)
 {
   color: #808080;
   font-style: italic;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, type-comment, selected-false)
+treechildren::-moz-tree-cell-text(col-rule, type-comment, selected-false)
 {
   color: #808080;
 }
 
-treechildren::-moz-tree-cell-text(col-filter, type-invalid, selected-false)
+treechildren::-moz-tree-cell-text(col-rule, type-invalid, selected-false)
 {
   color: #C00000;
 }

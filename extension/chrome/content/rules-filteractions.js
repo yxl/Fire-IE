@@ -5,13 +5,13 @@
  */
 
 /**
- * Implementation of the various actions performed on the filters.
+ * Implementation of the various actions performed on the rules.
  * @class
  */
-var FilterActions =
+var RuleActions =
 {
   /**
-   * Initializes filter actions.
+   * Initializes rule actions.
    */
   init: function()
   {
@@ -20,7 +20,7 @@ var FilterActions =
     {
       me.keyPress(event);
     }, true);
-    this.treeElement.view = FilterView;
+    this.treeElement.view = RuleView;
 
     this.treeElement.inputField.addEventListener("keypress", function(event)
     {
@@ -42,14 +42,14 @@ var FilterActions =
       }
       return node;
     }
-    E("viewMenu").appendChild(fixId(E("filters-view-menu1").cloneNode(true), "2"));
+    E("viewMenu").appendChild(fixId(E("rules-view-menu1").cloneNode(true), "2"));
   },
 
   /**
-   * <tree> element containing the filters.
+   * <tree> element containing the rules.
    * @type XULElement
    */
-  get treeElement() E("filtersTree"),
+  get treeElement() E("rulesTree"),
 
   /**
    * Tests whether the tree is currently visible.
@@ -68,7 +68,7 @@ var FilterActions =
     let focused = document.commandDispatcher.focusedElement;
     while (focused)
     {
-      if ("treeBoxObject" in focused && focused.treeBoxObject == FilterView.boxObject)
+      if ("treeBoxObject" in focused && focused.treeBoxObject == RuleView.boxObject)
         return true;
       focused = focused.parentNode;
     }
@@ -76,41 +76,41 @@ var FilterActions =
   },
 
   /**
-   * Updates visible filter commands whenever the selected subscription changes.
+   * Updates visible rule commands whenever the selected subscription changes.
    */
   updateCommands: function()
   {
-    E("filters-add-command").setAttribute("disabled", !FilterView.editable);
+    E("rules-add-command").setAttribute("disabled", !RuleView.editable);
   },
 
   /**
-   * Called whenever filter actions menu is opened, initializes menu items.
+   * Called whenever rule actions menu is opened, initializes menu items.
    */
   fillActionsPopup: function()
   {
-    let editable = FilterView.editable;
-    let items = FilterView.selectedItems.filter(function(i) !i.filter.dummy);
+    let editable = RuleView.editable;
+    let items = RuleView.selectedItems.rule(function(i) !i.rule.dummy);
     items.sort(function(entry1, entry2) entry1.index - entry2.index);
-    let activeItems = items.filter(function(i) i.filter instanceof ActiveFilter);
+    let activeItems = items.rule(function(i) i.rule instanceof ActiveRule);
 
-    E("filters-edit-command").setAttribute("disabled", !editable || !items.length);
-    E("filters-delete-command").setAttribute("disabled", !editable || !items.length);
-    E("filters-resetHitCounts-command").setAttribute("disabled", !activeItems.length);
-    E("filters-moveUp-command").setAttribute("disabled", !editable || FilterView.isSorted() || !items.length || items[0].index == 0);
-    E("filters-moveDown-command").setAttribute("disabled", !editable || FilterView.isSorted() || !items.length || items[items.length - 1].index == FilterView.rowCount - 1);
-    E("filters-copy-command").setAttribute("disabled", !items.length);
-    E("filters-cut-command").setAttribute("disabled", !editable || !items.length);
-    E("filters-paste-command").setAttribute("disabled", !editable || !Utils.clipboard.hasDataMatchingFlavors(["text/unicode"], 1, Utils.clipboard.kGlobalClipboard));
+    E("rules-edit-command").setAttribute("disabled", !editable || !items.length);
+    E("rules-delete-command").setAttribute("disabled", !editable || !items.length);
+    E("rules-resetHitCounts-command").setAttribute("disabled", !activeItems.length);
+    E("rules-moveUp-command").setAttribute("disabled", !editable || RuleView.isSorted() || !items.length || items[0].index == 0);
+    E("rules-moveDown-command").setAttribute("disabled", !editable || RuleView.isSorted() || !items.length || items[items.length - 1].index == RuleView.rowCount - 1);
+    E("rules-copy-command").setAttribute("disabled", !items.length);
+    E("rules-cut-command").setAttribute("disabled", !editable || !items.length);
+    E("rules-paste-command").setAttribute("disabled", !editable || !Utils.clipboard.hasDataMatchingFlavors(["text/unicode"], 1, Utils.clipboard.kGlobalClipboard));
   },
 
   /**
-   * Changes sort current order for the tree. Sorts by filter column if the list is unsorted.
+   * Changes sort current order for the tree. Sorts by rule column if the list is unsorted.
    * @param {String} order  either "ascending" or "descending"
    */
   setSortOrder: function(sortOrder)
   {
-    let col = (FilterView.sortColumn ? FilterView.sortColumn.id : "col-filter");
-    FilterView.sortBy(col, sortOrder);
+    let col = (RuleView.sortColumn ? RuleView.sortColumn.id : "col-rule");
+    RuleView.sortBy(col, sortOrder);
   },
 
   /**
@@ -123,21 +123,21 @@ var FilterActions =
   },
 
   /**
-   * Enables or disables all filters in the current selection.
+   * Enables or disables all rules in the current selection.
    */
   selectionToggleDisabled: function()
   {
     if (this.treeElement.editingColumn)
       return;
 
-    let items = FilterView.selectedItems.filter(function(i) i.filter instanceof ActiveFilter);
+    let items = RuleView.selectedItems.rule(function(i) i.rule instanceof ActiveRule);
     if (items.length)
     {
-      FilterView.boxObject.beginUpdateBatch();
-      let newValue = !items[0].filter.disabled;
+      RuleView.boxObject.beginUpdateBatch();
+      let newValue = !items[0].rule.disabled;
       for (let i = 0; i < items.length; i++)
-        items[i].filter.disabled = newValue;
-      FilterView.boxObject.endUpdateBatch();
+        items[i].rule.disabled = newValue;
+      RuleView.boxObject.endUpdateBatch();
     }
   },
 
@@ -149,30 +149,30 @@ var FilterActions =
     if (this.treeElement.editingColumn)
       return;
 
-    FilterView.selection.selectAll();
+    RuleView.selection.selectAll();
     this.treeElement.focus();
   },
 
   /**
-   * Starts editing the current filter.
+   * Starts editing the current rule.
    */
   startEditing: function()
   {
     if (this.treeElement.editingColumn)
       return;
 
-    this.treeElement.startEditing(FilterView.selection.currentIndex, FilterView.boxObject.columns.getNamedColumn("col-filter"));
+    this.treeElement.startEditing(RuleView.selection.currentIndex, RuleView.boxObject.columns.getNamedColumn("col-rule"));
   },
 
   /**
-   * Starts editing a new filter at the current position.
+   * Starts editing a new rule at the current position.
    */
-  insertFilter: function()
+  insertRule: function()
   {
-    if (!FilterView.editable || this.treeElement.editingColumn)
+    if (!RuleView.editable || this.treeElement.editingColumn)
       return;
 
-    FilterView.insertEditDummy();
+    RuleView.insertEditDummy();
     this.startEditing();
 
     let tree = this.treeElement;
@@ -181,7 +181,7 @@ var FilterActions =
       if (event.attrName == "editing" && tree.editingRow < 0)
       {
         tree.removeEventListener("DOMAttrModified", listener, false);
-        FilterView.removeEditDummy();
+        RuleView.removeEditDummy();
       }
     }
     tree.addEventListener("DOMAttrModified", listener, false);
@@ -192,24 +192,24 @@ var FilterActions =
    */
   deleteItems: function(/**Array*/ items)
   {
-    let oldIndex = FilterView.selection.currentIndex;
+    let oldIndex = RuleView.selection.currentIndex;
     items.sort(function(entry1, entry2) entry2.index - entry1.index);
 
     for (let i = 0; i < items.length; i++)
-      FilterStorage.removeFilter(items[i].filter, FilterView._subscription, items[i].index);
+      RuleStorage.removeRule(items[i].rule, RuleView._subscription, items[i].index);
 
-    FilterView.selectRow(oldIndex);
+    RuleView.selectRow(oldIndex);
   },
 
   /**
-   * Deletes selected filters.
+   * Deletes selected rules.
    */
   deleteSelected: function()
   {
-    if (!FilterView.editable || this.treeElement.editingColumn)
+    if (!RuleView.editable || this.treeElement.editingColumn)
       return;
 
-    let items = FilterView.selectedItems;
+    let items = RuleView.selectedItems;
     if (items.length == 0 || (items.length >= 2 && !Utils.confirm(window, this.treeElement.getAttribute("_removewarning"))))
       return;
 
@@ -217,16 +217,16 @@ var FilterActions =
   },
 
   /**
-   * Resets hit counts of the selected filters.
+   * Resets hit counts of the selected rules.
    */
   resetHitCounts: function()
   {
     if (this.treeElement.editingColumn)
       return;
 
-    let items = FilterView.selectedItems.filter(function(i) i.filter instanceof ActiveFilter);
+    let items = RuleView.selectedItems.rule(function(i) i.rule instanceof ActiveRule);
     if (items.length)
-      FilterStorage.resetHitCounts(items.map(function(i) i.filter));
+      RuleStorage.resetHitCounts(items.map(function(i) i.rule));
   },
 
   /**
@@ -247,67 +247,67 @@ var FilterActions =
         return;
 
       for (let i = 0; i < items.length; i++)
-        FilterStorage.moveFilter(items[i].filter, FilterView._subscription, items[i].index, position++);
-      FilterView.selection.rangedSelect(position - items.length, position - 1, false);
+        RuleStorage.moveRule(items[i].rule, RuleView._subscription, items[i].index, position++);
+      RuleView.selection.rangedSelect(position - items.length, position - 1, false);
     }
     else if (offset > 0)
     {
       items.sort(function(entry1, entry2) entry2.index - entry1.index);
       let position = items[0].index + offset;
-      if (position >= FilterView.rowCount)
+      if (position >= RuleView.rowCount)
         return;
 
       for (let i = 0; i < items.length; i++)
-        FilterStorage.moveFilter(items[i].filter, FilterView._subscription, items[i].index, position--);
-      FilterView.selection.rangedSelect(position + 1, position + items.length, false);
+        RuleStorage.moveRule(items[i].rule, RuleView._subscription, items[i].index, position--);
+      RuleView.selection.rangedSelect(position + 1, position + items.length, false);
     }
   },
 
   /**
-   * Moves selected filters one line up.
+   * Moves selected rules one line up.
    */
   moveUp: function()
   {
-    if (!FilterView.editable || FilterView.isEmpty || FilterView.isSorted() || this.treeElement.editingColumn)
+    if (!RuleView.editable || RuleView.isEmpty || RuleView.isSorted() || this.treeElement.editingColumn)
       return;
 
-    this._moveItems(FilterView.selectedItems, -1);
+    this._moveItems(RuleView.selectedItems, -1);
   },
 
   /**
-   * Moves selected filters one line down.
+   * Moves selected rules one line down.
    */
   moveDown: function()
   {
-    if (!FilterView.editable || FilterView.isEmpty || FilterView.isSorted() || this.treeElement.editingColumn)
+    if (!RuleView.editable || RuleView.isEmpty || RuleView.isSorted() || this.treeElement.editingColumn)
       return;
 
-    this._moveItems(FilterView.selectedItems, 1);
+    this._moveItems(RuleView.selectedItems, 1);
   },
 
   /**
-   * Fills the context menu of the filters columns.
+   * Fills the context menu of the rules columns.
    */
   fillColumnPopup: function(/**Element*/ element)
   {
     let suffix = element.id.match(/\d+$/)[0] || "1";
 
-    E("filters-view-filter" + suffix).setAttribute("checked", !E("col-filter").hidden);
-    E("filters-view-slow" + suffix).setAttribute("checked", !E("col-slow").hidden);
-    E("filters-view-enabled" + suffix).setAttribute("checked", !E("col-enabled").hidden);
-    E("filters-view-hitcount" + suffix).setAttribute("checked", !E("col-hitcount").hidden);
-    E("filters-view-lasthit" + suffix).setAttribute("checked", !E("col-lasthit").hidden);
+    E("rules-view-rule" + suffix).setAttribute("checked", !E("col-rule").hidden);
+    E("rules-view-slow" + suffix).setAttribute("checked", !E("col-slow").hidden);
+    E("rules-view-enabled" + suffix).setAttribute("checked", !E("col-enabled").hidden);
+    E("rules-view-hitcount" + suffix).setAttribute("checked", !E("col-hitcount").hidden);
+    E("rules-view-lasthit" + suffix).setAttribute("checked", !E("col-lasthit").hidden);
 
-    let sortColumn = FilterView.sortColumn;
+    let sortColumn = RuleView.sortColumn;
     let sortColumnID = (sortColumn ? sortColumn.id : null);
     let sortDir = (sortColumn ? sortColumn.getAttribute("sortDirection") : "natural");
-    E("filters-sort-none" + suffix).setAttribute("checked", sortColumn == null);
-    E("filters-sort-filter" + suffix).setAttribute("checked", sortColumnID == "col-filter");
-    E("filters-sort-enabled" + suffix).setAttribute("checked", sortColumnID == "col-enabled");
-    E("filters-sort-hitcount" + suffix).setAttribute("checked", sortColumnID == "col-hitcount");
-    E("filters-sort-lasthit" + suffix).setAttribute("checked", sortColumnID == "col-lasthit");
-    E("filters-sort-asc" + suffix).setAttribute("checked", sortDir == "ascending");
-    E("filters-sort-desc" + suffix).setAttribute("checked", sortDir == "descending");
+    E("rules-sort-none" + suffix).setAttribute("checked", sortColumn == null);
+    E("rules-sort-rule" + suffix).setAttribute("checked", sortColumnID == "col-rule");
+    E("rules-sort-enabled" + suffix).setAttribute("checked", sortColumnID == "col-enabled");
+    E("rules-sort-hitcount" + suffix).setAttribute("checked", sortColumnID == "col-hitcount");
+    E("rules-sort-lasthit" + suffix).setAttribute("checked", sortColumnID == "col-lasthit");
+    E("rules-sort-asc" + suffix).setAttribute("checked", sortDir == "ascending");
+    E("rules-sort-desc" + suffix).setAttribute("checked", sortDir == "descending");
   },
 
   /**
@@ -315,8 +315,8 @@ var FilterActions =
    */
   fillTooltip: function(event)
   {
-    let item = FilterView.getItemAt(event.clientX, event.clientY);
-    if (!item || item.filter.dummy)
+    let item = RuleView.getItemAt(event.clientX, event.clientY);
+    if (!item || item.rule.dummy)
     {
       event.preventDefault();
       return;
@@ -335,21 +335,21 @@ var FilterActions =
       }
     }
 
-    setMultilineContent(E("tooltip-filter"), item.filter.text);
+    setMultilineContent(E("tooltip-rule"), item.rule.text);
 
-    E("tooltip-hitcount-row").hidden = !(item.filter instanceof ActiveFilter);
-    E("tooltip-lasthit-row").hidden = !(item.filter instanceof ActiveFilter) || !item.filter.lastHit;
-    if (item.filter instanceof ActiveFilter)
+    E("tooltip-hitcount-row").hidden = !(item.rule instanceof ActiveRule);
+    E("tooltip-lasthit-row").hidden = !(item.rule instanceof ActiveRule) || !item.rule.lastHit;
+    if (item.rule instanceof ActiveRule)
     {
-      E("tooltip-hitcount").setAttribute("value", item.filter.hitCount)
-      E("tooltip-lasthit").setAttribute("value", Utils.formatTime(item.filter.lastHit))
+      E("tooltip-hitcount").setAttribute("value", item.rule.hitCount)
+      E("tooltip-lasthit").setAttribute("value", Utils.formatTime(item.rule.lastHit))
     }
 
     E("tooltip-additional").hidden = false;
-    if (item.filter instanceof InvalidFilter && item.filter.reason)
-      E("tooltip-additional").textContent = item.filter.reason;
-    else if (item.filter instanceof RegExpFilter && AllMatcher.isSlowFilter(item.filter))
-      E("tooltip-additional").textContent = Utils.getString("filter_regexp_tooltip");
+    if (item.rule instanceof InvalidRule && item.rule.reason)
+      E("tooltip-additional").textContent = item.rule.reason;
+    else if (item.rule instanceof RegExpRule && AllMatchers.isSlowRule(item.rule))
+      E("tooltip-additional").textContent = Utils.getString("rule_regexp_tooltip");
     else
       E("tooltip-additional").hidden = true;
   },
@@ -359,7 +359,7 @@ var FilterActions =
    */
   keyPress: function(/**Event*/ event)
   {
-    if (event.target != E("filtersTree"))
+    if (event.target != E("rulesTree"))
       return;
 
     let modifiers = 0;
@@ -374,13 +374,13 @@ var FilterActions =
       this.selectionToggleDisabled();
     else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP && modifiers == SubscriptionActions._accelMask)
     {
-      E("filters-moveUp-command").doCommand();
+      E("rules-moveUp-command").doCommand();
       event.preventDefault();
       event.stopPropagation();
     }
     else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN && modifiers == SubscriptionActions._accelMask)
     {
-      E("filters-moveDown-command").doCommand();
+      E("rules-moveDown-command").doCommand();
       event.preventDefault();
       event.stopPropagation();
     }
@@ -392,24 +392,24 @@ var FilterActions =
    */
   copySelected: function(/**Boolean*/ keep)
   {
-    let items = FilterView.selectedItems;
+    let items = RuleView.selectedItems;
     if (!items.length)
       return;
 
     items.sort(function(entry1, entry2) entry1.index - entry2.index);
-    let text = items.map(function(i) i.filter.text).join(Utils.getLineBreak());
+    let text = items.map(function(i) i.rule.text).join(Utils.getLineBreak());
     Utils.clipboardHelper.copyString(text);
 
-    if (!keep && FilterView.editable && !this.treeElement.editingColumn)
+    if (!keep && RuleView.editable && !this.treeElement.editingColumn)
       this.deleteItems(items);
   },
 
   /**
-   * Pastes text from clipboard as filters at the current position.
+   * Pastes text from clipboard as rules at the current position.
    */
   paste: function()
   {
-    if (!FilterView.editable || this.treeElement.editingColumn)
+    if (!RuleView.editable || this.treeElement.editingColumn)
       return;
 
     let transferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
@@ -427,15 +427,15 @@ var FilterActions =
       return;
     }
 
-    let item = FilterView.currentItem;
-    let position = (item ? item.index : FilterView.data.length);
+    let item = RuleView.currentItem;
+    let position = (item ? item.index : RuleView.data.length);
 
     let lines = data.replace(/\r/g, "").split("\n");
     for (let i = 0; i < lines.length; i++)
     {
-      let filter = Filter.fromText(lines[i]);
-      if (filter)
-        FilterStorage.addFilter(filter, FilterView._subscription, position++);
+      let rule = Rule.fromText(lines[i]);
+      if (rule)
+        RuleStorage.addRule(rule, RuleView._subscription, position++);
     }
   },
 
@@ -446,12 +446,12 @@ var FilterActions =
    */
   startDrag: function(/**Event*/ event)
   {
-    let items = FilterView.selectedItems;
+    let items = RuleView.selectedItems;
     if (!items.length)
       return;
 
     items.sort(function(entry1, entry2) entry1.index - entry2.index);
-    event.dataTransfer.setData("text/plain", items.map(function(i) i.filter.text).join(Utils.getLineBreak()));
+    event.dataTransfer.setData("text/plain", items.map(function(i) i.rule.text).join(Utils.getLineBreak()));
     this.dragItems = items;
     event.stopPropagation();
   },
@@ -461,14 +461,14 @@ var FilterActions =
    */
   canDrop: function(/**Integer*/ newPosition, /**nsIDOMDataTransfer*/ dataTransfer)
   {
-    if (!FilterView.editable || this.treeElement.editingColumn)
+    if (!RuleView.editable || this.treeElement.editingColumn)
       return false;
 
-    // If we aren't dragging items then maybe we got filters as plain text
+    // If we aren't dragging items then maybe we got rules as plain text
     if (!this.dragItems)
       return dataTransfer && dataTransfer.getData("text/plain");
 
-    if (FilterView.isEmpty || FilterView.isSorted())
+    if (RuleView.isEmpty || RuleView.isSorted())
       return false;
 
     if (newPosition < this.dragItems[0].index)
@@ -484,27 +484,27 @@ var FilterActions =
    */
   drop: function(/**Integer*/ newPosition, /**nsIDOMDataTransfer*/ dataTransfer)
   {
-    if (!FilterView.editable || this.treeElement.editingColumn)
+    if (!RuleView.editable || this.treeElement.editingColumn)
       return;
 
     if (!this.dragItems)
     {
-      // We got filters as plain text, insert them into the list
+      // We got rules as plain text, insert them into the list
       let data = (dataTransfer ? dataTransfer.getData("text/plain") : null);
       if (data)
       {
         let lines = data.replace(/\r/g, "").split("\n");
         for (let i = 0; i < lines.length; i++)
         {
-          let filter = Filter.fromText(lines[i]);
-          if (filter)
-            FilterStorage.addFilter(filter, FilterView._subscription, newPosition++);
+          let rule = Rule.fromText(lines[i]);
+          if (rule)
+            RuleStorage.addRule(rule, RuleView._subscription, newPosition++);
         }
       }
       return;
     }
 
-    if (FilterView.isEmpty || FilterView.isSorted())
+    if (RuleView.isEmpty || RuleView.isSorted())
       return;
 
     if (newPosition < this.dragItems[0].index)
@@ -522,9 +522,9 @@ var FilterActions =
   },
 
   /**
-   * Called if filters have been dragged into a subscription and need to be removed.
+   * Called if rules have been dragged into a subscription and need to be removed.
    */
-  removeDraggedFilters: function()
+  removeDraggedRules: function()
   {
     if (!this.dragItems)
       return;
@@ -535,5 +535,5 @@ var FilterActions =
 
 window.addEventListener("load", function()
 {
-  FilterActions.init();
+  RuleActions.init();
 }, false);

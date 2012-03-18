@@ -380,7 +380,7 @@ var Utils = {
     }
     //catch (e)
     {
-	  Utils.ERROR(e + ": " + url);
+      Utils.ERROR(e + ": " + url);
       return null;
     }
   },
@@ -389,10 +389,10 @@ var Utils = {
   {
     return Utils.makeURI(url) != null;
   },
-  
+
   isValidDomainName: function(domainName)
   {
-	return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
+    return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
   },
 
   /**
@@ -484,9 +484,9 @@ var Utils = {
   },
 
   /**
-   * Generates filter subscription checksum.
+   * Generates rule subscription checksum.
    *
-   * @param {Array of String} lines filter subscription lines (with checksum line removed)
+   * @param {Array of String} lines rule subscription lines (with checksum line removed)
    * @return {String} checksum or null
    */
   generateChecksum: function(lines)
@@ -516,12 +516,12 @@ var Utils = {
   },
 
   /**
-   * Opens filter preferences dialog or focuses an already open dialog.
-   * @param {Filter} [filter]  filter to be selected
+   * Opens rule preferences dialog or focuses an already open dialog.
+   * @param {Rule} [rule]  rule to be selected
    */
-  openFiltersDialog: function(filter)
+  openRulesDialog: function(rule)
   {
-    var dlg = Services.wm.getMostRecentWindow("abp:filters");
+    var dlg = Services.wm.getMostRecentWindow("abp:rules");
     if (dlg)
     {
       try
@@ -530,12 +530,12 @@ var Utils = {
       }
       catch (e)
       {}
-      dlg.SubscriptionActions.selectFilter(filter);
+      dlg.SubscriptionActions.selectRule(rule);
     }
     else
     {
-      Services.ww.openWindow(null, "chrome://adblockplus/content/ui/filters.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
-        wrappedJSObject: filter
+      Services.ww.openWindow(null, "chrome://adblockplus/content/ui/rules.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
+        wrappedJSObject: rule
       });
     }
   },
@@ -655,9 +655,9 @@ var Utils = {
   },
 
   /**
-   * Chooses the best filter subscription for user's language.
+   * Chooses the best rule subscription for user's language.
    */
-  chooseFilterSubscription: function( /**NodeList*/ subscriptions) /**Node*/
+  chooseRuleSubscription: function( /**NodeList*/ subscriptions) /**Node*/
   {
     let selectedItem = null;
     let selectedPrefix = null;
@@ -699,7 +699,8 @@ var Utils = {
 /**
  * Set the value of preference "extensions.logging.enabled" to false to hide
  * Utils.LOG message
- */ ["LOG", "WARN", "ERROR"].forEach(function(aName)
+ */
+["LOG", "WARN", "ERROR"].forEach(function(aName)
 {
   XPCOMUtils.defineLazyGetter(Utils, aName, function()
   {

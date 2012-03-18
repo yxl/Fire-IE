@@ -83,7 +83,7 @@ var Backup =
     while (this.restoreInsertionPoint.nextSibling && !this.restoreInsertionPoint.nextSibling.id)
       this.restoreInsertionPoint.parentNode.removeChild(this.restoreInsertionPoint.nextSibling);
 
-    let files = FilterStorage.getBackupFiles().reverse();
+    let files = RuleStorage.getBackupFiles().reverse();
     for (let i = 0; i < files.length; i++)
     {
       let file = files[i];
@@ -100,23 +100,23 @@ var Backup =
   },
 
   /**
-   * Lets the user choose a file to restore filters from.
+   * Lets the user choose a file to restore rules from.
    */
   restoreFromFile: function()
   {
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_restoreDialogTitle"), picker.modeOpen);
     picker.defaultExtension = ".ini";
-    picker.appendFilter(E("backupButton").getAttribute("_fileFilterComplete"), "*.ini");
-    picker.appendFilter(E("backupButton").getAttribute("_fileFilterCustom"), "*.txt");
+    picker.appendRule(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
+    picker.appendRule(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
 
     if (picker.show() != picker.returnCancel)
     {
       this.saveDefaultDir(picker.file.parent);
-      if (picker.filterIndex == 0)
+      if (picker.ruleIndex == 0)
         this.restoreAllData(picker.file);
       else
-        this.restoreCustomFilters(picker.file);
+        this.restoreCustomRules(picker.file);
     }
   },
 
@@ -148,19 +148,19 @@ var Backup =
 
     let warning = E("backupButton").getAttribute("_restoreCompleteWarning");
     let minVersion = parseInt(RegExp.$1, 10);
-    if (minVersion > FilterStorage.formatVersion)
+    if (minVersion > RuleStorage.formatVersion)
       warning += "\n\n" + E("backupButton").getAttribute("_restoreVersionWarning");
 
     if (!Utils.confirm(window, warning, E("backupButton").getAttribute("_restoreDialogTitle")))
       return;
 
-    FilterStorage.loadFromDisk(file);
+    RuleStorage.loadFromDisk(file);
   },
 
   /**
-   * Restores custom filters from a file.
+   * Restores custom rules from a file.
    */
-  restoreCustomFilters: function(/**nsIFile*/ file)
+  restoreCustomRules: function(/**nsIFile*/ file)
   {
     let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
     fileStream.init(file, 0x01, 0444, 0);
@@ -191,9 +191,9 @@ var Backup =
     if (!Utils.confirm(window, warning, E("backupButton").getAttribute("_restoreDialogTitle")))
       return;
 
-    let subscriptions = FilterStorage.subscriptions.filter(function(s) s instanceof SpecialSubscription);
+    let subscriptions = RuleStorage.subscriptions.rule(function(s) s instanceof SpecialSubscription);
     for (let i = 0; i < subscriptions.length; i++)
-      FilterStorage.removeSubscription(subscriptions[i]);
+      RuleStorage.removeSubscription(subscriptions[i]);
 
     let subscription = null;
     for (let i = 1; i < lines.length; i++)
@@ -203,7 +203,7 @@ var Backup =
       else if (this.GROUPTITLE_REGEXP.test(lines[i]))
       {
         if (subscription)
-          FilterStorage.addSubscription(subscription);
+          RuleStorage.addSubscription(subscription);
         subscription = SpecialSubscription.create(RegExp.$1);
 
         let options = RegExp.$2;
@@ -218,37 +218,37 @@ var Backup =
       }
       else
       {
-        let filter = Filter.fromText(Filter.normalize(lines[i]));
-        if (!filter)
+        let rule = Rule.fromText(Rule.normalize(lines[i]));
+        if (!rule)
           continue;
         if (!subscription)
           subscription = SpecialSubscription.create(Utils.getString("switchGroup.title"));
-        subscription.filters.push(filter);
+        subscription.rules.push(rule);
       }
     }
     if (subscription)
-      FilterStorage.addSubscription(subscription);
+      RuleStorage.addSubscription(subscription);
     E("tabs").selectedIndex = 1;
   },
 
   /**
-   * Lets the user choose a file to backup filters to.
+   * Lets the user choose a file to backup rules to.
    */
   backupToFile: function()
   {
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_backupDialogTitle"), picker.modeSave);
     picker.defaultExtension = ".ini";
-    picker.appendFilter(E("backupButton").getAttribute("_fileFilterComplete"), "*.ini");
-    picker.appendFilter(E("backupButton").getAttribute("_fileFilterCustom"), "*.txt");
+    picker.appendRule(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
+    picker.appendRule(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
 
     if (picker.show() != picker.returnCancel)
     {
       this.saveDefaultDir(picker.file.parent);
-      if (picker.filterIndex == 0)
+      if (picker.ruleIndex == 0)
         this.backupAllData(picker.file);
       else
-        this.backupCustomFilters(picker.file);
+        this.backupCustomRules(picker.file);
     }
   },
 
@@ -257,15 +257,15 @@ var Backup =
    */
   backupAllData: function(/**nsIFile*/ file)
   {
-    FilterStorage.saveToDisk(file);
+    RuleStorage.saveToDisk(file);
   },
 
   /**
-   * Writes user's custom filters to a file.
+   * Writes user's custom rules to a file.
    */
-  backupCustomFilters: function(/**nsIFile*/ file)
+  backupCustomRules: function(/**nsIFile*/ file)
   {
-    let subscriptions = FilterStorage.subscriptions.filter(function(s) s instanceof SpecialSubscription);
+    let subscriptions = RuleStorage.subscriptions.rule(function(s) s instanceof SpecialSubscription);
     let list = ["[Adblock Plus 2.0]"];
     for (let i = 0; i < subscriptions.length; i++)
     {
@@ -274,16 +274,16 @@ var Backup =
       if (subscription.defaults)
         typeAddition = "/" + subscription.defaults.join("/");
       list.push("! [" + subscription.title + "]" + typeAddition);
-      for (let j = 0; j < subscription.filters.length; j++)
+      for (let j = 0; j < subscription.rules.length; j++)
       {
-        let filter = subscription.filters[j];
+        let rule = subscription.rules[j];
         // Skip checksums
-        if (filter instanceof CommentFilter && this.CHECKSUM_REGEXP.test(filter.text))
+        if (rule instanceof CommentRule && this.CHECKSUM_REGEXP.test(rule.text))
           continue;
         // Skip group headers
-        if (filter instanceof CommentFilter && this.GROUPTITLE_REGEXP.test(filter.text))
+        if (rule instanceof CommentRule && this.GROUPTITLE_REGEXP.test(rule.text))
           continue;
-        list.push(filter.text);
+        list.push(rule.text);
       }
     }
 

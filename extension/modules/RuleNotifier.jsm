@@ -5,19 +5,16 @@
  */
 
 /**
- * @fileOverview FilterNotifier class manages listeners and distributes messages
- * about filter changes to them.
+ * @fileOverview RuleNotifier class manages listeners and distributes messages
+ * about rule changes to them.
  */
 
-var EXPORTED_SYMBOLS = ["FilterNotifier"];
+var EXPORTED_SYMBOLS = ["RuleNotifier"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
-
-try
-{
 
 /**
  * List of registered listeners
@@ -26,18 +23,16 @@ try
 let listeners = [];
 
 /**
- * This class allows registering and triggering listeners for filter events.
+ * This class allows registering and triggering listeners for rule events.
  * @class
  */
-var FilterNotifier =
-{
+var RuleNotifier = {
   /**
    * Adds a listener
    */
-  addListener: function(/**function(action, item, newValue, oldValue)*/ listener)
+  addListener: function( /**function(action, item, newValue, oldValue)*/ listener)
   {
-    if (listeners.indexOf(listener) >= 0)
-      return;
+    if (listeners.indexOf(listener) >= 0) return;
 
     listeners.push(listener);
   },
@@ -45,11 +40,10 @@ var FilterNotifier =
   /**
    * Removes a listener that was previosly added via addListener
    */
-  removeListener: function(/**function(action, item, newValue, oldValue)*/ listener)
+  removeListener: function( /**function(action, item, newValue, oldValue)*/ listener)
   {
     let index = listeners.indexOf(listener);
-    if (index >= 0)
-      listeners.splice(index, 1);
+    if (index >= 0) listeners.splice(index, 1);
   },
 
   /**
@@ -59,17 +53,13 @@ var FilterNotifier =
    *                 "subscription.disabled", "subscription.title",
    *                 "subscription.lastDownload", "subscription.downloadStatus",
    *                 "subscription.homepage", "subscription.updated",
-   *                 "filter.added", "filter.removed", "filter.moved",
-   *                 "filter.disabled", "filter.hitCount", "filter.lastHit")
-   * @param {Subscription|Filter} item item that the change applies to
+   *                 "rule.added", "rule.removed", "rule.moved",
+   *                 "rule.disabled", "rule.hitCount", "rule.lastHit")
+   * @param {Subscription|Rule} item item that the change applies to
    */
   triggerListeners: function(action, item, param1, param2, param3)
   {
-    for each (let listener in listeners)
-      listener(action, item, param1, param2, param3);
+    for each(let listener in listeners)
+    listener(action, item, param1, param2, param3);
   }
 };
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

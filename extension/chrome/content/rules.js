@@ -11,9 +11,9 @@ function init()
 {
   if (window.arguments && window.arguments.length)
   {
-    let filter = window.arguments[0].wrappedJSObject;
-    if (filter instanceof Filter)
-      Utils.runAsync(SubscriptionActions.selectFilter, SubscriptionActions, filter);
+    let rule = window.arguments[0].wrappedJSObject;
+    if (rule instanceof Rule)
+      Utils.runAsync(SubscriptionActions.selectRule, SubscriptionActions, rule);
   }
 }
 
@@ -73,7 +73,7 @@ function onSplitterStateChange(/**Element*/ splitter)
 }
 
 /**
- * Updates filter list when selected subscription changes.
+ * Updates rule list when selected subscription changes.
  */
 function updateSelectedSubscription()
 {
@@ -86,8 +86,8 @@ function updateSelectedSubscription()
     return;
 
   let data = Templater.getDataForNode(list.selectedItem);
-  FilterView.subscription = (data ? data.subscription : null);
-  FilterActions.updateCommands();
+  RuleView.subscription = (data ? data.subscription : null);
+  RuleActions.updateCommands();
 }
 
 /**
@@ -115,7 +115,7 @@ var Templater =
 
     // Resolve any attributes of the for attr="{obj.foo}"
     let conditionals = [];
-    let nodeIterator = document.createNodeIterator(result, NodeFilter.SHOW_ELEMENT, null, false);
+    let nodeIterator = document.createNodeIterator(result, NodeRule.SHOW_ELEMENT, null, false);
     for (let node = nodeIterator.nextNode(); node; node = nodeIterator.nextNode())
     {
       if (node.localName == "if")

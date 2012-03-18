@@ -14,26 +14,23 @@
  */
 
 /**
- * @fileOverview Matcher class implementing matching addresses against a list of filters.
- * Refer to http://adblockplus.org/blog/investigating-filter-matching-algorithms for more information about
+ * @fileOverview Matcher class implementing matching addresses against a list of rules.
+ * Refer to http://adblockplus.org/blog/investigating-rule-matching-algorithms for more information about
  * the matching algorithms.
  */
 
-var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "engineMatcher", "userAgentMatcher", "AllMatcher"];
+var EXPORTED_SYMBOLS = ["Matcher", "CombinedMatcher", "EngineMatcher", "UserAgentMatcher", "AllMatchers"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 
 /**
- * Blacklist/whitelist filter matching
+ * Blacklist/whitelist rule matching
  * @constructor
  */
 function Matcher()
@@ -43,109 +40,104 @@ function Matcher()
 
 Matcher.prototype = {
   /**
-   * Lookup table for filters by their associated keyword
+   * Lookup table for rules by their associated keyword
    * @type Object
    */
-  filterByKeyword: null,
+  ruleByKeyword: null,
 
   /**
-   * Lookup table for keywords by the filter text
+   * Lookup table for keywords by the rule text
    * @type Object
    */
-  keywordByFilter: null,
+  keywordByRule: null,
 
   /**
-   * Removes all known filters
+   * Removes all known rules
    */
   clear: function()
   {
-    this.filterByKeyword = {__proto__: null};
-    this.keywordByFilter = {__proto__: null};
+    this.ruleByKeyword = {
+      __proto__: null
+    };
+    this.keywordByRule = {
+      __proto__: null
+    };
   },
 
   /**
-   * Adds a filter to the matcher
-   * @param {RegExpFilter} filter
+   * Adds a rule to the matcher
+   * @param {RegExpRule} rule
    */
-  add: function(filter)
+  add: function(rule)
   {
-    if (filter.text in this.keywordByFilter)
-      return;
+    if (rule.text in this.keywordByRule) return;
 
     // Look for a suitable keyword
-    let keyword = this.findKeyword(filter);
-    switch (typeof this.filterByKeyword[keyword])
+    let keyword = this.findKeyword(rule);
+    switch (typeof this.ruleByKeyword[keyword])
     {
-      case "undefined":
-        this.filterByKeyword[keyword] = filter.text;
-        break;
-      case "string":
-        this.filterByKeyword[keyword] = [this.filterByKeyword[keyword], filter.text];
-        break;
-      default:
-        this.filterByKeyword[keyword].push(filter.text);
-        break;
+    case "undefined":
+      this.ruleByKeyword[keyword] = rule.text;
+      break;
+    case "string":
+      this.ruleByKeyword[keyword] = [this.ruleByKeyword[keyword], rule.text];
+      break;
+    default:
+      this.ruleByKeyword[keyword].push(rule.text);
+      break;
     }
-    this.keywordByFilter[filter.text] = keyword;
+    this.keywordByRule[rule.text] = keyword;
   },
 
   /**
-   * Removes a filter from the matcher
-   * @param {RegExpFilter} filter
+   * Removes a rule from the matcher
+   * @param {RegExpRule} rule
    */
-  remove: function(filter)
+  remove: function(rule)
   {
-    if (!(filter.text in this.keywordByFilter))
-      return;
+    if (!(rule.text in this.keywordByRule)) return;
 
-    let keyword = this.keywordByFilter[filter.text];
-    let list = this.filterByKeyword[keyword];
-    if (typeof list == "string")
-      delete this.filterByKeyword[keyword];
+    let keyword = this.keywordByRule[rule.text];
+    let list = this.ruleByKeyword[keyword];
+    if (typeof list == "string") delete this.ruleByKeyword[keyword];
     else
     {
-      let index = list.indexOf(filter.text);
+      let index = list.indexOf(rule.text);
       if (index >= 0)
       {
         list.splice(index, 1);
-        if (list.length == 1)
-          this.filterByKeyword[keyword] = list[0];
+        if (list.length == 1) this.ruleByKeyword[keyword] = list[0];
       }
     }
 
-    delete this.keywordByFilter[filter.text];
+    delete this.keywordByRule[rule.text];
   },
 
   /**
-   * Chooses a keyword to be associated with the filter
-   * @param {String} text text representation of the filter
+   * Chooses a keyword to be associated with the rule
+   * @param {String} text text representation of the rule
    * @return {String} keyword (might be empty string)
    */
-  findKeyword: function(filter)
+  findKeyword: function(rule)
   {
     let defaultResult = "";
 
-    let text = filter.text;
-    if (Filter.regexpRegExp.test(text))
-      return defaultResult;
+    let text = rule.text;
+    if (Rule.regexpRegExp.test(text)) return defaultResult;
 
     // Remove options
-    if (Filter.optionsRegExp.test(text))
-      text = RegExp.leftContext;
+    if (Rule.optionsRegExp.test(text)) text = RegExp.leftContext;
 
     // Remove whitelist marker
-    if (text.substr(0, 2) == "@@")
-      text = text.substr(2);
-      
+    if (text.substr(0, 2) == "@@") text = text.substr(2);
+
     // Remove user agent marker
-    if (text.substr(0, 2) == "##")
-      text = text.substr(2);
+    if (text.substr(0, 2) == "##") text = text.substr(2);
 
     let candidates = text.toLowerCase().match(/[^a-z0-9%*][a-z0-9%]{3,}(?=[^a-z0-9%*])/g);
-    if (!candidates)
-      return defaultResult;
+    if (!candidates) return defaultResult;
 
-    let hash = this.filterByKeyword;
+    let hash = this.ruleByKeyword;
     let result = defaultResult;
     let resultCount = 0xFFFFFF;
     let resultLength = 0;
@@ -155,15 +147,15 @@ Matcher.prototype = {
       let count;
       switch (typeof hash[candidate])
       {
-        case "undefined":
-          count = 0;
-          break;
-        case "string":
-          count = 1;
-          break;
-        default:
-          count = hash[candidate].length;
-          break;
+      case "undefined":
+        count = 0;
+        break;
+      case "string":
+        count = 1;
+        break;
+      default:
+        count = hash[candidate].length;
+        break;
       }
       if (count < resultCount || (count == resultCount && candidate.length > resultLength))
       {
@@ -176,22 +168,20 @@ Matcher.prototype = {
   },
 
   /**
-   * Checks whether a particular filter is being matched against.
+   * Checks whether a particular rule is being matched against.
    */
-  hasFilter: function(/**RegExpFilter*/ filter) /**Boolean*/
+  hasRule: function( /**RegExpRule*/ rule) /**Boolean*/
   {
-    return (filter.text in this.keywordByFilter);
+    return (rule.text in this.keywordByRule);
   },
 
   /**
-   * Returns the keyword used for a filter, null for unknown filters.
+   * Returns the keyword used for a rule, null for unknown rules.
    */
-  getKeywordForFilter: function(/**RegExpFilter*/ filter) /**String*/
+  getKeywordForRule: function( /**RegExpRule*/ rule) /**String*/
   {
-    if (filter.text in this.keywordByFilter)
-      return this.keywordByFilter[filter.text];
-    else
-      return null;
+    if (rule.text in this.keywordByRule) return this.keywordByRule[rule.text];
+    else return null;
   },
 
   /**
@@ -199,29 +189,29 @@ Matcher.prototype = {
    */
   _checkEntryMatch: function(keyword, location, docDomain)
   {
-    let list = this.filterByKeyword[keyword];
+    let list = this.ruleByKeyword[keyword];
     if (typeof list == "string")
     {
-      let filter = Filter.knownFilters[list];
-      if (!filter)
+      let rule = Rule.knownRules[list];
+      if (!rule)
       {
-        // Something is wrong, we probably shouldn't have this filter in the first place
-        delete this.filterByKeyword[keyword];
+        // Something is wrong, we probably shouldn't have this rule in the first place
+        delete this.ruleByKeyword[keyword];
         return null;
       }
-      return (filter.matches(location, docDomain) ? filter : null);
+      return (rule.matches(location, docDomain) ? rule : null);
     }
     else
     {
       for (let i = 0; i < list.length; i++)
       {
-        let filter = Filter.knownFilters[list[i]];
-        if (!filter)
+        let rule = Rule.knownRules[list[i]];
+        if (!rule)
         {
-          // Something is wrong, we probably shouldn't have this filter in the first place
+          // Something is wrong, we probably shouldn't have this rule in the first place
           if (list.length == 1)
           {
-            delete this.filterByKeyword[keyword];
+            delete this.ruleByKeyword[keyword];
             return null;
           }
           else
@@ -230,33 +220,30 @@ Matcher.prototype = {
             continue;
           }
         }
-        if (filter.matches(location, docDomain))
-          return filter;
+        if (rule.matches(location, docDomain)) return rule;
       }
       return null;
     }
   },
 
   /**
-   * Tests whether the URL matches any of the known filters
+   * Tests whether the URL matches any of the known rules
    * @param {String} location URL to be tested
    * @param {String} docDomain domain name of the document that loads the URL
-   * @return {RegExpFilter} matching filter or null
+   * @return {RegExpRule} matching rule or null
    */
   matchesAny: function(location, docDomain)
   {
     let candidates = location.toLowerCase().match(/[a-z0-9%]{3,}/g);
-    if (candidates === null)
-      candidates = [];
+    if (candidates === null) candidates = [];
     candidates.push("");
     for (let i = 0, l = candidates.length; i < l; i++)
     {
       let substr = candidates[i];
-      if (substr in this.filterByKeyword)
+      if (substr in this.ruleByKeyword)
       {
         let result = this._checkEntryMatch(substr, location, docDomain);
-        if (result)
-          return result;
+        if (result) return result;
       }
     }
 
@@ -266,39 +253,39 @@ Matcher.prototype = {
   /**
    * Stores current state in a JSON'able object.
    */
-  toCache: function(/**Object*/ cache)
+  toCache: function( /**Object*/ cache)
   {
-    cache.filterByKeyword = this.filterByKeyword;
+    cache.ruleByKeyword = this.ruleByKeyword;
   },
 
   /**
    * Restores current state from an object.
    */
-  fromCache: function(/**Object*/ cache)
+  fromCache: function( /**Object*/ cache)
   {
-    this.filterByKeyword = cache.filterByKeyword;
-    this.filterByKeyword.__proto__ = null;
+    this.ruleByKeyword = cache.ruleByKeyword;
+    this.ruleByKeyword.__proto__ = null;
 
-    // We don't want to initialize keywordByFilter yet, do it when it is needed
-    delete this.keywordByFilter;
-    this.__defineGetter__("keywordByFilter", function()
+    // We don't want to initialize keywordByRule yet, do it when it is needed
+    delete this.keywordByRule;
+    this.__defineGetter__("keywordByRule", function()
     {
-      let result = {__proto__: null};
-      for (let k in this.filterByKeyword)
+      let result = {
+        __proto__: null
+      };
+      for (let k in this.ruleByKeyword)
       {
-        let list = this.filterByKeyword[k];
-        if (typeof list == "string")
-          result[list] = k;
-        else
-          for (let i = 0, l = list.length; i < l; i++)
-            result[list[i]] = k;
+        let list = this.ruleByKeyword[k];
+        if (typeof list == "string") result[list] = k;
+        else for (let i = 0, l = list.length; i < l; i++)
+        result[list[i]] = k;
       }
-      return this.keywordByFilter = result;
+      return this.keywordByRule = result;
     });
-    this.__defineSetter__("keywordByFilter", function(value)
+    this.__defineSetter__("keywordByRule", function(value)
     {
-      delete this.keywordByFilter;
-      return this.keywordByFilter = value;
+      delete this.keywordByRule;
+      return this.keywordByRule = value;
     });
   }
 };
@@ -312,7 +299,9 @@ function CombinedMatcher()
 {
   this.blacklist = new Matcher();
   this.whitelist = new Matcher();
-  this.resultCache = {__proto__: null};
+  this.resultCache = {
+    __proto__: null
+  };
 }
 
 /**
@@ -321,8 +310,7 @@ function CombinedMatcher()
  */
 CombinedMatcher.maxCacheEntries = 1000;
 
-CombinedMatcher.prototype =
-{
+CombinedMatcher.prototype = {
   /**
    * Matcher for blocking rules.
    * @type Matcher
@@ -354,27 +342,31 @@ CombinedMatcher.prototype =
   {
     this.blacklist.clear();
     this.whitelist.clear();
-    this.resultCache = {__proto__: null};
+    this.resultCache = {
+      __proto__: null
+    };
     this.cacheEntries = 0;
   },
 
   /**
    * @see Matcher#add
    */
-  add: function(filter)
+  add: function(rule)
   {
-    if (filter instanceof WhitelistFilter)
+    if (rule instanceof EngineExceptionalRule)
     {
-      this.whitelist.add(filter);
+      this.whitelist.add(rule);
     }
     else
     {
-      this.blacklist.add(filter);
+      this.blacklist.add(rule);
     }
 
     if (this.cacheEntries > 0)
     {
-      this.resultCache = {__proto__: null};
+      this.resultCache = {
+        __proto__: null
+      };
       this.cacheEntries = 0;
     }
   },
@@ -382,20 +374,22 @@ CombinedMatcher.prototype =
   /**
    * @see Matcher#remove
    */
-  remove: function(filter)
+  remove: function(rule)
   {
-    if (filter instanceof WhitelistFilter)
+    if (rule instanceof EngineExceptionalRule)
     {
-      this.whitelist.remove(filter);
+      this.whitelist.remove(rule);
     }
     else
     {
-      this.blacklist.remove(filter);
+      this.blacklist.remove(rule);
     }
 
     if (this.cacheEntries > 0)
     {
-      this.resultCache = {__proto__: null};
+      this.resultCache = {
+        __proto__: null
+      };
       this.cacheEntries = 0;
     }
   },
@@ -403,72 +397,61 @@ CombinedMatcher.prototype =
   /**
    * @see Matcher#findKeyword
    */
-  findKeyword: function(filter)
+  findKeyword: function(rule)
   {
-    if (filter instanceof WhitelistFilter)
-      return this.whitelist.findKeyword(filter);
-    else
-      return this.blacklist.findKeyword(filter);
+    if (rule instanceof EngineExceptionalRule) return this.whitelist.findKeyword(rule);
+    else return this.blacklist.findKeyword(rule);
   },
 
   /**
-   * @see Matcher#hasFilter
+   * @see Matcher#hasRule
    */
-  hasFilter: function(filter)
+  hasRule: function(rule)
   {
-    if (filter instanceof WhitelistFilter)
-      return this.whitelist.hasFilter(filter);
-    else
-      return this.blacklist.hasFilter(filter);
+    if (rule instanceof EngineExceptionalRule) return this.whitelist.hasRule(rule);
+    else return this.blacklist.hasRule(rule);
   },
 
   /**
-   * @see Matcher#getKeywordForFilter
+   * @see Matcher#getKeywordForRule
    */
-  getKeywordForFilter: function(filter)
+  getKeywordForRule: function(rule)
   {
-    if (filter instanceof WhitelistFilter)
-      return this.whitelist.getKeywordForFilter(filter);
-    else
-      return this.blacklist.getKeywordForFilter(filter);
+    if (rule instanceof EngineExceptionalRule) return this.whitelist.getKeywordForRule(rule);
+    else return this.blacklist.getKeywordForRule(rule);
   },
 
   /**
-   * Checks whether a particular filter is slow
+   * Checks whether a particular rule is slow
    */
-  isSlowFilter: function(/**RegExpFilter*/ filter) /**Boolean*/
+  isSlowRule: function( /**RegExpRule*/ rule) /**Boolean*/
   {
-    let matcher = (filter instanceof WhitelistFilter ? this.whitelist : this.blacklist);
-    if (matcher.hasFilter(filter))
-      return !matcher.getKeywordForFilter(filter);
-    else
-      return !matcher.findKeyword(filter);
+    let matcher = (rule instanceof EngineExceptionalRule ? this.whitelist : this.blacklist);
+    if (matcher.hasRule(rule)) return !matcher.getKeywordForRule(rule);
+    else return !matcher.findKeyword(rule);
   },
 
   /**
-   * Optimized filter matching testing both whitelist and blacklist matchers
+   * Optimized rule matching testing both whitelist and blacklist matchers
    * simultaneously. For parameters see Matcher.matchesAny().
    * @see Matcher#matchesAny
    */
   matchesAnyInternal: function(location, docDomain)
   {
     let candidates = location.toLowerCase().match(/[a-z0-9%]{3,}/g);
-    if (candidates === null)
-      candidates = [];
+    if (candidates === null) candidates = [];
     candidates.push("");
 
     let blacklistHit = null;
     for (let i = 0, l = candidates.length; i < l; i++)
     {
       let substr = candidates[i];
-      if (substr in this.whitelist.filterByKeyword)
+      if (substr in this.whitelist.ruleByKeyword)
       {
         let result = this.whitelist._checkEntryMatch(substr, location, docDomain);
-        if (result)
-          return result;
+        if (result) return result;
       }
-      if (substr in this.blacklist.filterByKeyword && blacklistHit === null)
-        blacklistHit = this.blacklist._checkEntryMatch(substr, location, docDomain);
+      if (substr in this.blacklist.ruleByKeyword && blacklistHit === null) blacklistHit = this.blacklist._checkEntryMatch(substr, location, docDomain);
     }
     return blacklistHit;
   },
@@ -479,14 +462,15 @@ CombinedMatcher.prototype =
   matchesAny: function(location, docDomain)
   {
     let key = location + " " + docDomain;
-    if (key in this.resultCache)
-      return this.resultCache[key];
+    if (key in this.resultCache) return this.resultCache[key];
 
     let result = this.matchesAnyInternal(location, docDomain);
 
     if (this.cacheEntries >= CombinedMatcher.maxCacheEntries)
     {
-      this.resultCache = {__proto__: null};
+      this.resultCache = {
+        __proto__: null
+      };
       this.cacheEntries = 0;
     }
 
@@ -499,9 +483,12 @@ CombinedMatcher.prototype =
   /**
    * Stores current state in a JSON'able object.
    */
-  toCache: function(/**Object*/ cache)
+  toCache: function( /**Object*/ cache)
   {
-    cache.matcher = {whitelist: {}, blacklist: {} };
+    cache.matcher = {
+      whitelist: {},
+      blacklist: {}
+    };
     this.whitelist.toCache(cache.matcher.whitelist);
     this.blacklist.toCache(cache.matcher.blacklist);
   },
@@ -509,7 +496,7 @@ CombinedMatcher.prototype =
   /**
    * Restores current state from an object.
    */
-  fromCache: function(/**Object*/ cache)
+  fromCache: function( /**Object*/ cache)
   {
     this.whitelist.fromCache(cache.matcher.whitelist);
     this.blacklist.fromCache(cache.matcher.blacklist);
@@ -520,48 +507,49 @@ CombinedMatcher.prototype =
  * Shared CombinedMatcher instance for engine switching.
  * @type CombinedMatcher
  */
-var engineMatcher = new CombinedMatcher();
+let EngineMatcher = new CombinedMatcher();
 
 /**
  * Shared CombinedMatcher instance for user agent switching.
  * @type CombinedMatcher
  */
-var userAgentMatcher = new CombinedMatcher();
+let UserAgentMatcher = new CombinedMatcher();
 
-var AllMatcher = {
-  _getFilterMatch: function(filter) {
+let AllMatchers = {
+  _getRuleMatch: function(rule)
+  {
     let matcher = null;
-    if (filter instanceof BlockingFilter || filter instanceof WhitelistFilter)
-      matcher = engineMatcher;
-    else if (filter instanceof UserAgentFilter || filter instanceof UserAgentExceptionalFilter)
-      matcher = userAgentMatcher;
+    if (rule instanceof EngineRule || rule instanceof EngineExceptionalRule) matcher = EngineMatcher;
+    else if (rule instanceof UserAgentRule || rule instanceof UserAgentExceptionalRule) matcher = UserAgentMatcher;
     return matcher;
   },
   /**
    */
   clear: function()
   {
-    engineMatcher.clear();
-    userAgentMatcher.clear();
+    EngineMatcher.clear();
+    UserAgentMatcher.clear();
   },
 
   /**
    */
-  add: function(filter)
+  add: function(rule)
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      matcher.add(filter);
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      matcher.add(rule);
     }
   },
 
   /**
    */
-  remove: function(filter)
+  remove: function(rule)
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      matcher.remove(filter);
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      matcher.remove(rule);
     }
   },
 
@@ -569,72 +557,72 @@ var AllMatcher = {
   /**
    * @see Matcher#findKeyword
    */
-  findKeyword: function(filter)
+  findKeyword: function(rule)
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      return matcher.findKeyword(filter);
-    }  
-    return null; 
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      return matcher.findKeyword(rule);
+    }
+    return null;
   },
 
   /**
-   * @see Matcher#hasFilter
+   * @see Matcher#hasRule
    */
-  hasFilter: function(filter)
+  hasRule: function(rule)
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      return matcher.hasFilter(filter);
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      return matcher.hasRule(rule);
     }
     return false;
   },
 
   /**
-   * @see Matcher#getKeywordForFilter
+   * @see Matcher#getKeywordForRule
    */
-  getKeywordForFilter: function(filter)
+  getKeywordForRule: function(rule)
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      return matcher.getKeywordForFilter(filter);
-    }  
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      return matcher.getKeywordForRule(rule);
+    }
     return "";
   },
 
   /**
-   * Checks whether a particular filter is slow
+   * Checks whether a particular rule is slow
    */
-  isSlowFilter: function(/**RegExpFilter*/ filter) /**Boolean*/
+  isSlowRule: function( /**RegExpRule*/ rule) /**Boolean*/
   {
-    let matcher = this._getFilterMatch(filter);
-    if (matcher) {
-      return matcher.isSlowFilter(filter);
-    }  
+    let matcher = this._getRuleMatch(rule);
+    if (matcher)
+    {
+      return matcher.isSlowRule(rule);
+    }
     return false;
   },
 
   /**
    * Stores current state in a JSON'able object.
    */
-  toCache: function(/**Object*/ cache)
+  toCache: function( /**Object*/ cache)
   {
-    cache.engineMatcher = {};
-    cache.userAgentMatcher = {};
-    engineMatcher.toCache(cache.engineMatcher);
-    userAgentMatcher.toCache(cache.userAgentMatcher);
+    cache.EngineMatcher = {};
+    cache.UserAgentMatcher = {};
+    EngineMatcher.toCache(cache.EngineMatcher);
+    UserAgentMatcher.toCache(cache.UserAgentMatcher);
   },
 
   /**
    * Restores current state from an object.
    */
-  fromCache: function(/**Object*/ cache)
+  fromCache: function( /**Object*/ cache)
   {
-    engineMatcher.fromCache(cache.engineMatcher);
-    userAgentMatcher.fromCache(cache.userAgentMatcher);  
+    EngineMatcher.fromCache(cache.EngineMatcher);
+    UserAgentMatcher.fromCache(cache.UserAgentMatcher);
   }
 };
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

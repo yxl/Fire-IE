@@ -8,7 +8,7 @@ function init()
 {
   generateLinkText(E("changeDescription"));
 
-  for each (let subscription in FilterStorage.subscriptions)
+  for each (let subscription in RuleStorage.subscriptions)
   {
     if (subscription instanceof DownloadableSubscription && subscription.url != Prefs.subscriptions_exceptionsurl)
     {
@@ -24,7 +24,7 @@ function init()
     }
   }
 
-  if (FilterStorage.subscriptions.some(function(s) s.url == Prefs.subscriptions_exceptionsurl))
+  if (RuleStorage.subscriptions.some(function(s) s.url == Prefs.subscriptions_exceptionsurl))
     E("acceptableAds").hidden = false;
 }
 
@@ -50,7 +50,7 @@ function generateLinkText(element)
   element.appendChild(document.createTextNode(afterLink));
 }
 
-function openFilters()
+function openRules()
 {
-  Utils.openFiltersDialog();
+  Utils.openRulesDialog();
 }

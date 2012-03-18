@@ -31,13 +31,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
 
-
-try
-{
 /**
  * Public policy checking functions and auxiliary objects
  * @class
@@ -90,15 +87,15 @@ var Policy =
    * @param {String} url
    * @return {Boolean} true if IE engine should be used.
    */
-  checkEngineFilter: function(url)
+  checkEngineRule: function(url)
   {
     let docDomain = Utils.getHostname(url);
-    let match = engineMatcher.matchesAny(url, docDomain);
+    let match = EngineMatcher.matchesAny(url, docDomain);
     if (match)
     {
-      FilterStorage.increaseHitCount(match);
+      RuleStorage.increaseHitCount(match);
     }
-    return match && match instanceof BlockingFilter;
+    return match && match instanceof EngineRule;
   },
   
   /**
@@ -106,14 +103,14 @@ var Policy =
    * @param {String} url
    * @return {Boolean} true if IE user agent should be used. 
    */
-  checkUserAgentFilter: function(url, domain)
+  checkUserAgentRule: function(url, domain)
   {
-    let match = userAgentMatcher.matchesAny(url, domain);
+    let match = UserAgentMatcher.matchesAny(url, domain);
     if (match)
     {
-      FilterStorage.increaseHitCount(match);
+      RuleStorage.increaseHitCount(match);
     }
-    return match && match instanceof BlockingFilter;
+    return match && match instanceof EngineRule;
   },  
   
   /**
@@ -172,7 +169,7 @@ var PolicyPrivate =
 			return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
-    if (Policy.checkEngineFilter(location.spec)) {
+    if (Policy.checkEngineRule(location.spec)) {
       contentLocation.spec = Utils.toContainerUrl(location.spec);
     }
     
@@ -205,7 +202,7 @@ var PolicyPrivate =
 					{
 						domain = Utils.getHostname(wnd.location.href);
 					}
-          if (Policy.checkUserAgentFilter(url, domain) && Utils.ieUserAgent)
+          if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
           {
             // Change user agent
             subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
@@ -227,8 +224,3 @@ var PolicyPrivate =
     return this.QueryInterface(iid);
   }
 };
-
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

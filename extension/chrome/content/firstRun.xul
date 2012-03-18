@@ -41,7 +41,7 @@
   </vbox>
 
   <description id="changeDescription" _textTemplate="&listSelection2;">
-    <label class="text-link" onclick="openFilters();"/>
+    <label class="text-link" onclick="openRules();"/>
   </description>
 
 </dialog>
