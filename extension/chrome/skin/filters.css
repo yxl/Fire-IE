@@ -8,30 +8,30 @@
 
 #buttons
 {
-	margin-top: 10px;
+  margin-top: 10px;
 }
 
 #noSubscriptions
 {
-	font-style: italic;
+  font-style: italic;
 }
 
 .localeMatch
 {
-	font-weight: bold;
+  font-weight: bold;
 }
 .selectSubscriptionItem
 {
-	margin: 0px;
+  margin: 0px;
 }
 
 .subscription
 {
-	padding: 5px;
+  padding: 5px;
 }
 .subscription:not(:last-child)
 {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
 }
 .subscription:not([selected="true"]) > .disabled
 {
@@ -39,73 +39,73 @@
 
 .subscription:not([selected="true"]) > .disabled .titleBox
 {
-	color: #808080;
-	font-style: italic;
+  color: #808080;
+  font-style: italic;
 }
 .subscription:not([selected="true"]) > .disabled .status
 {
-	color: #808080;
+  color: #808080;
 }
 
 .subscription description, .subscription textbox
 {
-	margin: 0px !important;
-	padding: 0px !important;
-	border-width: 0px !important;
-	-moz-appearance: none !important;
+  margin: 0px !important;
+  padding: 0px !important;
+  border-width: 0px !important;
+  -moz-appearance: none !important;
 }
 
 .subscription .warning
 {
-	color: #FF0000;
+  color: #FF0000;
 }
 
 splitter
 {
-	border-width: 0px !important;
+  border-width: 0px !important;
 }
 
 #filtersTooltip
 {
-	max-width: none;
+  max-width: none;
 }
 
 .tooltipLabel
 {
-	font-weight: bold;
-	-moz-margin-end: 10px;
+  font-weight: bold;
+  -moz-margin-end: 10px;
 }
 
 #tooltip-additional
 {
-	color: #C00000;
-	margin-top: 10px;
+  color: #C00000;
+  margin-top: 10px;
 }
 
 tree
 {
-	margin: 0px;
+  margin: 0px;
 }
 
 #col-slow {
-	text-align: center;
+  text-align: center;
 }
 
 #col-hitcount, #col-lasthit {
-	text-align: right;
+  text-align: right;
 }
 
 #col-hitcount
 {
-	min-width: 60px;
+  min-width: 60px;
 }
 #col-enabled
 {
-	min-width: 48px;
+  min-width: 48px;
 }
 #col-slow
 {
-	min-width: 30px;
+  min-width: 30px;
 }
 
 /*
@@ -116,64 +116,64 @@ treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-whitelist),
 treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-filterlist),
 treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-filter, type-elemhide)
 {
-	direction: ltr;
-	text-align: end;
+  direction: ltr;
+  text-align: end;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, dummy-true)
 {
-	font-style: italic;
+  font-style: italic;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, type-whitelist, selected-false)
 {
-	color: #008000;
+  color: #008000;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, type-elemhide, selected-false)
 {
-	color: #000080;
+  color: #000080;
 }
 
 treechildren::-moz-tree-cell-text(col-slow)
 {
-	font-size: 0px;
+  font-size: 0px;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, disabled-true, selected-false)
 {
-	color: #808080;
-	font-style: italic;
+  color: #808080;
+  font-style: italic;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, type-comment, selected-false)
 {
-	color: #808080;
+  color: #808080;
 }
 
 treechildren::-moz-tree-cell-text(col-filter, type-invalid, selected-false)
 {
-	color: #C00000;
+  color: #C00000;
 }
 
 treechildren::-moz-tree-image(col-enabled, disabled-true)
 {
-	list-style-image: url(checkbox.png);
-	-moz-image-region: rect(13px 13px 26px 0px);
+  list-style-image: url(checkbox.png);
+  -moz-image-region: rect(13px 13px 26px 0px);
 }
 
 treechildren::-moz-tree-image(col-enabled, disabled-false)
 {
-	list-style-image: url(checkbox.png);
-	-moz-image-region: rect(0px 13px 13px 0px);
+  list-style-image: url(checkbox.png);
+  -moz-image-region: rect(0px 13px 13px 0px);
 }
 
 treechildren::-moz-tree-image(col-slow, slow-true)
 {
-	list-style-image: url(slow.png);
+  list-style-image: url(slow.png);
 }
 
 .findbar-highlight
 {
-	display: none;
+  display: none;
 }

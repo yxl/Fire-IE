@@ -25,7 +25,7 @@ let {NetUtil, fireieUtils, Services} = jsm;
  * @namespace
  */
 if (typeof(FireIE) == "undefined") {
-	var FireIE = {};
+  var FireIE = {};
 }
 
 function getWindowForWebProgress(webProgress) {
@@ -59,38 +59,38 @@ function getWindowForRequest(request){
 }
 
 FireIE.HttpObserver = {
-	// nsISupports
-	QueryInterface: function(iid) {
-		if (iid.equals(Components.interfaces.nsISupports) ||
-			iid.equals(Components.interfaces.nsIObserver)) {
-			return this;
-		}
-		throw Components.results.NS_ERROR_NO_INTERFACE;
-	},
-	
-	// nsIObserver
-	observe: function(subject, topic, data) {		
-		if (!(subject instanceof Components.interfaces.nsIHttpChannel))
-			return;
-		switch (topic) {
-			case 'http-on-modify-request':
-				this.onModifyRequest(subject);
-				break;
-			}
-	},
-	
-	onModifyRequest: function(subject) {
-		var httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+  // nsISupports
+  QueryInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsISupports) ||
+      iid.equals(Components.interfaces.nsIObserver)) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+  
+  // nsIObserver
+  observe: function(subject, topic, data) {    
+    if (!(subject instanceof Components.interfaces.nsIHttpChannel))
+      return;
+    switch (topic) {
+      case 'http-on-modify-request':
+        this.onModifyRequest(subject);
+        break;
+      }
+  },
+  
+  onModifyRequest: function(subject) {
+    var httpChannel = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
     var win = getWindowForRequest(httpChannel);
     var tab = fireieUtils.getTabFromWindow(win);
     var isWindowURI = httpChannel.loadFlags & Components.interfaces.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
-		if (isWindowURI) {
+    if (isWindowURI) {
       var url = httpChannel.URI.spec;
       if (this.shouldFilter(url)) {
         if (!tab.linkedBrowser) return;
-				
+        
         subject.cancel(Components.results.NS_BINDING_SUCCEEDED);
-				
+        
         // http headers
         var headers = this._getAllRequestHeaders(httpChannel);
         
@@ -102,36 +102,36 @@ FireIE.HttpObserver = {
           post = NetUtil.readInputStreamToString(uploadChannel.uploadStream, len);
         }
         
-				// 通过Tab的Attribute传送http header和post data参数
-				var param = {headers: headers, post: post};
-				FireIE.setTabAttributeJSON(tab, FireIE.navigateParamsAttr, param);
-				
-        tab.linkedBrowser.loadURI(FireIE.getfireieURL(url));
+        // 通过Tab的Attribute传送http header和post data参数
+        var param = {headers: headers, post: post};
+        FireIE.setTabAttributeJSON(tab, FireIE.navigateParamsAttr, param);
+        
+        tab.linkedBrowser.loadURI(Utils.toContainerUrl(url));
       }
-		}
-	},
+    }
+  },
   
   _getAllRequestHeaders: function(httpChannel) {
-    	var visitor = function() {
+      var visitor = function() {
         this.headers = "";
-		  };
+      };
       visitor.prototype.visitHeader = function(aHeader, aValue) {
         this.headers += aHeader + ":" + aValue + "\r\n";
-		  };
+      };
       var v = new visitor();
       httpChannel.visitRequestHeaders(v);
       return v.headers;
   },
   
   shouldFilter: function(url) {
-	  if (FireIE.manualSwitchUrl && FireIE.getUrlDomain(FireIE.manualSwitchUrl) == FireIE.getUrlDomain(url)) {
-			return false;
-		}
+    if (FireIE.manualSwitchUrl && FireIE.getUrlDomain(FireIE.manualSwitchUrl) == FireIE.getUrlDomain(url)) {
+      return false;
+    }
     return !FireIEWatcher.isFireIEURL(url)
          && !FireIE.isFirefoxOnly(url)
          && FireIEWatcher.isFilterEnabled()
          && FireIEWatcher.isMatchFilterList(url);
-	}
+  }
 }
 
 var FireIEWatcher = {

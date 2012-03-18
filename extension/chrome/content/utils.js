@@ -21,10 +21,12 @@ Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 /**
  * Shortcut for document.getElementById(id)
  */
 function E(id)
 {
-	return document.getElementById(id);
+  return document.getElementById(id);
 }

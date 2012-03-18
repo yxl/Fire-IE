@@ -159,7 +159,7 @@ public:
 	CString m_strLoadingUrl;
 
 	// plugin methods
-	void Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders);
+	void Navigate(const CString& strURL);
 	void Refresh();
 	void Stop();
 	void Back();
@@ -193,7 +193,7 @@ public:
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
-	void OnProgressChanged(INT32 iProgress);
+	void OnIEProgressChanged(INT32 iProgress);
 	void OnStatusChanged(const CString& message);
 	void OnCloseIETab();
 

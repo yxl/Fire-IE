@@ -136,8 +136,10 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 
 	
 	// window just created
-	if(!pPlugin->isInitialized() && (pNPWindow->window != NULL)) { 
-		if(!pPlugin->init(pNPWindow)) {
+	if(!pPlugin->isInitialized() && (pNPWindow->window != NULL)) 
+	{ 
+		if(!pPlugin->init(pNPWindow)) 
+		{
 			return NPERR_MODULE_LOAD_FAILED_ERROR;
 		}
 	}

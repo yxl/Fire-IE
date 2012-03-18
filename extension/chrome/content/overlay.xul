@@ -8,56 +8,53 @@
 
 <overlay id="fireieOverlay"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	 xmlns:html="http://www.w3.org/1999/xhtml">
+   xmlns:html="http://www.w3.org/1999/xhtml">
 
-<script type="application/x-javascript" src="chrome://fireie/content/fireieCommon.js" />
-<script type="application/x-javascript" src="chrome://fireie/content/CookieObserver.js" />
-<script type="application/x-javascript" src="chrome://fireie/content/fireieHttpObserver.js" />
 <script type="application/x-javascript" src="chrome://fireie/content/overlay.js" />
 
 <commandset id="mainCommandSet">
-	<command id="cmd_fireieToggle" oncommand="FireIE.switchEngine();" />
+  <command id="cmd_fireieSwitch" oncommand="gFireIE.switchEngine();" />
 </commandset>
-	
+  
 <keyset id="mainKeyset">
-	<key id="key_fireieToggle" command="cmd_fireieToggle"
-	modifiers="alt" key="C" />
+  <key id="key_fireieSwitch" command="cmd_fireieSwitch"
+  modifiers="alt" key="C" />
 </keyset>
 
 <!-- urlbar switch button -->
 <textbox id="urlbar">
-	 <toolbarbutton id="fireie-urlbar-switch"
-									insertbefore="urlbar-go-button"
-									onclick="FireIE.clickSwitchButton(event);" tooltip="fireie-urlbar-switch-tooltip" engine="fx">
-			<image id="fireie-urlbar-switch-image" class="fireie-status-image"/>
-			<label id="fireie-urlbar-switch-label"/>
-			<!-- tooltips -->
-			<tooltip id="fireie-urlbar-switch-tooltip" noautohide="true" orient="vertical" position="before_start" style="padding:2px;">
-			 <vbox>
-				 <label value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;"/>
-				 <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;"/>
-				 <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;"/>
-			 </vbox>
-			</tooltip>			
-	 </toolbarbutton>
+   <toolbarbutton id="fireie-urlbar-switch"
+                  insertbefore="urlbar-go-button"
+                  onclick="gFireIE.clickSwitchButton(event);" tooltip="fireie-urlbar-switch-tooltip" engine="fx">
+      <image id="fireie-urlbar-switch-image" class="fireie-status-image"/>
+      <label id="fireie-urlbar-switch-label"/>
+      <!-- tooltips -->
+      <tooltip id="fireie-urlbar-switch-tooltip" noautohide="true" orient="vertical" position="before_start" style="padding:2px;">
+       <vbox>
+         <label value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;"/>
+         <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;"/>
+         <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;"/>
+       </vbox>
+      </tooltip>      
+   </toolbarbutton>
 </textbox>
 
 <!-- Toolbar button-->
 <toolbarpalette id="BrowserToolbarPalette">
-	<toolbarbutton id="fireie-toolbar-palette-button"
-	label="&fireie.switchButton.label;"
-	class="toolbarbutton-1 chromeclass-toolbar-additional"
-	onclick="FireIE.clickSwitchButton(event);" tooltip="fireie-urlbar-switch-tooltip"
-	engine="fx" />
+  <toolbarbutton id="fireie-toolbar-palette-button"
+  label="&fireie.switchButton.label;"
+  class="toolbarbutton-1 chromeclass-toolbar-additional"
+  onclick="gFireIE.clickSwitchButton(event);" tooltip="fireie-urlbar-switch-tooltip"
+  engine="fx" />
 </toolbarpalette>
 
 <!-- Popup menus -->
 <popupset>
-	<!-- Switch button context menu -->
-	<menupopup id="fireie-switch-button-context-menu">
-		<menuitem label="&fireie.options.title;" oncommand="FireIE.openOptionsDialog();"/>
-		<menuitem label="Switch Rules" oncommand="FireIE.openFiltersDialog();" />
-	</menupopup>
+  <!-- Switch button context menu -->
+  <menupopup id="fireie-switch-button-context-menu">
+    <menuitem label="&fireie.options.title;" oncommand="gFireIE.openOptionsDialog();"/>
+    <menuitem label="Switch Rules" oncommand="gFireIE.openRulesDialog();" />
+  </menupopup>
 </popupset>
 
 </overlay>

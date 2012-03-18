@@ -41,27 +41,27 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 }, this);
 
 function httpGet (url, onreadystatechange) {
-	var xmlHttpRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+  var xmlHttpRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
   xmlHttpRequest.QueryInterface(Ci.nsIJSXMLHttpRequest);
-	xmlHttpRequest.open('GET', url, true);
-	xmlHttpRequest.send(null);
-	xmlHttpRequest.onreadystatechange = function() {
-		onreadystatechange(xmlHttpRequest);
-	};
+  xmlHttpRequest.open('GET', url, true);
+  xmlHttpRequest.send(null);
+  xmlHttpRequest.onreadystatechange = function() {
+    onreadystatechange(xmlHttpRequest);
+  };
 };
    
 function updateFilter (timer) {
-	var updateUrl = Services.prefs.getCharPref("extensions.coba.official.updateurl", null);
-	if(!updateUrl)
-	  return;
-	httpGet(updateUrl, function(response) {
-		if (response.readyState == 4 && 200 == response.status) {
-			var filter = response.responseText;
-			if (filter) {
+  var updateUrl = Services.prefs.getCharPref("extensions.coba.official.updateurl", null);
+  if(!updateUrl)
+    return;
+  httpGet(updateUrl, function(response) {
+    if (response.readyState == 4 && 200 == response.status) {
+      var filter = response.responseText;
+      if (filter) {
         Services.prefs.setCharPref("extensions.coba.official.filterlist", filter);
-			}
-		}
-	});  
+      }
+    }
+  });  
 }
 
 
@@ -79,8 +79,8 @@ watchFactoryClass.prototype = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
     case "profile-after-change":
-		SetReg();
-	  break;
+    SetReg();
+    break;
     };
   }
 }
@@ -112,14 +112,14 @@ function SetReg(){
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
   if(!wrk.hasValue("CookiesOld")){
       let dir = GetDefIECtrlReg("Cookies");
-	  wrk.writeStringValue("CookiesOld",dir);
-	}
+    wrk.writeStringValue("CookiesOld",dir);
+  }
   wrk.close();
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", wrk.ACCESS_ALL);
   if(!wrk.hasValue("CacheOld")){
     let dir = GetDefIECtrlReg("Cache");
-	wrk.writeStringValue("CacheOld",dir);
+  wrk.writeStringValue("CacheOld",dir);
   }
   wrk.close();
   SetIECtrlReg("Cookies");

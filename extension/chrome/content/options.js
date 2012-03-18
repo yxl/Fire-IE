@@ -18,103 +18,103 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * @namespace
  */
-
-let jsm = {};
-Components.utils.import("resource://gre/modules/AddonManager.jsm", jsm);
-Components.utils.import("resource://gre/modules/Services.jsm", jsm);
-Components.utils.import("resource://fireie/fireieUtils.jsm", jsm);
-let {
-  AddonManager, Services, fireieUtils
-} = jsm;
-let Strings = fireieUtils.Strings;
-
-if (typeof(FireIE) == "undefined") {
-  var FireIE = {};
+if (typeof(Options) == "undefined") {
+  var Options = {};
 }
 
-FireIE.exportOptions = function() {
-  var aOld = FireIE._getAllSettings(false);
-  FireIE.setOptions(true);
-  var aCurrent = FireIE._getAllSettings(false);
-  if (aCurrent) FireIE._saveToFile(aCurrent);
-  FireIE._setAllSettings(aOld);
+Options.export = function()
+{
+  let aOld = Options._getAllOptions(false);
+  Options.apply(true);
+  let aCurrent = Options._getAllOptions(false);
+  if (aCurrent) Options._saveToFile(aCurrent);
+  Options._setAllOptions(aOld);
 }
 
-FireIE.importOptions = function() {
-  var aOld = FireIE._getAllSettings(false);
-  var [result, aList] = FireIE._loadFromFile();
-  if (result) {
-    if (aList) {
-      FireIE._setAllSettings(aList);
-      FireIE.initDialog();
-      FireIE._setAllSettings(aOld);
-      FireIE.updateApplyButton(true);
-    } else {
-      alert(Strings.global.GetStringFromName("fireie.options.import.error"));
+Options.import = function()
+{
+  let aOld = Options._getAllOptions(false);
+  let [result, aList] = Options._loadFromFile();
+  if (result)
+	{
+    if (aList)
+		{
+      Options._setAllOptions(aList);
+      Options.initDialog();
+      Options._setAllOptions(aOld);
+      Options.updateApplyButton(true);
+    }
+		else
+		{
+      alert(Utils.getString("fireie.options.import.error"));
     }
   }
 }
 
-FireIE.restoreDefaultSettings = function() {
-  var aOld = FireIE._getAllSettings(false);
-  var aDefault = FireIE._getAllSettings(true);
-  FireIE._setAllSettings(aDefault);
-  FireIE.initDialog();
-  FireIE._setAllSettings(aOld);
-  FireIE.updateApplyButton(true);
+Options.restoreDefaultSettings = function()
+{
+  let aOld = Options._getAllOptions(false);
+  let aDefault = Options._getAllOptions(true);
+  Options._setAllOptions(aDefault);
+  Options.initDialog();
+  Options._setAllOptions(aOld);
+  Options.updateApplyButton(true);
 }
 
 // 应用设置
-FireIE.setOptions = function(quiet) {
+Options.apply = function(quiet)
+{
   let requiresRestart = false;
 
-  //filter
-  let filter = document.getElementById("filtercbx").checked;
-  Services.prefs.setBoolPref("extensions.fireie.filter", filter);
-  Services.prefs.setCharPref("extensions.fireie.filterlist", FireIE.getFilterListString());
-
   //general
-  Services.prefs.setBoolPref("extensions.fireie.handleUrlBar", document.getElementById("handleurl").checked);
-	let newKey = document.getElementById('shortcut-key').value;
-	if (Services.prefs.getCharPref("extensions.fireie.shortcut.key") != newKey) {
-		requiresRestart = true;
-		Services.prefs.setCharPref("extensions.fireie.shortcut.key", newKey);
-	}
-	let newModifiers = document.getElementById('shortcut-modifiers').value;
-	if (Services.prefs.getCharPref("extensions.fireie.shortcut.modifiers") != newModifiers) {
-		requiresRestart = true;
-		Services.prefs.setCharPref("extensions.fireie.shortcut.modifiers", newModifiers);
-	}
-	Services.prefs.setBoolPref("extensions.fireie.showUrlBarLabel", document.getElementById("showUrlBarLabel").checked);
+	Prefs.handleUrlBar = E("handleurl").checked;
+  let newKey = E("shortcut-key").value;
+  if (Prefs.shortcut_key != newKey)
+	{
+    requiresRestart = true;
+    Prefs.shortcut_key = newKey;
+  }
+  let newModifiers = E("shortcut-modifiers").value;
+  if (Prefs.shortcut_modifiers != newModifiers)
+	{
+    requiresRestart = true;
+    Prefs.shortcut_modifiers = newModifiers;
+  }
+  Prefs.showUrlBarLabel = E("showUrlBarLabel").checked;
 
   // IE compatibility mode
   let newMode = "ie7mode";
-  let iemode = document.getElementById("iemode");
-  if (iemode) {
+  let iemode = E("iemode");
+  if (iemode)
+	{
     newMode = iemode.value;
   }
-  if (Services.prefs.getCharPref("extensions.fireie.compatMode") != newMode) {
+  if (Prefs.compatMode != newMode)
+	{
     requiresRestart = true;
-    Services.prefs.setCharPref("extensions.fireie.compatMode", newMode);
-    FireIE.applyIECompatMode();
+    Prefs.compatMode = newMode;
+    Options.applyIECompatMode();
   }
 
   //update UI
-  FireIE.updateApplyButton(false);
+  Options.updateApplyButton(false);
 
   //notify of restart requirement
-  if (requiresRestart && !quiet) {
-    alert(Strings.global.GetStringFromName("fireie.options.alert.restart"));
+  if (requiresRestart && !quiet)
+	{
+    alert(Utils.getString("fireie.options.alert.restart"));
   }
 }
 
-FireIE.applyIECompatMode = function() {
+Options.applyIECompatMode = function()
+{
   let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
 
   let value = 7000;
-  switch (mode) {
+  switch (mode)
+	{
   case 'ie7mode':
     value = 7000;
     break;
@@ -134,27 +134,34 @@ FireIE.applyIECompatMode = function() {
 }
 
 // 获取IE主版本号
-FireIE.getIEMainVersion = function() {
+Options.getIEMainVersion = function()
+{
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
 
   let versionString = "";
-  try {
+  try
+	{
     versionString = wrk.readStringValue("version");
-  } catch (e) {
-    fireieUtils.ERROR(e);
+  }
+	catch (e)
+	{
+    Utils.ERROR(e);
     return '0';
   }
   return parseInt(versionString);
 }
 
-FireIE.updateIEModeTab = function() {
-  let mainIEVersion = FireIE.getIEMainVersion();
+Options.updateIEModeTab = function()
+{
+  let mainIEVersion = Options.getIEMainVersion();
   // IE 8之前不显示这个设置页面
-  if (mainIEVersion < 8) {
+  if (mainIEVersion < 8)
+	{
     return;
   }
-  switch (mainIEVersion) {
+  switch (mainIEVersion)
+	{
   case 9:
     document.getElementById("ie9mode-radio").hidden = false;
   case 8:
@@ -163,205 +170,70 @@ FireIE.updateIEModeTab = function() {
     break;
   }
   document.getElementById("iemode-tab").hidden = false;
-  let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
+  let mode = Prefs.compatMode;
   document.getElementById("iemode").value = mode;
 }
 
-FireIE.getPrefFilterList = function() {
-  var s = Services.prefs.getCharPref("extensions.fireie.filterlist", null);
-  return (s ? s.split(" ") : "");
-}
-
-FireIE.addFilterRule = function(rule, enabled) {
-  var rules = document.getElementById('filterChilds');
-  var item = document.createElement('treeitem');
-  var row = document.createElement('treerow');
-  var c1 = document.createElement('treecell');
-  var c2 = document.createElement('treecell');
-  c1.setAttribute('label', rule);
-  c2.setAttribute('value', enabled);
-  row.appendChild(c1);
-  row.appendChild(c2);
-  item.appendChild(row);
-  rules.appendChild(item);
-  return (rules.childNodes.length - 1);
-}
-
-FireIE.initDialog = function() {
-  //filter tab 网址过滤
-  document.getElementById('filtercbx').checked = Services.prefs.getBoolPref("extensions.fireie.filter", true);
-  var list = FireIE.getPrefFilterList();
-  var rules = document.getElementById('filterChilds');
-  while (rules.hasChildNodes()) rules.removeChild(rules.firstChild);
-  for (var i = 0; i < list.length; i++) {
-    if (list[i] != "") {
-      var item = list[i].split("\b");
-      var rule = item[0];
-      if (!/^\/(.*)\/$/.exec(rule)) rule = rule.replace(/\/$/, "/*");
-      var enabled = (item.length == 1);
-      FireIE.addFilterRule(rule, enabled);
-    }
-  }
-  // add current tab's url 
-  var newurl = (window.arguments ? window.arguments[0] : ""); //get CurrentTab's URL
-  document.getElementById('urlbox').value = (FireIE.startsWith(newurl, "about:") ? "" : newurl);
-  document.getElementById('urlbox').select();
-
+Options.initDialog = function()
+{
   // general 功能设置
-  document.getElementById('handleurl').checked = Services.prefs.getBoolPref("extensions.fireie.handleUrlBar", false);
-	document.getElementById('shortcut-modifiers').value = Services.prefs.getCharPref("extensions.fireie.shortcut.modifiers", "alt");
-	document.getElementById('shortcut-key').value = Services.prefs.getCharPref("extensions.fireie.shortcut.key", "C");
-	document.getElementById("showUrlBarLabel").checked = Services.prefs.getBoolPref("extensions.fireie.showUrlBarLabel", true);
-
-	
+  E("handleurl").checked = Prefs.handleUrlBar;
+  E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
+  E("shortcut-key").value = Prefs.shortcut_key;
+  E("showUrlBarLabel").checked = Prefs.showUrlBarLabel;
+  
   // updateStatus
-  FireIE.updateDialogAllStatus();
-  FireIE.updateApplyButton(false);
+  Options.updateApplyButton(false);
 
   // IE Compatibility Mode
-  FireIE.updateIEModeTab();
+  Options.updateIEModeTab();
 }
 
-FireIE.updateApplyButton = function(e) {
+Options.updateApplyButton = function(e) {
   document.getElementById("myApply").disabled = !e;
 }
 
-FireIE.init = function() {
-  FireIE.initDialog();
-  FireIE.addEventListenerByTagName("checkbox", "command", FireIE.updateApplyButton);
-  FireIE.addEventListenerByTagName("radio", "command", FireIE.updateApplyButton);
-  FireIE.addEventListener("filterChilds", "DOMAttrModified", FireIE.updateApplyButton);
-  FireIE.addEventListener("filterChilds", "DOMNodeInserted", FireIE.updateApplyButton);
-  FireIE.addEventListener("filterChilds", "DOMNodeRemoved", FireIE.updateApplyButton);
-  FireIE.addEventListener("parambox", "input", FireIE.updateApplyButton);
+Options.init = function()
+{
+	function addEventListenerByTagName(tag, type, listener)
+	{
+   let objs = document.getElementsByTagName(tag);
+   for (let i = 0; i < objs.length; i++)
+	 {
+      objs[i].addEventListener(type, listener, false);
+   }	
+	}
+  Options.initDialog();
+  addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
+  addEventListenerByTagName("radio", "command", Options.updateApplyButton);
+	addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
 }
 
-FireIE.close = function() {
+Options.close = function() {
   let isModified = !document.getElementById("myApply").disabled;
   if (isModified) {
     // TODO Replace with localized string
     if (confirm("选项已修改，是否保存？")) {
-      FireIE.setOptions(true);
+      Options.apply(true);
     }
   }
 }
 
-FireIE.destory = function() {
-  FireIE.removeEventListenerByTagName("checkbox", "command", FireIE.updateApplyButton);
-  FireIE.removeEventListenerByTagName("radio", "command", FireIE.updateApplyButton);
-  FireIE.removeEventListener("filterChilds", "DOMAttrModified", FireIE.updateApplyButton);
-  FireIE.removeEventListener("filterChilds", "DOMNodeInserted", FireIE.updateApplyButton);
-  FireIE.removeEventListener("filterChilds", "DOMNodeRemoved", FireIE.updateApplyButton);
-  FireIE.removeEventListener("parambox", "input", FireIE.updateApplyButton);
-}
-
-FireIE.updateDialogAllStatus = function() {
-  var en = document.getElementById('filtercbx').checked;
-  document.getElementById('filterList').disabled = (!en);
-  document.getElementById('filterList').editable = (en);
-  document.getElementById('urllabel').disabled = (!en);
-  document.getElementById('urlbox').disabled = (!en);
-  FireIE.updateAddButtonStatus();
-  FireIE.updateDelButtonStatus();
-}
-
-FireIE.getFilterListString = function() {
-  var list = [];
-  var filter = document.getElementById('filterList');
-  var count = filter.view.rowCount;
-
-  for (var i = 0; i < count; i++) {
-    var rule = filter.view.getCellText(i, filter.columns['columnRule']);
-    var enabled = filter.view.getCellValue(i, filter.columns['columnEnabled']);
-    var item = rule + (enabled == "true" ? "" : "\b");
-    list.push(item);
-  }
-  list.sort();
-  return list.join(" ");
-}
-
-FireIE.updateDelButtonStatus = function() {
-  var en = document.getElementById('filtercbx').checked;
-  var delbtn = document.getElementById('delbtn');
-  var filter = document.getElementById('filterList');
-  delbtn.disabled = (!en) || (filter.view.selection.count < 1);
-}
-
-FireIE.updateAddButtonStatus = function() {
-  var en = document.getElementById('filtercbx').checked;
-  var addbtn = document.getElementById('addbtn');
-  var urlbox = document.getElementById('urlbox');
-  addbtn.disabled = (!en) || (urlbox.value.trim().length < 1);
-}
-
-FireIE.findRule = function(value) {
-  var filter = document.getElementById('filterList');
-  var count = filter.view.rowCount;
-  for (var i = 0; i < count; i++) {
-    var rule = filter.view.getCellText(i, filter.columns['columnRule']);
-    if (rule == value) return i;
-  }
-  return -1;
-}
-
-FireIE.addNewURL = function() {
-  var filter = document.getElementById('filterList');
-  var urlbox = document.getElementById('urlbox');
-  var rule = urlbox.value.trim();
-  if (rule != "") {
-    if ((rule != "about:blank") && (rule.indexOf("://") < 0)) {
-      rule = (/^[A-Za-z]:/.test(rule) ? "file:///" + rule.replace(/\\/g, "/") : rule);
-      if (/^file:\/\/.*/.test(rule)) rule = encodeURI(rule);
-    }
-    if (!/^\/(.*)\/$/.exec(rule)) rule = rule.replace(/\/$/, "/*");
-    rule = rule.replace(/\s/g, "%20");
-    var idx = FireIE.findRule(rule);
-    if (idx == -1) {
-      idx = FireIE.addFilterRule(rule, true);
-      urlbox.value = "";
-    }
-    filter.view.selection.select(idx);
-    filter.boxObject.ensureRowIsVisible(idx);
-  }
-  filter.focus();
-  FireIE.updateAddButtonStatus();
-}
-
-FireIE.delSelected = function() {
-  var filter = document.getElementById('filterList');
-  var rules = document.getElementById('filterChilds');
-  if (filter.view.selection.count > 0) {
-    for (var i = rules.childNodes.length - 1; i >= 0; i--) {
-      if (filter.view.selection.isSelected(i)) rules.removeChild(rules.childNodes[i]);
-    }
-  }
-  FireIE.updateDelButtonStatus();
-}
-
-FireIE.onClickFilterList = function(e) {
-  var filter = document.getElementById('filterList');
-  if (!filter.disabled && e.button == 0 && e.detail >= 2) {
-    if (filter.view.selection.count == 1) {
-      var urlbox = document.getElementById('urlbox');
-      urlbox.value = filter.view.getCellText(filter.currentIndex, filter.columns['columnRule']);
-      urlbox.select();
-      FireIE.updateAddButtonStatus();
-    }
-  }
-}
-
-FireIE._saveToFile = function(aList) {
-  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
-  var stream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-  var converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].createInstance(Components.interfaces.nsIConverterOutputStream);
+Options._saveToFile = function(aList)
+{
+  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+  let stream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+  let converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].createInstance(Components.interfaces.nsIConverterOutputStream);
 
   fp.init(window, null, fp.modeSave);
   fp.defaultExtension = "txt";
   fp.defaultString = "FireIEPref";
   fp.appendFilters(fp.filterText);
 
-  if (fp.show() != fp.returnCancel) {
-    try {
+  if (fp.show() != fp.returnCancel)
+	{
+    try
+		{
       if (fp.file.exists()) fp.file.remove(true);
       fp.file.create(fp.file.NORMAL_FILE_TYPE, 0666);
       stream.init(fp.file, 0x02, 0x200, null);
@@ -371,31 +243,37 @@ FireIE._saveToFile = function(aList) {
         aList[i] = aList[i] + "\n";
         converter.writeString(aList[i]);
       }
-    } finally {
+    }
+		finally
+		{
       converter.close();
       stream.close();
     }
   }
 }
 
-FireIE._loadFromFile = function() {
-  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
-  var stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
-  var converter = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
+Options._loadFromFile = function() {
+  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+  let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+  let converter = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
 
   fp.init(window, null, fp.modeOpen);
   fp.defaultExtension = "txt";
   fp.appendFilters(fp.filterText);
 
-  if (fp.show() != fp.returnCancel) {
-    try {
-      var input = {};
+  if (fp.show() != fp.returnCancel)
+	{
+    try
+		{
+      let input = {};
       stream.init(fp.file, 0x01, 0444, null);
       converter.init(stream, "UTF-8", 0, 0x0000);
       converter.readString(stream.available(), input);
-      var linebreak = input.value.match(/(((\n+)|(\r+))+)/m)[1];
+      let linebreak = input.value.match(/(((\n+)|(\r+))+)/m)[1];
       return [true, input.value.split(linebreak)];
-    } finally {
+    }
+		finally
+		{
       converter.close();
       stream.close();
     }
@@ -403,16 +281,19 @@ FireIE._loadFromFile = function() {
   return [false, null];
 }
 
-FireIE._getAllSettings = function(isDefault) {
-  var prefix = "extensions.fireie.";
-  var prefs = (isDefault ? Services.prefs.getDefaultBranch("") : Services.prefs.getBranch(""));
-  var preflist = prefs.getChildList(prefix, {});
+Options._getAllOptions = function(isDefault) {
+  let prefix = "extensions.fireie.";
+  let prefs = (isDefault ? Services.prefs.getDefaultBranch("") : Services.prefs.getBranch(""));
+  let preflist = prefs.getChildList(prefix, {});
 
-  var aList = ["FireIEPref"];
-  for (var i = 0; i < preflist.length; i++) {
-    try {
-      var value = null;
-      switch (prefs.getPrefType(preflist[i])) {
+  let aList = ["FireIEPref"];
+  for (var i = 0; i < preflist.length; i++)
+	{
+    try
+		{
+      let value = null;
+      switch (prefs.getPrefType(preflist[i]))
+			{
       case prefs.PREF_BOOL:
         value = prefs.getBoolPref(preflist[i]);
         break;
@@ -424,12 +305,17 @@ FireIE._getAllSettings = function(isDefault) {
         break;
       }
       aList.push(preflist[i] + "=" + value);
-    } catch (e) {}
+    }
+		catch (e)
+		{
+			Utils.ERROR(e);
+		}
   }
   return aList;
 }
 
-FireIE._setAllSettings = function(aList) {
+Options._setAllOptions = function(aList)
+{
   if (!aList) return;
   if (aList.length == 0) return;
   if (aList[0] != "FireIEPref") return;
@@ -437,19 +323,24 @@ FireIE._setAllSettings = function(aList) {
   let prefs = Services.prefs.getBranch("");
 
   let aPrefs = [];
-  for (let i = 1; i < aList.length; i++) {
+  for (let i = 1; i < aList.length; i++)
+	{
     let index = aList[i].indexOf("=");
-    if (index > 0) {
+    if (index > 0)
+		{
       var name = aList[i].substring(0, index);
       var value = aList[i].substring(index + 1, aList[i].length);
       aPrefs.push([name, value]);
     }
   }
-  for (let i = 0; i < aPrefs.length; i++) {
-    try {
+  for (let i = 0; i < aPrefs.length; i++)
+	{
+    try
+		{
       let name = aPrefs[i][0];
       let value = aPrefs[i][1];
-      switch (prefs.getPrefType(name)) {
+      switch (prefs.getPrefType(name))
+			{
       case prefs.PREF_BOOL:
         prefs.setBoolPref(name, /true/i.test(value));
         break;
@@ -463,6 +354,10 @@ FireIE._setAllSettings = function(aList) {
         prefs.setComplexValue(name, Components.interfaces.nsISupportsString, sString);
         break;
       }
-    } catch (e) {}
+    }
+		catch (e)
+		{
+			Utils.ERROR(e);
+		}
   }
 }

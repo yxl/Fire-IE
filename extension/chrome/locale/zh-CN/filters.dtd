@@ -33,7 +33,7 @@
 <!ENTITY addGroup.label "添加规则列表">
 <!ENTITY addGroup.accesskey "g">
 <!ENTITY noFilters.text "
-	您还没有自定义的切换规则.
+  您还没有自定义的切换规则.
 ">
 <!ENTITY addFilter.label "添加">
 <!ENTITY addFilter.accesskey "d">

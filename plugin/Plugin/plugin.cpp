@@ -99,8 +99,6 @@ namespace Plugin
 
 		DWORD navId = 0;
 		CString url;
-		CString post;
-		CString headers;
 
 		if (m_strId == _T("fireie-object"))
 		{
@@ -118,8 +116,6 @@ namespace Plugin
 
 			// 获取从Firefox传入的其他参数
 			navId = GetNavigateWindowId();
-			post = GetNavigatePostData();
-			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
 		}
 
@@ -137,7 +133,7 @@ namespace Plugin
 		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
 		if (navId == 0)
 		{
-			m_pIEHostWindow->Navigate(url, post, headers);
+			m_pIEHostWindow->Navigate(url);
 		}
 
 		ScriptablePluginObject* sp = static_cast<ScriptablePluginObject*>(GetScriptableObject());
@@ -161,7 +157,7 @@ namespace Plugin
 		CWnd parent;
 		if (!parent.Attach(hParent))
 		{
-			return FALSE;
+			return NULL;
 		}
 		try
 		{
@@ -343,17 +339,6 @@ namespace Plugin
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return strParam;
-	}
-	// 获取IECtrl::Navigate的Http headers参数
-	CString CPlugin::GetNavigateHeaders() const
-	{
-		return GetNavigateParam("getNavigateHeaders");
-	}
-
-	// 获取IECtrl::Navigate的Post data参数
-	CString CPlugin::GetNavigatePostData() const
-	{
-		return GetNavigateParam("getNavigatePostData");
 	}
 
 	// 获取CIEHostWindow ID
@@ -574,9 +559,9 @@ namespace Plugin
 		return UTF8ToCString(NPN_UserAgent(m_pNPInstance));
 	}
 
-	void CPlugin::NewIETab(DWORD id, const CString& strURL)
+	void CPlugin::IENewTab(DWORD id, const CString& strURL)
 	{
-		CString strEventType = _T("NewIETab");
+		CString strEventType = _T("IENewTab");
 		CString strDetail;
 		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\"}"), id, strURL);
 		FireEvent(strEventType, strDetail);
@@ -590,9 +575,9 @@ namespace Plugin
 	}
 
 	/** 向Firefox发送IE窗口标题改变的消息 */
-	void CPlugin::OnIeTitleChanged(const CString& strTitle)
+	void CPlugin::OnIETitleChanged(const CString& strTitle)
 	{
-		CString strEventType = _T("IeTitleChanged");
+		CString strEventType = _T("IETitleChanged");
 		CString strDetail = strTitle;
 		FireEvent(strEventType, strDetail);
 	}

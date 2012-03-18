@@ -7,21 +7,20 @@
 <dialog id="fireie-dialog"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 autosize="true" resizable="no" persist="screenX screenY"
-buttons="accept,cancel,extra1,extra2" onload="FireIE.init();"
-onunload="FireIE.destory();" onclose="FireIE.close();"
-ondialogaccept="FireIE.setOptions(false);"
-ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
-  <script type="application/x-javascript"
-  src="chrome://fireie/content/fireieCommon.js" />
-  <script type="application/x-javascript"
-  src="chrome://fireie/content/options.js" />
+buttons="accept,cancel,extra1,extra2" onload="Options.init();"
+onclose="Options.close();"
+ondialogaccept="Options.apply(false);"
+ondialogextra1="Options.apply(false);"
+title="&fireie.options.title;"
+windowtype="fireie:options">
+  <script type="application/x-javascript" src="utils.js"/>
+  <script type="application/x-javascript" src="options.js" />
   <tabbox>
     <tabs>
       <tab label="&fireie.options.general.label;" />
-      <tab label="&fireie.options.filter.label;" />
       <tab id="iemode-tab" label="&fireie.options.iecompat.label;"
       hidden="true" />
-    </tabs>		
+    </tabs>    
     <tabpanels>
       <!-- General Tab -->
       <tabpanel>
@@ -39,7 +38,7 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
             <hbox>
               <menulist id="shortcut-modifiers">
                 <menupopup>
-									<menuitem value="alt" label="Alt" />
+                  <menuitem value="alt" label="Alt" />
                   <menuitem value="control" label="Ctrl" />
                   <menuitem value="control shift" label="Ctrl + Shift" />
                   <menuitem value="control alt" label="Ctrl + Alt" />
@@ -98,45 +97,7 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
               <checkbox label="&fireie.options.showUrlBarLabel;"
               id="showUrlBarLabel" />
             </hbox>
-          </groupbox>					
-        </vbox>
-      </tabpanel>
-			<!-- Filter Tab-->			
-      <tabpanel>
-        <vbox flex="1">
-          <hbox align="center">
-            <checkbox id="filtercbx" label="&fireie.options.filter.enabled;"
-            oncommand="FireIE.updateDialogAllStatus();" />
-            <spacer flex="1" />
-            <button id="delbtn" label="&fireie.options.filter.button.delete;"
-            disabled="true" oncommand="FireIE.delSelected();" />
-          </hbox>
-          <hbox align="center" flex="1">
-            <tree id="filterList" flex="1" width="375" height="170"
-            seltype="multiple" enableColumnDrag="true"
-            disableKeyNavigation="true" editable="true"
-            onselect="FireIE.updateDelButtonStatus();">
-              <treecols>
-                <treecol id="columnRule"
-                label="&fireie.options.filter.column.rule;" flex="1"
-                persist="width ordinal hidden" />
-                <splitter class="tree-splitter" />
-                <treecol id="columnEnabled"
-                label="&fireie.options.filter.column.enabled;" flex="0"
-                persist="width ordinal hidden" type="checkbox"
-                editable="true" />
-              </treecols>
-              <treechildren id="filterChilds"
-              ondblclick="FireIE.onClickFilterList(event);" />
-            </tree>
-          </hbox>
-          <hbox align="center">
-            <label id="urllabel" value="&fireie.options.filter.url.label;" />
-            <textbox id="urlbox" flex="1"
-            oninput="FireIE.updateAddButtonStatus();" />
-            <button id="addbtn" label="&fireie.options.filter.button.add;"
-            disabled="true" oncommand="FireIE.addNewURL();" />
-          </hbox>
+          </groupbox>          
         </vbox>
       </tabpanel>
       <!-- IE Compatibility Mode -->
@@ -166,12 +127,12 @@ ondialogextra1="FireIE.setOptions(false);" title="&fireie.options.title;">
     label="&fireie.options.manager;" popup="options">
       <menupopup>
         <menuitem id="import" label="&fireie.options.import;"
-        oncommand="FireIE.importOptions();" />
+        oncommand="Options.import();" />
         <menuitem id="export" label="&fireie.options.export;"
-        oncommand="FireIE.exportOptions();" />
+        oncommand="Options.export();" />
         <menuseparator />
         <menuitem id="default" label="&fireie.options.default;"
-        oncommand="FireIE.restoreDefaultoptions();" />
+        oncommand="Options.restoreDefaultoptions();" />
       </menupopup>
     </button>
     <spacer flex="1" />

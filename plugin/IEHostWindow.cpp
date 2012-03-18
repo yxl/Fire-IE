@@ -372,36 +372,14 @@ void FetchCookie(const CString& strUrl, const CString& strHeaders)
 }
 
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
-void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
+void CIEHostWindow::Navigate(const CString& strURL)
 {
 	m_strLoadingUrl = strURL;
 	if (m_ie.GetSafeHwnd())
 	{
 		try
 		{
-			CString strHost = GetHostName(strHeaders);
-			if (strHost.IsEmpty()) 
-			{
-				strHost = GetHostFromUrl(strURL);
-			}
-
-			FetchCookie(strURL, strHeaders);
-			_variant_t vFlags(0l);
-			_variant_t vTarget(_T(""));
-			_variant_t vPost;
-			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
-			if (!strPost.IsEmpty()) 
-			{
-				// 去除postContent-Type和Content-Length这样的header信息
-				int pos = strPost.Find(_T("\r\n\r\n"));
-
-				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
-				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
-				char* szPostData = new char[size + 1];
-				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
-				FillSafeArray(vPost, szPostData);
-			}
-			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
+			m_ie.Navigate(strURL, NULL, NULL, NULL, NULL);
 		}
 		catch(...)
 		{
@@ -705,17 +683,17 @@ void CIEHostWindow::OnTitleChanged(const CString& title)
 {
 	if (m_pPlugin)
 	{
-		m_pPlugin->OnIeTitleChanged(title);
+		m_pPlugin->OnIETitleChanged(title);
 	}
 }
 
-void CIEHostWindow::OnProgressChanged(INT32 iProgress)
+void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 {
 	if (m_pPlugin)
 	{
 		CString strDetail;
 		strDetail.Format(_T("%d"), iProgress);
-		m_pPlugin->FireEvent(_T("IeProgressChanged"), strDetail);
+		m_pPlugin->FireEvent(_T("IEProgressChanged"), strDetail);
 	}
 }
 
@@ -754,7 +732,7 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 		m_iProgress = (100 * Progress) / ProgressMax; 
 	else 
 		m_iProgress = -1;
-	OnProgressChanged(m_iProgress);
+	OnIEProgressChanged(m_iProgress);
 }
 
 
@@ -768,7 +746,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 {
 	m_iProgress = -1;
-	OnProgressChanged(m_iProgress);
+	OnIEProgressChanged(m_iProgress);
 
 	// 按Firefox的设置缩放页面
 	if (m_pPlugin)
@@ -846,7 +824,7 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
 			s_NewIEWindowMap.Add(id, pIEHostWindow);
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
-			m_pPlugin->NewIETab(id, bstrUrl);
+			m_pPlugin->IENewTab(id, bstrUrl);
 		}
 		else
 		{

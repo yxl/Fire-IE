@@ -8,271 +8,271 @@ let subscriptionListLoading = false;
 
 function init()
 {
-	if (window.arguments && window.arguments.length && window.arguments[0])
-	{
-		let source = window.arguments[0];
-		setCustomSubscription(source.title, source.url,
-													source.mainSubscriptionTitle, source.mainSubscriptionURL);
+  if (window.arguments && window.arguments.length && window.arguments[0])
+  {
+    let source = window.arguments[0];
+    setCustomSubscription(source.title, source.url,
+                          source.mainSubscriptionTitle, source.mainSubscriptionURL);
 
-		E("all-subscriptions-container").hidden = true;
-		E("fromWebText").hidden = false;
-	}
-	else
-		loadSubscriptionList();
+    E("all-subscriptions-container").hidden = true;
+    E("fromWebText").hidden = false;
+  }
+  else
+    loadSubscriptionList();
 }
 
 function updateSubscriptionInfo()
 {
-	let selectedSubscription = E("all-subscriptions").selectedItem;
+  let selectedSubscription = E("all-subscriptions").selectedItem;
 
-	E("subscriptionInfo").setAttribute("invisible", !selectedSubscription);
-	if (selectedSubscription)
-	{
-		let url = selectedSubscription.getAttribute("_url");
-		let homePage = selectedSubscription.getAttribute("_homepage")
+  E("subscriptionInfo").setAttribute("invisible", !selectedSubscription);
+  if (selectedSubscription)
+  {
+    let url = selectedSubscription.getAttribute("_url");
+    let homePage = selectedSubscription.getAttribute("_homepage")
 
-		let viewLink = E("view-list");
-		viewLink.setAttribute("_url", url);
-		viewLink.setAttribute("tooltiptext", url);
+    let viewLink = E("view-list");
+    viewLink.setAttribute("_url", url);
+    viewLink.setAttribute("tooltiptext", url);
 
-		let homePageLink = E("visit-homepage");
-		homePageLink.hidden = !homePage;
-		if (homePage)
-		{
-			homePageLink.setAttribute("_url", homePage);
-			homePageLink.setAttribute("tooltiptext", homePage);
-		}
-	}
+    let homePageLink = E("visit-homepage");
+    homePageLink.hidden = !homePage;
+    if (homePage)
+    {
+      homePageLink.setAttribute("_url", homePage);
+      homePageLink.setAttribute("tooltiptext", homePage);
+    }
+  }
 }
 
 function reloadSubscriptionList()
 {
-	subscriptionListLoading = false;
-	loadSubscriptionList();
+  subscriptionListLoading = false;
+  loadSubscriptionList();
 }
 
 function loadSubscriptionList()
 {
-	if (subscriptionListLoading)
-		return;
+  if (subscriptionListLoading)
+    return;
 
-	E("all-subscriptions-container").selectedIndex = 0;
-	E("all-subscriptions-loading").hidden = false;
+  E("all-subscriptions-container").selectedIndex = 0;
+  E("all-subscriptions-loading").hidden = false;
 
-	let request = new XMLHttpRequest();
-	let errorHandler = function()
-	{
-		E("all-subscriptions-container").selectedIndex = 2;
-		E("all-subscriptions-loading").hidden = true;
-	};
-	let successHandler = function()
-	{
-		if (!request.responseXML || request.responseXML.documentElement.localName != "subscriptions")
-		{
-			errorHandler();
-			return;
-		}
+  let request = new XMLHttpRequest();
+  let errorHandler = function()
+  {
+    E("all-subscriptions-container").selectedIndex = 2;
+    E("all-subscriptions-loading").hidden = true;
+  };
+  let successHandler = function()
+  {
+    if (!request.responseXML || request.responseXML.documentElement.localName != "subscriptions")
+    {
+      errorHandler();
+      return;
+    }
 
-		try
-		{
-			processSubscriptionList(request.responseXML);
-			E("all-subscriptions").selectedIndex = 0;
-			E("all-subscriptions").focus();
-		}
-		catch (e)
-		{
-			Cu.reportError(e);
-			errorHandler();
-		}
-	};
+    try
+    {
+      processSubscriptionList(request.responseXML);
+      E("all-subscriptions").selectedIndex = 0;
+      E("all-subscriptions").focus();
+    }
+    catch (e)
+    {
+      Cu.reportError(e);
+      errorHandler();
+    }
+  };
 
-	request.open("GET", Prefs.subscriptions_listurl);
-	request.addEventListener("error", errorHandler, false);
-	request.addEventListener("load", successHandler, false);
-	request.send(null);
+  request.open("GET", Prefs.subscriptions_listurl);
+  request.addEventListener("error", errorHandler, false);
+  request.addEventListener("load", successHandler, false);
+  request.send(null);
 
-	subscriptionListLoading = true;
+  subscriptionListLoading = true;
 }
 
 function processSubscriptionList(doc)
 {
-	let list = E("all-subscriptions");
-	while (list.firstChild)
-		list.removeChild(list.firstChild);
+  let list = E("all-subscriptions");
+  while (list.firstChild)
+    list.removeChild(list.firstChild);
 
-	addSubscriptions(list, doc.documentElement, 0, null, null);
-	E("all-subscriptions-container").selectedIndex = 1;
-	E("all-subscriptions-loading").hidden = true;
+  addSubscriptions(list, doc.documentElement, 0, null, null);
+  E("all-subscriptions-container").selectedIndex = 1;
+  E("all-subscriptions-loading").hidden = true;
 }
 
 function addSubscriptions(list, parent, level, parentTitle, parentURL)
 {
-	for (let i = 0; i < parent.childNodes.length; i++)
-	{
-		let node = parent.childNodes[i];
-		if (node.nodeType != Node.ELEMENT_NODE || node.localName != "subscription")
-			continue;
+  for (let i = 0; i < parent.childNodes.length; i++)
+  {
+    let node = parent.childNodes[i];
+    if (node.nodeType != Node.ELEMENT_NODE || node.localName != "subscription")
+      continue;
 
-		if (node.getAttribute("type") != "ads" || node.getAttribute("deprecated") == "true")
-			continue;
+    if (node.getAttribute("type") != "ads" || node.getAttribute("deprecated") == "true")
+      continue;
 
-		let variants = node.getElementsByTagName("variants");
-		if (!variants.length || !variants[0].childNodes.length)
-			continue;
-		variants = variants[0].childNodes;
+    let variants = node.getElementsByTagName("variants");
+    if (!variants.length || !variants[0].childNodes.length)
+      continue;
+    variants = variants[0].childNodes;
 
-		let isFirst = true;
-		let mainTitle = null;
-		let mainURL = null;
-		for (let j = 0; j < variants.length; j++)
-		{
-			let variant = variants[j];
-			if (variant.nodeType != Node.ELEMENT_NODE || variant.localName != "variant")
-				continue;
+    let isFirst = true;
+    let mainTitle = null;
+    let mainURL = null;
+    for (let j = 0; j < variants.length; j++)
+    {
+      let variant = variants[j];
+      if (variant.nodeType != Node.ELEMENT_NODE || variant.localName != "variant")
+        continue;
 
-			let item = document.createElement("richlistitem");
-			item.setAttribute("_title", variant.getAttribute("title"));
-			item.setAttribute("_url", variant.getAttribute("url"));
-			if (parentTitle && parentURL && variant.getAttribute("complete") != "true")
-			{
-				item.setAttribute("_supplementForTitle", parentTitle);
-				item.setAttribute("_supplementForURL", parentURL);
-			}
-			item.setAttribute("tooltiptext", variant.getAttribute("url"));
-			item.setAttribute("_homepage", node.getAttribute("homepage"));
+      let item = document.createElement("richlistitem");
+      item.setAttribute("_title", variant.getAttribute("title"));
+      item.setAttribute("_url", variant.getAttribute("url"));
+      if (parentTitle && parentURL && variant.getAttribute("complete") != "true")
+      {
+        item.setAttribute("_supplementForTitle", parentTitle);
+        item.setAttribute("_supplementForURL", parentURL);
+      }
+      item.setAttribute("tooltiptext", variant.getAttribute("url"));
+      item.setAttribute("_homepage", node.getAttribute("homepage"));
 
-			let title = document.createElement("description");
-			if (isFirst)
-			{
-				if (Utils.checkLocalePrefixMatch(node.getAttribute("prefixes")))
-					title.setAttribute("class", "subscriptionTitle localeMatch");
-				else
-					title.setAttribute("class", "subscriptionTitle");
-				title.textContent = node.getAttribute("title") + " (" + node.getAttribute("specialization") + ")";
-				mainTitle = variant.getAttribute("title");
-				mainURL = variant.getAttribute("url");
-				isFirst = false;
-			}
-			title.setAttribute("flex", "1");
-			title.style.marginLeft = (20 * level) + "px";
-			item.appendChild(title);
-	
-			let variantTitle = document.createElement("description");
-			variantTitle.setAttribute("class", "variant");
-			variantTitle.textContent = variant.getAttribute("title");
-			variantTitle.setAttribute("crop", "end");
-			item.appendChild(variantTitle);
+      let title = document.createElement("description");
+      if (isFirst)
+      {
+        if (Utils.checkLocalePrefixMatch(node.getAttribute("prefixes")))
+          title.setAttribute("class", "subscriptionTitle localeMatch");
+        else
+          title.setAttribute("class", "subscriptionTitle");
+        title.textContent = node.getAttribute("title") + " (" + node.getAttribute("specialization") + ")";
+        mainTitle = variant.getAttribute("title");
+        mainURL = variant.getAttribute("url");
+        isFirst = false;
+      }
+      title.setAttribute("flex", "1");
+      title.style.marginLeft = (20 * level) + "px";
+      item.appendChild(title);
+  
+      let variantTitle = document.createElement("description");
+      variantTitle.setAttribute("class", "variant");
+      variantTitle.textContent = variant.getAttribute("title");
+      variantTitle.setAttribute("crop", "end");
+      item.appendChild(variantTitle);
 
-			list.appendChild(item);
-		}
+      list.appendChild(item);
+    }
 
-		let supplements = node.getElementsByTagName("supplements");
-		if (supplements.length)
-			addSubscriptions(list, supplements[0], level + 1, mainTitle, mainURL);
-	}
+    let supplements = node.getElementsByTagName("supplements");
+    if (supplements.length)
+      addSubscriptions(list, supplements[0], level + 1, mainTitle, mainURL);
+  }
 }
 
 function onSelectionChange()
 {
-	let selectedItem = E("all-subscriptions").selectedItem;
-	if (!selectedItem)
-		return;
+  let selectedItem = E("all-subscriptions").selectedItem;
+  if (!selectedItem)
+    return;
 
-	setCustomSubscription(selectedItem.getAttribute("_title"), selectedItem.getAttribute("_url"),
-												selectedItem.getAttribute("_supplementForTitle"), selectedItem.getAttribute("_supplementForURL"));
+  setCustomSubscription(selectedItem.getAttribute("_title"), selectedItem.getAttribute("_url"),
+                        selectedItem.getAttribute("_supplementForTitle"), selectedItem.getAttribute("_supplementForURL"));
 
-	updateSubscriptionInfo();
+  updateSubscriptionInfo();
 }
 
 function setCustomSubscription(title, url, mainSubscriptionTitle, mainSubscriptionURL)
 {
-	E("title").value = title;
-	E("location").value = url;
+  E("title").value = title;
+  E("location").value = url;
 
-	let messageElement = E("supplementMessage");
-	let addMainCheckbox = E("addMainSubscription");
-	if (mainSubscriptionURL && !hasSubscription(mainSubscriptionURL))
-	{
-		messageElement.removeAttribute("invisible");
-		addMainCheckbox.removeAttribute("invisible");
+  let messageElement = E("supplementMessage");
+  let addMainCheckbox = E("addMainSubscription");
+  if (mainSubscriptionURL && !hasSubscription(mainSubscriptionURL))
+  {
+    messageElement.removeAttribute("invisible");
+    addMainCheckbox.removeAttribute("invisible");
 
-		let beforeLink, afterLink;
-		if (/(.*)\?1\?(.*)/.test(messageElement.getAttribute("_textTemplate")))
-			[beforeLink, afterLink] = [RegExp.$1, RegExp.$2, RegExp.$3];
-		else
-			[beforeLink, afterLink] = [messageElement.getAttribute("_textTemplate"), ""];
+    let beforeLink, afterLink;
+    if (/(.*)\?1\?(.*)/.test(messageElement.getAttribute("_textTemplate")))
+      [beforeLink, afterLink] = [RegExp.$1, RegExp.$2, RegExp.$3];
+    else
+      [beforeLink, afterLink] = [messageElement.getAttribute("_textTemplate"), ""];
 
-		while (messageElement.firstChild)
-			messageElement.removeChild(messageElement.firstChild);
-		messageElement.appendChild(document.createTextNode(beforeLink));
-		let link = document.createElement("label");
-		link.className = "text-link";
-		link.setAttribute("tooltiptext", mainSubscriptionURL);
-		link.addEventListener("click", function() Utils.loadInBrowser(mainSubscriptionURL), false);
-		link.textContent = mainSubscriptionTitle;
-		messageElement.appendChild(link);
-		messageElement.appendChild(document.createTextNode(afterLink));
-		
-		addMainCheckbox.value = mainSubscriptionURL;
-		addMainCheckbox.setAttribute("_mainSubscriptionTitle", mainSubscriptionTitle)
-		addMainCheckbox.label = addMainCheckbox.getAttribute("_labelTemplate").replace(/\?1\?/g, mainSubscriptionTitle);
-		addMainCheckbox.accessKey = addMainCheckbox.accessKey;
-	}
-	else
-	{
-		messageElement.setAttribute("invisible", "true");
-		addMainCheckbox.setAttribute("invisible", "true");
-	}
+    while (messageElement.firstChild)
+      messageElement.removeChild(messageElement.firstChild);
+    messageElement.appendChild(document.createTextNode(beforeLink));
+    let link = document.createElement("label");
+    link.className = "text-link";
+    link.setAttribute("tooltiptext", mainSubscriptionURL);
+    link.addEventListener("click", function() Utils.loadInBrowser(mainSubscriptionURL), false);
+    link.textContent = mainSubscriptionTitle;
+    messageElement.appendChild(link);
+    messageElement.appendChild(document.createTextNode(afterLink));
+    
+    addMainCheckbox.value = mainSubscriptionURL;
+    addMainCheckbox.setAttribute("_mainSubscriptionTitle", mainSubscriptionTitle)
+    addMainCheckbox.label = addMainCheckbox.getAttribute("_labelTemplate").replace(/\?1\?/g, mainSubscriptionTitle);
+    addMainCheckbox.accessKey = addMainCheckbox.accessKey;
+  }
+  else
+  {
+    messageElement.setAttribute("invisible", "true");
+    addMainCheckbox.setAttribute("invisible", "true");
+  }
 }
 
 function validateURL(url)
 {
-	if (!url)
-		return null;
-	url = url.replace(/^\s+/, "").replace(/\s+$/, "");
+  if (!url)
+    return null;
+  url = url.replace(/^\s+/, "").replace(/\s+$/, "");
 
-	// Is this a file path?
-	try {
-		let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-		file.initWithPath(url);
-		return Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newFileURI(file).spec;
-	} catch (e) {}
+  // Is this a file path?
+  try {
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(url);
+    return Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newFileURI(file).spec;
+  } catch (e) {}
 
-	// Is this a valid URL?
-	let uri = Utils.makeURI(url);
-	if (uri)
-		return uri.spec;
+  // Is this a valid URL?
+  let uri = Utils.makeURI(url);
+  if (uri)
+    return uri.spec;
 
-	return null;
+  return null;
 }
 
 function addSubscription()
 {
-	let url = E("location").value;
-	url = validateURL(url);
-	if (!url)
-	{
-		Utils.alert(window, Utils.getString("subscription_invalid_location"));
-		E("location").focus();
-		return false;
-	}
+  let url = E("location").value;
+  url = validateURL(url);
+  if (!url)
+  {
+    Utils.alert(window, Utils.getString("subscription_invalid_location"));
+    E("location").focus();
+    return false;
+  }
 
-	let title = E("title").value.replace(/^\s+/, "").replace(/\s+$/, "");
-	if (!title)
-		title = url;
+  let title = E("title").value.replace(/^\s+/, "").replace(/\s+$/, "");
+  if (!title)
+    title = url;
 
-	doAddSubscription(url, title);
+  doAddSubscription(url, title);
 
-	let addMainCheckbox = E("addMainSubscription")
-	if (addMainCheckbox.getAttribute("invisible") != "true" && addMainCheckbox.checked)
-	{
-		let mainSubscriptionTitle = addMainCheckbox.getAttribute("_mainSubscriptionTitle");
-		let mainSubscriptionURL = validateURL(addMainCheckbox.value);
-		if (mainSubscriptionURL)
-			doAddSubscription(mainSubscriptionURL, mainSubscriptionTitle);
-	}
+  let addMainCheckbox = E("addMainSubscription")
+  if (addMainCheckbox.getAttribute("invisible") != "true" && addMainCheckbox.checked)
+  {
+    let mainSubscriptionTitle = addMainCheckbox.getAttribute("_mainSubscriptionTitle");
+    let mainSubscriptionURL = validateURL(addMainCheckbox.value);
+    if (mainSubscriptionURL)
+      doAddSubscription(mainSubscriptionURL, mainSubscriptionTitle);
+  }
 
-	return true;
+  return true;
 }
 
 /**
@@ -280,20 +280,20 @@ function addSubscription()
  */
 function doAddSubscription(/**String*/ url, /**String*/ title)
 {
-	let subscription = Subscription.fromURL(url);
-	if (!subscription)
-		return;
+  let subscription = Subscription.fromURL(url);
+  if (!subscription)
+    return;
 
-	FilterStorage.addSubscription(subscription);
+  FilterStorage.addSubscription(subscription);
 
-	subscription.disabled = false;
-	subscription.title = title;
+  subscription.disabled = false;
+  subscription.title = title;
 
-	if (subscription instanceof DownloadableSubscription && !subscription.lastDownload)
-		Synchronizer.execute(subscription);
+  if (subscription instanceof DownloadableSubscription && !subscription.lastDownload)
+    Synchronizer.execute(subscription);
 }
 
 function hasSubscription(url)
 {
-	return FilterStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription && subscription.url == url);
+  return FilterStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription && subscription.url == url);
 }

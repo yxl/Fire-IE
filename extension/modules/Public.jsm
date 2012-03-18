@@ -15,6 +15,9 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+try
+{
+
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import(baseURL.spec + "Utils.jsm");
@@ -30,127 +33,127 @@ const externalPrefix = "~external~";
  */
 var AdblockPlus =
 {
-	/**
-	 * Returns current subscription count
-	 * @type Integer
-	 */
-	get subscriptionCount()
-	{
-		return FilterStorage.subscriptions.length;
-	},
+  /**
+   * Returns current subscription count
+   * @type Integer
+   */
+  get subscriptionCount()
+  {
+    return FilterStorage.subscriptions.length;
+  },
 
-	/**
-	 * Gets a subscription by its URL
-	 */
-	getSubscription: function(/**String*/ id) /**IAdblockPlusSubscription*/
-	{
-		if (id in FilterStorage.knownSubscriptions)
-			return createSubscriptionWrapper(FilterStorage.knownSubscriptions[id]);
+  /**
+   * Gets a subscription by its URL
+   */
+  getSubscription: function(/**String*/ id) /**IAdblockPlusSubscription*/
+  {
+    if (id in FilterStorage.knownSubscriptions)
+      return createSubscriptionWrapper(FilterStorage.knownSubscriptions[id]);
 
-		return null;
-	},
+    return null;
+  },
 
-	/**
-	 * Gets a subscription by its position in the list
-	 */
-	getSubscriptionAt: function(/**Integer*/ index) /**IAdblockPlusSubscription*/
-	{
-		if (index < 0 || index >= FilterStorage.subscriptions.length)
-			return null;
+  /**
+   * Gets a subscription by its position in the list
+   */
+  getSubscriptionAt: function(/**Integer*/ index) /**IAdblockPlusSubscription*/
+  {
+    if (index < 0 || index >= FilterStorage.subscriptions.length)
+      return null;
 
-		return createSubscriptionWrapper(FilterStorage.subscriptions[index]);
-	},
+    return createSubscriptionWrapper(FilterStorage.subscriptions[index]);
+  },
 
-	/**
-	 * Updates an external subscription and creates it if necessary
-	 */
-	updateExternalSubscription: function(/**String*/ id, /**String*/ title, /**Array of Filter*/ filters) /**String*/
-	{
-		if (id.substr(0, externalPrefix.length) != externalPrefix)
-			id = externalPrefix + id;
-		let subscription = Subscription.fromURL(id);
-		if (!subscription)
-			subscription = new ExternalSubscription(id, title);
+  /**
+   * Updates an external subscription and creates it if necessary
+   */
+  updateExternalSubscription: function(/**String*/ id, /**String*/ title, /**Array of Filter*/ filters) /**String*/
+  {
+    if (id.substr(0, externalPrefix.length) != externalPrefix)
+      id = externalPrefix + id;
+    let subscription = Subscription.fromURL(id);
+    if (!subscription)
+      subscription = new ExternalSubscription(id, title);
 
-		subscription.lastDownload = parseInt(new Date().getTime() / 1000);
+    subscription.lastDownload = parseInt(new Date().getTime() / 1000);
 
-		let newFilters = [];
-		for each (let filter in filters)
-		{
-			filter = Filter.fromText(Filter.normalize(filter));
-			if (filter)
-				newFilters.push(filter);
-		}
+    let newFilters = [];
+    for each (let filter in filters)
+    {
+      filter = Filter.fromText(Filter.normalize(filter));
+      if (filter)
+        newFilters.push(filter);
+    }
 
-		if (id in FilterStorage.knownSubscriptions)
-			FilterStorage.updateSubscriptionFilters(subscription, newFilters);
-		else
-		{
-			subscription.filters = newFilters;
-			FilterStorage.addSubscription(subscription);
-		}
+    if (id in FilterStorage.knownSubscriptions)
+      FilterStorage.updateSubscriptionFilters(subscription, newFilters);
+    else
+    {
+      subscription.filters = newFilters;
+      FilterStorage.addSubscription(subscription);
+    }
 
-		return id;
-	},
+    return id;
+  },
 
-	/**
-	 * Removes an external subscription by its identifier
-	 */
-	removeExternalSubscription: function(/**String*/ id) /**Boolean*/
-	{
-		if (id.substr(0, externalPrefix.length) != externalPrefix)
-			id = externalPrefix + id;
-		if (!(id in FilterStorage.knownSubscriptions))
-			return false;
+  /**
+   * Removes an external subscription by its identifier
+   */
+  removeExternalSubscription: function(/**String*/ id) /**Boolean*/
+  {
+    if (id.substr(0, externalPrefix.length) != externalPrefix)
+      id = externalPrefix + id;
+    if (!(id in FilterStorage.knownSubscriptions))
+      return false;
 
-		FilterStorage.removeSubscription(FilterStorage.knownSubscriptions[id]);
-		return true;
-	},
+    FilterStorage.removeSubscription(FilterStorage.knownSubscriptions[id]);
+    return true;
+  },
 
-	/**
-	 * Adds user-defined filters to the list
-	 */
-	addPatterns: function(/**Array of String*/ filters)
-	{
-		for each (let filter in filters)
-		{
-			filter = Filter.fromText(Filter.normalize(filter));
-			if (filter)
-			{
-				filter.disabled = false;
-				FilterStorage.addFilter(filter);
-			}
-		}
-	},
+  /**
+   * Adds user-defined filters to the list
+   */
+  addPatterns: function(/**Array of String*/ filters)
+  {
+    for each (let filter in filters)
+    {
+      filter = Filter.fromText(Filter.normalize(filter));
+      if (filter)
+      {
+        filter.disabled = false;
+        FilterStorage.addFilter(filter);
+      }
+    }
+  },
 
-	/**
-	 * Removes user-defined filters from the list
-	 */
-	removePatterns: function(/**Array of String*/ filters)
-	{
-		for each (let filter in filters)
-		{
-			filter = Filter.fromText(Filter.normalize(filter));
-			if (filter)
-				FilterStorage.removeFilter(filter);
-		}
-	},
+  /**
+   * Removes user-defined filters from the list
+   */
+  removePatterns: function(/**Array of String*/ filters)
+  {
+    for each (let filter in filters)
+    {
+      filter = Filter.fromText(Filter.normalize(filter));
+      if (filter)
+        FilterStorage.removeFilter(filter);
+    }
+  },
 
-	/**
-	 * Returns installed Adblock Plus version
-	 */
-	getInstalledVersion: function() /**String*/
-	{
-		return Utils.addonVersion;
-	},
+  /**
+   * Returns installed Adblock Plus version
+   */
+  getInstalledVersion: function() /**String*/
+  {
+    return Utils.addonVersion;
+  },
 
-	/**
-	 * Returns source code revision this Adblock Plus build was created from (if available)
-	 */
-	getInstalledBuild: function() /**String*/
-	{
-		return Utils.addonBuild;
-	},
+  /**
+   * Returns source code revision this Adblock Plus build was created from (if available)
+   */
+  getInstalledBuild: function() /**String*/
+  {
+    return Utils.addonBuild;
+  },
 };
 
 /**
@@ -158,27 +161,31 @@ var AdblockPlus =
  */
 function createSubscriptionWrapper(/**Subscription*/ subscription) /**IAdblockPlusSubscription*/
 {
-	if (!subscription)
-		return null;
+  if (!subscription)
+    return null;
 
-	return {
-		url: subscription.url,
-		special: subscription instanceof SpecialSubscription,
-		title: subscription.title,
-		autoDownload: true,
-		disabled: subscription.disabled,
-		external: subscription instanceof ExternalSubscription,
-		lastDownload: subscription instanceof RegularSubscription ? subscription.lastDownload : 0,
-		downloadStatus: subscription instanceof DownloadableSubscription ? subscription.downloadStatus : "synchronize_ok",
-		lastModified: subscription instanceof DownloadableSubscription ? subscription.lastModified : null,
-		expires: subscription instanceof DownloadableSubscription ? subscription.expires : 0,
-		getPatterns: function()
-		{
-			let result = subscription.filters.map(function(filter)
-			{
-				return filter.text;
-			});
-			return result;
-		}
-	};
+  return {
+    url: subscription.url,
+    special: subscription instanceof SpecialSubscription,
+    title: subscription.title,
+    autoDownload: true,
+    disabled: subscription.disabled,
+    external: subscription instanceof ExternalSubscription,
+    lastDownload: subscription instanceof RegularSubscription ? subscription.lastDownload : 0,
+    downloadStatus: subscription instanceof DownloadableSubscription ? subscription.downloadStatus : "synchronize_ok",
+    lastModified: subscription instanceof DownloadableSubscription ? subscription.lastModified : null,
+    expires: subscription instanceof DownloadableSubscription ? subscription.expires : 0,
+    getPatterns: function()
+    {
+      let result = subscription.filters.map(function(filter)
+      {
+        return filter.text;
+      });
+      return result;
+    }
+  };
+}
+
+} catch (ex) {
+	Cu.reportError(ex);
 }

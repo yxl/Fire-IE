@@ -15,9 +15,14 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+try
+{
+
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 
 Cu.import(baseURL.spec + "Utils.jsm");
 
@@ -34,7 +39,7 @@ let willBeUninstalled = false;
  * Preferences branch containing Adblock Plus preferences.
  * @type nsIPrefBranch
  */
-let branch = Utils.prefService.getBranch(prefRoot);
+let branch = Services.prefs.getBranch(prefRoot);
 
 /**
  * List of listeners to be notified whenever preferences are updated
@@ -49,88 +54,84 @@ let listeners = [];
  */
 var Prefs =
 {
-	/**
-	 * Will be set to true if the user enters private browsing mode.
-	 * @type Boolean
-	 */
-	privateBrowsing: false,
+  /**
+   * Will be set to true if the user enters private browsing mode.
+   * @type Boolean
+   */
+  privateBrowsing: false,
 
-	/**
-	 * Called on module startup.
-	 */
-	startup: function()
-	{
-		// Initialize prefs list
-		let defaultBranch = this.defaultBranch;
-		for each (let name in defaultBranch.getChildList("", {}))
-		{
-			let type = defaultBranch.getPrefType(name);
-			switch (type)
-			{
-				case Ci.nsIPrefBranch.PREF_INT:
-					defineIntegerProperty(name);
-					break;
-				case Ci.nsIPrefBranch.PREF_BOOL:
-					defineBooleanProperty(name);
-					break;
-				case Ci.nsIPrefBranch.PREF_STRING:
-					defineStringProperty(name);
-					break;
-			}
-			if ("_update_" + name in PrefsPrivate)
-				PrefsPrivate["_update_" + name]();
-		}
+  /**
+   * Called on module startup.
+   */
+  startup: function()
+  {
+    // Initialize prefs list
+    let defaultBranch = this.defaultBranch;
+    for each (let name in defaultBranch.getChildList("", {}))
+    {
+      let type = defaultBranch.getPrefType(name);
+      switch (type)
+      {
+        case Ci.nsIPrefBranch.PREF_INT:
+          defineIntegerProperty(name);
+          break;
+        case Ci.nsIPrefBranch.PREF_BOOL:
+          defineBooleanProperty(name);
+          break;
+        case Ci.nsIPrefBranch.PREF_STRING:
+          defineStringProperty(name);
+          break;
+      }
+      if ("_update_" + name in PrefsPrivate)
+        PrefsPrivate["_update_" + name]();
+    }
+  
+    // Register observers
+    registerObservers();
+  },
 
-		// Always disable object tabs in Fennec, they aren't usable
-		if (Utils.isFennec)
-			Prefs.frameobjects = false;
-	
-		// Register observers
-		registerObservers();
-	},
+  /**
+   * Retrieves the preferences branch containing default preference values.
+   */
+  get defaultBranch() /**nsIPreferenceBranch*/
+  {
+    return Services.prefs.getDefaultBranch(prefRoot);
+  },
 
-	/**
-	 * Retrieves the preferences branch containing default preference values.
-	 */
-	get defaultBranch() /**nsIPreferenceBranch*/
-	{
-		return Utils.prefService.getDefaultBranch(prefRoot);
-	},
+  /**
+   * Called on module shutdown.
+   */
+  shutdown: function()
+  {
+    if (willBeUninstalled)
+    {
+      // Make sure that a new installation after uninstall will be treated like
+      // an update.
+      try {
+        branch.clearUserPref("currentVersion");
+      } catch(e) {}
+    }
+  },
 
-	/**
-	 * Called on module shutdown.
-	 */
-	shutdown: function()
-	{
-		if (willBeUninstalled)
-		{
-			// Make sure that a new installation after uninstall will be treated like
-			// an update.
-			try {
-				branch.clearUserPref("currentVersion");
-			} catch(e) {}
-		}
-	},
-
-	/**
-	 * Adds a preferences listener that will be fired whenever preferences are
-	 * reloaded
-	 */
-	addListener: function(/**Function*/ listener)
-	{
-		let index = listeners.indexOf(listener);
-		if (index < 0)
-			listeners.push(listener);
-	},
-	/**
-	 * Removes a preferences listener
-	 */
-	removeListener: function(/**Function*/ listener)
-	{
-		let index = listeners.indexOf(listener);
-		if (index >= 0)
-			listeners.splice(index, 1);
-	}
+  /**
+   * Adds a preferences listener that will be fired whenever preferences are
+   * reloaded
+   */
+  addListener: function(/**Function*/ listener)
+  {
+    let index = listeners.indexOf(listener);
+    if (index < 0)
+      listeners.push(listener);
+  },
+  /**
+   * Removes a preferences listener
+   */
+  removeListener: function(/**Function*/ listener)
+  {
+    let index = listeners.indexOf(listener);
+    if (index >= 0)
+      listeners.splice(index, 1);
+  }
 };
 
 /**
@@ -139,35 +140,35 @@ var Prefs =
  */
 var PrefsPrivate =
 {
-	/**
-	 * If set to true notifications about preference changes will no longer cause
-	 * a reload. This is to prevent unnecessary reloads while saving.
-	 * @type Boolean
-	 */
-	ignorePrefChanges: false,
+  /**
+   * If set to true notifications about preference changes will no longer cause
+   * a reload. This is to prevent unnecessary reloads while saving.
+   * @type Boolean
+   */
+  ignorePrefChanges: false,
 
-	/**
-	 * nsIObserver implementation
-	 */
-	observe: function(subject, topic, data)
-	{
-		if (topic == "private-browsing")
-		{
-			if (data == "enter")
-				Prefs.privateBrowsing = true;
-			else if (data == "exit")
-				Prefs.privateBrowsing = false;
-		}
-		else if (topic == "em-action-requested")
-		{
-			if (subject instanceof Ci.nsIUpdateItem && subject.id == Utils.addonID)
-				willBeUninstalled = (data == "item-uninstalled");
-		}
-		else if (topic == "nsPref:changed" && !this.ignorePrefChanges && "_update_" + data in PrefsPrivate)
-			PrefsPrivate["_update_" + data]();
-	},
+  /**
+   * nsIObserver implementation
+   */
+  observe: function(subject, topic, data)
+  {
+    if (topic == "private-browsing")
+    {
+      if (data == "enter")
+        Prefs.privateBrowsing = true;
+      else if (data == "exit")
+        Prefs.privateBrowsing = false;
+    }
+    else if (topic == "em-action-requested")
+    {
+      if (subject instanceof Ci.nsIUpdateItem && subject.id == Utils.addonID)
+        willBeUninstalled = (data == "item-uninstalled");
+    }
+    else if (topic == "nsPref:changed" && !this.ignorePrefChanges && "_update_" + data in PrefsPrivate)
+      PrefsPrivate["_update_" + data]();
+  },
 
-	QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
 }
 
 /**
@@ -175,31 +176,33 @@ var PrefsPrivate =
  */
 function registerObservers()
 {
-	// Observe preferences changes
-	try {
-		branch.QueryInterface(Ci.nsIPrefBranchInternal)
-					.addObserver("", PrefsPrivate, true);
-	}
-	catch (e) {
-		Cu.reportError(e);
-	}
+  // Observe preferences changes
+  try
+  {
+    branch.QueryInterface(Ci.nsIPrefBranchInternal)
+          .addObserver("", PrefsPrivate, true);
+  }
+  catch (e)
+  {
+    Cu.reportError(e);
+  }
 
-	let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-	observerService.addObserver(PrefsPrivate, "em-action-requested", true);
+  let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+  observerService.addObserver(PrefsPrivate, "em-action-requested", true);
 
-	// Add Private Browsing observer
-	if ("@mozilla.org/privatebrowsing;1" in Cc)
-	{
-		try
-		{
-			Prefs.privateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService).privateBrowsingEnabled;
-			observerService.addObserver(PrefsPrivate, "private-browsing", true);
-		}
-		catch(e)
-		{
-			Cu.reportError(e);
-		}
-	}
+  // Add Private Browsing observer
+  if ("@mozilla.org/privatebrowsing;1" in Cc)
+  {
+    try
+    {
+      Prefs.privateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService).privateBrowsingEnabled;
+      observerService.addObserver(PrefsPrivate, "private-browsing", true);
+    }
+    catch(e)
+    {
+      Cu.reportError(e);
+    }
+  }
 }
 
 /**
@@ -207,8 +210,8 @@ function registerObservers()
  */
 function triggerListeners(/**String*/ name)
 {
-	for each (let listener in listeners)
-		listener(name);
+  for each (let listener in listeners)
+    listener(name);
 }
 
 /**
@@ -216,42 +219,42 @@ function triggerListeners(/**String*/ name)
  */
 function defineProperty(/**String*/ name, defaultValue, /**Function*/ readFunc, /**Function*/ writeFunc)
 {
-	let value = defaultValue;
-	PrefsPrivate["_update_" + name] = function()
-	{
-		try
-		{
-			value = readFunc();
-			triggerListeners(name);
-		}
-		catch(e)
-		{
-			Cu.reportError(e);
-		}
-	}
-	Prefs.__defineGetter__(name, function() value);
-	Prefs.__defineSetter__(name, function(newValue)
-	{
-		if (value == newValue)
-			return value;
+  let value = defaultValue;
+  PrefsPrivate["_update_" + name] = function()
+  {
+    try
+    {
+      value = readFunc();
+      triggerListeners(name);
+    }
+    catch(e)
+    {
+      Cu.reportError(e);
+    }
+  }
+  Prefs.__defineGetter__(name, function() value);
+  Prefs.__defineSetter__(name, function(newValue)
+  {
+    if (value == newValue)
+      return value;
 
-		try
-		{
-			PrefsPrivate.ignorePrefChanges = true;
-			writeFunc(newValue);
-			value = newValue;
-			triggerListeners(name);
-		}
-		catch(e)
-		{
-			Cu.reportError(e);
-		}
-		finally
-		{
-			PrefsPrivate.ignorePrefChanges = false;
-		}
-		return value;
-	});
+    try
+    {
+      PrefsPrivate.ignorePrefChanges = true;
+      writeFunc(newValue);
+      value = newValue;
+      triggerListeners(name);
+    }
+    catch(e)
+    {
+      Cu.reportError(e);
+    }
+    finally
+    {
+      PrefsPrivate.ignorePrefChanges = false;
+    }
+    return value;
+  });
 }
 
 /**
@@ -259,8 +262,8 @@ function defineProperty(/**String*/ name, defaultValue, /**Function*/ readFunc, 
  */
 function defineIntegerProperty(/**String*/ name)
 {
-	defineProperty(name, 0, function() branch.getIntPref(name),
-													function(newValue) branch.setIntPref(name, newValue));
+  defineProperty(name, 0, function() branch.getIntPref(name),
+                          function(newValue) branch.setIntPref(name, newValue));
 }
 
 /**
@@ -268,8 +271,8 @@ function defineIntegerProperty(/**String*/ name)
  */
 function defineBooleanProperty(/**String*/ name)
 {
-	defineProperty(name, false, function() branch.getBoolPref(name),
-															function(newValue) branch.setBoolPref(name, newValue));
+  defineProperty(name, false, function() branch.getBoolPref(name),
+                              function(newValue) branch.setBoolPref(name, newValue));
 }
 
 /**
@@ -277,11 +280,16 @@ function defineBooleanProperty(/**String*/ name)
  */
 function defineStringProperty(/**String*/ name)
 {
-	defineProperty(name, "", function() branch.getComplexValue(name, Ci.nsISupportsString).data,
-		function(newValue)
-		{
-			let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-			str.data = newValue;
-			branch.setComplexValue(name, Ci.nsISupportsString, str);
-		});
+  defineProperty(name, "", function() branch.getComplexValue(name, Ci.nsISupportsString).data,
+    function(newValue)
+    {
+      let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+      str.data = newValue;
+      branch.setComplexValue(name, Ci.nsISupportsString, str);
+    });
+}
+
+
+} catch (ex) {
+	Cu.reportError(ex);
 }

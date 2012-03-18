@@ -232,17 +232,17 @@
       }
       
       function markContinue() {
-		var cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
-		var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-		var prefservice = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
-		try {
-			var prefs = prefservice.getBranch("");
-   			prefs.setBoolPref("extensions.fireie.privatebrowsingwarning", document.getElementById("chkWarning").checked);
-			cookieService.setCookieString(ioService.newURI("http://fireie/", null, null), null, "privatebrowsingwarning=no", null);
-			parent.location.reload();
-		}
-		catch (e) { }
-	  }
+    var cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var prefservice = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
+    try {
+      var prefs = prefservice.getBranch("");
+         prefs.setBoolPref("extensions.fireie.privatebrowsingwarning", document.getElementById("chkWarning").checked);
+      cookieService.setCookieString(ioService.newURI("http://fireie/", null, null), null, "privatebrowsingwarning=no", null);
+      parent.location.reload();
+    }
+    catch (e) { }
+    }
     ]]></script>
   </head>
 
