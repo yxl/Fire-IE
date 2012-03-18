@@ -201,7 +201,9 @@ namespace Plugin
 	{
 		if (m_pIEHostWindow)
 		{
-			m_pIEHostWindow->DestroyWindow();
+			m_pIEHostWindow->DestroyWindow(); 
+			delete m_pIEHostWindow;
+			m_pIEHostWindow = NULL;
 		}
 		m_hWnd = NULL;
 		m_bInitialized = FALSE;

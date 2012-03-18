@@ -124,7 +124,7 @@ FireIE.HttpObserver = {
   },
   
   shouldFilter: function(url) {
-    if (FireIE.manualSwitchUrl && FireIE.getUrlDomain(FireIE.manualSwitchUrl) == FireIE.getUrlDomain(url)) {
+    if (FireIE.manualSwitchUrl && FireIE.getURLDomain(FireIE.manualSwitchUrl) == FireIE.getURLDomain(url)) {
       return false;
     }
     return !FireIEWatcher.isFireIEURL(url)

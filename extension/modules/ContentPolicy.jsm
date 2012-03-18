@@ -168,7 +168,7 @@ var PolicyPrivate =
       return Ci.nsIContentPolicy.ACCEPT;
 
 		// User has manually switched to Firefox engine
-		if (browserNode.getAttribute('manualSwitchToFirefox') == Utils.getHostname(location.spec))
+		if (browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(location.spec))
 			return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
