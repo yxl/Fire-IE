@@ -14,7 +14,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
    Contributor(s):
     Yuan Xulei <hi@yxl.name>
     Wei Deng <wdeng@mozilla.com>
-    patwonder <patwonder@163.com>
+    Yifan Wu <patwonder@163.com>
 ------------------- END LICENSE BLOCK -------------------------
  
 A Firefox add-on let you switch to IE engine in one click and give up your Internet Explorer.
