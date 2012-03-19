@@ -107,8 +107,8 @@ var Backup =
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_restoreDialogTitle"), picker.modeOpen);
     picker.defaultExtension = ".ini";
-    picker.appendRule(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
-    picker.appendRule(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
+    picker.appendFilter(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
+    picker.appendFilter(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
 
     if (picker.show() != picker.returnCancel)
     {
@@ -239,8 +239,8 @@ var Backup =
     let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_backupDialogTitle"), picker.modeSave);
     picker.defaultExtension = ".ini";
-    picker.appendRule(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
-    picker.appendRule(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
+    picker.appendFilter(E("backupButton").getAttribute("_fileRuleComplete"), "*.ini");
+    picker.appendFilter(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
 
     if (picker.show() != picker.returnCancel)
     {

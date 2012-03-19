@@ -63,7 +63,7 @@ let IECookieManager = {
     // Change the default cookie and cache directories of the IE, which will
     // be restored when the cookie plugin is loaded.
     this._changeIETempDirectorySetting();
-    
+
     CookieObserver.register();
   },
 
@@ -94,7 +94,7 @@ let IECookieManager = {
     let ret = InternetSetCookieW(url, 0, cookieData);
     if (!ret)
     {
-      fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' data:' + cookieData);
+      Utils.ERROR('InternetSetCookieW failed! url:' + url + ' data:' + cookieData);
     }
     return ret;
   },
@@ -139,9 +139,9 @@ let IECookieManager = {
       ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
       ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
       ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
-    }    
+    }
   },
-  
+
   _unloadInternetSetCookieW: function()
   {
     if (this.wininetDll)
@@ -150,7 +150,7 @@ let IECookieManager = {
       this.wininetDll = null;
     }
   },
-  
+
   _changeIETempDirectorySetting: function()
   {
     const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
@@ -172,7 +172,7 @@ let IECookieManager = {
         return null;
       }
     }
-    
+
     function setIECtrlRegString(regName, value)
     {
       try
@@ -187,24 +187,24 @@ let IECookieManager = {
         return false;
       }
     }
-    
+
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-    
+
     let originalCookies = getIECtrlRegString("Cookies");
     // Backup the cookie directory setting if needed.
-    if(getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
+    if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
     {
       setIECtrlRegString("Cookies", profileDir + "\\fireie\\cookies");
     }
-    
+
     let originalCache = getIECtrlRegString("Cache");
     // Backup the cache directory setting if needed.
-    if(getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie",originalCache))
+    if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
     {
       setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
     }
   },
-  
+
   _getExpiresString: function(expiresInSeconds)
   {
     // Convert expires seconds to date string of the format "Tue, 28 Feb 2012 17:14:26 GMT"
