@@ -99,6 +99,7 @@ NPError NPP_Destroy (NPP instance, NPSavedData** save)
 	NPError rv = NPERR_NO_ERROR;
 
 	CPlugin * pPlugin = (CPlugin *)instance->pdata;
+
 	if(pPlugin != NULL) {
 		pPlugin->shut();
 		delete pPlugin;
@@ -133,20 +134,17 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 		{
 			return NPERR_MODULE_LOAD_FAILED_ERROR;
 		}
-		return NPERR_NO_ERROR;
 	}
-	else
-	{
-		// window goes away
-		if(pNPWindow->window == NULL)
-			return NPERR_NO_ERROR;
 
-		// window resized
-		if(pNPWindow->window != NULL)
-		{
-			pPlugin->SetWindow(pNPWindow);
-			return NPERR_NO_ERROR;
-		}
+	// window goes away
+	if(pNPWindow->window == NULL)
+		return NPERR_NO_ERROR;
+
+	// window resized
+	if(pNPWindow->window != NULL)
+	{
+		pPlugin->SetWindow(pNPWindow);
+		return NPERR_NO_ERROR;
 	}
 
 	return rv;

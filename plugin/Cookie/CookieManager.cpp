@@ -59,9 +59,9 @@ namespace Cookie
 		HKEY key;
 		if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, SUB_KEY, 0, KEY_SET_VALUE, &key))
 		{
-			LPBYTE buffer = (LPBYTE)(LPCTSTR)strValue;
+			LPBYTE cstr = (LPBYTE)strValue.GetString();
 			DWORD length = (strValue.GetLength() + 1) * sizeof(TCHAR);
-			if (ERROR_SUCCESS == RegSetValueEx(key, strRegName, 0, REG_EXPAND_SZ, buffer, length))
+			if (ERROR_SUCCESS == RegSetValueEx(key, strRegName, 0, REG_EXPAND_SZ, cstr, length))
 			{
 				bSucceeded = TRUE;
 			}
