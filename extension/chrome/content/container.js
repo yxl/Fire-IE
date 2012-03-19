@@ -14,21 +14,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
-var FireIEContainer = {};
+let FireIEContainer = {};
 
 {
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-  var Cr = Components.results;
-  var Cu = Components.utils;
+  let Cc = Components.classes;
+  let Ci = Components.interfaces;
+  let Cr = Components.results;
+  let Cu = Components.utils;
 
-  var baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-  var jsm = {};
+  let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+  let jsm = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Cu.import(baseURL.spec + "Favicon.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
-  var
+  let
   {
     Utils, Prefs, Favicon, Services
   } = jsm;
@@ -44,7 +44,7 @@ var FireIEContainer = {};
   function init()
   {
     window.removeEventListener('DOMContentLoaded', init, false);
-    var container = E('container');
+    let container = E('container');
     if (!container)
     {
       Utils.ERROR('Cannot find container to insert fireie-object.');
@@ -60,16 +60,16 @@ var FireIEContainer = {};
     }
     window.setTimeout(function()
     {
-      var pluginObject = E(Utils.containerPluginId);
+      let pluginObject = E(Utils.containerPluginId);
       document.title = pluginObject.Title;
     }, 200);
   }
 
   function getNavigateParam(name)
   {
-    var headers = "";
-    var tab = Utils.getTabFromDocument(document);
-    var navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    let headers = "";
+    let tab = Utils.getTabFromDocument(document);
+    let navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
     if (navigateParams && typeof navigateParams[name] != "undefined")
     {
       headers = navigateParams[name];
@@ -84,8 +84,8 @@ var FireIEContainer = {};
 
   function removeNavigateParams()
   {
-    var tab = Utils.getTabFromDocument(document);
-    var navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    let tab = Utils.getTabFromDocument(document);
+    let navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
     if (navigateParams)
     {
       tab.removeAttribute("fireieNavigateParams");
@@ -97,7 +97,7 @@ var FireIEContainer = {};
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
-    var pluginObject = E(Utils.containerPluginId);
+    let pluginObject = E(Utils.containerPluginId);
     if (pluginObject)
     {
       pluginObject.addEventListener("focus", onPluginFocus, false);
@@ -109,7 +109,7 @@ var FireIEContainer = {};
 
   function onIETitleChanged(event)
   {
-    var title = event.detail;
+    let title = event.detail;
     document.title = title;
   }
 
@@ -127,10 +127,10 @@ var FireIEContainer = {};
   function onIEDocumentComplete(event)
   {
     /** 设置页面Favicon */
-    var po = E(Utils.containerPluginId);
+    let po = E(Utils.containerPluginId);
     if (po)
     {
-      var faviconURL = po.FaviconURL;
+      let faviconURL = po.FaviconURL;
       if (faviconURL && faviconURL != "")
       {
         Favicon.setIcon(document, faviconURL);
@@ -145,7 +145,7 @@ var FireIEContainer = {};
    */
   function onPluginFocus(event)
   {
-    var pluginObject = event.originalTarget;
+    let pluginObject = event.originalTarget;
     pluginObject.blur();
     pluginObject.Focus();
   }
