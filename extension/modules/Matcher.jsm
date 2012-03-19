@@ -30,7 +30,7 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import(baseURL.spec + "RuleClasses.jsm");
 
 /**
- * Blacklist/whitelist rule matching
+ * Switch rule matching
  * @constructor
  */
 function Matcher()
