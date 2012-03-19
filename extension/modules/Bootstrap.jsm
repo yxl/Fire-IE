@@ -14,7 +14,7 @@
  */
 
 /**
- * @fileOverview Bootstrap module, will initialize Adblock Plus when loaded
+ * @fileOverview Bootstrap module, will initialize Fire IE when loaded
  */
 
 var EXPORTED_SYMBOLS = ["Bootstrap"];
@@ -60,7 +60,7 @@ let factoryPrivate = {
 };
 
 let defaultModules = [
-baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm"];
+baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm", baseURL.spec + "IECookieManager.jsm"];
 
 let loadedModules = {
   __proto__: null
@@ -69,7 +69,7 @@ let loadedModules = {
 let initialized = false;
 
 /**
- * Allows starting up and shutting down Adblock Plus functions.
+ * Allows starting up and shutting down Fire IE functions.
  * @class
  */
 var Bootstrap = {

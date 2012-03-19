@@ -61,23 +61,6 @@ END_MESSAGE_MAP()
 
 CPluginApp::CPluginApp()
 {
-	using namespace Cookie;
-	CString csCookie = Cookie::CookieManager::ReadIECtrlReg(TEXT("CookiesOld"));
-	if (!csCookie.IsEmpty())
-	{
-		int index = csCookie.Find(_T("AppData"));
-		if (index > 0)
-			csCookie = _T("%USERPROFILE%") + csCookie.Right(csCookie.GetLength() - index +1 );
-		Cookie::CookieManager::SetIECtrlReg(TEXT("Cookies"),csCookie);
-	}
-	CString csCache = Cookie::CookieManager::ReadIECtrlReg(TEXT("CacheOld"));
-	if(!csCache.IsEmpty())
-	{
-		int index = csCache.Find(_T("AppData"));
-		if(index > 0)
-			csCache = _T("%USERPROFILE%") + csCache.Right(csCookie.GetLength() - index +1 );
-		Cookie::CookieManager::SetIECtrlReg(TEXT("Cache"),csCache);
-	}
 }
 
 
@@ -157,19 +140,20 @@ CString UTF8ToCString(const char* szUTF8)
 
 BOOL CPluginApp::InitInstance()
 {
-	//using namespace Cookie;
-	//CString csCookie = TEXT("d:\\cookies");
-	//Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
 	AfxOleInit();
 	SetClassName(STR_WINDOW_CLASS_NAME);
 	CWinApp::InitInstance();
+
+	// Restore the IE temperary directory setting to avoid affacting IE browser.
+	if (!Cookie::CookieManager::s_instance.RestoreIETempDirectorySetting())
+	{
+		TRACE(_T("Failed to restore IE temerary directory setting.\n"));
+	}
 
 	return TRUE;
 }
 
 int CPluginApp::ExitInstance()
 {
-  // TODO: Add your specialized code here and/or call the base class
-
   return CWinApp::ExitInstance();
 }

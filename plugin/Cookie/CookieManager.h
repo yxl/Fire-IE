@@ -1,18 +1,23 @@
 #pragma once
-#include <cstring>
 
 namespace Cookie
 {
 	class CookieManager
 	{
 	public:
+	    // Single instance of the CookieManager for use in the plugin.
 		static CookieManager s_instance;
-		static CString ReadIECtrlReg(CString csRegName);
-		static void SetIECtrlReg(CString csRegName,CString& csCookie);
-		//static void RestoreIECookieReg(CString& csIECookie);
+
+		// Restore the cookie and cache directories of the IE
+		BOOL RestoreIETempDirectorySetting();	
 	private:
 		CookieManager(void){}
-		~CookieManager(void){}
+		~CookieManager(void){}	
 
+		static LPCTSTR SUB_KEY;
+
+		CString SetIECtrlRegString(const CString& strRegName);
+
+		BOOL SetIECtrlRegString(const CString& strRegName, const CString& strValue);
 	};
 }
