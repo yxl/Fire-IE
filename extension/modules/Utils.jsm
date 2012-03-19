@@ -184,6 +184,7 @@ var Utils = {
   /** 将URL转换为IE Engine URL */
   toContainerUrl: function(url)
   {
+    url = url.trim();
     if (Utils.startsWith(url, Utils.containerUrl)) return url;
     if (/^file:\/\/.*/.test(url))
     {
@@ -203,11 +204,14 @@ var Utils = {
     if (url && url.length > 0)
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      if (!/^[\w]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
       if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
       if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
       {
         url = decodeURI(url.substring(Utils.containerUrl.length));
-
         if (!/^[\w]+:/.test(url))
         {
           url = "http://" + url;
@@ -374,11 +378,16 @@ var Utils = {
    */
   makeURI: function( /**String*/ url) /**nsIURI*/
   {
-    //try
+    try
     {
+      url = url.trim();
+      if (!/^[\w]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
       return Services.io.newURI(url, null, null);
     }
-    //catch (e)
+    catch (e)
     {
       Utils.ERROR(e + ": " + url);
       return null;
@@ -402,6 +411,11 @@ var Utils = {
   {
     try
     {
+      url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      if (!/^[\w]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
       return Utils.unwrapURL(url).host;
     }
     catch (e)

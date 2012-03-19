@@ -295,7 +295,7 @@ WindowWrapper.prototype = {
         else
         {
           let self = this;
-          if (this.window.gURLBar.selectionEnd != this.window.gURLBar.selectionStart) window.setTimeout(function()
+          if (this.window.gURLBar.selectionEnd != this.window.gURLBar.selectionStart) this.window.setTimeout(function()
           {
             self.window.gURLBar.focus();
           }, 0);
@@ -312,7 +312,7 @@ WindowWrapper.prototype = {
           Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
         }
       }
-      
+
       // 更新收藏状态(星星按钮黄色时表示该页面已收藏)
       this.window.PlacesStarButton.updateState();
 
@@ -558,6 +558,10 @@ WindowWrapper.prototype = {
   getHandledURL: function(url, isModeIE)
   {
     url = url.trim();
+    if (!/^[\w]+:/.test(url))
+    {
+      url = "http://" + url;
+    }
 
     // 访问firefox特有地址时, 只允许使用firefox内核
     if (Utils.isFirefoxOnly(url))
