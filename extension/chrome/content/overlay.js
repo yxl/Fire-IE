@@ -165,9 +165,8 @@ var gFireIE = null;
       var pluginObject = gFireIE.getContainerPlugin();
       if (pluginObject)
       {
-		window.setTimeout(function() {
         gFireIE.goDoCommand("HandOverFocus");
-		}, 200);
+        aURLBar.focus();
       }
     }
     hookProp(aURLBar, "value", null, function()
