@@ -16,7 +16,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 let FireIEContainer = {};
 
-{
+(function() {
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cr = Components.results;
@@ -43,12 +43,15 @@ let FireIEContainer = {};
 
   function init()
   {
-    window.removeEventListener('DOMContentLoaded', init, false);
     let container = E('container');
     if (!container)
     {
       Utils.ERROR('Cannot find container to insert fireie-object.');
       return;
+    }
+    while (container.hasChildNodes())
+    {
+      container.removeChild(container.firstChild);
     }
     if (Prefs.privateBrowsing)
     {
@@ -56,6 +59,7 @@ let FireIEContainer = {};
     }
     else
     {
+      container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
       registerEventHandler();
     }
     window.setTimeout(function()
@@ -63,6 +67,15 @@ let FireIEContainer = {};
       let pluginObject = E(Utils.containerPluginId);
       document.title = pluginObject.Title;
     }, 200);
+  }
+
+  function destory()
+  {
+    let c = E("container");
+    while (c.hasChildNodes())
+    {
+      c.removeChild(c.firstChild);
+    }
   }
 
   function getNavigateParam(name)
@@ -123,10 +136,10 @@ let FireIEContainer = {};
     }, 100);
   }
 
-   /** 响应页面加载完成事件 */
+  /** 响应页面加载完成事件 */
+
   function onIEDocumentComplete(event)
-  {
-    /** 设置页面Favicon */
+  { /** 设置页面Favicon */
     let po = E(Utils.containerPluginId);
     if (po)
     {
@@ -137,7 +150,7 @@ let FireIEContainer = {};
       }
     }
   }
- 
+
   /**
    * 当焦点在plugin对象上时，在plugin中按Alt+XXX组合键时，
    * 菜单栏无法正常弹出，因此当plugin对象得到焦点时，需要
@@ -150,7 +163,8 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
-  window.addEventListener('DOMContentLoaded', init, false);
+  window.addEventListener('pageshow', init, false);
+  window.addEventListener('pagehide', destory, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
-}
+})();
