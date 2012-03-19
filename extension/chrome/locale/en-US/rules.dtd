@@ -1,7 +1,7 @@
 <!ENTITY dialog.title                         "Fire-IE Switch Rules Preferences">
 
 <!ENTITY subscriptions.tab.label              "Rule subscriptions">
-<!ENTITY filters.tab.label                    "Custom rules">
+<!ENTITY rules.tab.label                    "Custom rules">
 
 <!ENTITY addSubscription.label                "Add rule subscription">
 <!ENTITY addSubscription.accesskey            "f">
@@ -24,14 +24,14 @@
 <!ENTITY subscription.lastDownload.checksumMismatch "Failed, checksum mismatch">
 <!ENTITY subscription.lastDownload.success    "Success">
 <!ENTITY subscription.minVersion.warning      "This rule subscription requires a newer Fire IE version, you should update to the latest Fire IE version.">
-<!ENTITY subscription.disabledFilters.warning "Some rules in this subscription are disabled.">
-<!ENTITY subscription.disabledFilters.enable  "Enable disabled rules">
+<!ENTITY subscription.disabledRules.warning "Some rules in this subscription are disabled.">
+<!ENTITY subscription.disabledRules.enable  "Enable disabled rules">
 
 <!ENTITY subscription.actions.label           "Actions">
 <!ENTITY subscription.update.label            "Update rules">
 <!ENTITY subscription.editTitle.label         "Edit title">
 <!ENTITY subscription.delete.label            "Delete">
-<!ENTITY subscription.showHideFilters.label   "Show/hide details">
+<!ENTITY subscription.showHideRules.label   "Show/hide details">
 <!ENTITY subscription.moveUp.label            "Move up">
 <!ENTITY subscription.moveDown.label          "Move down">
 
@@ -40,25 +40,25 @@
 <!ENTITY addGroup.label                       "Add rule group">
 <!ENTITY addGroup.accesskey                   "g">
 
-<!ENTITY noFilters.text                       "You don't have any custom rules yet.">
+<!ENTITY noRules.text                       "You don't have any custom rules yet.">
 
-<!ENTITY addFilter.label                      "Add rule">
-<!ENTITY addFilter.accesskey                  "d">
+<!ENTITY addRule.label                      "Add rule">
+<!ENTITY addRule.accesskey                  "d">
 
-<!ENTITY filter.actions.label                 "Rule actions">
-<!ENTITY filter.edit.label                    "Edit">
-<!ENTITY filter.cut.label                     "Cut">
-<!ENTITY filter.copy.label                    "Copy">
-<!ENTITY filter.paste.label                   "Paste">
-<!ENTITY filter.delete.label                  "Delete">
-<!ENTITY filter.selectAll.label               "Select All">
-<!ENTITY filter.resetHitCounts.label          "Reset hit statistics">
-<!ENTITY filter.moveUp.label                  "Move up">
-<!ENTITY filter.moveDown.label                "Move down">
+<!ENTITY rule.actions.label                 "Rule actions">
+<!ENTITY rule.edit.label                    "Edit">
+<!ENTITY rule.cut.label                     "Cut">
+<!ENTITY rule.copy.label                    "Copy">
+<!ENTITY rule.paste.label                   "Paste">
+<!ENTITY rule.delete.label                  "Delete">
+<!ENTITY rule.selectAll.label               "Select All">
+<!ENTITY rule.resetHitCounts.label          "Reset hit statistics">
+<!ENTITY rule.moveUp.label                  "Move up">
+<!ENTITY rule.moveDown.label                "Move down">
 <!ENTITY viewMenu.label                       "View">
 
-<!ENTITY filter.column                        "Switch rule">
-<!ENTITY filter.accesskey                     "F">
+<!ENTITY rule.column                        "Switch rule">
+<!ENTITY rule.accesskey                     "F">
 <!ENTITY slow.column                          "Slow rules">
 <!ENTITY slow.accesskey                       "w">
 <!ENTITY enabled.column                       "Enabled">
@@ -78,9 +78,9 @@
 <!ENTITY sort.descending.accesskey            "Z">
 
 <!ENTITY noGroupSelected.text                 "You need to select a rule group before its rules can be displayed.">
-<!ENTITY noFiltersInGroup.text                "The selected group is empty.">
+<!ENTITY noRulesInGroup.text                "The selected group is empty.">
 
-<!ENTITY filters.remove.warning               "Do you really want to remove all selected rules?">
+<!ENTITY rules.remove.warning               "Do you really want to remove all selected rules?">
 
 <!ENTITY backupButton.label                   "Backup and Restore">
 <!ENTITY backupButton.accesskey               "B">

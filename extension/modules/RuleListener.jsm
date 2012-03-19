@@ -5,27 +5,24 @@
  */
 
 /**
- * @fileOverview Component synchronizing filter storage with Matcher instances.
+ * @fileOverview Component synchronizing rule storage with Matcher instances.
  */
 
-var EXPORTED_SYMBOLS = ["FilterListener"];
+var EXPORTED_SYMBOLS = ["RuleListener"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
@@ -36,38 +33,34 @@ Cu.import(baseURL.spec + "Utils.jsm");
 const cacheVersion = 2;
 
 /**
- * Value of the FilterListener.batchMode property.
+ * Value of the RuleListener.batchMode property.
  * @type Boolean
  */
 let batchMode = false;
 
 /**
- * Increases on filter changes, filters will be saved if it exceeds 1.
+ * Increases on rule changes, rules will be saved if it exceeds 1.
  * @type Integer
  */
 let isDirty = 0;
 
 /**
- * This object can be used to change properties of the filter change listeners.
+ * This object can be used to change properties of the rule change listeners.
  * @class
  */
-var FilterListener =
-{
+var RuleListener = {
   /**
-   * Called on module initialization, registers listeners for FilterStorage changes
+   * Called on module initialization, registers listeners for RuleStorage changes
    */
   startup: function()
   {
 
 
-    FilterNotifier.addListener(function(action, item, newValue, oldValue)
+    RuleNotifier.addListener(function(action, item, newValue, oldValue)
     {
-      if (/^filter\.(.*)/.test(action))
-        onFilterChange(RegExp.$1, item, newValue, oldValue);
-      else if (/^subscription\.(.*)/.test(action))
-        onSubscriptionChange(RegExp.$1, item, newValue, oldValue);
-      else
-        onGenericChange(action, item);
+      if (/^rule\.(.*)/.test(action)) onRuleChange(RegExp.$1, item, newValue, oldValue);
+      else if (/^subscription\.(.*)/.test(action)) onSubscriptionChange(RegExp.$1, item, newValue, oldValue);
+      else onGenericChange(action, item);
     });
 
     let initialized = false;
@@ -87,12 +80,13 @@ var FilterListener =
 
         stream.close();
 
-        if (cache.version == cacheVersion && cache.patternsTimestamp == FilterStorage.sourceFile.clone().lastModifiedTime)
+        if (cache.version == cacheVersion && cache.patternsTimestamp == RuleStorage.sourceFile.clone().lastModifiedTime)
         {
-          AllMatcher.fromCache(cache);
+          AllMatchers.fromCache(cache);
 
           // We still need to load patterns.ini if certain properties are accessed
           var loadDone = false;
+
           function trapProperty(obj, prop)
           {
             var origValue = obj[prop];
@@ -105,7 +99,7 @@ var FilterListener =
               {
 
                 loadDone = true;
-                FilterStorage.loadFromDisk(null, true);
+                RuleStorage.loadFromDisk(null, true);
 
               }
               return obj[prop];
@@ -117,14 +111,12 @@ var FilterListener =
             });
           }
 
-          for each (let prop in ["fileProperties", "subscriptions", "knownSubscriptions",
-                                 "addSubscription", "removeSubscription", "updateSubscriptionFilters",
-                                 "addFilter", "removeFilter", "increaseHitCount", "resetHitCounts"])
+          for each(let prop in ["fileProperties", "subscriptions", "knownSubscriptions", "addSubscription", "removeSubscription", "updateSubscriptionRules", "addRule", "removeRule", "increaseHitCount", "resetHitCounts"])
           {
-            trapProperty(FilterStorage, prop);
+            trapProperty(RuleStorage, prop);
           }
-          trapProperty(Filter, "fromText");
-          trapProperty(Filter, "knownFilters");
+          trapProperty(Rule, "fromText");
+          trapProperty(Rule, "knownRules");
           trapProperty(Subscription, "fromURL");
           trapProperty(Subscription, "knownSubscriptions");
 
@@ -138,10 +130,9 @@ var FilterListener =
     }
 
     // If we failed to restore from cache - load patterns.ini
-    if (!initialized)
-      FilterStorage.loadFromDisk();
+    if (!initialized) RuleStorage.loadFromDisk();
 
-    Services.obs.addObserver(FilterListenerPrivate, "browser:purge-session-history", true);
+    Services.obs.addObserver(RuleListenerPrivate, "browser:purge-session-history", true);
   },
 
   /**
@@ -150,8 +141,7 @@ var FilterListener =
   shutdown: function()
   {
 
-    if (isDirty > 0)
-      FilterStorage.saveToDisk();
+    if (isDirty > 0) RuleStorage.saveToDisk();
 
   },
 
@@ -169,21 +159,19 @@ var FilterListener =
   },
 
   /**
-   * Increases "dirty factor" of the filters and calls FilterStorage.saveToDisk()
+   * Increases "dirty factor" of the rules and calls RuleStorage.saveToDisk()
    * if it becomes 1 or more. Save is executed delayed to prevent multiple
-   * subsequent calls. If the parameter is 0 it forces saving filters if any
+   * subsequent calls. If the parameter is 0 it forces saving rules if any
    * changes were recorded after the previous save.
    */
-  setDirty: function(/**Integer*/ factor)
+  setDirty: function( /**Integer*/ factor)
   {
-    if (factor == 0 && isDirty > 0)
-      isDirty = 1;
-    else
-      isDirty += factor;
-    if (isDirty >= 1 && !filtersFlushScheduled)
+    if (factor == 0 && isDirty > 0) isDirty = 1;
+    else isDirty += factor;
+    if (isDirty >= 1 && !rulesFlushScheduled)
     {
-      Utils.runAsync(flushFiltersInternal);
-      filtersFlushScheduled = true;
+      Utils.runAsync(flushRulesInternal);
+      rulesFlushScheduled = true;
     }
   }
 };
@@ -192,15 +180,13 @@ var FilterListener =
  * Private nsIObserver implementation.
  * @class
  */
-var FilterListenerPrivate =
-{
+var RuleListenerPrivate = {
   observe: function(subject, topic, data)
   {
     if (topic == "browser:purge-session-history" && Prefs.clearStatsOnHistoryPurge)
     {
-      FilterStorage.resetHitCounts();
-      FilterListener.setDirty(0); // Force saving to disk
-
+      RuleStorage.resetHitCounts();
+      RuleListener.setDirty(0); // Force saving to disk
       Prefs.recentReports = "[]";
     }
   },
@@ -208,57 +194,51 @@ var FilterListenerPrivate =
 };
 
 
-let filtersFlushScheduled = false;
+let rulesFlushScheduled = false;
 
-function flushFiltersInternal()
+function flushRulesInternal()
 {
-  filtersFlushScheduled = false;
-  FilterStorage.saveToDisk();
+  rulesFlushScheduled = false;
+  RuleStorage.saveToDisk();
 }
 
 /**
- * Notifies Matcher instances about a new filter
+ * Notifies Matcher instances about a new rule
  * if necessary.
- * @param {Filter} filter filter that has been added
+ * @param {Rule} rule rule that has been added
  */
-function addFilter(filter)
+function addRule(rule)
 {
-  if (!(filter instanceof ActiveFilter) || filter.disabled)
-    return;
+  if (!(rule instanceof ActiveRule) || rule.disabled) return;
 
   let hasEnabled = false;
-  for (let i = 0; i < filter.subscriptions.length; i++)
-    if (!filter.subscriptions[i].disabled)
-      hasEnabled = true;
-  if (!hasEnabled)
-    return;
+  for (let i = 0; i < rule.subscriptions.length; i++)
+  if (!rule.subscriptions[i].disabled) hasEnabled = true;
+  if (!hasEnabled) return;
 
-  if (filter instanceof RegExpFilter)
-    AllMatcher.add(filter);
+  if (rule instanceof RegExpRule) AllMatchers.add(rule);
 }
 
 /**
- * Notifies Matcher instances about removal of a filter
+ * Notifies Matcher instances about removal of a rule
  * if necessary.
- * @param {Filter} filter filter that has been removed
+ * @param {Rule} rule rule that has been removed
  */
-function removeFilter(filter)
+function removeRule(rule)
 {
-  if (!(filter instanceof ActiveFilter))
-    return;
+  if (!(rule instanceof ActiveRule)) return;
 
-  if (!filter.disabled)
+  if (!rule.disabled)
   {
     let hasEnabled = false;
-    for (let i = 0; i < filter.subscriptions.length; i++)
-      if (!filter.subscriptions[i].disabled)
-        hasEnabled = true;
-    if (hasEnabled)
-      return;
+    for (let i = 0; i < rule.subscriptions.length; i++)
+    if (!rule.subscriptions[i].disabled) hasEnabled = true;
+    if (hasEnabled) return;
   }
 
-  if (filter instanceof RegExpFilter) {
-    AllMatcher.remove(filter);
+  if (rule instanceof RegExpRule)
+  {
+    AllMatchers.remove(rule);
   }
 }
 
@@ -267,15 +247,12 @@ function removeFilter(filter)
  */
 function onSubscriptionChange(action, subscription, newValue, oldValue)
 {
-  if (action == "homepage" || action == "downloadStatus" || action == "lastDownload")
-    FilterListener.setDirty(0.2);
-  else
-    FilterListener.setDirty(1);
+  if (action == "homepage" || action == "downloadStatus" || action == "lastDownload") RuleListener.setDirty(0.2);
+  else RuleListener.setDirty(1);
 
-  if (action != "added" && action != "removed" && action != "disabled" && action != "updated")
-    return;
+  if (action != "added" && action != "removed" && action != "disabled" && action != "updated") return;
 
-  if (action != "removed" && !(subscription.url in FilterStorage.knownSubscriptions))
+  if (action != "removed" && !(subscription.url in RuleStorage.knownSubscriptions))
   {
     // Ignore updates for subscriptions not in the list
     return;
@@ -289,42 +266,35 @@ function onSubscriptionChange(action, subscription, newValue, oldValue)
 
   if (action == "added" || action == "removed" || action == "disabled")
   {
-    let method = (action == "added" || (action == "disabled" && newValue == false) ? addFilter : removeFilter);
-    if (subscription.filters)
-      subscription.filters.forEach(method);
+    let method = (action == "added" || (action == "disabled" && newValue == false) ? addRule : removeRule);
+    if (subscription.rules) subscription.rules.forEach(method);
   }
   else if (action == "updated")
   {
-    subscription.oldFilters.forEach(removeFilter);
-    subscription.filters.forEach(addFilter);
+    subscription.oldRules.forEach(removeRule);
+    subscription.rules.forEach(addRule);
   }
 }
 
 /**
- * Filter change listener
+ * Rule change listener
  */
-function onFilterChange(action, filter, newValue, oldValue)
+function onRuleChange(action, rule, newValue, oldValue)
 {
-  if (action == "hitCount" || action == "lastHit")
-    FilterListener.setDirty(0.0001);
-  else if (action == "disabled" || action == "moved")
-    FilterListener.setDirty(0.2);
-  else
-    FilterListener.setDirty(1);
+  if (action == "hitCount" || action == "lastHit") RuleListener.setDirty(0.0001);
+  else if (action == "disabled" || action == "moved") RuleListener.setDirty(0.2);
+  else RuleListener.setDirty(1);
 
-  if (action != "added" && action != "removed" && action != "disabled")
-    return;
+  if (action != "added" && action != "removed" && action != "disabled") return;
 
-  if ((action == "added" || action == "removed") && filter.disabled)
+  if ((action == "added" || action == "removed") && rule.disabled)
   {
-    // Ignore adding/removing of disabled filters
+    // Ignore adding/removing of disabled rules
     return;
   }
 
-  if (action == "added" || (action == "disabled" && newValue == false))
-    addFilter(filter);
-  else
-    removeFilter(filter);
+  if (action == "added" || (action == "disabled" && newValue == false)) addRule(rule);
+  else removeRule(rule);
 }
 
 /**
@@ -336,25 +306,30 @@ function onGenericChange(action)
   {
     isDirty = 0;
 
-    AllMatcher.clear();
-    for each (let subscription in FilterStorage.subscriptions)
-      if (!subscription.disabled)
-        subscription.filters.forEach(addFilter);
+    AllMatchers.clear();
+    for each(let subscription in RuleStorage.subscriptions)
+    if (!subscription.disabled) subscription.rules.forEach(addRule);
   }
   else if (action == "save")
   {
     isDirty = 0;
 
-    let cache = {version: cacheVersion, patternsTimestamp: FilterStorage.sourceFile.clone().lastModifiedTime};
-    AllMatcher.toCache(cache);
+    let cache = {
+      version: cacheVersion,
+      patternsTimestamp: RuleStorage.sourceFile.clone().lastModifiedTime
+    };
+    AllMatchers.toCache(cache);
 
     let cacheFile = Utils.resolveFilePath(Prefs.data_directory);
     cacheFile.append("cache.js");
 
-    try {
+    try
+    {
       // Make sure the file's parent directory exists
       cacheFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
-    } catch (e) {}
+    }
+    catch (e)
+    {}
 
     try
     {
@@ -376,14 +351,10 @@ function onGenericChange(action)
         stream.close();
       }
     }
-    catch(e)
+    catch (e)
     {
-      delete FilterStorage.fileProperties.cacheTimestamp;
+      delete RuleStorage.fileProperties.cacheTimestamp;
       Cu.reportError(e);
     }
   }
-}
-
-} catch (ex) {
-	Cu.reportError(ex);
 }

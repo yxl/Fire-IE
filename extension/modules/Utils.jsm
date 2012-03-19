@@ -8,7 +8,7 @@
  * @fileOverview Module containing a bunch of utility functions.
  */
 
-var EXPORTED_SYMBOLS = ["Utils", "Cache"];
+var EXPORTED_SYMBOLS = ["Utils"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -19,19 +19,15 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let sidebarParams = null;
+let _addonVersion = null;
 
-try
-{
 /**
  * Provides a bunch of utility functions.
  * @class
  */
-var Utils =
-{
-  _addonVersion: "0.0.9",
+var Utils = {
   _ieUserAgent: null,
-  
+
   /**
    * Returns the add-on ID used by Adblock Plus
    */
@@ -45,7 +41,7 @@ var Utils =
    */
   get addonVersion()
   {
-    return this._addonVersion;
+    return _addonVersion;
   },
 
   /**
@@ -97,14 +93,14 @@ var Utils =
 
   get ieUserAgent()
   {
-	return Utils._ieUserAgent;
+    return Utils._ieUserAgent;
   },
-  
+
   set ieUserAgent(value)
   {
-	Utils._ieUserAgent = value;
+    Utils._ieUserAgent = value;
   },
-  
+
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.
    * 
@@ -113,9 +109,7 @@ var Utils =
    */
   getString: function(name)
   {
-    let stringBundle = Cc["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Ci.nsIStringBundleService)
-                        .createBundle("chrome://fireie/locale/global.properties");
+    let stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService).createBundle("chrome://fireie/locale/global.properties");
     Utils.getString = function(name)
     {
       return stringBundle.GetStringFromName(name);
@@ -132,8 +126,7 @@ var Utils =
    */
   alert: function(parentWindow, message, title)
   {
-    if (!title)
-      title = Utils.getString("default_dialog_title");
+    if (!title) title = Utils.getString("default_dialog_title");
     Services.prompt.alert(parentWindow, title, message);
   },
 
@@ -147,8 +140,7 @@ var Utils =
    */
   confirm: function(parentWindow, message, title)
   {
-    if (!title)
-      title = Utils.getString("default_dialog_title");
+    if (!title) title = Utils.getString("default_dialog_title");
     return Services.prompt.confirm(parentWindow, title, message);
   },
 
@@ -156,14 +148,12 @@ var Utils =
    * Retrieves the window for a document node.
    * @return {Window} will be null if the node isn't associated with a window
    */
-  getWindow: function(/**Node*/ node)
+  getWindow: function( /**Node*/ node)
   {
-    if ("ownerDocument" in node && node.ownerDocument)
-      node = node.ownerDocument;
-  
-    if ("defaultView" in node)
-      return node.defaultView;
-  
+    if ("ownerDocument" in node && node.ownerDocument) node = node.ownerDocument;
+
+    if ("defaultView" in node) return node.defaultView;
+
     return null;
   },
 
@@ -172,13 +162,12 @@ var Utils =
    * data: URL) walks up the parent chain until a window is found that has a
    * security context.
    */
-  getOriginWindow: function(/**Window*/ wnd) /**Window*/
+  getOriginWindow: function( /**Window*/ wnd) /**Window*/
   {
     while (wnd != wnd.parent)
     {
       let uri = Utils.makeURI(wnd.location.href);
-      if (uri.spec != "about:blank" && uri.spec != "moz-safe-about:blank" &&
-          !Utils.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT))
+      if (uri.spec != "about:blank" && uri.spec != "moz-safe-about:blank" && !Utils.netUtils.URIChainHasFlags(uri, Ci.nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT))
       {
         break;
       }
@@ -186,35 +175,39 @@ var Utils =
     }
     return wnd;
   },
-  
+
   get containerUrl()
   {
     return "chrome://fireie/content/container.xhtml?url=";
   },
-  
-  /** 将URL转换为IE Engine URL */
+
+  /** 灏哢RL杞崲涓篒E Engine URL */
   toContainerUrl: function(url)
   {
     if (Utils.startsWith(url, Utils.containerUrl)) return url;
     if (/^file:\/\/.*/.test(url))
     {
-      try {
+      try
+      {
         url = decodeURI(url).replace(/\|/g, ":");
-      } catch (e) {}
+      }
+      catch (e)
+      {}
     }
     return Utils.containerUrl + encodeURI(url);
   },
-  
-  /** 从Plugin URL中提取实际访问的URL */
+
+  /** 浠嶱lugin URL涓彁鍙栧疄闄呰闂殑URL */
   fromContainerUrl: function(url)
   {
-    if (url && url.length > 0) {
+    if (url && url.length > 0)
+    {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
       if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
       if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
       {
         url = decodeURI(url.substring(Utils.containerUrl.length));
-  
+
         if (!/^[\w]+:/.test(url))
         {
           url = "http://" + url;
@@ -223,20 +216,21 @@ var Utils =
     }
     return url;
   },
-  
+
   get containerPluginId()
   {
     return "fireie-object";
   },
-  
+
   get cookiePluginId()
   {
     return "fireie-cookie-object";
   },
 
-  convertToUTF8: function (data)
+  convertToUTF8: function(data)
   {
-    try {
+    try
+    {
       data = decodeURI(data);
     }
     catch (e)
@@ -251,7 +245,8 @@ var Utils =
         {
           let strBundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
           var intlMess = strBundle.createBundle("chrome://global-platform/locale/intl.properties");
-          try {
+          try
+          {
             return intlMess.GetStringFromName("intl.charset.default");
           }
           catch (e)
@@ -259,7 +254,7 @@ var Utils =
             return null;
           }
         }
-      }    
+      }
       let charset = getDefaultCharset();
       if (charset)
       {
@@ -279,7 +274,7 @@ var Utils =
     }
     return data;
   },
-  
+
   getTabAttributeJSON: function(tab, name)
   {
     let attrString = tab.getAttribute(name);
@@ -287,7 +282,7 @@ var Utils =
     {
       return null;
     }
-    
+
     try
     {
       let json = JSON.parse(attrString);
@@ -299,7 +294,7 @@ var Utils =
     }
     return null;
   },
-  
+
   setTabAttributeJSON: function(tab, name, value)
   {
     let attrString = JSON.stringify(value);
@@ -326,106 +321,107 @@ var Utils =
         tab = aBrowser.tabContainer.childNodes[targetBrowserIndex];
         return tab;
       }
-    } catch (err)
+    }
+    catch (err)
     {
       Utils.ERROR(err);
     }
     return null;
   },
-  
+
   getTabFromWindow: function(win)
   {
     function getRootWindow(win)
     {
-      for (; win; win = win.parent) {
-        if (!win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow))
-          return win;
+      for (; win; win = win.parent)
+      {
+        if (!win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow)) return win;
       }
-    
+
       return null;
-    }  
+    }
     let aWindow = getRootWindow(win);
-    
-    if (!aWindow || !aWindow.document)
-      return null;
-    
+
+    if (!aWindow || !aWindow.document) return null;
+
     return Utils.getTabFromDocument(aWindow.document);
   },
-  
-  /** 检查URL地址是否是火狐浏览器特有
-   *  例如 about:config chrome://xxx
+
+  /** 妫�鏌RL鍦板潃鏄惁鏄伀鐙愭祻瑙堝櫒鐗规湁
+   *  渚嬪 about:config chrome://xxx
    */
   isFirefoxOnly: function(url)
   {
     url = url.trim();
-    return(url && (url.length>0) &&
-              ((Utils.startsWith(url, 'about:') && url != "about:blank") ||
-               Utils.startsWith(url, 'chrome://')
-              )
-          );
-  },  
+    return (url && (url.length > 0) && ((Utils.startsWith(url, 'about:') && url != "about:blank") || Utils.startsWith(url, 'chrome://')));
+  },
 
   /**
    * If a protocol using nested URIs like jar: is used - retrieves innermost
    * nested URI.
    */
-  unwrapURL: function(/**nsIURI or String*/ url) /**nsIURI*/
+  unwrapURL: function( /**nsIURI or String*/ url) /**nsIURI*/
   {
-    if (!(url instanceof Ci.nsIURI))
-      url = Utils.makeURI(url);
+    if (!(url instanceof Ci.nsIURI)) url = Utils.makeURI(url);
 
-    if (url instanceof Ci.nsINestedURI)
-      return url.innermostURI;
-    else
-      return url;
+    if (url instanceof Ci.nsINestedURI) return url.innermostURI;
+    else return url;
   },
 
   /**
    * Translates a string URI into its nsIURI representation, will return null for
    * invalid URIs.
    */
-  makeURI: function(/**String*/ url) /**nsIURI*/
+  makeURI: function( /**String*/ url) /**nsIURI*/
   {
-    try
+    //try
     {
       return Services.io.newURI(url, null, null);
     }
-    catch (e) {
+    //catch (e)
+    {
+      Utils.ERROR(e + ": " + url);
       return null;
     }
   },
-  
-  isValidUrl: function (url)
+
+  isValidUrl: function(url)
   {
     return Utils.makeURI(url) != null;
-  },  
-  
+  },
+
+  isValidDomainName: function(domainName)
+  {
+    return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
+  },
+
   /**
    * Extracts the hostname from a URL (might return null).
    */
-  getHostname: function(/**String*/ url) /**String*/
+  getHostname: function( /**String*/ url) /**String*/
   {
     try
     {
       return Utils.unwrapURL(url).host;
     }
-    catch(e)
+    catch (e)
     {
       return null;
     }
   },
-  
-  startsWith: function (s, prefix) {
+
+  startsWith: function(s, prefix)
+  {
     if (s) return ((s.substring(0, prefix.length) == prefix));
     else return false;
   },
-      
+
   /**
    * Posts an action to the event queue of the current thread to run it
    * asynchronously. Any additional parameters to this function are passed
    * as parameters to the callback.
    */
-  runAsync: function(/**Function*/ callback, /**Object*/ thisPtr)
+  runAsync: function( /**Function*/ callback, /**Object*/ thisPtr)
   {
     let params = Array.prototype.slice.call(arguments, 2);
     let runnable = {
@@ -440,19 +436,21 @@ var Utils =
   /**
    * Gets the DOM window associated with a particular request (if any).
    */
-  getRequestWindow: function(/**nsIChannel*/ channel) /**nsIDOMWindow*/
+  getRequestWindow: function( /**nsIChannel*/ channel) /**nsIDOMWindow*/
   {
     try
     {
-      if (channel.notificationCallbacks)
-        return channel.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
-    } catch(e) {}
-  
+      if (channel.notificationCallbacks) return channel.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+    }
+    catch (e)
+    {}
+
     try
     {
-      if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
-        return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
-    } catch(e) {}
+      if (channel.loadGroup && channel.loadGroup.notificationCallbacks) return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+    }
+    catch (e)
+    {}
 
     return null;
   },
@@ -465,28 +463,30 @@ var Utils =
     // HACKHACK: Gecko doesn't expose NS_LINEBREAK, try to determine
     // plattform's line breaks by reading prefs.js
     let lineBreak = "\n";
-    try {
+    try
+    {
       let prefFile = Services.dirsvc.get("PrefF", Ci.nsIFile);
       let inputStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
       inputStream.init(prefFile, 0x01, 0444, 0);
-  
+
       let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(Ci.nsIScriptableInputStream);
       scriptableStream.init(inputStream);
       let data = scriptableStream.read(1024);
       scriptableStream.close();
-  
-      if (/(\r\n?|\n\r?)/.test(data))
-        lineBreak = RegExp.$1;
-    } catch (e) {}
-  
+
+      if (/(\r\n?|\n\r?)/.test(data)) lineBreak = RegExp.$1;
+    }
+    catch (e)
+    {}
+
     Utils.getLineBreak = function() lineBreak;
     return lineBreak;
   },
 
   /**
-   * Generates filter subscription checksum.
+   * Generates rule subscription checksum.
    *
-   * @param {Array of String} lines filter subscription lines (with checksum line removed)
+   * @param {Array of String} lines rule subscription lines (with checksum line removed)
    * @return {String} checksum or null
    */
   generateChecksum: function(lines)
@@ -496,11 +496,10 @@ var Utils =
     {
       // Checksum is an MD5 checksum (base64-encoded without the trailing "=") of
       // all lines in UTF-8 without the checksum line, joined with "\n".
-  
       let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
       converter.charset = "UTF-8";
       stream = converter.convertToInputStream(lines.join("\n"));
-  
+
       let hashEngine = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
       hashEngine.init(hashEngine.MD5);
       hashEngine.updateFromStream(stream, stream.available());
@@ -512,30 +511,32 @@ var Utils =
     }
     finally
     {
-      if (stream)
-        stream.close();
+      if (stream) stream.close();
     }
   },
 
   /**
-   * Opens filter preferences dialog or focuses an already open dialog.
-   * @param {Filter} [filter]  filter to be selected
+   * Opens rule preferences dialog or focuses an already open dialog.
+   * @param {Rule} [rule]  rule to be selected
    */
-  openFiltersDialog: function(filter)
+  openRulesDialog: function(rule)
   {
-    var dlg = Services.wm.getMostRecentWindow("abp:filters");
+    var dlg = Services.wm.getMostRecentWindow("abp:rules");
     if (dlg)
     {
       try
       {
         dlg.focus();
       }
-      catch (e) {}
-      dlg.SubscriptionActions.selectFilter(filter);
+      catch (e)
+      {}
+      dlg.SubscriptionActions.selectRule(rule);
     }
     else
     {
-      Services.ww.openWindow(null, "chrome://adblockplus/content/ui/filters.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {wrappedJSObject: filter});
+      Services.ww.openWindow(null, "chrome://adblockplus/content/ui/rules.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
+        wrappedJSObject: rule
+      });
     }
   },
 
@@ -545,7 +546,7 @@ var Utils =
    * it should be passed in to the browser if possible (will e.g. open a tab in
    * background depending on modifiers keys).
    */
-  loadInBrowser: function(/**String*/ url)
+  loadInBrowser: function( /**String*/ url)
   {
     let window = null;
 
@@ -577,7 +578,7 @@ var Utils =
    * send the UI language to adblockplus.org so that the correct language
    * version of the page can be selected.
    */
-  loadDocLink: function(/**String*/ linkID)
+  loadDocLink: function( /**String*/ linkID)
   {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
@@ -596,12 +597,9 @@ var Utils =
     try
     {
       let date = new Date(time);
-      return Utils.dateFormatter.FormatDateTime("", Ci.nsIScriptableDateFormat.dateFormatShort,
-                                                Ci.nsIScriptableDateFormat.timeFormatNoSeconds,
-                                                date.getFullYear(), date.getMonth() + 1, date.getDate(),
-                                                date.getHours(), date.getMinutes(), date.getSeconds());
+      return Utils.dateFormatter.FormatDateTime("", Ci.nsIScriptableDateFormat.dateFormatShort, Ci.nsIScriptableDateFormat.timeFormatNoSeconds, date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
     }
-    catch(e)
+    catch (e)
     {
       // Make sure to return even on errors
       Cu.reportError(e);
@@ -613,25 +611,30 @@ var Utils =
    * Tries to interpret a file path as an absolute path or a path relative to
    * user's profile. Returns a file or null on failure.
    */
-  resolveFilePath: function(/**String*/ path) /**nsIFile*/
+  resolveFilePath: function( /**String*/ path) /**nsIFile*/
   {
-    if (!path)
-      return null;
+    if (!path) return null;
 
-    try {
+    try
+    {
       // Assume an absolute path first
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
       file.initWithPath(path);
       return file;
-    } catch (e) {}
+    }
+    catch (e)
+    {}
 
-    try {
+    try
+    {
       // Try relative path now
       let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
       let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
       file.setRelativeDescriptor(profileDir, path);
       return file;
-    } catch (e) {}
+    }
+    catch (e)
+    {}
 
     return null;
   },
@@ -640,23 +643,21 @@ var Utils =
    * Checks whether any of the prefixes listed match the application locale,
    * returns matching prefix if any.
    */
-  checkLocalePrefixMatch: function(/**String*/ prefixes) /**String*/
+  checkLocalePrefixMatch: function( /**String*/ prefixes) /**String*/
   {
-    if (!prefixes)
-      return null;
+    if (!prefixes) return null;
 
     let appLocale = Utils.appLocale;
-    for each (let prefix in prefixes.split(/,/))
-      if (new RegExp("^" + prefix + "\\b").test(appLocale))
-        return prefix;
+    for each(let prefix in prefixes.split(/,/))
+    if (new RegExp("^" + prefix + "\\b").test(appLocale)) return prefix;
 
     return null;
   },
 
   /**
-   * Chooses the best filter subscription for user's language.
+   * Chooses the best rule subscription for user's language.
    */
-  chooseFilterSubscription: function(/**NodeList*/ subscriptions) /**Node*/
+  chooseRuleSubscription: function( /**NodeList*/ subscriptions) /**Node*/
   {
     let selectedItem = null;
     let selectedPrefix = null;
@@ -664,8 +665,7 @@ var Utils =
     for (let i = 0; i < subscriptions.length; i++)
     {
       let subscription = subscriptions[i];
-      if (!selectedItem)
-        selectedItem = subscription;
+      if (!selectedItem) selectedItem = subscription;
 
       let prefix = Utils.checkLocalePrefixMatch(subscription.getAttribute("prefixes"));
       if (prefix)
@@ -693,87 +693,17 @@ var Utils =
       }
     }
     return selectedItem;
-  },
-
-  /**
-   * Saves sidebar state before detaching/reattaching
-   */
-  setParams: function(params)
-  {
-    sidebarParams = params;
-  },
-
-  /**
-   * Retrieves and removes sidebar state after detaching/reattaching
-   */
-  getParams: function()
-  {
-    let ret = sidebarParams;
-    sidebarParams = null;
-    return ret;
-  },
-
-  /**
-   * Nodes scheduled for post-processing (might be null).
-   * @type Array of Node
-   */
-  scheduledNodes: null,
-
-  /**
-   * Schedules a node for post-processing.
-   */
-  schedulePostProcess: function(node)
-  {
-    if (Utils.scheduledNodes)
-      Utils.scheduledNodes.push(node);
-    else
-    {
-      Utils.scheduledNodes = [node];
-      Utils.runAsync(Utils.postProcessNodes);
-    }
-  },
-
-  /**
-   * Processes nodes scheduled for post-processing (typically hides them).
-   */
-  postProcessNodes: function()
-  {
-    let nodes = Utils.scheduledNodes;
-    Utils.scheduledNodes = null;
-
-    for each (let node in nodes)
-    {
-      // adjust frameset's cols/rows for frames
-      let parentNode = node.parentNode;
-      if (parentNode && parentNode instanceof Ci.nsIDOMHTMLFrameSetElement)
-      {
-        let hasCols = (parentNode.cols && parentNode.cols.indexOf(",") > 0);
-        let hasRows = (parentNode.rows && parentNode.rows.indexOf(",") > 0);
-        if ((hasCols || hasRows) && !(hasCols && hasRows))
-        {
-          let index = -1;
-          for (let frame = node; frame; frame = frame.previousSibling)
-            if (frame instanceof Ci.nsIDOMHTMLFrameElement || frame instanceof Ci.nsIDOMHTMLFrameSetElement)
-              index++;
-
-          let property = (hasCols ? "cols" : "rows");
-          let weights = parentNode[property].split(",");
-          weights[index] = "0";
-          parentNode[property] = weights.join(",");
-        }
-      }
-      else
-        node.className += " " + Utils.collapsedClass;
-    }
   }
 };
 
 /**
  * Set the value of preference "extensions.logging.enabled" to false to hide
- * fireieUtils.LOG message
+ * Utils.LOG message
  */
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  XPCOMUtils.defineLazyGetter(Utils, aName, function() {
+["LOG", "WARN", "ERROR"].forEach(function(aName)
+{
+  XPCOMUtils.defineLazyGetter(Utils, aName, function()
+  {
     Components.utils.import("resource://gre/modules/AddonLogging.jsm");
     let logger = {};
     LogManager.getLogger("[fireie]", logger);
@@ -782,73 +712,10 @@ var Utils =
 });
 
 // Get the addon's version
-AddonManager.getAddonByID(Utils.addonID, function(addon) {
-  Utils._addonVersion = addon.version;
-}); 
-
-/**
- * A cache with a fixed capacity, newer entries replace entries that have been
- * stored first.
- * @constructor
- */
-function Cache(/**Integer*/ size)
+AddonManager.getAddonByID(Utils.addonID, function(addon)
 {
-  this._ringBuffer = new Array(size);
-  this.data = {__proto__: null};
-}
-Cache.prototype =
-{
-  /**
-   * Ring buffer storing hash keys, allows determining which keys need to be
-   * evicted.
-   * @type Array
-   */
-  _ringBuffer: null,
-
-  /**
-   * Index in the ring buffer to be written next.
-   * @type Integer
-   */
-  _bufferIndex: 0,
-
-  /**
-   * Cache data, maps values to the keys. Read-only access, for writing use
-   * add() method.
-   * @type Object
-   */
-  data: null,
-
-  /**
-   * Adds a key and the corresponding value to the cache.
-   */
-  add: function(/**String*/ key, value)
-  {
-    if (!(key in this.data))
-    {
-      // This is a new key - we need to add it to the ring buffer and evict
-      // another entry instead.
-      let oldKey = this._ringBuffer[this._bufferIndex];
-      if (typeof oldKey != "undefined")
-        delete this.data[oldKey];
-      this._ringBuffer[this._bufferIndex] = key;
-
-      this._bufferIndex++;
-      if (this._bufferIndex >= this._ringBuffer.length)
-        this._bufferIndex = 0;
-    }
-
-    this.data[key] = value;
-  },
-
-  /**
-   * Clears cache contents.
-   */
-  clear: function()
-  {
-    this._ringBuffer = new Array(this._ringBuffer.length);
-    this.data = {__proto__: null};
-  }
-};
+  _addonVersion = addon.version;
+});
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
@@ -856,12 +723,3 @@ XPCOMUtils.defineLazyServiceGetter(Utils, "categoryManager", "@mozilla.org/categ
 XPCOMUtils.defineLazyServiceGetter(Utils, "chromeRegistry", "@mozilla.org/chrome/chrome-registry;1", "nsIXULChromeRegistry");
 XPCOMUtils.defineLazyServiceGetter(Utils, "netUtils", "@mozilla.org/network/util;1", "nsINetUtil");
 XPCOMUtils.defineLazyServiceGetter(Utils, "dateFormatter", "@mozilla.org/intl/scriptabledateformat;1", "nsIScriptableDateFormat");
-
-if ("@mozilla.org/messenger/headerparser;1" in Cc)
-  XPCOMUtils.defineLazyServiceGetter(Utils, "headerParser", "@mozilla.org/messenger/headerparser;1", "nsIMsgHeaderParser");
-else
-  Utils.headerParser = null;
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

@@ -30,14 +30,14 @@ var SubscriptionActions =
   },
 
   /**
-   * Finds the subscription for a particular filter, selects it and selects the
-   * filter.
+   * Finds the subscription for a particular rule, selects it and selects the
+   * rule.
    */
-  selectFilter: function(/**Filter*/ filter)
+  selectRule: function(/**Rule*/ rule)
   {
     let node = null;
     let tabIndex = -1;
-    let subscriptions = filter.subscriptions.slice();
+    let subscriptions = rule.subscriptions.slice();
     subscriptions.sort(function(s1, s2) s1.disabled - s2.disabled);
     for (let i = 0; i < subscriptions.length; i++)
     {
@@ -55,9 +55,9 @@ var SubscriptionActions =
       {
         node.parentNode.ensureElementIsVisible(node);
         node.parentNode.selectItem(node);
-        if (!FilterActions.visible)
-          E("subscription-showHideFilters-command").doCommand();
-        Utils.runAsync(FilterView.selectFilter, FilterView, filter);
+        if (!RuleActions.visible)
+          E("subscription-showHideRules-command").doCommand();
+        Utils.runAsync(RuleView.selectRule, RuleView, rule);
       });
     }
   },
@@ -91,9 +91,9 @@ var SubscriptionActions =
   },
 
   /**
-   * Triggers re-download of a filter subscription.
+   * Triggers re-download of a rule subscription.
    */
-  updateFilters: function(/**Node*/ node)
+  updateRules: function(/**Node*/ node)
   {
     let data = Templater.getDataForNode(node || this.selectedItem);
     if (data && data.subscription instanceof DownloadableSubscription)
@@ -101,13 +101,13 @@ var SubscriptionActions =
   },
 
   /**
-   * Triggers re-download of all filter subscriptions.
+   * Triggers re-download of all rule subscriptions.
    */
-  updateAllFilters: function()
+  updateAllRules: function()
   {
-    for (let i = 0; i < FilterStorage.subscriptions.length; i++)
+    for (let i = 0; i < RuleStorage.subscriptions.length; i++)
     {
-      let subscription = FilterStorage.subscriptions[i];
+      let subscription = RuleStorage.subscriptions[i];
       if (subscription instanceof DownloadableSubscription)
         Synchronizer.execute(subscription, true, true);
     }
@@ -124,37 +124,37 @@ var SubscriptionActions =
   },
 
   /**
-   * Enables all disabled filters in a subscription.
+   * Enables all disabled rules in a subscription.
    */
-  enableFilters: function(/**Element*/ node)
+  enableRules: function(/**Element*/ node)
   {
     let data = Templater.getDataForNode(node);
     if (!data)
       return;
 
-    let filters = data.subscription.filters;
-    for (let i = 0, l = filters.length; i < l; i++)
-      if (filters[i] instanceof ActiveFilter && filters[i].disabled)
-        filters[i].disabled = false;
+    let rules = data.subscription.rules;
+    for (let i = 0, l = rules.length; i < l; i++)
+      if (rules[i] instanceof ActiveRule && rules[i].disabled)
+        rules[i].disabled = false;
   },
 
   /**
-   * Removes a filter subscription from the list (after a warning).
+   * Removes a rule subscription from the list (after a warning).
    */
   remove: function(/**Node*/ node)
   {
     let data = Templater.getDataForNode(node || this.selectedItem);
     if (data && Utils.confirm(window, Utils.getString("remove_subscription_warning")))
-      FilterStorage.removeSubscription(data.subscription);
+      RuleStorage.removeSubscription(data.subscription);
   },
 
   /**
-   * Adds a new filter group and allows the user to change its title.
+   * Adds a new rule group and allows the user to change its title.
    */
   addGroup: function()
   {
     let subscription = SpecialSubscription.create();
-    FilterStorage.addSubscription(subscription);
+    RuleStorage.addSubscription(subscription);
 
     let list = E("groups");
     let node = Templater.getNodeForData(list, "subscription", subscription);
@@ -168,7 +168,7 @@ var SubscriptionActions =
   },
 
   /**
-   * Moves a filter subscription one line up.
+   * Moves a rule subscription one line up.
    */
   moveUp: function(/**Node*/ node)
   {
@@ -181,11 +181,11 @@ var SubscriptionActions =
     if (!previousData)
       return;
 
-    FilterStorage.moveSubscription(data.subscription, previousData.subscription);
+    RuleStorage.moveSubscription(data.subscription, previousData.subscription);
   },
 
   /**
-   * Moves a filter subscription one line down.
+   * Moves a rule subscription one line down.
    */
   moveDown: function(/**Node*/ node)
   {
@@ -199,7 +199,7 @@ var SubscriptionActions =
       return;
 
     let nextData = Templater.getDataForNode(nextNode.nextSibling);
-    FilterStorage.moveSubscription(data.subscription, nextData ? nextData.subscription : null);
+    RuleStorage.moveSubscription(data.subscription, nextData ? nextData.subscription : null);
   },
 
   /**
@@ -333,18 +333,18 @@ var SubscriptionActions =
   {
     if (!this.dragSubscription)
     {
-      // Not dragging a subscription, maybe this is plain text that we can add as filters?
+      // Not dragging a subscription, maybe this is plain text that we can add as rules?
       let data = Templater.getDataForNode(node);
       if (data && data.subscription instanceof SpecialSubscription)
       {
         let lines = event.dataTransfer.getData("text/plain").replace(/\r/g, "").split("\n");
         for (let i = 0; i < lines.length; i++)
         {
-          let filter = Filter.fromText(lines[i]);
-          if (filter)
-            FilterStorage.addFilter(filter, data.subscription);
+          let rule = Rule.fromText(lines[i]);
+          if (rule)
+            RuleStorage.addRule(rule, data.subscription);
         }
-        FilterActions.removeDraggedFilters();
+        RuleActions.removeDraggedRules();
         event.stopPropagation();
       }
       return;
@@ -360,7 +360,7 @@ var SubscriptionActions =
     }
 
     let data = Templater.getDataForNode(node);
-    FilterStorage.moveSubscription(this.dragSubscription, data ? data.subscription : null);
+    RuleStorage.moveSubscription(this.dragSubscription, data ? data.subscription : null);
     event.stopPropagation();
   },
 
@@ -459,13 +459,13 @@ var TitleEditor =
 };
 
 /**
- * Methods called when choosing and adding a new filter subscription.
+ * Methods called when choosing and adding a new rule subscription.
  * @class
  */
 var SelectSubscription =
 {
   /**
-   * Starts selection of a filter subscription to add.
+   * Starts selection of a rule subscription to add.
    */
   start: function(/**Event*/ event)
   {
@@ -500,7 +500,7 @@ var SelectSubscription =
       {
         let subscription = subscriptions[i];
         let url = subscription.getAttribute("url");
-        if (!url || url in FilterStorage.knownSubscriptions)
+        if (!url || url in RuleStorage.knownSubscriptions)
           continue;
 
         let localePrefix = Utils.checkLocalePrefixMatch(subscription.getAttribute("prefixes"));
@@ -512,7 +512,7 @@ var SelectSubscription =
         parent.appendChild(node);
         listedSubscriptions.push(subscription);
       }
-      let selectedNode = Utils.chooseFilterSubscription(listedSubscriptions);
+      let selectedNode = Utils.chooseRuleSubscription(listedSubscriptions);
       list.selectedItem = Templater.getNodeForData(parent, "node", selectedNode) || parent.firstChild;
 
       // Show panel and focus list
@@ -528,7 +528,7 @@ var SelectSubscription =
   },
 
   /**
-   * Adds filter subscription that is selected.
+   * Adds rule subscription that is selected.
    */
   add: function()
   {
@@ -542,7 +542,7 @@ var SelectSubscription =
     if (!subscription)
       return;
 
-    FilterStorage.addSubscription(subscription);
+    RuleStorage.addSubscription(subscription);
     subscription.disabled = false;
     subscription.title = data.node.getAttribute("title");
     subscription.homepage = data.node.getAttribute("homepage");

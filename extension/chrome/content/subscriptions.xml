@@ -14,7 +14,7 @@
   <subscription title="ABPindo+EasyList"
                 specialization="Bahasa Indonesia"
                 url="https://easylist-downloads.adblockplus.org/abpindo+easylist.txt"
-                homepage="http://indonesianfilter.blogspot.com/"
+                homepage="http://indonesianrule.blogspot.com/"
                 prefixes="id"
                 author="heradhis"/>
   <subscription title="Bulgarian list+EasyList"
@@ -32,7 +32,7 @@
   <subscription title="DutchAdblockList+EasyList"
                 specialization="Nederlands"
                 url="https://easylist-downloads.adblockplus.org/dutchadblocklist+easylist.txt"
-                homepage="https://code.google.com/p/dutchadblockfilters/"
+                homepage="https://code.google.com/p/dutchadblockrules/"
                 prefixes="nl"
                 author="Famlam"/>
   <subscription title="EasyList Germany+EasyList"

@@ -24,34 +24,30 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
 
 /**
- * Abstract base class for filter subscriptions
+ * Abstract base class for rule subscriptions
  *
  * @param {String} url    download location of the subscription
- * @param {String} [title]  title of the filter subscription
+ * @param {String} [title]  title of the rule subscription
  * @constructor
  */
 function Subscription(url, title)
 {
   this.url = url;
-  this.filters = [];
+  this.rules = [];
   this._title = title || Utils.getString("newGroup.title");
   Subscription.knownSubscriptions[url] = this;
 }
 
-Subscription.prototype =
-{
+Subscription.prototype = {
   /**
    * Download location of the subscription
    * @type String
@@ -59,16 +55,16 @@ Subscription.prototype =
   url: null,
 
   /**
-   * Filters contained in the filter subscription
-   * @type Array of Filter
+   * Rules contained in the rule subscription
+   * @type Array of Rule
    */
-  filters: null,
+  rules: null,
 
   _title: null,
   _disabled: false,
 
   /**
-   * Title of the filter subscription
+   * Title of the rule subscription
    * @type String
    */
   get title() this._title,
@@ -78,13 +74,13 @@ Subscription.prototype =
     {
       let oldValue = this._title;
       this._title = value;
-      FilterNotifier.triggerListeners("subscription.title", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.title", this, value, oldValue);
     }
     return this._title;
   },
 
   /**
-   * Defines whether the filters in the subscription should be disabled
+   * Defines whether the rules in the subscription should be disabled
    * @type Boolean
    */
   get disabled() this._disabled,
@@ -94,13 +90,13 @@ Subscription.prototype =
     {
       let oldValue = this._disabled;
       this._disabled = value;
-      FilterNotifier.triggerListeners("subscription.disabled", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.disabled", this, value, oldValue);
     }
     return this._disabled;
   },
 
   /**
-   * Serializes the filter to an array of strings for writing out on the disk.
+   * Serializes the rule to an array of strings for writing out on the disk.
    * @param {Array of String} buffer  buffer to push the serialization results into
    */
   serialize: function(buffer)
@@ -108,14 +104,13 @@ Subscription.prototype =
     buffer.push("[Subscription]");
     buffer.push("url=" + this.url);
     buffer.push("title=" + this._title);
-    if (this._disabled)
-      buffer.push("disabled=true");
+    if (this._disabled) buffer.push("disabled=true");
   },
 
-  serializeFilters: function(buffer)
+  serializeRules: function(buffer)
   {
-    for each (let filter in this.filters)
-      buffer.push(filter.text.replace(/\[/g, "\\["));
+    for each(let rule in this.rules)
+    buffer.push(rule.text.replace(/\[/g, "\\["));
   },
 
   toString: function()
@@ -127,10 +122,12 @@ Subscription.prototype =
 };
 
 /**
- * Cache for known filter subscriptions, maps URL to subscription objects.
+ * Cache for known rule subscriptions, maps URL to subscription objects.
  * @type Object
  */
-Subscription.knownSubscriptions = {__proto__: null};
+Subscription.knownSubscriptions = {
+  __proto__: null
+};
 
 /**
  * Returns a subscription from its URL, creates a new one if necessary.
@@ -139,8 +136,7 @@ Subscription.knownSubscriptions = {__proto__: null};
  */
 Subscription.fromURL = function(url)
 {
-  if (url in Subscription.knownSubscriptions)
-    return Subscription.knownSubscriptions[url];
+  if (url in Subscription.knownSubscriptions) return Subscription.knownSubscriptions[url];
 
   try
   {
@@ -169,55 +165,41 @@ Subscription.fromObject = function(obj)
 
     // URL is valid - this is a downloadable subscription
     result = new DownloadableSubscription(obj.url, obj.title);
-    if ("downloadStatus" in obj)
-      result._downloadStatus = obj.downloadStatus;
-    if ("lastModified" in obj)
-      result.lastModified = obj.lastModified;
-    if ("lastSuccess" in obj)
-      result.lastSuccess = parseInt(obj.lastSuccess) || 0;
-    if ("lastCheck" in obj)
-      result._lastCheck = parseInt(obj.lastCheck) || 0;
-    if ("expires" in obj)
-      result.expires = parseInt(obj.expires) || 0;
-    if ("errors" in obj)
-      result._errors = parseInt(obj.errors) || 0;
+    if ("downloadStatus" in obj) result._downloadStatus = obj.downloadStatus;
+    if ("lastModified" in obj) result.lastModified = obj.lastModified;
+    if ("lastSuccess" in obj) result.lastSuccess = parseInt(obj.lastSuccess) || 0;
+    if ("lastCheck" in obj) result._lastCheck = parseInt(obj.lastCheck) || 0;
+    if ("expires" in obj) result.expires = parseInt(obj.expires) || 0;
+    if ("errors" in obj) result._errors = parseInt(obj.errors) || 0;
     if ("requiredVersion" in obj)
     {
       result.requiredVersion = obj.requiredVersion;
-      if (Services.vc.compare(result.requiredVersion, Utils.addonVersion) > 0)
-        result.upgradeRequired = true;
+      if (Services.vc.compare(result.requiredVersion, Utils.addonVersion) > 0) result.upgradeRequired = true;
     }
-    if ("homepage" in obj)
-      result._homepage = obj.homepage;
-    if ("lastDownload" in obj)
-      result._lastDownload = parseInt(obj.lastDownload) || 0;
+    if ("homepage" in obj) result._homepage = obj.homepage;
+    if ("lastDownload" in obj) result._lastDownload = parseInt(obj.lastDownload) || 0;
   }
   catch (e)
   {
-    // Invalid URL - custom filter group
+    // Invalid URL - custom rule group
     if (!("title" in obj))
     {
-      // Backwards compatibility - titles and filter types were originally
+      // Backwards compatibility - titles and rule types were originally
       // determined by group identifier.
-      if (obj.url == "~exceptional~")
-        obj.defaults = "exceptional";
-      else if (obj.url == "~custom~")
-        obj.defaults = "custom";
-      if ("defaults" in obj)
-        obj.title = Utils.getString(obj.defaults + "Group.title");
+      if (obj.url == "~exceptional~") obj.defaults = "exceptional";
+      else if (obj.url == "~custom~") obj.defaults = "custom";
+      if ("defaults" in obj) obj.title = Utils.getString(obj.defaults + "Group.title");
     }
     result = new SpecialSubscription(obj.url, obj.title);
-    if ("defaults" in obj)
-      result.defaults = obj.defaults.split(" ");
+    if ("defaults" in obj) result.defaults = obj.defaults.split(" ");
   }
-  if ("disabled" in obj)
-    result._disabled = (obj.disabled == "true");
+  if ("disabled" in obj) result._disabled = (obj.disabled == "true");
 
   return result;
 }
 
 /**
- * Class for special filter subscriptions (user's filters)
+ * Class for special rule subscriptions (user's rules)
  * @param {String} url see Subscription()
  * @param {String} [title]  see Subscription()
  * @constructor
@@ -227,32 +209,29 @@ function SpecialSubscription(url, title)
 {
   Subscription.call(this, url, title);
 }
-SpecialSubscription.prototype =
-{
+SpecialSubscription.prototype = {
   __proto__: Subscription.prototype,
 
   /**
-   * Filter types that should be added to this subscription by default
+   * Rule types that should be added to this subscription by default
    * (entries should correspond to keys in SpecialSubscription.defaultsMap).
    * @type Array of String
    */
   defaults: null,
 
   /**
-   * Tests whether a filter should be added to this group by default
-   * @param {Filter} filter filter to be tested
+   * Tests whether a rule should be added to this group by default
+   * @param {Rule} rule rule to be tested
    * @return {Boolean}
    */
-  isDefaultFor: function(filter)
+  isDefaultFor: function(rule)
   {
     if (this.defaults && this.defaults.length)
     {
-      for each (let type in this.defaults)
+      for each(let type in this.defaults)
       {
-        if (filter instanceof SpecialSubscription.defaultsMap[type])
-          return true;
-        if (!(filter instanceof ActiveFilter) && type == "blacklist")
-          return true;
+        if (rule instanceof SpecialSubscription.defaultsMap[type]) return true;
+        if (!(rule instanceof ActiveRule) && type == "blacklist") return true;
       }
     }
 
@@ -265,22 +244,20 @@ SpecialSubscription.prototype =
   serialize: function(buffer)
   {
     Subscription.prototype.serialize.call(this, buffer);
-    if (this.defaults && this.defaults.length)
-      buffer.push("defaults=" + this.defaults.filter(function(type) type in SpecialSubscription.defaultsMap).join(" "));
-    if (this._lastDownload)
-      buffer.push("lastDownload=" + this._lastDownload);
+    if (this.defaults && this.defaults.length) buffer.push("defaults=" + this.defaults.filter(function(type) type in SpecialSubscription.defaultsMap).join(" "));
+    if (this._lastDownload) buffer.push("lastDownload=" + this._lastDownload);
   }
 };
 
 SpecialSubscription.defaultsMap = {
   __proto__: null,
-  "exceptional": WhitelistFilter,
-  "custom": BlockingFilter
+  "exceptional": EngineExceptionalRule,
+  "custom": EngineRule
 };
 
 /**
- * Creates a new user-defined filter group.
- * @param {String} [title]  title of the new filter group
+ * Creates a new user-defined rule group.
+ * @param {String} [title]  title of the new rule group
  * @result {SpecialSubscription}
  */
 SpecialSubscription.create = function(title)
@@ -288,32 +265,30 @@ SpecialSubscription.create = function(title)
   let url;
   do
   {
-    url = "~user~" + Math.round(Math.random()*1000000);
+    url = "~user~" + Math.round(Math.random() * 1000000);
   } while (url in Subscription.knownSubscriptions);
   return new SpecialSubscription(url, title)
 };
 
 /**
- * Creates a new user-defined filter group and adds the given filter to it.
- * This group will act as the default group for this filter type.
+ * Creates a new user-defined rule group and adds the given rule to it.
+ * This group will act as the default group for this rule type.
  */
-SpecialSubscription.createForFilter = function(/**Filter*/ filter) /**SpecialSubscription*/
+SpecialSubscription.createForRule = function( /**Rule*/ rule) /**SpecialSubscription*/
 {
   let subscription = SpecialSubscription.create();
-  subscription.filters.push(filter);
+  subscription.rules.push(rule);
   for (let type in SpecialSubscription.defaultsMap)
   {
-    if (filter instanceof SpecialSubscription.defaultsMap[type])
-      subscription.defaults = [type];
+    if (rule instanceof SpecialSubscription.defaultsMap[type]) subscription.defaults = [type];
   }
-  if (!subscription.defaults)
-    subscription.defaults = ["custom"];
+  if (!subscription.defaults) subscription.defaults = ["custom"];
   subscription.title = Utils.getString(subscription.defaults[0] + "Group.title");
   return subscription;
 };
 
 /**
- * Abstract base class for regular filter subscriptions (both internally and externally updated)
+ * Abstract base class for regular rule subscriptions (both internally and externally updated)
  * @param {String} url    see Subscription()
  * @param {String} [title]  see Subscription()
  * @constructor
@@ -323,15 +298,14 @@ function RegularSubscription(url, title)
 {
   Subscription.call(this, url, title || url);
 }
-RegularSubscription.prototype =
-{
+RegularSubscription.prototype = {
   __proto__: Subscription.prototype,
 
   _homepage: null,
   _lastDownload: 0,
 
   /**
-   * Filter subscription homepage if known
+   * Rule subscription homepage if known
    * @type String
    */
   get homepage() this._homepage,
@@ -341,7 +315,7 @@ RegularSubscription.prototype =
     {
       let oldValue = this._homepage;
       this._homepage = value;
-      FilterNotifier.triggerListeners("subscription.homepage", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.homepage", this, value, oldValue);
     }
     return this._homepage;
   },
@@ -357,7 +331,7 @@ RegularSubscription.prototype =
     {
       let oldValue = this._lastDownload;
       this._lastDownload = value;
-      FilterNotifier.triggerListeners("subscription.lastDownload", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.lastDownload", this, value, oldValue);
     }
     return this._lastDownload;
   },
@@ -368,15 +342,13 @@ RegularSubscription.prototype =
   serialize: function(buffer)
   {
     Subscription.prototype.serialize.call(this, buffer);
-    if (this._homepage)
-      buffer.push("homepage=" + this._homepage);
-    if (this._lastDownload)
-      buffer.push("lastDownload=" + this._lastDownload);
+    if (this._homepage) buffer.push("homepage=" + this._homepage);
+    if (this._lastDownload) buffer.push("lastDownload=" + this._lastDownload);
   }
 };
 
 /**
- * Class for filter subscriptions updated by externally (by other extension)
+ * Class for rule subscriptions updated by externally (by other extension)
  * @param {String} url    see Subscription()
  * @param {String} [title]  see Subscription()
  * @constructor
@@ -386,8 +358,7 @@ function ExternalSubscription(url, title)
 {
   RegularSubscription.call(this, url, title);
 }
-ExternalSubscription.prototype =
-{
+ExternalSubscription.prototype = {
   __proto__: RegularSubscription.prototype,
 
   /**
@@ -400,7 +371,7 @@ ExternalSubscription.prototype =
 };
 
 /**
- * Class for filter subscriptions updated by externally (by other extension)
+ * Class for rule subscriptions updated by externally (by other extension)
  * @param {String} url  see Subscription()
  * @param {String} [title]  see Subscription()
  * @constructor
@@ -410,8 +381,7 @@ function DownloadableSubscription(url, title)
 {
   RegularSubscription.call(this, url, title);
 }
-DownloadableSubscription.prototype =
-{
+DownloadableSubscription.prototype = {
   __proto__: RegularSubscription.prototype,
 
   _downloadStatus: null,
@@ -428,7 +398,7 @@ DownloadableSubscription.prototype =
   {
     let oldValue = this._downloadStatus;
     this._downloadStatus = value;
-    FilterNotifier.triggerListeners("subscription.downloadStatus", this, value, oldValue);
+    RuleNotifier.triggerListeners("subscription.downloadStatus", this, value, oldValue);
     return this._downloadStatus;
   },
 
@@ -457,13 +427,13 @@ DownloadableSubscription.prototype =
     {
       let oldValue = this._lastCheck;
       this._lastCheck = value;
-      FilterNotifier.triggerListeners("subscription.lastCheck", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.lastCheck", this, value, oldValue);
     }
     return this._lastCheck;
   },
 
   /**
-   * Hard expiration time of the filter subscription (in seconds since the beginning of the epoch)
+   * Hard expiration time of the rule subscription (in seconds since the beginning of the epoch)
    * @type Number
    */
   expires: 0,
@@ -479,7 +449,7 @@ DownloadableSubscription.prototype =
     {
       let oldValue = this._errors;
       this._errors = value;
-      FilterNotifier.triggerListeners("subscription.errors", this, value, oldValue);
+      RuleNotifier.triggerListeners("subscription.errors", this, value, oldValue);
     }
     return this._errors;
   },
@@ -502,23 +472,12 @@ DownloadableSubscription.prototype =
   serialize: function(buffer)
   {
     RegularSubscription.prototype.serialize.call(this, buffer);
-    if (this.downloadStatus)
-      buffer.push("downloadStatus=" + this.downloadStatus);
-    if (this.lastModified)
-      buffer.push("lastModified=" + this.lastModified);
-    if (this.lastSuccess)
-      buffer.push("lastSuccess=" + this.lastSuccess);
-    if (this.lastCheck)
-      buffer.push("lastCheck=" + this.lastCheck);
-    if (this.expires)
-      buffer.push("expires=" + this.expires);
-    if (this.errors)
-      buffer.push("errors=" + this.errors);
-    if (this.requiredVersion)
-      buffer.push("requiredVersion=" + this.requiredVersion);
+    if (this.downloadStatus) buffer.push("downloadStatus=" + this.downloadStatus);
+    if (this.lastModified) buffer.push("lastModified=" + this.lastModified);
+    if (this.lastSuccess) buffer.push("lastSuccess=" + this.lastSuccess);
+    if (this.lastCheck) buffer.push("lastCheck=" + this.lastCheck);
+    if (this.expires) buffer.push("expires=" + this.expires);
+    if (this.errors) buffer.push("errors=" + this.errors);
+    if (this.requiredVersion) buffer.push("requiredVersion=" + this.requiredVersion);
   }
 };
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

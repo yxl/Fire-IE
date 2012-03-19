@@ -228,7 +228,7 @@ Options._saveToFile = function(aList)
   fp.init(window, null, fp.modeSave);
   fp.defaultExtension = "txt";
   fp.defaultString = "FireIEPref";
-  fp.appendFilters(fp.filterText);
+  fp.appendRules(fp.ruleText);
 
   if (fp.show() != fp.returnCancel)
 	{
@@ -259,7 +259,7 @@ Options._loadFromFile = function() {
 
   fp.init(window, null, fp.modeOpen);
   fp.defaultExtension = "txt";
-  fp.appendFilters(fp.filterText);
+  fp.appendRules(fp.ruleText);
 
   if (fp.show() != fp.returnCancel)
 	{

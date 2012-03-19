@@ -25,25 +25,20 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-try
-{
-
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "Favicon.jsm");
 Cu.import(baseURL.spec + "ContentPolicy.jsm");
-Cu.import(baseURL.spec + "FilterListener.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleListener.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
-
 
 /**
  * Wrappers for tracked application windows.
@@ -65,16 +60,14 @@ function init()
   // Process preferences
   reloadPrefs();
 
-  // Listen for pref and filters changes
+  // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "shortcut_key" || name == "shortcut_modifiers")
-      reloadPrefs();
+    if (name == "showUrlBarLabel" || name == "shortcut_key" || name == "shortcut_modifiers") reloadPrefs();
   });
-  FilterNotifier.addListener(function(action)
+  RuleNotifier.addListener(function(action)
   {
-    if (/^(filter|subscription)\.(added|removed|disabled|updated)$/.test(action))
-      reloadPrefs();
+    if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
 }
 
@@ -82,12 +75,11 @@ function init()
  * Exported app integration functions.
  * @class
  */
-var AppIntegration =
-{
+var AppIntegration = {
   /**
    * Adds an application window to the tracked list.
    */
-  addWindow: function(/**Window*/ window)
+  addWindow: function( /**Window*/ window)
   {
     // Execute first-run actions
     // Show subscriptions dialog if the user doesn't have any subscriptions yet
@@ -98,8 +90,7 @@ var AppIntegration =
       if ("nsISessionStore" in Ci)
       {
         // Have to wait for session to be restored
-        let observer =
-        {
+        let observer = {
           QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
           observe: function(subject, topic, data)
           {
@@ -130,11 +121,10 @@ var AppIntegration =
   /**
    * Retrieves the wrapper object corresponding to a particular application window.
    */
-  getWrapperForWindow: function(/**Window*/ wnd) /**WindowWrapper*/
+  getWrapperForWindow: function( /**Window*/ wnd) /**WindowWrapper*/
   {
-    for each (let wrapper in wrappers)
-      if (wrapper.window == wnd)
-        return wrapper;
+    for each(let wrapper in wrappers)
+    if (wrapper.window == wnd) return wrapper;
 
     return null;
   }
@@ -148,8 +138,7 @@ function removeWindow()
   let wnd = this;
 
   for (let i = 0; i < wrappers.length; i++)
-    if (wrappers[i].window == wnd)
-      wrappers.splice(i--, 1);
+  if (wrappers[i].window == wnd) wrappers.splice(i--, 1);
 }
 
 /**
@@ -160,24 +149,24 @@ function WindowWrapper(window)
 {
 
   this.window = window;
-  
-  if (!isPluginListRefreshed) {
+
+  if (!isPluginListRefreshed)
+  {
     /**
-     * navigator.plugins·½·¨½«Ê¹µÃ×îÐÂ°²×°µÄ²å¼þ¿ÉÓÃ£¬¸üÐÂÏà¹ØÊý×é£¬Èç plugins Êý×é£¬²¢¿ÉÑ¡ÖØÐÂ×°Èë°üº¬²å¼þµÄÒÑ´ò¿ªÎÄµµ¡£
-     * Äã¿ÉÒÔÊ¹ÓÃÏÂÁÐÓï¾äµ÷ÓÃ¸Ã·½·¨£º
+     * navigator.pluginsæ–¹æ³•å°†ä½¿å¾—æœ€æ–°å®‰è£…çš„æ’ä»¶å¯ç”¨ï¼Œæ›´æ–°ç›¸å…³æ•°ç»„ï¼Œå¦‚ plugins æ•°ç»„ï¼Œå¹¶å¯é€‰é‡æ–°è£…å…¥åŒ…å«æ’ä»¶çš„å·²æ‰“å¼€æ–‡æ¡£ã€‚
+     * ä½ å¯ä»¥ä½¿ç”¨ä¸‹åˆ—è¯­å¥è°ƒç”¨è¯¥æ–¹æ³•ï¼š
      * navigator.plugins.refresh(true)
      * navigator.plugins.refresh(false)
-     * Èç¹ûÄã¸ø¶¨ true µÄ»°£¬refresh ½«ÔÚÊ¹µÃÐÂ°²×°µÄ²å¼þ¿ÉÓÃµÄÍ¬Ê±£¬ÖØÐÂ×°ÈëËùÓÐ°üº¬ÓÐÇ¶Èë¶ÔÏó(EMBED ±êÇ©)µÄÎÄµµ¡£
-     *Èç¹ûÄã¸ø¶¨ false µÄ»°£¬¸Ã·½·¨ÔòÖ»»áË¢ÐÂ plugins Êý×é£¬¶ø²»»áÖØÐÂÔØÈëÈÎºÎÎÄµµ¡£
-     * µ±ÓÃ»§°²×°²å¼þºó£¬¸Ã²å¼þ½«²»»á¿ÉÓÃ£¬³ý·Çµ÷ÓÃÁË refresh£¬»òÕßÓÃ»§¹Ø±Õ²¢ÖØÐÂÆô¶¯ÁË Navigator¡£ 
+     * å¦‚æžœä½ ç»™å®š true çš„è¯ï¼Œrefresh å°†åœ¨ä½¿å¾—æ–°å®‰è£…çš„æ’ä»¶å¯ç”¨çš„åŒæ—¶ï¼Œé‡æ–°è£…å…¥æ‰€æœ‰åŒ…å«æœ‰åµŒå…¥å¯¹è±¡(EMBED æ ‡ç­¾)çš„æ–‡æ¡£ã€‚
+     * å¦‚æžœä½ ç»™å®š false çš„è¯ï¼Œè¯¥æ–¹æ³•åˆ™åªä¼šåˆ·æ–° plugins æ•°ç»„ï¼Œè€Œä¸ä¼šé‡æ–°è½½å…¥ä»»ä½•æ–‡æ¡£ã€‚
+     * å½“ç”¨æˆ·å®‰è£…æ’ä»¶åŽï¼Œè¯¥æ’ä»¶å°†ä¸ä¼šå¯ç”¨ï¼Œé™¤éžè°ƒç”¨äº† refreshï¼Œæˆ–è€…ç”¨æˆ·å…³é—­å¹¶é‡æ–°å¯åŠ¨äº† Navigatorã€‚ 
      */
     window.navigator.plugins.refresh(false);
-    isPluginListRefreshed = true;    
+    isPluginListRefreshed = true;
   }
 }
 
-WindowWrapper.prototype =
-{
+WindowWrapper.prototype = {
   /**
    * Application window this object belongs to.
    * @type Window
@@ -189,12 +178,12 @@ WindowWrapper.prototype =
    * @type Boolean
    */
   isUpdating: false,
-  
+
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
    */
-  _bindMethod: function(/**Function*/ method) /**Function*/
+  _bindMethod: function( /**Function*/ method) /**Function*/
   {
     let me = this;
     return function() method.apply(me, arguments);
@@ -203,26 +192,27 @@ WindowWrapper.prototype =
   /**
    * Retrieves an element by its ID.
    */
-  E: function(/**String*/ id)
+  E: function( /**String*/ id)
   {
     let doc = this.window.document;
     this.E = function(id) doc.getElementById(id);
     return this.E(id);
   },
-  
+
   init: function()
   {
     this.installCookiePlugin();
-      
+
     this.registerEventListeners();
-  
-    this.updateState();  
+
+    this.updateState();
   },
 
   /**
    * Install the plugin used to sync cookie
    */
-  installCookiePlugin: function() {
+  installCookiePlugin: function()
+  {
     let doc = this.window.document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.hidden = true;
@@ -231,57 +221,50 @@ WindowWrapper.prototype =
     let mainWindow = this.E("main-window");
     mainWindow.appendChild(embed);
   },
-  
-  /**
-   * Remove the plugin used to sync cookie
-   */
-  uninstallCookiePlugin: function() {
-    let embed = E(Utils.cookiePluginId);
-    let mainWindow = this.E("main-window");
-    mainWindow.appendChild(embed);
-  },  
-  
+
   /**
    * Sets up URL bar button
    */
-  setupUrlBarButton: function() {
-    this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;  
+  setupUrlBarButton: function()
+  {
+    this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;
   },
-  
+
   /**
    * Attaches event listeners to a window represented by hooks element
    */
-  registerEventListeners: function(/**Boolean*/ addProgressListener)
+  registerEventListeners: function( /**Boolean*/ addProgressListener)
   {
     this.window.addEventListener("unload", removeWindow, false);
-  
+
     this.window.addEventListener("DOMContentLoaded", this._bindMethod(this.onPageShowOrLoad));
     this.window.addEventListener("pageshow", this._bindMethod(this.onPageShowOrLoad));
     this.window.addEventListener("resize", this._bindMethod(this.onResize));
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this.onTabSelected));
-    let menuEditPopup = this.E("menu_EditPopup");
-    menuEditPopup.addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems));
+    this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems));
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange));
     this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab));
-    this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown));  
+    this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown));
   },
-  
+
   /**
    * Updates the UI for an application window.
    */
   updateInterface: function()
   {
-    if (this.isUpdating) {
+    if (this.isUpdating)
+    {
       return;
-    }  
-    try {
+    }
+    //try
+    {
       this.isUpdating = true;
-      
+
       let pluginObject = this.getContainerPlugin();
-      var url = this.getUrl();
+      var url = this.getURL();
       let isIEEngine = this.isIEEngine();
-      
-      // ¸üÐÂÇ°½ø¡¢ºóÍË¡¢Í£Ö¹ºÍË¢ÐÂï§Å¥×´Ì¬
+
+      // æ›´æ–°å‰è¿›ã€åŽé€€ã€åœæ­¢å’Œåˆ·æ–°é“µé’®çŠ¶æ€
       let canBack = (pluginObject ? pluginObject.CanBack : false) || this.window.gBrowser.webNavigation.canGoBack;
       let canForward = (pluginObject ? pluginObject.CanForward : false) || this.window.gBrowser.webNavigation.canGoForward;
       let isBlank = (this.window.gBrowser.currentURI.spec == "about:blank");
@@ -290,8 +273,8 @@ WindowWrapper.prototype =
       this._updateObjectDisabledStatus("Browser:Forward", canForward);
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
-      
-      // ¸üÐÂ·ÃÎÊhttpsÍøÖ·Ê±µÄ°²È«±êÊ¶
+
+      // æ›´æ–°è®¿é—®httpsç½‘å€æ—¶çš„å®‰å…¨æ ‡è¯†
       let securityButton = this.E("security-button");
       if (securityButton)
       {
@@ -299,19 +282,27 @@ WindowWrapper.prototype =
         let state = (Utils.startsWith(url, "https://") ? wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH : wpl.STATE_IS_INSECURE);
         this.window.XULBrowserWindow.onSecurityChange(null, null, state);
         securityButton.setAttribute("label", Utils.getHostname(pluginObject.URL));
-      }      
-      
-      // ¸üÐÂµØÖ·ÊäÈë¿òÄÚÈÝ
+      }
+
+      // æ›´æ–°åœ°å€è¾“å…¥æ¡†å†…å®¹
       if (this.window.gURLBar && this.isIEEngine())
       {
         if (!this.window.gBrowser.userTypedValue)
         {
           if (url == "about:blank") url = "";
           if (this.window.gURLBar.value != url) this.window.gURLBar.value = url;
-        }      
+        }
+        else
+        {
+          let self = this;
+          if (this.window.gURLBar.selectionEnd != this.window.gURLBar.selectionStart) window.setTimeout(function()
+          {
+            self.window.gURLBar.focus();
+          }, 0);
+        }
       }
 
-      // ½ö¸üÐÂµ±Ç°±êÇ©Ò³Favicon
+      // ä»…è®¾ç½®å½“å‰Tabçš„Favicon
       var po = this.getContainerPlugin(this.window.gBrowser.selectedTab);
       if (po)
       {
@@ -322,31 +313,42 @@ WindowWrapper.prototype =
         }
       }
       
-      // ¸üÐÂÊÕ²Ø×´Ì¬(ÐÇÐÇ°´Å¥»ÆÉ«Ê±±íÊ¾¸ÃÒ³ÃæÒÑÊÕ²Ø)
+      // æ›´æ–°æ”¶è—çŠ¶æ€(æ˜Ÿæ˜ŸæŒ‰é’®é»„è‰²æ—¶è¡¨ç¤ºè¯¥é¡µé¢å·²æ”¶è—)
       this.window.PlacesStarButton.updateState();
 
-      // ¸üÐÂµØÖ·À¸°´Å¥
+      // æ›´æ–°åœ°å€æ æŒ‰é’®
       let urlbarButton = this.E("fireie-urlbar-switch");
-      urlbarButton.disabled = Utils.isFirefoxOnly(url);  // FirefoxÌØÓÐÒ³Ãæ½ûÖ¹ÄÚºËÇÐ»»
-      urlbarButton.style.visibility = "visible";
-      urlbarButton.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
-      let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-      urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
-      let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
-      urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");  
-      
-      // ¹¤¾ßÀ¸°´Å¥µÄ×´Ì¬ÓëµØÖ·À¸×´Ì¬ÏàÍ¬
+      if (urlbarButton)
+      {
+        urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefoxç‰¹æœ‰é¡µé¢ç¦æ­¢å†…æ ¸åˆ‡æ¢
+        urlbarButton.style.visibility = "visible";
+        urlbarButton.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
+        let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+        urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+        let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
+        urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
+      }
+      // å·¥å…·æ æŒ‰é’®çš„çŠ¶æ€ä¸Žåœ°å€æ çŠ¶æ€ç›¸åŒ
       let toolbarButton = this.E("fireie-toolbar-palette-button");
-      toolbarButton.disabled = urlbarButton.disabled;
-      toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
-      
-    } finally {
+      if (toolbarButton)
+      {
+        toolbarButton.disabled = urlbarButton.disabled;
+        toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
+      }
+    }
+    //catch (e)
+    {
+      //Utils.ERROR(e);
+    }
+    //finally
+    {
       this.isUpdating = false;
     }
   },
-  
-  /** ¸Ä±äÒ³ÃæÔªËØÆôÓÃ×´Ì¬*/
-  _updateObjectDisabledStatus: function(objId, isEnabled) {
+
+  /** æ”¹å˜é¡µé¢å…ƒç´ å¯ç”¨çŠ¶æ€*/
+  _updateObjectDisabledStatus: function(objId, isEnabled)
+  {
     var obj = (typeof(objId) == "object" ? objId : this.E(objId));
     if (obj)
     {
@@ -358,9 +360,10 @@ WindowWrapper.prototype =
       }
     }
   },
-  
-  // ¸üÐÂ±à¼­²Ëµ¥ÖÐcmd_cut¡¢cmd_copy¡¢cmd_paste×´Ì¬
-  updateEditMenuItems: function(e) {
+
+  // æ›´æ–°ç¼–è¾‘èœå•ä¸­cmd_cutã€cmd_copyã€cmd_pasteçŠ¶æ€
+  updateEditMenuItems: function(e)
+  {
     if (e.originalTarget != this.E("menu_EditPopup")) return;
     var pluginObject = this.getContainerPlugin();
     if (pluginObject)
@@ -377,18 +380,19 @@ WindowWrapper.prototype =
   updateState: function()
   {
     this.setupUrlBarButton();
-  
+
     this.configureKeys();
-  
-    this.updateInterface();  
+
+    this.updateInterface();
   },
-  
+
   /**
    * Sets up hotkeys for the window.
    */
   configureKeys: function()
   {
-    try {
+    try
+    {
       let keyItem = this.E('key_fireieSwitch');
       if (keyItem)
       {
@@ -397,14 +401,16 @@ WindowWrapper.prototype =
         // Default modifiers is "alt"
         keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
       }
-    } catch (e)
+    }
+    catch (e)
     {
       Utils.ERROR(e);
     }
   },
-  
-  /** »ñÈ¡IEÄÚºËPlugin¶ÔÏó */
-  getContainerPlugin: function(aTab) {
+
+  /** èŽ·å–IEå†…æ ¸Pluginå¯¹è±¡ */
+  getContainerPlugin: function(aTab)
+  {
     var aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
     if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
     {
@@ -419,38 +425,42 @@ WindowWrapper.prototype =
     }
     return null;
   },
-  
-  /** »ñÈ¡µ±Ç°ÄÚºËÊµ¼Ê·ÃÎÊµÄURL*/
-  getUrl: function(aTab)
+
+  /** èŽ·å–å½“å‰å†…æ ¸å®žé™…è®¿é—®çš„URL*/
+  getURL: function(aTab)
   {
-    var tab = aTab || null;
-    var aBrowser = (tab ? tab.linkedBrowser : this.window.gBrowser);
-    var url = Utils.fromContainerUrl(aBrowser.currentURI.spec);
-    var pluginObject = this.getContainerPlugin(tab);
-    if (pluginObject && pluginObject.URL && pluginObject.URL != "")
+    let tab = aTab || null;
+    let aBrowser = (tab ? tab.linkedBrowser : this.window.gBrowser);
+    let url = Utils.fromContainerUrl(aBrowser.currentURI.spec);
+    let pluginObject = this.getContainerPlugin(tab);
+    let pluginURL = pluginObject ? pluginObject.URL : null;
+    if (pluginURL && pluginURL != "")
     {
-      url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginObject.URL)) : pluginObject.URL);
+      url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginURL)) : pluginURL);
     }
     return Utils.fromContainerUrl(url);
   },
-  
 
-  /** »ñÈ¡µ±Ç°ÄÚºËÊµ¼Ê·ÃÎÊµÄURI
-   *  ÓëWindowWrapper#getUrl¹¦ÄÜÏàÍ¬
+
+  /** èŽ·å–å½“å‰å†…æ ¸å®žé™…è®¿é—®çš„URI
+   *  ä¸ŽWindowWrapper#getURLåŠŸèƒ½ç›¸åŒ
    */
-  getURI: function(aBrowser) {
-    try {
+  getURI: function(aBrowser)
+  {
+    try
+    {
       var docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
       var wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-      if (wNav.currentURI && Utils.startsWith(wNav.currentURI.spec, Utils.containerUrl)) {
+      if (wNav.currentURI && Utils.startsWith(wNav.currentURI.spec, Utils.containerUrl))
+      {
         var pluginObject = wNav.document.getElementById(Utils.containerPluginId);
-        if (pluginObject) {
+        if (pluginObject)
+        {
           if (pluginObject.wrappedJSObject) pluginObject = pluginObject.wrappedJSObject;
-          var url = pluginObject.URL;
-          if (url)
+          let pluginURL = pluginObject.URL;
+          if (pluginURL)
           {
-            url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginObject.URL)) : pluginObject.URL);
-            return Utils.makeURI(Utils.containerUrl + encodeURI(url), null, null);
+            return Utils.makeURI(Utils.containerUrl + encodeURI(pluginURL));
           }
         }
       }
@@ -461,8 +471,8 @@ WindowWrapper.prototype =
     }
     return null;
   },
-  
-  /** ÊÇ·ñÊÇIEÄÚºË*/
+
+  /** æ˜¯å¦æ˜¯IEå†…æ ¸*/
   isIEEngine: function(aTab)
   {
     let tab = aTab || this.window.gBrowser.mCurrentTab;
@@ -470,24 +480,25 @@ WindowWrapper.prototype =
     if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
     {
       return true;
-    }  
+    }
     return false;
   },
-  
-  /** ÇÐ»»Ä³¸öTabµÄÄÚºË
-   *  Í¨¹ýÉèÖÃ²»Í¬µÄURLÊµÏÖÇÐ»»ÄÚºËµÄ¹¦ÄÜ¡£
-   *  Ê¹ÓÃIEÄÚºËÊ±£¬½«URL×ª»»Îªie tab URLÔÙ·ÃÎÊ£»
-   *  Ê¹ÓÃFirefoxÄÚºËÊ±£¬²»Ðè×ª»»Ö±½Ó·ÃÎÊ¡£
+
+  /** åˆ‡æ¢æŸä¸ªTabçš„å†…æ ¸
+   *  é€šè¿‡è®¾ç½®ä¸åŒçš„URLå®žçŽ°åˆ‡æ¢å†…æ ¸çš„åŠŸèƒ½ã€‚
+   *  ä½¿ç”¨IEå†…æ ¸æ—¶ï¼Œå°†URLè½¬æ¢ä¸ºie tab URLå†è®¿é—®ï¼›
+   *  ä½¿ç”¨Firefoxå†…æ ¸æ—¶ï¼Œä¸éœ€è½¬æ¢ç›´æŽ¥è®¿é—®ã€‚
    */
   _switchTabEngine: function(aTab)
   {
-    if (aTab && aTab.localName == "tab") {
-    
-      // Êµ¼Êä¯ÀÀµÄURL
-      var url = this.getUrl(aTab);
-      
+    if (aTab && aTab.localName == "tab")
+    {
+
+      // å®žé™…æµè§ˆçš„URL
+      var url = this.getURL(aTab);
+
       var isIEEngineAfterSwitch = !this.isIEEngine(aTab);
-      
+
       if (aTab.linkedBrowser)
       {
         let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
@@ -497,96 +508,93 @@ WindowWrapper.prototype =
           {
             // User manually switches to Firefox engine.
             // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-            browserNode.setAttribute('manualSwitchToFirefox', Utils.getHostname(url));
+            browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
           }
           else
           {
-            browserNode.removeAttribute('manualSwitchToFirefox');
-          }        
+            browserNode.removeAttribute('manuallySwitchToFirefox');
+          }
         }
       }
-      
+
       let zoomLevel = this.getZoomLevel();
-      Utils.setTabAttributeJSON(aTab, 'zoom', {zoomLevel: zoomLevel});
-  
-  
-      // firefoxÌØÓÐµØÖ·Ö»ÔÊÐíÊ¹ÓÃFirefoxÄÚºË
+      Utils.setTabAttributeJSON(aTab, 'zoom', {
+        zoomLevel: zoomLevel
+      });
+
+      // firefoxç‰¹æœ‰åœ°å€åªå…è®¸ä½¿ç”¨Firefoxå†…æ ¸
       if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
       {
-        // ie tab URL
         url = Utils.toContainerUrl(url);
       }
-      if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url) aTab.linkedBrowser.loadURI(url);    
+      if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url) aTab.linkedBrowser.loadURI(url);
     }
   },
-  
-  /** ÇÐ»»µ±Ç°Ò³ÃæÄÚºË*/
+
+  /** åˆ‡æ¢å½“å‰é¡µé¢å†…æ ¸*/
   switchEngine: function()
   {
     this._switchTabEngine(this.window.gBrowser.mCurrentTab);
   },
 
-  /** ´ò¿ªÑ¡Ïî¶Ô»°¿ò */
+  /** æ‰“å¼€é€‰é¡¹å¯¹è¯æ¡† */
   openOptionsDialog: function(url)
   {
-    if (!url) url = this.getUrl();
+    if (!url) url = this.getURL();
     let wnd = Services.wm.getMostRecentWindow("fireie:options");
-    if (wnd)
-      wnd.focus();
-    else
-      this.window.openDialog("chrome://fireie/content/options.xul", "fireieOptionsDialog", "chrome,centerscreen,resizable=no", Utils.getHostname(url));    
+    if (wnd) wnd.focus();
+    else this.window.openDialog("chrome://fireie/content/options.xul", "fireieOptionsDialog", "chrome,centerscreen,resizable=no", Utils.getHostname(url));
   },
-  
-  /** ´ò¿ªÇÐ»»¹æÔò¶Ô»°¿ò */
-  openRulesDialog: function(url) {
+
+  /** æ‰“å¼€åˆ‡æ¢è§„åˆ™å¯¹è¯æ¡† */
+  openRulesDialog: function(url)
+  {
     let wnd = Services.wm.getMostRecentWindow("fireie:rules");
-    if (wnd)
-      wnd.focus();
-    else
-      this.window.openDialog("chrome://fireie/content/filters.xul", "fireieRulesDialog", "chrome,centerscreen,resizable=no");    
-    
+    if (wnd) wnd.focus();
+    else this.window.openDialog("chrome://fireie/content/rules.xul", "fireieRulesDialog", "chrome,centerscreen,resizable=no");
+
   },
-  
+
   getHandledURL: function(url, isModeIE)
   {
     url = url.trim();
-    
-    // ·ÃÎÊfirefoxÌØÓÐµØÖ·Ê±, Ö»ÔÊÐíÊ¹ÓÃfirefoxÄÚºË
+
+    // è®¿é—®firefoxç‰¹æœ‰åœ°å€æ—¶, åªå…è®¸ä½¿ç”¨firefoxå†…æ ¸
     if (Utils.isFirefoxOnly(url))
     {
       return url;
     }
-    
+
     if (isModeIE) return Utils.toContainerUrl(url);
-  
-    if (this.isIEEngine() && (!Utils.startsWith(url, "about:")))
+
+    if (this.isIEEngine() && !Utils.startsWith(url, "about:"))
     {
-      if (Utils.isValidUrl(url))
+      if (Utils.isValidUrl(url) || Utils.isValidDomainName(url))
       {
-        var isBlank = (Utils.fromContainerUrl(gBrowser.currentURI.spec) == "about:blank");
-        var handleUrlBar = Prefs.handleUrlBar;
-        var isSimilar = Utils.getHostname(this.getUrl()) == Utils.getHostname(url);
+        let isBlank = (Utils.fromContainerUrl(this.window.gBrowser.currentURI.spec) == "about:blank");
+        let handleUrlBar = Prefs.handleUrlBar;
+        let isSimilar = Utils.getHostname(this.getURL()) == Utils.getHostname(url);
         if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
-  
+
     return url;
   },
-  
+
   updateProgressStatus: function()
   {
-    var mTabs = this.window.gBrowser.mTabContainer.childNodes;
+    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
     for (var i = 0; i < mTabs.length; i++)
     {
       if (mTabs[i].localName == "tab")
       {
-        var pluginObject = this.getContainerPlugin(mTabs[i]);
+        let pluginObject = this.getContainerPlugin(mTabs[i]);
         if (pluginObject)
         {
-          var aCurTotalProgress = pluginObject.Progress;
+          let aCurTotalProgress = pluginObject.Progress;
           if (aCurTotalProgress != mTabs[i].mProgress)
           {
-            const wpl = Components.interfaces.nsIWebProgressListener;
+            const wpl = Ci.nsIWebProgressListener;
             var aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
             var aTabListener = this.window.gBrowser.mTabListeners[mTabs[i]._tPos];
             var aWebProgress = mTabs[i].linkedBrowser.webProgress;
@@ -600,39 +608,47 @@ WindowWrapper.prototype =
       }
     }
   },
-  
-  /** ÏìÓ¦Ò³ÃæÕýÔÚ¼ÓÔØµÄÏûÏ¢*/
+
+  /** å“åº”é¡µé¢æ­£åœ¨åŠ è½½çš„æ¶ˆæ¯*/
   onIEProgressChange: function(event)
   {
-    var progress = parseInt(event.detail);
+    let progress = parseInt(event.detail);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this.updateProgressStatus();
     this.updateInterface();
   },
-  
-  /** ÏìÓ¦ÐÂ¿ªIE±êÇ©µÄÏûÏ¢*/
+
+  /** å“åº”æ–°å¼€IEæ ‡ç­¾çš„æ¶ˆæ¯*/
   onIENewTab: function(event)
   {
     let data = JSON.parse(event.detail);
     let url = data.url;
     let id = data.id;
     let newTab = this.window.gBrowser.addTab(Utils.toContainerUrl(url));
-    this.window.gBrowser.selectedTab = newTab;    
-    var param = {id: id};
+    this.window.gBrowser.selectedTab = newTab;
+    let self = this;
+    if (this.window.gURLBar && (url == 'about:blank')) window.setTimeout(function()
+    {
+      self.window.gURLBar.focus();
+    }, 0);
+
+    let param = {
+      id: id
+    };
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
   },
-  
-  /** Òì²½µ÷ÓÃpluginµÄ·½·¨*/
+
+
+  /** pluginæ–¹æ³•çš„è°ƒç”¨*/
   goDoCommand: function(cmd)
   {
     try
     {
-      var pluginObject = this.getContainerPlugin();
+      let pluginObject = this.getContainerPlugin();
       if (pluginObject == null)
       {
         return false;
       }
-      var param = null;
       switch (cmd)
       {
       case "Back":
@@ -640,51 +656,14 @@ WindowWrapper.prototype =
         {
           return false;
         }
+        pluginObject.Back();
         break;
       case "Forward":
         if (!pluginObject.CanForward)
         {
           return false;
         }
-        break;
-      }
-      let self = this;
-      this.window.setTimeout(function()
-      {
-        self._delayedGoDoCommand(cmd);
-      }, 100);
-      return true;
-    }
-    catch (ex)
-    {
-      Utils.ERROR(ex);
-    }
-    return false;
-  }, 
-  
-  /** ÅäºÏFireIE.goDoCommandÍê³É¶Ôplugin·½·¨µÄµ÷ÓÃ*/
-  _delayedGoDoCommand: function(cmd)
-  {
-    try
-    {
-      var pluginObject = this.getContainerPlugin();
-      if (pluginObject == null)
-      {
-        return;
-      }
-      switch (cmd)
-      {
-      case "Back":
-	    if (pluginObject.CanBack)
-        {
-		  pluginObject.Back();
-		}
-        break;
-      case "Forward":
-	    if (pluginObject.CanForward)
-        {
-          pluginObject.Forward();
-		}
+        pluginObject.Forward();
         break;
       case "Stop":
         pluginObject.Stop();
@@ -720,7 +699,6 @@ WindowWrapper.prototype =
         pluginObject.SelectAll();
         break;
       case "Focus":
-        pluginObject.focus();
         pluginObject.Focus();
         break;
       case "HandOverFocus":
@@ -730,88 +708,83 @@ WindowWrapper.prototype =
         var zoomLevel = this.getZoomLevel();
         pluginObject.Zoom(zoomLevel);
         break;
-      case "DisplaySecurityInfo":    
+      case "DisplaySecurityInfo":
         pluginObject.DisplaySecurityInfo();
-      break;
+        break;
       }
     }
     catch (ex)
     {
-      Utils.ERROR(ex);
+      Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
+      this.window.gBrowser.mCurrentBrowser.reload();
+      return false;
     }
-    finally
-    {
-      let self = this;
-      this.window.setTimeout(function()
-      {
-        self.updateInterface();
-      }, 0);
-    }
+    this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
+    return true;
   },
-    
-  // ÏìÓ¦ÄÚºËÇÐ»»°´Å¥µã»÷ÊÂ¼þ
+
+  // å“åº”å†…æ ¸åˆ‡æ¢æŒ‰é’®ç‚¹å‡»äº‹ä»¶
   clickSwitchButton: function(e)
   {
-    // ×ó¼ü»òÖÐ¼üµã»÷ÇÐ»»ÄÚºË
+    // å·¦é”®æˆ–ä¸­é”®ç‚¹å‡»åˆ‡æ¢å†…æ ¸
     if (e.button <= 1 && !e.target.disabled)
     {
       this.switchEngine();
     }
-    
-    // ÓÒ¼üµã»÷ÏÔÊ¾Ñ¡Ïî²Ëµ¥
+
+    // å³é”®ç‚¹å‡»æ˜¾ç¤ºé€‰é¡¹èœå•
     else if (e.button == 2)
     {
       this.E("fireie-switch-button-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
     }
-    
+
     e.preventDefault();
   },
-  
-  /** ½«½¹µãÉèÖÃµ½IE´°¿ÚÉÏ*/
+
+  /** å°†ç„¦ç‚¹è®¾ç½®åˆ°IEçª—å£ä¸Š*/
   focusIE: function()
   {
     this.goDoCommand("Focus");
   },
-  
+
   onTabSelected: function(e)
   {
     this.updateInterface();
     this.focusIE();
   },
-  
+
 
   /**
-   * ÓÉÓÚIE²»Ö§³ÖText Zoom, Ö»¿¼ÂÇFull Zoom
+   * ç”±äºŽIEä¸æ”¯æŒText Zoom, åªè€ƒè™‘Full Zoom
    */
-  getZoomLevel: function ()
+  getZoomLevel: function()
   {
-    var docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
-    var zoomLevel = docViewer.fullZoom;
+    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let zoomLevel = docViewer.fullZoom;
     return zoomLevel;
   },
-  
+
   /**
-   * ÓÉÓÚIE²»Ö§³ÖText Zoom, Ö»¿¼ÂÇFull Zoom
+   * ç”±äºŽIEä¸æ”¯æŒText Zoom, åªè€ƒè™‘Full Zoom
    */
-  _setZoomLevel: function (value)
+  _setZoomLevel: function(value)
   {
-    var docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
     docViewer.fullZoom = value;
   },
 
-  /** ¼ÓÔØ»òÏÔÊ¾Ò³ÃæÊ±¸üÐÂ½çÃæ*/
+  /** åŠ è½½æˆ–æ˜¾ç¤ºé¡µé¢æ—¶æ›´æ–°ç•Œé¢*/
   onPageShowOrLoad: function(e)
-  {    
+  {
     this.updateInterface();
-    this.focusIE();
-    
-    var doc = e.originalTarget;
-  
-    var tab = Utils.getTabFromDocument(doc);
+
+    let doc = e.originalTarget;
+
+    let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
-  
+
     //
-    // ¼ì²éÊÇ·ñÐèÒªÉèÖÃZoomLevel
+    // æ£€æŸ¥æ˜¯å¦éœ€è¦è®¾ç½®ZoomLevel
     //  
     let zoomLevelParams = Utils.getTabAttributeJSON(tab, 'zoom');
     if (zoomLevelParams)
@@ -820,27 +793,26 @@ WindowWrapper.prototype =
       tab.removeAttribute(tab, 'zoom');
     }
   },
-  
+
   /**
-   * ÏìÓ¦½çÃæ´óÐ¡±ä»¯ÊÂ¼þ
+   * å“åº”ç•Œé¢å¤§å°å˜åŒ–äº‹ä»¶
    */
   onResize: function(e)
   {
-    // Resize¿ÉÄÜÊÇÓÉZoomÒýÆðµÄ£¬ËùÒÔÕâÀïÐèÒªµ÷ÓÃZoom·½·¨
+    // Resizeå¯èƒ½æ˜¯ç”±Zoomå¼•èµ·çš„ï¼Œæ‰€ä»¥è¿™é‡Œéœ€è¦è°ƒç”¨Zoomæ–¹æ³•
     this.goDoCommand("Zoom");
   },
-  
-  onMouseDown:function(event)
+
+  onMouseDown: function(event)
   {
     let target = event.target;
     Utils.LOG("type:" + event.type + " target: " + target.id);
-	return;
-    // Í¨¹ýÄ£ÄâmousedownÊÂ¼þ£¬Ö§³ÖFireGuesturesÊÖÊÆ
+    return;
+    // é€šè¿‡æ¨¡æ‹Ÿmousedownäº‹ä»¶ï¼Œæ”¯æŒFireGuesturesæ‰‹åŠ¿
     if (target.id == Utils.containerPluginId)
     {
       let evt = this.window.document.createEvent("MouseEvents");
-      evt.initMouseEvent("mousedown", true, true, event.view,
-      event.detail, event.screenX, event.screenY + 80, event.clientX, event.clientY + 80, false, false, false, false, 2, null);
+      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY + 80, event.clientX, event.clientY + 80, false, false, false, false, 2, null);
       let container = this.getContainerPlugin().parentNode;
       this.window.setTimeout(function()
       {
@@ -849,17 +821,15 @@ WindowWrapper.prototype =
       }, 200);
     }
   },
-  
+
   /**
    * Opens report wizard for the current page.
    */
   openReportDialog: function()
   {
     let wnd = Services.wm.getMostRecentWindow("abp:sendReport");
-    if (wnd)
-      wnd.focus();
-    else
-      this.window.openDialog("chrome://adblockplus/content/ui/sendReport.xul", "_blank", "chrome,centerscreen,resizable=no", this.window.content, this.getCurrentLocation());
+    if (wnd) wnd.focus();
+    else this.window.openDialog("chrome://adblockplus/content/ui/sendReport.xul", "_blank", "chrome,centerscreen,resizable=no", this.window.content, this.getCurrentLocation());
   },
 
   /**
@@ -869,40 +839,37 @@ WindowWrapper.prototype =
   {
     Utils.loadDocLink("contribute");
   }
-  
+
 };
 
 /**
- * Updates displayed status for all application windows (on prefs or filters
+ * Updates displayed status for all application windows (on prefs or rules
  * change).
  */
 function reloadPrefs()
 {
-  for each (let wrapper in wrappers)
-    wrapper.updateState();
+  for each(let wrapper in wrappers)
+  wrapper.updateState();
 }
 
 /**
- * Executed on first run, adds a filter subscription and notifies that user
+ * Executed on first run, adds a rule subscription and notifies that user
  * about that.
  */
 function addSubscription()
 {
   // Don't add subscription if the user has a subscription already
   let needAdd = true;
-  if (FilterStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription))
-    needAdd = false;
+  if (RuleStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription)) needAdd = false;
 
-  // Only add subscription if user has no filters
+  // Only add subscription if user has no rules
   if (needAdd)
   {
-    let hasFilters = FilterStorage.subscriptions.some(function(subscription) subscription.filters.length);
-    if (hasFilters)
-      needAdd = false;
+    let hasRules = RuleStorage.subscriptions.some(function(subscription) subscription.rules.length);
+    if (hasRules) needAdd = false;
   }
 
-  if (!needAdd)
-    return;
+  if (!needAdd) return;
 
   function notifyUser()
   {
@@ -913,9 +880,7 @@ function addSubscription()
     }
     else
     {
-      Services.ww.openWindow(wrapper ? wrapper.window : null,
-                                     "chrome://fireie/content/firstRun.xul",
-                                     "_blank", "chrome,centerscreen,resizable,dialog=no", null);
+      Services.ww.openWindow(wrapper ? wrapper.window : null, "chrome://fireie/content/firstRun.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", null);
     }
   }
 
@@ -924,16 +889,15 @@ function addSubscription()
   request.open("GET", "chrome://fireie/content/subscriptions.xml");
   request.addEventListener("load", function()
   {
-    let node = Utils.chooseFilterSubscription(request.responseXML.getElementsByTagName("subscription"));
+    let node = Utils.chooseRuleSubscription(request.responseXML.getElementsByTagName("subscription"));
     let subscription = (node ? Subscription.fromURL(node.getAttribute("url")) : null);
     if (subscription)
     {
-      FilterStorage.addSubscription(subscription);
+      RuleStorage.addSubscription(subscription);
       subscription.disabled = false;
       subscription.title = node.getAttribute("title");
       subscription.homepage = node.getAttribute("homepage");
-      if (subscription instanceof DownloadableSubscription && !subscription.lastDownload)
-        Synchronizer.execute(subscription);
+      if (subscription instanceof DownloadableSubscription && !subscription.lastDownload) Synchronizer.execute(subscription);
 
       notifyUser();
     }
@@ -943,7 +907,3 @@ function addSubscription()
 }
 
 init();
-
-} catch (ex) {
-  Cu.reportError(ex);
-}

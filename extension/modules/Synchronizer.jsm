@@ -14,13 +14,10 @@
  */
 
 /**
- * @fileOverview Manages synchronization of filter subscriptions.
+ * @fileOverview Manages synchronization of rule subscriptions.
  */
 
 var EXPORTED_SYMBOLS = ["Synchronizer"];
-
-try
-{
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -33,9 +30,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
-Cu.import(baseURL.spec + "FilterStorage.jsm");
-Cu.import(baseURL.spec + "FilterNotifier.jsm");
-Cu.import(baseURL.spec + "FilterClasses.jsm");
+Cu.import(baseURL.spec + "RuleStorage.jsm");
+Cu.import(baseURL.spec + "RuleNotifier.jsm");
+Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
@@ -57,15 +54,16 @@ let timer = null;
  * Map of subscriptions currently being downloaded, all currently downloaded
  * URLs are keys of that map.
  */
-let executing = {__proto__: null};
+let executing = {
+  __proto__: null
+};
 
 /**
- * This object is responsible for downloading filter subscriptions whenever
+ * This object is responsible for downloading rule subscriptions whenever
  * necessary.
  * @class
  */
-var Synchronizer =
-{
+var Synchronizer = {
   /**
    * Called on module startup.
    */
@@ -76,7 +74,7 @@ var Synchronizer =
       timer.delay = CHECK_INTERVAL * MILLISECONDS_IN_SECOND;
       checkSubscriptions();
     };
-  
+
     timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(callback, INITIAL_DELAY * MILLISECONDS_IN_SECOND, Ci.nsITimer.TYPE_REPEATING_SLACK);
   },
@@ -107,24 +105,28 @@ var Synchronizer =
   executeInternal: function(subscription, manual, forceDownload)
   {
     let url = subscription.url;
-    if (url in executing)
-      return;
+    if (url in executing) return;
 
     let loadFrom = url;
-    
+
     let request = null;
+
     function errorCallback(error)
     {
       let channelStatus = -1;
       try
       {
         channelStatus = request.channel.status;
-      } catch (e) {}
+      }
+      catch (e)
+      {}
       let responseStatus = "";
       try
       {
         responseStatus = request.channel.QueryInterface(Ci.nsIHttpChannel).responseStatus;
-      } catch (e) {}
+      }
+      catch (e)
+      {}
       setError(subscription, error, channelStatus, responseStatus, manual);
     }
 
@@ -140,14 +142,12 @@ var Synchronizer =
       return;
     }
 
-    try {
+    try
+    {
       request.overrideMimeType("text/plain");
-      request.channel.loadFlags = request.channel.loadFlags |
-                                  request.channel.INHIBIT_CACHING |
-                                  request.channel.VALIDATE_ALWAYS;
+      request.channel.loadFlags = request.channel.loadFlags | request.channel.INHIBIT_CACHING | request.channel.VALIDATE_ALWAYS;
 
-      request.channel.notificationCallbacks =
-      {
+      request.channel.notificationCallbacks = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor, Ci.nsIChannelEventSink]),
 
         getInterface: function(iid)
@@ -156,14 +156,14 @@ var Synchronizer =
           {
             return this;
           }
-    
+
           throw Cr.NS_ERROR_NO_INTERFACE;
         },
 
         asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback)
         {
           this.onChannelRedirect(oldChannel, newChannel, flags);
-      
+
           // If onChannelRedirect didn't throw an exception indicate success
           callback.onRedirectVerifyCallback(Cr.NS_OK);
         }
@@ -174,15 +174,17 @@ var Synchronizer =
       Cu.reportError(e)
     }
 
-    if (subscription.lastModified && !forceDownload)
-      request.setRequestHeader("If-Modified-Since", subscription.lastModified);
+    if (subscription.lastModified && !forceDownload) request.setRequestHeader("If-Modified-Since", subscription.lastModified);
 
     request.addEventListener("error", function(ev)
     {
       delete executing[url];
-      try {
+      try
+      {
         request.channel.notificationCallbacks = null;
-      } catch (e) {}
+      }
+      catch (e)
+      {}
 
       errorCallback("Synchronizer.connectionError");
     }, false);
@@ -190,9 +192,12 @@ var Synchronizer =
     request.addEventListener("load", function(ev)
     {
       delete executing[url];
-      try {
+      try
+      {
         request.channel.notificationCallbacks = null;
-      } catch (e) {}
+      }
+      catch (e)
+      {}
 
       // Status will be 0 for non-HTTP requests
       if (request.status && request.status != 200 && request.status != 304)
@@ -201,12 +206,11 @@ var Synchronizer =
         return;
       }
 
-      let newFilters = null;
+      let newRules = null;
       if (request.status != 304)
       {
-        newFilters = readFilters(subscription, request.responseText, errorCallback);
-        if (!newFilters)
-          return;
+        newRules = readRules(subscription, request.responseText, errorCallback);
+        if (!newRules) return;
 
         subscription.lastModified = request.getResponseHeader("Last-Modified");
       }
@@ -219,18 +223,15 @@ var Synchronizer =
       let now = Math.round((new Date(request.getResponseHeader("Date")).getTime() || Date.now()) / MILLISECONDS_IN_SECOND);
       let expires = Math.round(new Date(request.getResponseHeader("Expires")).getTime() / MILLISECONDS_IN_SECOND) || 0;
       let expirationInterval = (expires ? expires - now : 0);
-      for each (let filter in newFilters || subscription.filters)
+      for each(let rule in newRules || subscription.rules)
       {
-        if (filter instanceof CommentFilter && /\bExpires\s*(?::|after)\s*(\d+)\s*(h)?/i.test(filter.text))
+        if (rule instanceof CommentRule && /\bExpires\s*(?::|after)\s*(\d+)\s*(h)?/i.test(rule.text))
         {
           let interval = parseInt(RegExp.$1);
-          if (RegExp.$2)
-            interval *= SECONDS_IN_HOUR;
-          else
-            interval *= SECONDS_IN_DAY;
+          if (RegExp.$2) interval *= SECONDS_IN_HOUR;
+          else interval *= SECONDS_IN_DAY;
 
-          if (interval > expirationInterval)
-            expirationInterval = interval;
+          if (interval > expirationInterval) expirationInterval = interval;
         }
       }
 
@@ -240,13 +241,13 @@ var Synchronizer =
       // Hard expiration: download immediately after twice the expiration interval
       subscription.expires = (subscription.lastDownload + expirationInterval * 2);
 
-      // Process some special filters and remove them
-      if (newFilters)
+      // Process some special rules and remove them
+      if (newRules)
       {
-        for (let i = 0; i < newFilters.length; i++)
+        for (let i = 0; i < newRules.length; i++)
         {
-          let filter = newFilters[i];
-          if (filter instanceof CommentFilter && /^!\s*(\w+)\s*:\s*(.*)/.test(filter.text))
+          let rule = newRules[i];
+          if (rule instanceof CommentRule && /^!\s*(\w+)\s*:\s*(.*)/.test(rule.text))
           {
             let keyword = RegExp.$1.toLowerCase();
             let value = RegExp.$2;
@@ -254,25 +255,21 @@ var Synchronizer =
             if (keyword == "homepage")
             {
               let uri = Utils.makeURI(value);
-              if (uri && (uri.scheme == "http" || uri.scheme == "https"))
-                subscription.homepage = uri.spec;
+              if (uri && (uri.scheme == "http" || uri.scheme == "https")) subscription.homepage = uri.spec;
             }
-            else
-              known = false;
+            else known = false;
 
-            if (known)
-              newFilters.splice(i--, 1);
+            if (known) newRules.splice(i--, 1);
           }
         }
       }
 
-      if (newFilters)
-        FilterStorage.updateSubscriptionFilters(subscription, newFilters);
+      if (newRules) RuleStorage.updateSubscriptionRules(subscription, newRules);
       delete subscription.oldSubscription;
     }, false);
 
     executing[url] = true;
-    FilterNotifier.triggerListeners("subscription.downloadStatus", subscription);
+    RuleNotifier.triggerListeners("subscription.downloadStatus", subscription);
 
     try
     {
@@ -293,39 +290,34 @@ var Synchronizer =
  */
 function checkSubscriptions()
 {
-  if (!Prefs.subscriptions_autoupdate)
-    return;
+  if (!Prefs.subscriptions_autoupdate) return;
 
   let time = Math.round(Date.now() / MILLISECONDS_IN_SECOND);
-  for each (let subscription in FilterStorage.subscriptions)
+  for each(let subscription in RuleStorage.subscriptions)
   {
-    if (!(subscription instanceof DownloadableSubscription))
-      continue;
+    if (!(subscription instanceof DownloadableSubscription)) continue;
 
     subscription.lastCheck = time;
 
     // Sanity check: do expiration times make sense? Make sure people changing
     // system clock don't get stuck with outdated subscriptions.
-    if (subscription.expires - time > MAX_EXPIRATION_INTERVAL)
-      subscription.expires = time + MAX_EXPIRATION_INTERVAL;
+    if (subscription.expires - time > MAX_EXPIRATION_INTERVAL) subscription.expires = time + MAX_EXPIRATION_INTERVAL;
 
-    if (subscription.expires > time)
-      continue;
+    if (subscription.expires > time) continue;
 
     // Do not retry downloads more often than MIN_EXPIRATION_INTERVAL
-    if (time - subscription.lastDownload >= MIN_EXPIRATION_INTERVAL)
-      Synchronizer.execute(subscription, false);
+    if (time - subscription.lastDownload >= MIN_EXPIRATION_INTERVAL) Synchronizer.execute(subscription, false);
   }
 }
 
 /**
- * Extracts a list of filters from text returned by a server.
+ * Extracts a list of rules from text returned by a server.
  * @param {DownloadableSubscription} subscription  subscription the info should be placed into
  * @param {String} text server response
  * @param {Function} errorCallback function to be called on error
- * @return {Array of Filter}
+ * @return {Array of Rule}
  */
-function readFilters(subscription, text, errorCallback)
+function readRules(subscription, text, errorCallback)
 {
   let lines = text.split(/[\r\n]+/);
   if (!/\[Adblock(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
@@ -358,17 +350,15 @@ function readFilters(subscription, text, errorCallback)
   if (minVersion)
   {
     subscription.requiredVersion = minVersion;
-    if (Services.vc.compare(minVersion, Utils.addonVersion) > 0)
-      subscription.upgradeRequired = true;
+    if (Services.vc.compare(minVersion, Utils.addonVersion) > 0) subscription.upgradeRequired = true;
   }
 
   lines.shift();
   let result = [];
-  for each (let line in lines)
+  for each(let line in lines)
   {
-    let filter = Filter.fromText(Filter.normalize(line));
-    if (filter)
-      result.push(filter);
+    let rule = Rule.fromText(Rule.normalize(line));
+    if (rule) result.push(rule);
   }
 
   return result;
@@ -384,12 +374,12 @@ function readFilters(subscription, text, errorCallback)
  */
 function setError(subscription, error, channelStatus, responseStatus, manual)
 {
-  try {
-    Cu.reportError("Fire-IE: Downloading filter subscription " + subscription.title + " failed (" + Utils.getString(error) + ")\n" +
-                   "Download address: " + subscription.url + "\n" +
-                   "Channel status: " + channelStatus + "\n" +
-                   "Server response: " + responseStatus);
-  } catch(e) {}
+  try
+  {
+    Cu.reportError("Fire-IE: Downloading rule subscription " + subscription.title + " failed (" + Utils.getString(error) + ")\n" + "Download address: " + subscription.url + "\n" + "Channel status: " + channelStatus + "\n" + "Server response: " + responseStatus);
+  }
+  catch (e)
+  {}
 
   subscription.lastDownload = Math.round(Date.now() / MILLISECONDS_IN_SECOND);
   subscription.downloadStatus = error;
@@ -402,8 +392,7 @@ function setError(subscription, error, channelStatus, responseStatus, manual)
       // No fallback for successful download with checksum mismatch, reset error counter
       subscription.errors = 0;
     }
-    else
-      subscription.errors++;
+    else subscription.errors++;
 
     if (subscription.errors >= Prefs.subscriptions_fallbackerrors && /^https?:\/\//i.test(subscription.url))
     {
@@ -420,32 +409,24 @@ function setError(subscription, error, channelStatus, responseStatus, manual)
       request.mozBackgroundRequest = true;
       request.open("GET", fallbackURL);
       request.overrideMimeType("text/plain");
-      request.channel.loadFlags = request.channel.loadFlags |
-                                  request.channel.INHIBIT_CACHING |
-                                  request.channel.VALIDATE_ALWAYS;
+      request.channel.loadFlags = request.channel.loadFlags | request.channel.INHIBIT_CACHING | request.channel.VALIDATE_ALWAYS;
       request.addEventListener("load", function(ev)
       {
-        if (!(subscription.url in FilterStorage.knownSubscriptions))
-          return;
+        if (!(subscription.url in RuleStorage.knownSubscriptions)) return;
 
-        if (/^410\b/.test(request.responseText))   // Gone
+        if (/^410\b/.test(request.responseText)) // Gone
         {
-          let data = "[fireie]\n" + subscription.filters.map(function(f) f.text).join("\n");
+          let data = "[fireie]\n" + subscription.rules.map(function(f) f.text).join("\n");
           let url = "data:text/plain," + encodeURIComponent(data);
           let newSubscription = Subscription.fromURL(url);
           newSubscription.title = subscription.title;
           newSubscription.disabled = subscription.disabled;
-          FilterStorage.removeSubscription(subscription);
-          FilterStorage.addSubscription(newSubscription);
+          RuleStorage.removeSubscription(subscription);
+          RuleStorage.addSubscription(newSubscription);
           Synchronizer.execute(newSubscription);
         }
       }, false);
       request.send(null);
     }
   }
-}
-
-
-} catch (ex) {
-	Cu.reportError(ex);
 }

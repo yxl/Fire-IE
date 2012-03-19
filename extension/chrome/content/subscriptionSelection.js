@@ -284,7 +284,7 @@ function doAddSubscription(/**String*/ url, /**String*/ title)
   if (!subscription)
     return;
 
-  FilterStorage.addSubscription(subscription);
+  RuleStorage.addSubscription(subscription);
 
   subscription.disabled = false;
   subscription.title = title;
@@ -295,5 +295,5 @@ function doAddSubscription(/**String*/ url, /**String*/ title)
 
 function hasSubscription(url)
 {
-  return FilterStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription && subscription.url == url);
+  return RuleStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription && subscription.url == url);
 }

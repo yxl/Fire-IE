@@ -12,13 +12,13 @@
 <!ENTITY fireie.options.ui.caption "User Interface">
 <!ENTITY fireie.options.showUrlBarLabel "Show url bar button label.">
 
-<!ENTITY fireie.options.filter.label "Sites Filter">
-<!ENTITY fireie.options.filter.enabled "Enable Sites Filter">
-<!ENTITY fireie.options.filter.column.rule "Rule">
-<!ENTITY fireie.options.filter.column.enabled "Enabled">
-<!ENTITY fireie.options.filter.url.label "URL:">
-<!ENTITY fireie.options.filter.button.add "Add">
-<!ENTITY fireie.options.filter.button.delete "Delete">
+<!ENTITY fireie.options.rule.label "Sites Rule">
+<!ENTITY fireie.options.rule.enabled "Enable Sites Rule">
+<!ENTITY fireie.options.rule.column.rule "Rule">
+<!ENTITY fireie.options.rule.column.enabled "Enabled">
+<!ENTITY fireie.options.rule.url.label "URL:">
+<!ENTITY fireie.options.rule.button.add "Add">
+<!ENTITY fireie.options.rule.button.delete "Delete">
 
 <!ENTITY fireie.options.iecompat.label "IE Compatibility Mode">
 <!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">

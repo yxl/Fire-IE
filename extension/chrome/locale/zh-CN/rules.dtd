@@ -1,6 +1,6 @@
 <!ENTITY dialog.title "解雇IE切换规则参数">
 <!ENTITY subscriptions.tab.label "已订阅的规则">
-<!ENTITY filters.tab.label "自定义规则">
+<!ENTITY rules.tab.label "自定义规则">
 <!ENTITY addSubscription.label "订阅新规则">
 <!ENTITY addSubscription.accesskey "f">
 <!ENTITY addSubscriptionAdd.label "订阅">
@@ -20,36 +20,36 @@
 <!ENTITY subscription.lastDownload.checksumMismatch "失败，校验和不匹配">
 <!ENTITY subscription.lastDownload.success "成功">
 <!ENTITY subscription.minVersion.warning "该订阅的切换规则需要新版本的 解雇IE, 请更新至最新版本。">
-<!ENTITY subscription.disabledFilters.warning "该订阅中的某些切换规则被禁用.">
-<!ENTITY subscription.disabledFilters.enable "启用已禁用的切换规则">
+<!ENTITY subscription.disabledRules.warning "该订阅中的某些切换规则被禁用.">
+<!ENTITY subscription.disabledRules.enable "启用已禁用的切换规则">
 <!ENTITY subscription.actions.label "动作">
 <!ENTITY subscription.update.label "更新规则">
 <!ENTITY subscription.editTitle.label "编辑标题">
 <!ENTITY subscription.delete.label "删除">
-<!ENTITY subscription.showHideFilters.label "显示/隐藏详细信息">
+<!ENTITY subscription.showHideRules.label "显示/隐藏详细信息">
 <!ENTITY subscription.moveUp.label "上移">
 <!ENTITY subscription.moveDown.label "下移">
 <!ENTITY viewList.label "查看列表">
 <!ENTITY addGroup.label "添加规则列表">
 <!ENTITY addGroup.accesskey "g">
-<!ENTITY noFilters.text "
+<!ENTITY noRules.text "
   您还没有自定义的切换规则.
 ">
-<!ENTITY addFilter.label "添加">
-<!ENTITY addFilter.accesskey "d">
-<!ENTITY filter.actions.label "切换规则动作">
-<!ENTITY filter.edit.label "编辑">
-<!ENTITY filter.cut.label "剪切">
-<!ENTITY filter.copy.label "复制">
-<!ENTITY filter.paste.label "粘贴">
-<!ENTITY filter.delete.label "删除">
-<!ENTITY filter.selectAll.label "全部选中">
-<!ENTITY filter.resetHitCounts.label "使用次数清零">
-<!ENTITY filter.moveUp.label "上移">
-<!ENTITY filter.moveDown.label "下移">
+<!ENTITY addRule.label "添加">
+<!ENTITY addRule.accesskey "d">
+<!ENTITY rule.actions.label "切换规则动作">
+<!ENTITY rule.edit.label "编辑">
+<!ENTITY rule.cut.label "剪切">
+<!ENTITY rule.copy.label "复制">
+<!ENTITY rule.paste.label "粘贴">
+<!ENTITY rule.delete.label "删除">
+<!ENTITY rule.selectAll.label "全部选中">
+<!ENTITY rule.resetHitCounts.label "使用次数清零">
+<!ENTITY rule.moveUp.label "上移">
+<!ENTITY rule.moveDown.label "下移">
 <!ENTITY viewMenu.label "查看">
-<!ENTITY filter.column "切换规则">
-<!ENTITY filter.accesskey "F">
+<!ENTITY rule.column "切换规则">
+<!ENTITY rule.accesskey "F">
 <!ENTITY slow.column "慢速切换规则">
 <!ENTITY slow.accesskey "w">
 <!ENTITY enabled.column "启用">
@@ -67,8 +67,8 @@
 <!ENTITY sort.descending.label "Z &gt; A 顺序">
 <!ENTITY sort.descending.accesskey "Z">
 <!ENTITY noGroupSelected.text "想要显示规则列表中的切换规则, 您需要先选择一个列表.">
-<!ENTITY noFiltersInGroup.text "选择的规则列表是空的">
-<!ENTITY filters.remove.warning "您确定删除所有选择的切换规则吗?">
+<!ENTITY noRulesInGroup.text "选择的规则列表是空的">
+<!ENTITY rules.remove.warning "您确定删除所有选择的切换规则吗?">
 <!ENTITY backupButton.label "备份与还原">
 <!ENTITY backupButton.accesskey "B">
 <!ENTITY backup.label "创建新备份">

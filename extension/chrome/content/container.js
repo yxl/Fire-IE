@@ -14,22 +14,25 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
-let FireIEContainer = {};
+var FireIEContainer = {};
 
 {
-	let Cc = Components.classes;
-	let Ci = Components.interfaces;
-	let Cr = Components.results;
-	let Cu = Components.utils;
-	
-  let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
-  let jsm = {};
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var Cr = Components.results;
+  var Cu = Components.utils;
+
+  var baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+  var jsm = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
-  Cu.import(baseURL.spec + "Prefs.jsm", jsm);  
+  Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Cu.import(baseURL.spec + "Favicon.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
-  var {Utils, Prefs, Favicon, Services} = jsm;
-  
+  var
+  {
+    Utils, Prefs, Favicon, Services
+  } = jsm;
+
   /**
    * Shortcut for document.getElementById(id)
    */
@@ -37,7 +40,7 @@ let FireIEContainer = {};
   {
     return document.getElementById(id);
   }
-  
+
   function init()
   {
     window.removeEventListener('DOMContentLoaded', init, false);
@@ -50,7 +53,8 @@ let FireIEContainer = {};
     if (Prefs.privateBrowsing)
     {
       container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
-    } else
+    }
+    else
     {
       registerEventHandler();
     }
@@ -60,23 +64,24 @@ let FireIEContainer = {};
       document.title = pluginObject.Title;
     }, 200);
   }
-  
+
   function getNavigateParam(name)
   {
     var headers = "";
     var tab = Utils.getTabFromDocument(document);
     var navigateParams = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
-    if (navigateParams && typeof navigateParams[name] != "undefined") {
+    if (navigateParams && typeof navigateParams[name] != "undefined")
+    {
       headers = navigateParams[name];
     }
-    return headers;  
+    return headers;
   }
-    
+
   function getNavigateWindowId()
   {
     return getNavigateParam("id") + "";
   }
-  
+
   function removeNavigateParams()
   {
     var tab = Utils.getTabFromDocument(document);
@@ -84,7 +89,7 @@ let FireIEContainer = {};
     if (navigateParams)
     {
       tab.removeAttribute("fireieNavigateParams");
-    }  
+    }
   }
 
   function registerEventHandler()
@@ -98,16 +103,18 @@ let FireIEContainer = {};
       pluginObject.addEventListener("focus", onPluginFocus, false);
     }
   }
-  
+
 
   /** 响应Plugin标题变化事件 */
+
   function onIETitleChanged(event)
   {
     var title = event.detail;
     document.title = title;
   }
-  
+
   /** 响应关闭IE标签窗口事件 */
+
   function onCloseIETab(event)
   {
     window.setTimeout(function()
@@ -142,9 +149,8 @@ let FireIEContainer = {};
     pluginObject.blur();
     pluginObject.Focus();
   }
-  
+
   window.addEventListener('DOMContentLoaded', init, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
 }
-

@@ -50,15 +50,15 @@ function httpGet (url, onreadystatechange) {
   };
 };
    
-function updateFilter (timer) {
+function updateRule (timer) {
   var updateUrl = Services.prefs.getCharPref("extensions.coba.official.updateurl", null);
   if(!updateUrl)
     return;
   httpGet(updateUrl, function(response) {
     if (response.readyState == 4 && 200 == response.status) {
-      var filter = response.responseText;
-      if (filter) {
-        Services.prefs.setCharPref("extensions.coba.official.filterlist", filter);
+      var rule = response.responseText;
+      if (rule) {
+        Services.prefs.setCharPref("extensions.coba.official.rulelist", rule);
       }
     }
   });  

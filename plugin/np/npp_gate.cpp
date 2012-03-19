@@ -43,7 +43,6 @@
 #include "stdafx.h"
 #include "plugin.h"
 #include "PluginGlobal.h"
-#include "Cookie\CookieManager.h"
 
 #define NPMIMEDESCRIPTION			"application/fireie"
 #define NPPVPLUGINNAMESTRING		"npfireie"
@@ -54,8 +53,6 @@ char* NPP_GetMIMEDescription(void)
 {
 	return NPMIMEDESCRIPTION;
 }
-
-
 
 NPError NPP_Initialize(void)
 {
@@ -84,17 +81,11 @@ NPError NPP_New(NPMIMEType pluginType,
 	NPError rv = NPERR_NO_ERROR;
 
 	nsPluginCreateData data = {instance, pluginType, mode, argc, argn, argv, saved};
-	
-	//CString csCookie = TEXT("d:\\cookies");
-	//Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
 
 	CPlugin * pPlugin = new CPlugin(data);
 	if(pPlugin == NULL)
 		return NPERR_OUT_OF_MEMORY_ERROR;
 
-	//csCookie = TEXT("%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Cookies");
-	//Cookie::CookieManager::SetIECtrlCookieReg(csCookie);
-	
 	instance->pdata = (void *)pPlugin;
 	return rv;
 }
@@ -113,6 +104,7 @@ NPError NPP_Destroy (NPP instance, NPSavedData** save)
 		delete pPlugin;
 		pPlugin = NULL; 
 	}
+	instance->pdata = NULL;
 	return rv;
 }
 
@@ -133,31 +125,29 @@ NPError NPP_SetWindow (NPP instance, NPWindow* pNPWindow)
 
 	if(pPlugin == NULL) 
 		return NPERR_GENERIC_ERROR;
-
 	
 	// window just created
-	if(!pPlugin->isInitialized() && (pNPWindow->window != NULL)) 
+	if(!pPlugin->isInitialized()) 
 	{ 
 		if(!pPlugin->init(pNPWindow)) 
 		{
 			return NPERR_MODULE_LOAD_FAILED_ERROR;
 		}
-	}
-
-	// window goes away
-	if((pNPWindow->window == NULL) && pPlugin->isInitialized())
 		return NPERR_NO_ERROR;
-
-	// window resized
-	if(pPlugin->isInitialized() && (pNPWindow->window != NULL))
+	}
+	else
 	{
-		pPlugin->SetWindow(pNPWindow);
-		return NPERR_NO_ERROR;
-	}
+		// window goes away
+		if(pNPWindow->window == NULL)
+			return NPERR_NO_ERROR;
 
-	// this should not happen, nothing to do
-	if((pNPWindow->window == NULL) && !pPlugin->isInitialized())
-		return NPERR_NO_ERROR;
+		// window resized
+		if(pNPWindow->window != NULL)
+		{
+			pPlugin->SetWindow(pNPWindow);
+			return NPERR_NO_ERROR;
+		}
+	}
 
 	return rv;
 }

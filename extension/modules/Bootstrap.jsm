@@ -34,76 +34,61 @@ baseURL.fileName = "";
 
 Cu.import(baseURL.spec + "Utils.jsm");
 
-if (publicURL instanceof Ci.nsIMutable)
-  publicURL.mutable = false;
-if (baseURL instanceof Ci.nsIMutable)
-  baseURL.mutable = false;
-    
+if (publicURL instanceof Ci.nsIMutable) publicURL.mutable = false;
+if (baseURL instanceof Ci.nsIMutable) baseURL.mutable = false;
+
 const cidPublic = Components.ID("{205D5CF8-A382-4D5E-BE4C-86012C7161FF}");
 const contractIDPublic = "@fireie.org/fireie/public;1";
 
 const cidPrivate = Components.ID("{B264B58F-2948-4E8A-9824-45AA6C19697E}");
 const contractIDPrivate = "@fireie.org/fireie/private;1";
 
-let factoryPublic =
-{
+let factoryPublic = {
   createInstance: function(outer, iid)
   {
-    if (outer)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+    if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
     return publicURL.QueryInterface(iid);
   }
 };
 
-let factoryPrivate =
-{
+let factoryPrivate = {
   createInstance: function(outer, iid)
   {
-    if (outer)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+    if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
     return baseURL.QueryInterface(iid);
   }
 };
 
 let defaultModules = [
-  baseURL.spec + "Prefs.jsm",
-  baseURL.spec + "FilterListener.jsm",
-  baseURL.spec + "ContentPolicy.jsm",
-  baseURL.spec + "Synchronizer.jsm"
-];
+baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm"];
 
-let loadedModules = {__proto__: null};
+let loadedModules = {
+  __proto__: null
+};
 
 let initialized = false;
-
-try
-{
 
 /**
  * Allows starting up and shutting down Adblock Plus functions.
  * @class
  */
-var Bootstrap =
-{
+var Bootstrap = {
   /**
    * Initializes add-on, loads and initializes all modules.
    */
   startup: function()
   {
-    if (initialized)
-      return;
+    if (initialized) return;
     initialized = true;
 
     // Register component to allow retrieving private and public URL
-    
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(cidPublic, "Fire-IE public module URL", contractIDPublic, factoryPublic);
     registrar.registerFactory(cidPrivate, "Fire-IE private module URL", contractIDPrivate, factoryPrivate);
-  
+
     // Load and initialize modules
-  
-    for each (let url in defaultModules)
-      Bootstrap.loadModule(url);
+    for each(let url in defaultModules)
+    Bootstrap.loadModule(url);
 
     let categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
     let enumerator = categoryManager.enumerateCategory("fireie-module-location");
@@ -115,7 +100,7 @@ var Bootstrap =
 
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-added", true);
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-removed", true);
-  
+
   },
 
   /**
@@ -123,24 +108,22 @@ var Bootstrap =
    */
   shutdown: function()
   {
-    if (!initialized)
-      return;
+    if (!initialized) return;
 
     // Shut down modules
     for (let url in loadedModules)
-      Bootstrap.shutdownModule(url);
-			
-		Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-added");
-		Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-removed");
+    Bootstrap.shutdownModule(url);
+
+    Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-added");
+    Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-removed");
   },
 
   /**
    * Loads and initializes a module.
    */
-  loadModule: function(/**String*/ url)
+  loadModule: function( /**String*/ url)
   {
-    if (url in loadedModules)
-      return;
+    if (url in loadedModules) return;
 
     let module = {};
     try
@@ -153,7 +136,7 @@ var Bootstrap =
       return;
     }
 
-    for each (let obj in module)
+    for each(let obj in module)
     {
       if ("startup" in obj)
       {
@@ -176,10 +159,9 @@ var Bootstrap =
   /**
    * Shuts down a module.
    */
-  shutdownModule: function(/**String*/ url)
+  shutdownModule: function( /**String*/ url)
   {
-    if (!(url in loadedModules))
-      return;
+    if (!(url in loadedModules)) return;
 
     let obj = loadedModules[url];
     if ("shutdown" in obj)
@@ -201,28 +183,21 @@ var Bootstrap =
  * Observer called on modules category changes.
  * @class
  */
-var BootstrapPrivate =
-{
+var BootstrapPrivate = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe: function(subject, topic, data)
   {
-    if (data != "fireie-module-location")
-      return;
+    if (data != "fireie-module-location") return;
 
     switch (topic)
     {
-      case "xpcom-category-entry-added":
-        Bootstrap.loadModule(subject.QueryInterface(Ci.nsISupportsCString).data);
-        break;
-      case "xpcom-category-entry-removed":
-        Bootstrap.unloadModule(subject.QueryInterface(Ci.nsISupportsCString).data, true);
-        break;
+    case "xpcom-category-entry-added":
+      Bootstrap.loadModule(subject.QueryInterface(Ci.nsISupportsCString).data);
+      break;
+    case "xpcom-category-entry-removed":
+      Bootstrap.unloadModule(subject.QueryInterface(Ci.nsISupportsCString).data, true);
+      break;
     }
   }
 };
-
-
-} catch (ex) {
-	Cu.reportError(ex);
-}

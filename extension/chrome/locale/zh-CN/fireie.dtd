@@ -12,13 +12,13 @@
 <!ENTITY fireie.options.ui.caption "用户界面">
 <!ENTITY fireie.options.showUrlBarLabel "显示地址栏按钮文字">
 
-<!ENTITY fireie.options.filter.label "网址过滤">
-<!ENTITY fireie.options.filter.enabled "总是使用 IE Tab 浏览以下网址">
-<!ENTITY fireie.options.filter.column.rule "规则">
-<!ENTITY fireie.options.filter.column.enabled "激活">
-<!ENTITY fireie.options.filter.url.label "加入网址:">
-<!ENTITY fireie.options.filter.button.add "添加">
-<!ENTITY fireie.options.filter.button.delete "删除">
+<!ENTITY fireie.options.rule.label "网址过滤">
+<!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">
+<!ENTITY fireie.options.rule.column.rule "规则">
+<!ENTITY fireie.options.rule.column.enabled "激活">
+<!ENTITY fireie.options.rule.url.label "加入网址:">
+<!ENTITY fireie.options.rule.button.add "添加">
+<!ENTITY fireie.options.rule.button.delete "删除">
 
 <!ENTITY fireie.options.iecompat.label "IE兼容模式">
 <!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">
