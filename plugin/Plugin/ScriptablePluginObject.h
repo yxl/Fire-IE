@@ -47,6 +47,7 @@ namespace Plugin
 		// properties
 		NPIdentifier m_URLID;
 		NPIdentifier m_TitleID;
+		NPIdentifier m_FaviconURLID;
 		NPIdentifier m_CanRefreshID;
 		NPIdentifier m_CanStopID;
 		NPIdentifier m_CanBackID;
@@ -84,6 +85,7 @@ namespace Plugin
 			// properties
 			m_URLID = NPN_GetStringIdentifier("URL");
 			m_TitleID = NPN_GetStringIdentifier("Title");
+			m_FaviconURLID = NPN_GetStringIdentifier("FaviconURL");
 			m_CanRefreshID = NPN_GetStringIdentifier("CanRefresh");
 			m_CanStopID = NPN_GetStringIdentifier("CanStop");
 			m_CanBackID = NPN_GetStringIdentifier("CanBack");

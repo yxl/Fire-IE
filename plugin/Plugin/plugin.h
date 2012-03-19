@@ -120,6 +120,9 @@ namespace Plugin
 
 		/** 向Firefox发送IE窗口标题改变的消息 */
 		void OnIETitleChanged(const CString& strTitle);
+
+		/** 页面加载完成时产生的事件 */
+		void OnDocumentComplete();
 	protected:
 
 		NPP m_pNPInstance;

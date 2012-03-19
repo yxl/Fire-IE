@@ -47,6 +47,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bCanBack(FALSE)
 	, m_bCanForward(FALSE)
 	, m_iProgress(-1)
+	, m_strFaviconURL(_T("NONE"))
 {
 
 }
@@ -349,6 +350,68 @@ CString GetHostFromUrl(const CString& strUrl)
 	return strHost;
 }
 
+CString GetProtocolFromUrl(const CString& strUrl)
+{
+	int pos = strUrl.Find(_T("://"));
+	if (pos != -1)
+	{
+		return strUrl.Left(pos);
+	}
+	return _T("http"); // Assume http
+}
+
+CString GetPathFromUrl(const CString& strUrl)
+{
+	CString strPath(strUrl);
+	int pos = strUrl.Find(_T("://"));
+	if (pos != -1)
+	{
+		strPath.Delete(0, pos+3);
+
+	}
+	pos = strPath.Find(_T('/'));
+	if (pos != -1)
+	{
+		strPath = strPath.Mid(pos);
+		pos = strPath.Find(_T('?'));
+		if (pos != -1)
+		{
+			strPath = strPath.Left(pos);
+		}
+		pos = strPath.ReverseFind(_T('/'));
+		// pos can't be -1 here
+		strPath = strPath.Left(pos + 1);
+	}
+	else
+	{
+		strPath = _T("/");
+	}
+	return strPath;
+}
+
+CString GetURLRelative(const CString& baseURL, const CString relativeURL)
+{
+	if (relativeURL.Find(_T("://")) != -1)
+	{
+		// complete url, return immediately
+		return relativeURL;
+	}
+
+	CString protocol = GetProtocolFromUrl(baseURL);
+	CString host = GetHostFromUrl(baseURL);
+	if (relativeURL.GetLength() && relativeURL[0] == _T('/'))
+	{
+		// root url
+		return protocol + _T("://") + host + relativeURL;
+	}
+	else
+	{
+		CString path = GetPathFromUrl(baseURL);
+		// relative url
+		return protocol + _T("://") + host + path + relativeURL;
+	}
+}
+
 void FetchCookie(const CString& strUrl, const CString& strHeaders)
 {
 	const CString COOKIE_HEADER(_T("Cookie:"));
@@ -638,6 +701,47 @@ CString CIEHostWindow::GetTitle()
 	return title;
 }
 
+CString CIEHostWindow::GetFaviconURL()
+{
+	CString host, url, favurl;
+	favurl = _T("");
+	try
+	{
+		if (m_ie.GetSafeHwnd())
+		{
+			url = m_ie.get_LocationURL();
+			// use page specified favicon, if exists
+			// here we query favicon url directly from content before it is cached
+			// and use the cached value thereafter
+			CString contentFaviconURL;
+			if (m_strFaviconURL == _T("NONE"))
+				contentFaviconURL = GetFaviconURLFromContent();
+			else
+				contentFaviconURL = m_strFaviconURL;
+			if (contentFaviconURL != _T(""))
+			{
+				return GetURLRelative(url, contentFaviconURL);
+			}
+			host = GetHostFromUrl(url);
+			if (host != "")
+			{
+				CString protocol = GetProtocolFromUrl(url);
+				if (protocol.MakeLower() != _T("http") && protocol.MakeLower() != _T("https")) {
+					// force http/https protocols -- others are not supported for purpose of fetching favicons
+					protocol = _T("http");
+				}
+				favurl = protocol + _T("://") + host + _T("/favicon.ico");
+			}
+		}
+	}
+	catch(...)
+	{
+		TRACE(_T("CIEHostWindow::GetURL failed!\n"));
+	}
+	// temporary return baidu's favicon url
+	return favurl;
+}
+
 BOOL CIEHostWindow::IsOleCmdEnabled(OLECMDID cmdID)
 {
 	try
@@ -766,6 +870,86 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	{
 		s_strIEUserAgent = GetDocumentUserAgent();
 	}
+
+	/** 缓存 Favicon URL */
+	m_strFaviconURL = GetFaviconURLFromContent();
+
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnDocumentComplete();
+	}
+}
+
+CString CIEHostWindow::GetFaviconURLFromContent()
+{
+	CString favurl = _T("");
+	CComQIPtr<IHTMLDocument2> pDoc = m_ie.get_Document();
+	if (!pDoc)
+	{
+		return favurl;
+	}
+	IHTMLElementCollection* elems = NULL;
+	if (FAILED(pDoc->get_all(&elems)))
+	{
+		return favurl;
+	}
+	long length;
+	if (FAILED(elems->get_length(&length)))
+	{
+		elems->Release();
+		return favurl;
+	}
+	/** iterate over elements in the document */
+	for (int i = 0; i < length; i++)
+	{
+		_variant_t index = i;
+		IDispatch* pDisp = NULL;
+
+		if (SUCCEEDED(elems->item(index, index, &pDisp)) && pDisp)
+		{
+			IHTMLElement* pElem = NULL;
+			if (SUCCEEDED(pDisp->QueryInterface(IID_IHTMLElement, (void**)&pElem)))
+			{
+				BSTR bstr_tagName;
+				if (SUCCEEDED(pElem->get_tagName(&bstr_tagName)) 
+					&& CString(bstr_tagName).MakeLower() == _T("link"))
+				{
+					CString rel;
+					VARIANT v_rel;
+					if (SUCCEEDED(pElem->getAttribute(_T("rel"), 2, &v_rel)))
+					{
+						rel = v_rel.bstrVal;
+						rel = rel.MakeLower();
+						if (rel == "shortcut icon" || rel == "icon")
+						{
+							CString href;
+							VARIANT v_href;
+							if (SUCCEEDED(pElem->getAttribute(_T("href"), 2, &v_href)))
+							{
+								href = v_href.bstrVal;
+								favurl = href;
+								pElem->Release();
+								pDisp->Release();
+								break; // Assume only one favicon link
+							}
+						}
+					}
+				}
+				if (CString(bstr_tagName).MakeLower() == "body")
+				{
+					// to speed up, only parse elements before the body element
+					pElem->Release();
+					pDisp->Release();
+					break;
+				}
+				pElem->Release();
+			}
+			pDisp->Release();
+		}
+	}
+	elems->Release();
+
+	return favurl;
 }
 
 // 从IE控件的HTML文档中获取UserAgent

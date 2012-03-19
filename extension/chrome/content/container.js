@@ -26,8 +26,9 @@ let FireIEContainer = {};
   let jsm = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);  
+  Cu.import(baseURL.spec + "Favicon.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
-  var {Utils, Prefs, Services} = jsm;
+  var {Utils, Prefs, Favicon, Services} = jsm;
   
   /**
    * Shortcut for document.getElementById(id)
@@ -90,6 +91,7 @@ let FireIEContainer = {};
   {
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
+    window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     var pluginObject = E(Utils.containerPluginId);
     if (pluginObject)
     {
@@ -113,7 +115,22 @@ let FireIEContainer = {};
       window.close();
     }, 100);
   }
-  
+
+   /** 响应页面加载完成事件 */
+  function onIEDocumentComplete(event)
+  {
+    /** 设置页面Favicon */
+    var po = E(Utils.containerPluginId);
+    if (po)
+    {
+      var faviconURL = po.FaviconURL;
+      if (faviconURL && faviconURL != "")
+      {
+        Favicon.setIcon(document, faviconURL);
+      }
+    }
+  }
+ 
   /**
    * 当焦点在plugin对象上时，在plugin中按Alt+XXX组合键时，
    * 菜单栏无法正常弹出，因此当plugin对象得到焦点时，需要

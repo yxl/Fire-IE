@@ -35,6 +35,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
+Cu.import(baseURL.spec + "Favicon.jsm");
 Cu.import(baseURL.spec + "ContentPolicy.jsm");
 Cu.import(baseURL.spec + "FilterListener.jsm");
 Cu.import(baseURL.spec + "FilterStorage.jsm");
@@ -308,6 +309,17 @@ WindowWrapper.prototype =
           if (url == "about:blank") url = "";
           if (this.window.gURLBar.value != url) this.window.gURLBar.value = url;
         }      
+      }
+
+      // 仅更新当前标签页Favicon
+      var po = this.getContainerPlugin(this.window.gBrowser.selectedTab);
+      if (po)
+      {
+        var faviconURL = po.FaviconURL;
+        if (faviconURL && faviconURL != "")
+        {
+          Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
+        }
       }
       
       // 更新收藏状态(星星按钮黄色时表示该页面已收藏)

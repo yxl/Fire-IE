@@ -581,4 +581,11 @@ namespace Plugin
 		CString strDetail = strTitle;
 		FireEvent(strEventType, strDetail);
 	}
+
+	void CPlugin::OnDocumentComplete()
+	{
+		CString strEventType = _T("IEDocumentComplete");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
 }

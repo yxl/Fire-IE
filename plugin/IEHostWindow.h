@@ -124,7 +124,7 @@ protected:
 
 	/** IE控件的UserAgent */
 	static CString s_strIEUserAgent;
-	
+
 	void InitIE();
 	void UninitIE();
 
@@ -181,6 +181,8 @@ public:
 	// read only plugin properties
 	CString GetURL();
 	CString GetTitle();
+	CString GetFaviconURL();
+	CString GetFaviconURLFromContent();
 	BOOL GetCanBack() {return m_bCanBack;}
 	BOOL GetCanForward() {return m_bCanForward;}
 	BOOL GetCanStop() {return IsOleCmdEnabled(OLECMDID_STOP);}
@@ -205,5 +207,8 @@ protected:
 	/** DIRTY FIX: NewWindow3 里面创建的 IE 窗口不能设置 Referrer */
 	CString m_strUrlContext;
 
+	/** 缓存最近的 Favicion URL */
+	CString m_strFaviconURL;
+	
 	Plugin::CPlugin* m_pPlugin;
 };
