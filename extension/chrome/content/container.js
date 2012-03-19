@@ -65,7 +65,8 @@ let FireIEContainer = {};
     window.setTimeout(function()
     {
       let pluginObject = E(Utils.containerPluginId);
-      document.title = pluginObject.Title;
+      if (pluginObject)
+        document.title = pluginObject.Title;
     }, 200);
   }
 
