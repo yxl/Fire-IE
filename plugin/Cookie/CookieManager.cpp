@@ -17,7 +17,9 @@ namespace Cookie
 		HKEY key;
 		if(ERROR_SUCCESS == RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"), 0, KEY_SET_VALUE, &key))
 		{
-			RegSetValueEx(key, csRegName, 0, REG_EXPAND_SZ, (LPBYTE)csCookie.GetBuffer(), 1024);
+			LPBYTE buffer = (LPBYTE)csCookie.GetBuffer();
+			DWORD length = (csCookie.GetLength() + 1) * sizeof(TCHAR);
+			RegSetValueEx(key, csRegName, 0, REG_EXPAND_SZ, buffer, length);
 			csCookie.ReleaseBuffer();
 			RegCloseKey(key);
 		}
