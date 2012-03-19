@@ -17,7 +17,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 var gFireIE = null;
 
-{
+(function(){
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cr = Components.results;
@@ -185,4 +185,4 @@ var gFireIE = null;
     gFireIE.init();
     initializeHooks();
   }, false);
-}
+})();
