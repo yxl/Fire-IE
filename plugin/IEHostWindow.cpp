@@ -149,7 +149,7 @@ CString CIEHostWindow::GetFirefoxUserAgent()
 	{
 		pIEHostWindow = s_CookieIEWindowMap.GetValueAt(0);
 	}
-	
+
 	if (pIEHostWindow && pIEHostWindow->m_pPlugin)
 	{
 		strUserAgent = pIEHostWindow->m_pPlugin->GetFirefoxUserAgent();
@@ -434,7 +434,6 @@ void FetchCookie(const CString& strUrl, const CString& strHeaders)
 	} 
 }
 
-/** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
 void CIEHostWindow::Navigate(const CString& strURL)
 {
 	m_strLoadingUrl = strURL;
@@ -863,12 +862,16 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	}
 
 	/**
-	 * 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
-	 * 文档中获取UserAgent。
-	 */
+	* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
+	* 文档中获取UserAgent。
+	*/
 	if (s_strIEUserAgent.IsEmpty())
 	{
 		s_strIEUserAgent = GetDocumentUserAgent();
+		if (!s_strIEUserAgent.IsEmpty() && m_pPlugin)
+		{
+			m_pPlugin->OnIEUserAgentReceived(s_strIEUserAgent);
+		}
 	}
 
 	/** 缓存 Favicon URL */

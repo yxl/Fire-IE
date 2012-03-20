@@ -584,6 +584,14 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
+	/** 通过消息向Firefox发送IE的UserAgent*/
+	void CPlugin::OnIEUserAgentReceived(const CString& strUserAgent)
+	{
+		CString strEventType = _T("IEUserAgentReceived");
+		CString strDetail = strUserAgent;
+		FireEvent(strEventType, strDetail);
+	}
+
 	void CPlugin::OnDocumentComplete()
 	{
 		CString strEventType = _T("IEDocumentComplete");

@@ -43,6 +43,13 @@ Cu.import(baseURL.spec + "Utils.jsm");
  */
 let InternetSetCookieW = null;
 
+// NULL pointer
+const NULL = 0;
+
+/**
+ *  DWORD WINAPI GetLastError(void)
+ */
+let GetLastError = null;
 
 
 /**
@@ -51,6 +58,7 @@ let InternetSetCookieW = null;
  */
 let IECookieManager = {
   wininetDll: null,
+  kernel32Dll: null,
 
   /**
    * Called on module startup.
@@ -86,15 +94,29 @@ let IECookieManager = {
      * http://baidu.com才能识别
      */
     let url = 'http://' + hostname + cookie2.path;
-    let cookieData = cookie2.name + "=" + decodeURI(cookie2.value) + "; domain=" + cookie2.host + "; path=" + cookie2.path;
+    let cookieValue = cookie2.value;
+    try
+    {
+      cookieValue = decodeURI(cookie2.value);
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
+    let cookieData = cookie2.name + "=" + cookieValue + "; domain=" + cookie2.host + "; path=" + cookie2.path;
     if (cookie2.expires > 1)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
-    let ret = InternetSetCookieW(url, 0, cookieData);
+    if (cookie2.isHttpOnly)
+    {
+      cookieData +="; httponly";
+    }
+    let ret = InternetSetCookieW(url, NULL, cookieData); 
     if (!ret)
     {
-      Utils.ERROR('InternetSetCookieW failed! url:' + url + ' data:' + cookieData);
+      let errCode = GetLastError();
+      Utils.ERROR('InternetSetCookieW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
     }
     return ret;
   },
@@ -111,35 +133,51 @@ let IECookieManager = {
 
   _loadInternetSetCookieW: function()
   {
+    /**
+     * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
+     * anfilat2: 
+     * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
+     * 64bit.
+     * ctypes.default_abi is more universal, but don't works in 32bit callback functions.
+     */
+    let CallBackABI = ctypes.stdcall_abi;
+    let WinABI = ctypes.winapi_abi;
+    if (ctypes.size_t.size == 8)
+    {
+      CallBackABI = ctypes.default_abi;
+      WinABI = ctypes.default_abi;
+    }    
     try
     {
       this.wininetDll = ctypes.open("Wininet.dll");
+      if (this.wininetDll)
+      {
+        InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
+        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
+        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ ); 
+      }      
     }
     catch (e)
     {
       Utils.ERROR(e);
     }
-    if (this.wininetDll)
+
+    
+    try
     {
-      /**
-       * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
-       * anfilat2: 
-       * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
-       * 64bit.
-       * ctypes.default_abi is more universal, but don't works in 32bit callback functions.
-       */
-      let CallBackABI = ctypes.stdcall_abi;
-      let WinABI = ctypes.winapi_abi;
-      if (ctypes.size_t.size == 8)
+      this.kernel32Dll = ctypes.open("kernel32.dll");
+      if (this.kernel32Dll)
       {
-        CallBackABI = ctypes.default_abi;
-        WinABI = ctypes.default_abi;
-      }
-      InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
-      ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-      ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
-      ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
+        GetLastError = this.kernel32Dll.declare("GetLastError",
+                                        WinABI,
+                                        ctypes.uint32_t);
+      }        
     }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }  
   },
 
   _unloadInternetSetCookieW: function()
@@ -148,6 +186,11 @@ let IECookieManager = {
     {
       this.wininetDll.close();
       this.wininetDll = null;
+    }
+    if (this.kernel32Dll)
+    {
+      this.kernel32Dll.close();
+      this.kernel32Dll = null;
     }
   },
 
@@ -264,11 +307,11 @@ let CookieObserver = {
       }
       break;
     case 'cleared':
-      fireieUtils.LOG('[CookieObserver cleared]');
+      Utils.LOG('[CookieObserver cleared]');
       IECookieManager.clearAllCookies();
       break;
     case 'reload':
-      fireieUtils.LOG('[CookieObserver reload]');
+      Utils.LOG('[CookieObserver reload]');
       IECookieManager.clearAllCookies();
       break;
     }
@@ -276,6 +319,8 @@ let CookieObserver = {
 
   logCookie: function(tag, cookie2)
   {
+    // Don't log!
+    return;
     Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + decodeURI(cookie2.value) + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };

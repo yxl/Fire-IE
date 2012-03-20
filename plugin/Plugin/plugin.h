@@ -121,6 +121,9 @@ namespace Plugin
 		/** 向Firefox发送IE窗口标题改变的消息 */
 		void OnIETitleChanged(const CString& strTitle);
 
+		/** 通过消息向Firefox发送IE的UserAgent*/
+		void OnIEUserAgentReceived(const CString& strUserAgent);
+
 		/** 页面加载完成时产生的事件 */
 		void OnDocumentComplete();
 	protected:

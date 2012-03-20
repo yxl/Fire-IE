@@ -89,7 +89,7 @@ namespace HttpMonitor
 		E_UNEXPECTED;
 
 		m_strURL = szURL;
-		SetCustomHeaders(pszAdditionalHeaders);
+		//SetCustomHeaders(pszAdditionalHeaders);
 
 		return hr;
 	}
