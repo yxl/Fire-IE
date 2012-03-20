@@ -14,8 +14,6 @@ namespace Cookie
 		CookieManager(void){}
 		~CookieManager(void){}	
 
-		static LPCTSTR SUB_KEY;
-
 		CString SetIECtrlRegString(const CString& strRegName);
 
 		BOOL SetIECtrlRegString(const CString& strRegName, const CString& strValue);

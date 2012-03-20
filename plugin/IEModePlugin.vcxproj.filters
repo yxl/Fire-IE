@@ -36,9 +36,6 @@
     <ClCompile Include="BrowserHook\AtlDepHook.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\URI.cpp">
-      <Filter>Utils</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\OS.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
@@ -46,6 +43,9 @@
       <Filter>Plugin</Filter>
     </ClCompile>
     <ClCompile Include="Cookie\CookieManager.cpp">
+      <Filter>Cookie</Filter>
+    </ClCompile>
+    <ClCompile Include="Cookie\Cookie.cpp">
       <Filter>Cookie</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,9 +108,6 @@
     <ClInclude Include="BrowserHook\AtlDepHook.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\URI.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\OS.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -118,6 +115,9 @@
       <Filter>Plugin</Filter>
     </ClInclude>
     <ClInclude Include="Cookie\CookieManager.h">
+      <Filter>Cookie</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie\Cookie.h">
       <Filter>Cookie</Filter>
     </ClInclude>
   </ItemGroup>

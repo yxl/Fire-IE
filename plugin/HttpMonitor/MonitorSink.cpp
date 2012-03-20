@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include <Wininet.h>
 #include <string>
+#include "Cookie.h"
 #pragma comment(lib, "Wininet.lib")
 
 #include "plugin.h"
@@ -159,13 +160,15 @@ namespace HttpMonitor
 		{
 			if (lpCookies)
 			{
-				// TODO 去除m_strURL这个变量
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s"), m_strURL, strCookie);
+				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), m_strURL, strCookie);
 				CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
 				VirtualFree(lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;
+
+				Cookie::Cookie cookieObject(m_strURL, strCookie);
+				TRACE("Cookie %s\n", cookieObject.toString().c_str());
 			}
 
 		}
