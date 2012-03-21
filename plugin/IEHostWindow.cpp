@@ -394,20 +394,30 @@ CString GetURLRelative(const CString& baseURL, const CString relativeURL)
 	if (relativeURL.Find(_T("://")) != -1)
 	{
 		// complete url, return immediately
+		// test url: https://addons.mozilla.org/zh-CN/firefox/
 		return relativeURL;
 	}
 
 	CString protocol = GetProtocolFromUrl(baseURL);
+	if (relativeURL.GetLength() >= 2 && relativeURL.Left(2) == _T("//"))
+	{
+		// same protocol semi-complete url, return immediately
+		// test url: http://www.windowsazure.com/zh-cn/
+		return protocol + _T(":") + relativeURL;
+	}
+
 	CString host = GetHostFromUrl(baseURL);
 	if (relativeURL.GetLength() && relativeURL[0] == _T('/'))
 	{
 		// root url
+		// test url: https://mail.qq.com/cgi-bin/loginpage?
 		return protocol + _T("://") + host + relativeURL;
 	}
 	else
 	{
 		CString path = GetPathFromUrl(baseURL);
 		// relative url
+		// test url: http://www.update.microsoft.com/windowsupdate/v6/thanks.aspx?ln=zh-cn&&thankspage=5
 		return protocol + _T("://") + host + path + relativeURL;
 	}
 }
