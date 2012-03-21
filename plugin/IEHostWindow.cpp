@@ -778,7 +778,6 @@ void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& str
 {
 	if (m_pPlugin)
 	{
-		//m_pPlugin->SetURLCookie(strURL, strCookie);
 		m_pPlugin->SetFirefoxCookie(strURL, strCookie);
 	}
 }

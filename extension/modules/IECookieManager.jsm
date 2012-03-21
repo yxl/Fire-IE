@@ -33,7 +33,6 @@ Cu.import("resource://gre/modules/ctypes.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 
-
 /**
  * BOOL InternetSetCookie(
  * in LPCTSTR lpszUrl,
@@ -43,13 +42,63 @@ Cu.import(baseURL.spec + "Utils.jsm");
  */
 let InternetSetCookieW = null;
 
+/**
+ * DWORD InternetSetCookieEx(
+ * in  LPCTSTR lpszURL,
+ * in  LPCTSTR lpszCookieName,
+ * in  LPCTSTR lpszCookieData,
+ * in  DWORD dwFlags,
+ * in  DWORD_PTR dwReserved
+ * );
+ */
+let InternetSetCookieExW = null;
+
 // NULL pointer
 const NULL = 0;
+
+const INTERNET_COOKIE_HTTPONLY = 0x00002000;
 
 /**
  *  DWORD WINAPI GetLastError(void)
  */
 let GetLastError = null;
+
+const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
+
+const cookieSvc = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+                  
+function getIECtrlRegString(regName)
+{
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
+    if (!wrk.hasValue(regName)) return null;
+    let value = wrk.readStringValue(regName);
+    wrk.close();
+    return value;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+    return null;
+  }
+}
+
+function setIECtrlRegString(regName, value)
+{
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
+    wrk.writeStringValue(regName, value);
+    return true;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+    return false;
+  }
+}
 
 
 /**
@@ -71,7 +120,7 @@ let IECookieManager = {
 
     // Change the default cookie and cache directories of the IE, which will
     // be restored when the cookie plugin is loaded.
-    this._changeIETempDirectorySetting();
+    this.changeIETempDirectorySetting();
 
     CookieObserver.register();
   },
@@ -95,30 +144,30 @@ let IECookieManager = {
       let seperate = header.indexOf("=");
       if (seperate == -1 || seperate > terminate)
       {
-        return null;
+        return {name: null, value: null};
       }
       let cookieName = header.substring(0, seperate).trim();
       let cookieValue = header.substring(seperate + 1, terminate).trim();
       return {name: cookieName, vlaue: cookieValue};
-    }  
-
+    }
+    
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
     this._ieCookieMap[name] = value;
-    
-    Services.cookies.setCookieString(Utils.makeURI(url), null, header, null);  
+    cookieSvc.setCookieString(Utils.makeURI(url), null, cookieHeader, null);
   },
 
   saveIECookie: function(cookie2)
-  {
-    let cookieValue = cookie2.value;
-    
+  {  
     // If the cookie is received from IE, does not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
-    if (valueInMap && valueInMap == cookieValue)
+    if (valueInMap !== null)
     {
       this._ieCookieMap[cookie2.name] = undefined;
-      return;
+      if (valueInMap == cookie2.value)
+      {
+        return;
+      }
     }
     
     let hostname = cookie2.host.trim();
@@ -132,8 +181,8 @@ let IECookieManager = {
      * http://baidu.com才能识别
      */
     let url = 'http://' + hostname + cookie2.path;
-    let cookieData = cookie2.name + "=" + cookieValue + "; domain=" + cookie2.host + "; path=" + cookie2.path;
-    if (cookie2.expires > 1)
+    let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
+    if (cookie2.expires > 0)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
@@ -142,6 +191,7 @@ let IECookieManager = {
       //cookieData +="; httponly";
     }
     let ret = InternetSetCookieW(url, NULL, cookieData); 
+    //let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
     if (!ret)
     {
       let errCode = GetLastError();
@@ -151,7 +201,14 @@ let IECookieManager = {
 
   deleteIECookie: function(cookie2)
   {
-    // @todo 是否需要删除IE中的cookie?
+    let cookie = {};
+    cookie.name = cookie2.name;
+    cookie.value = cookie2.value;
+    cookie.host = cookie2.host;
+    cookie.path = cookie2.path;
+    cookie.expires = 1;
+    cookie.isHttpOnly = cookie2.isHttpOnly;
+    this.saveIECookie(cookie);
   },
 
   clearAllIECookies: function()
@@ -183,8 +240,15 @@ let IECookieManager = {
         InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
         ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
         ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
-        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ ); 
-      }      
+        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
+        
+        InternetSetCookieExW = this.wininetDll.declare('InternetSetCookieExW', WinABI, ctypes.int32_t, /*BOOL*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
+        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszCookieData*/
+        ctypes.uint32_t,    /*DWORD dwFlags*/
+        ctypes.int32_t    /*DWORD_PTR dwReserved*/);
+      }
     }
     catch (e)
     {
@@ -221,43 +285,8 @@ let IECookieManager = {
     }
   },
 
-  _changeIETempDirectorySetting: function()
+  changeIETempDirectorySetting: function()
   {
-    const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
-    const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
-
-    function getIECtrlRegString(regName)
-    {
-      try
-      {
-        wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
-        if (!wrk.hasValue(regName)) return null;
-        let value = wrk.readStringValue(regName);
-        wrk.close();
-        return value;
-      }
-      catch (e)
-      {
-        Utils.ERROR(e);
-        return null;
-      }
-    }
-
-    function setIECtrlRegString(regName, value)
-    {
-      try
-      {
-        wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
-        wrk.writeStringValue(regName, value);
-        return true;
-      }
-      catch (e)
-      {
-        Utils.ERROR(e);
-        return false;
-      }
-    }
-
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
     let originalCookies = getIECtrlRegString("Cookies");
@@ -274,6 +303,21 @@ let IECookieManager = {
       setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
     }
   },
+  
+  retoreIETempDirectorySetting: function()
+  {
+    let cookies = getIECtrlRegString("Cookies_fireie");
+    if (cookies)
+    {
+      setIECtrlRegString("Cookies", cookies);
+    }
+    let cache = getIECtrlRegString("Cache_fireie");
+    if (cache)
+    {
+      setIECtrlRegString("Cache", cache);
+    }
+    
+  },
 
   _getExpiresString: function(expiresInSeconds)
   {
@@ -289,13 +333,15 @@ let CookieObserver = {
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
-    Services.obs.addObserver(this, "fireie-set-cookie", false);  
+    Services.obs.addObserver(this, "fireie-set-cookie", false);
+    Services.obs.addObserver(this, "fireie-restoreIETempDirectorySetting", false);
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
-    Services.obs.removeObserver(this, "fireie-set-cookie");    
+    Services.obs.removeObserver(this, "fireie-set-cookie");
+    Services.obs.removeObserver(this, "fireie-restoreIETempDirectorySetting");
   },
 
   // nsIObserver
@@ -308,6 +354,9 @@ let CookieObserver = {
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
+      break;
+    case 'fireie-restoreIETempDirectorySetting':
+      IECookieManager.retoreIETempDirectorySetting();
       break;
     }
   },
@@ -354,7 +403,7 @@ let CookieObserver = {
   {
     try
     {
-      let {url, header} = JSON.parse(data);
+      let {header, url} = JSON.parse(data);
       IECookieManager.saveFirefoxCookie(url, header);
     }
     catch(e)
@@ -366,7 +415,6 @@ let CookieObserver = {
   logFirefoxCookie: function(tag, cookie2)
   {
     // Don't log!
-    return;
     Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };

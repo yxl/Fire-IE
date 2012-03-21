@@ -245,6 +245,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange));
     this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab));
     this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this.onIEUserAgentReceived));
+    this.window.addEventListener("IESetCookie", this._bindMethod(this.onIESetCookie));
     this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown));
   },
 
@@ -649,6 +650,7 @@ WindowWrapper.prototype = {
     let userAgent = event.detail;
     Utils.ieUserAgent = userAgent;
     Utils.LOG("onIEUserAgentReceived: " + userAgent);
+    this._restoreIETempDirectorySetting();
   },
   
   /**
@@ -656,17 +658,18 @@ WindowWrapper.prototype = {
    */
   onIESetCookie: function(event)
   {
-    try
-    {
-      let subject = null;
-      let topic = "fireie-set-cookie";
-      let data = event.detail;
-      Services.obs.notifyObservers(subject, topic, data);
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
+    let subject = null;
+    let topic = "fireie-set-cookie";
+    let data = event.detail;
+    Services.obs.notifyObservers(subject, topic, data);
+  },
+
+  _restoreIETempDirectorySetting: function()
+  {
+    let subject = null;
+    let topic = "fireie-restoreIETempDirectorySetting";
+    let data = null;
+    Services.obs.notifyObservers(subject, topic, data);    
   },
 
   /** plugin方法的调用*/
