@@ -46,6 +46,8 @@ let InternetSetCookieW = null;
 // NULL pointer
 const NULL = 0;
 
+const cookieSvc = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);  
+
 /**
  *  DWORD WINAPI GetLastError(void)
  */
@@ -59,7 +61,8 @@ let GetLastError = null;
 let IECookieManager = {
   wininetDll: null,
   kernel32Dll: null,
-
+  _ieCookieMap: {},
+  
   /**
    * Called on module startup.
    */
@@ -80,9 +83,54 @@ let IECookieManager = {
     this._unloadInternetSetCookieW();
     CookieObserver.unregister();
   },
-
-  saveCookie: function(cookie2)
+  
+  saveFirefoxCookie: function(url, cookieHeader)
   {
+    function getNameValueFromCookieHeader(header)
+    {
+      header = header.trim();
+      let terminate = header.indexOf(";");
+      if (terminate == -1)
+      {
+        terminate = header.length;
+      }
+      let seperate = header.indexOf("=");
+      if (seperate == -1 || seperate > terminate)
+      {
+        return null;
+      }
+      let cookieName = header.substring(0, seperate).trim();
+      let cookieValue = header.substring(seperate + 1, terminate).trim();
+      return {name: cookieName, vlaue: cookieValue};
+    }  
+
+    // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
+    let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
+    this._ieCookieMap[name] = value;
+    
+    cookieSvc.setCookieString(Utils.makeURI(url), null, header, null);  
+  },
+
+  saveIECookie: function(cookie2)
+  {
+    let cookieValue = cookie2.value;
+    try
+    {
+      cookieValue = decodeURI(cookie2.value);
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
+    
+    // If the cookie is received from IE, does not sync it back
+    let valueInMap = this._ieCookieMap[cookie2.name] || null;
+    if (valueInMap && valueInMap == cookieValue)
+    {
+      this._ieCookieMap[cookie2.name] = undefined;
+      return;
+    }
+    
     let hostname = cookie2.host.trim();
     // 去除hostname开头的“.”
     if (hostname.substring(0, 1) == ".")
@@ -94,15 +142,6 @@ let IECookieManager = {
      * http://baidu.com才能识别
      */
     let url = 'http://' + hostname + cookie2.path;
-    let cookieValue = cookie2.value;
-    try
-    {
-      cookieValue = decodeURI(cookie2.value);
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
     let cookieData = cookie2.name + "=" + cookieValue + "; domain=" + cookie2.host + "; path=" + cookie2.path;
     if (cookie2.expires > 1)
     {
@@ -118,19 +157,18 @@ let IECookieManager = {
       let errCode = GetLastError();
       Utils.ERROR('InternetSetCookieW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
     }
-    return ret;
   },
 
-  deleteCookie: function(cookie2)
+  deleteIECookie: function(cookie2)
   {
     // @todo 是否需要删除IE中的cookie?
   },
 
-  clearAllCookies: function()
+  clearAllIECookies: function()
   {
     // @todo 
   },
-
+  
   _loadInternetSetCookieW: function()
   {
     /**
@@ -258,14 +296,17 @@ let IECookieManager = {
 };
 
 let CookieObserver = {
+  
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "fireie-set-cookie", false);  
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "fireie-set-cookie");    
   },
 
   // nsIObserver
@@ -274,50 +315,66 @@ let CookieObserver = {
     switch (topic)
     {
     case 'cookie-changed':
-      this.onCookieChanged(subject, data);
+      this.onFirefoxCookieChanged(subject, data);
+      break;
+    case 'fireie-set-cookie':
+      this.onIECookieChanged(data);
       break;
     }
   },
 
-  onCookieChanged: function(subject, data)
+  onFirefoxCookieChanged: function(subject, data)
   {
     let cookie = (subject instanceof Ci.nsICookie2) ? subject.QueryInterface(Ci.nsICookie2) : null;
     let cookieArray = (subject instanceof Ci.nsIArray) ? subject.QueryInterface(Ci.nsIArray) : null;
     switch (data)
     {
     case 'deleted':
-      this.logCookie(data, cookie);
-      IECookieManager.deleteCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.deleteIECookie(cookie);
       break;
     case 'added':
-      this.logCookie(data, cookie);
-      IECookieManager.saveCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie);
       break;
     case 'changed':
-      this.logCookie(data, cookie);
-      IECookieManager.saveCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie);
       break;
     case 'batch-deleted':
       Utils.LOG('[CookieObserver batch-deleted] ' + cookieArray.length + ' cookie(s)');
       for (let i = 0; i < cookieArray.length; i++)
       {
         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
-        IECookieManager.deleteCookie(cookie);
-        this.logCookie(data, cookie);
+        IECookieManager.deleteIECookie(cookie);
+        this.logFirefoxCookie(data, cookie);
       }
       break;
     case 'cleared':
       Utils.LOG('[CookieObserver cleared]');
-      IECookieManager.clearAllCookies();
+      IECookieManager.clearAllIECookies();
       break;
     case 'reload':
       Utils.LOG('[CookieObserver reload]');
-      IECookieManager.clearAllCookies();
+      IECookieManager.clearAllIECookies();
       break;
     }
   },
+  
+  onIECookieChanged: function(data)
+  {
+    try
+    {
+      let {url, header} = JSON.parse(data);
+      IECookieManager.saveFirefoxCookie(url, header);
+    }
+    catch(e)
+    {
+      Utils.ERROR(e);
+    }
+  },
 
-  logCookie: function(tag, cookie2)
+  logFirefoxCookie: function(tag, cookie2)
   {
     // Don't log!
     return;

@@ -650,6 +650,24 @@ WindowWrapper.prototype = {
     Utils.ieUserAgent = userAgent;
     Utils.LOG("onIEUserAgentReceived: " + userAgent);
   },
+  
+  /**
+   * Handles 'IESetCookie' event receiving from the plugin
+   */
+  onIESetCookie: function(event)
+  {
+    try
+    {
+      let subject = null;
+      let topic = "fireie-set-cookie";
+      let data = event.detail;
+      Services.obs.notifyObservers(subject, topic, data);
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
+  },
 
   /** plugin方法的调用*/
   goDoCommand: function(cmd)
