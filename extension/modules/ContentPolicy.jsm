@@ -39,8 +39,7 @@ Cu.import(baseURL.spec + "Matcher.jsm");
  * Public policy checking functions and auxiliary objects
  * @class
  */
-var Policy =
-{
+var Policy = {
 
   /**
    * Map containing all schemes that should be ignored by content policy.
@@ -54,11 +53,12 @@ var Policy =
   startup: function()
   {
     // whitelisted URL schemes
-    for each (var scheme in Prefs.autoswitch_whitelistschemes.toLowerCase().split(" "))
-      Policy.whitelistSchemes[scheme] = true;
-      
-    // Register our content policy
+    for each(var scheme in Prefs.autoswitch_whitelistschemes.toLowerCase().split(" "))
+	{
+	  Policy.whitelistSchemes[scheme] = true;
+	}
 
+    // Register our content policy
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     try
     {
@@ -69,10 +69,10 @@ var Policy =
       // Don't stop on errors - the factory might already be registered
       Utils.ERROR(e);
     }
-  
+
     let catMan = Utils.categoryManager;
-    for each (let category in PolicyPrivate.xpcom_categories)
-      catMan.addCategoryEntry(category, PolicyPrivate.classDescription, PolicyPrivate.contractID, false, true);
+    for each(let category in PolicyPrivate.xpcom_categories)
+    catMan.addCategoryEntry(category, PolicyPrivate.classDescription, PolicyPrivate.contractID, false, true);
 
     Services.obs.addObserver(PolicyPrivate, "http-on-modify-request", true);
   },
@@ -81,7 +81,7 @@ var Policy =
   {
     PolicyPrivate.previousRequest = null;
   },
-  
+
   /**
    * Checks whether the page should be loaded in IE engine. 
    * @param {String} url
@@ -97,7 +97,7 @@ var Policy =
     }
     return match && match instanceof EngineRule;
   },
-  
+
   /**
    * Checks whether IE user agent should be used. 
    * @param {String} url
@@ -110,9 +110,9 @@ var Policy =
     {
       RuleStorage.increaseHitCount(match);
     }
-    return match && match instanceof EngineRule;
-  },  
-  
+    return match && match instanceof UserAgentRule;
+  },
+
   /**
    * Checks whether the location's scheme is blockable.
    * @param {nsIURI} location  
@@ -128,8 +128,7 @@ var Policy =
  * Private nsIContentPolicy and nsIChannelEventSink implementation
  * @class
  */
-var PolicyPrivate =
-{
+var PolicyPrivate = {
   classDescription: "Fire-IE content policy",
   classID: Components.ID("005C9F5D-B31B-4E22-9B3C-7FA31D1F333A"),
   contractID: "@fireie.org/fireie/policy;1",
@@ -138,41 +137,35 @@ var PolicyPrivate =
   //
   // nsISupports interface implementation
   //
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPolicy, Ci.nsIObserver, Ci.nsIFactory, Ci.nsISupportsWeakReference]),
 
   //
   // nsIContentPolicy interface implementation
   //
-
   shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra)
   {
-    if (!Prefs.autoswitch_enabled)
-      return Ci.nsIContentPolicy.ACCEPT;
-      
+    if (!Prefs.autoswitch_enabled) return Ci.nsIContentPolicy.ACCEPT;
+
     // Ignore requests within a page
-    if (contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT)
-      return Ci.nsIContentPolicy.ACCEPT;
+    if (contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT) return Ci.nsIContentPolicy.ACCEPT;
 
-		let browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
-		if (!browserNode)
-			return Ci.nsIContentPolicy.ACCEPT;
-		
-		let location = Utils.unwrapURL(contentLocation);
-		
+    let browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
+    if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
+
+    let location = Utils.unwrapURL(contentLocation);
+
     // Ignore whitelisted schemes
-    if (!Policy.isBlockableScheme(location))
-      return Ci.nsIContentPolicy.ACCEPT;
+    if (!Policy.isBlockableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
 
-		// User has manually switched to Firefox engine
-		if (browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(location.spec))
-			return Ci.nsIContentPolicy.ACCEPT;
+    // User has manually switched to Firefox engine
+    if (browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(location.spec)) return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
-    if (Policy.checkEngineRule(location.spec)) {
+    if (Policy.checkEngineRule(location.spec))
+    {
       contentLocation.spec = Utils.toContainerUrl(location.spec);
     }
-    
+
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
@@ -188,20 +181,19 @@ var PolicyPrivate =
   {
     switch (topic)
     {
-      case "http-on-modify-request":
+    case "http-on-modify-request":
       {
-        if (!(subject instanceof Ci.nsIHttpChannel))
-          return;
+        if (!(subject instanceof Ci.nsIHttpChannel)) return;
 
         if (Prefs.autoswitch_enabled)
         {
           let url = subject.URI.spec;
-					let domain = null;
+          let domain = null;
           let wnd = Utils.getRequestWindow(subject);
-					if (wnd)
-					{
-						domain = Utils.getHostname(wnd.location.href);
-					}
+          if (wnd)
+          {
+            domain = Utils.getHostname(wnd.location.href);
+          }
           if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
           {
             // Change user agent
@@ -216,11 +208,9 @@ var PolicyPrivate =
   //
   // nsIFactory interface implementation
   //
-
   createInstance: function(outer, iid)
   {
-    if (outer)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+    if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
     return this.QueryInterface(iid);
   }
 };

@@ -244,6 +244,7 @@ WindowWrapper.prototype = {
     this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems));
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange));
     this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab));
+    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this.onIEUserAgentReceived));
     this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown));
   },
 
@@ -642,6 +643,31 @@ WindowWrapper.prototype = {
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
   },
 
+  /** 响应获取到IE UserAgent的消息 */
+  onIEUserAgentReceived: function(event)
+  {
+    let userAgent = event.detail;
+    Utils.ieUserAgent = userAgent;
+    Utils.LOG("onIEUserAgentReceived: " + userAgent);
+  },
+  
+  /**
+   * Handles 'IESetCookie' event receiving from the plugin
+   */
+  onIESetCookie: function(event)
+  {
+    try
+    {
+      let subject = null;
+      let topic = "fireie-set-cookie";
+      let data = event.detail;
+      Services.obs.notifyObservers(subject, topic, data);
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
+  },
 
   /** plugin方法的调用*/
   goDoCommand: function(cmd)

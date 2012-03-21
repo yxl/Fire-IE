@@ -24,7 +24,7 @@ namespace Cookie
 		return bSucceeded;
 	}
 
-	LPCTSTR CookieManager::SUB_KEY =  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders");
+	static LPCTSTR SUB_KEY =  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders");
 
 	CString CookieManager::SetIECtrlRegString(const CString& strRegName)
 	{

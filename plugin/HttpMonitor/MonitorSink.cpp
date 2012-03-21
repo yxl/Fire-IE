@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include <Wininet.h>
 #include <string>
+#include "Cookie.h"
 #pragma comment(lib, "Wininet.lib")
 
 #include "plugin.h"
@@ -89,7 +90,7 @@ namespace HttpMonitor
 		E_UNEXPECTED;
 
 		m_strURL = szURL;
-		SetCustomHeaders(pszAdditionalHeaders);
+		//SetCustomHeaders(pszAdditionalHeaders);
 
 		return hr;
 	}
@@ -129,6 +130,8 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
+		USES_CONVERSION;
+
 		if (pszAdditionalRequestHeaders)
 		{
 			*pszAdditionalRequestHeaders = 0;
@@ -136,14 +139,22 @@ namespace HttpMonitor
 
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
+
+		// 去除httponly属性, 临时解决httponly Cookie无法同步问题
+		// @todo 寻找更安全的方法解决这个问题。
+		// @author Yuan Xulei
+		CString strResponseHeaderBuffer(szResponseHeaders);
+		strResponseHeaderBuffer.Replace(_T("httponly"), _T(""));
+		strResponseHeaderBuffer.Replace(_T("HttpOnly"), _T(""));
+		
 		HRESULT hr = spHttpNegotiate ?
-			spHttpNegotiate->OnResponse(dwResponseCode, szResponseHeaders,
+			spHttpNegotiate->OnResponse(dwResponseCode, strResponseHeaderBuffer,
 			szRequestHeaders, pszAdditionalRequestHeaders) :
 		E_UNEXPECTED;
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
-			ExportCookies(szResponseHeaders);
+			ExportCookies(strResponseHeaderBuffer);
 		}
 		return hr;
 	}
@@ -159,13 +170,15 @@ namespace HttpMonitor
 		{
 			if (lpCookies)
 			{
-				// TODO 去除m_strURL这个变量
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s"), m_strURL, strCookie);
+				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), m_strURL, strCookie);
 				CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
 				VirtualFree(lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;
+
+				Cookie::Cookie cookieObject(m_strURL, strCookie);
+				TRACE("Cookie %s\n", cookieObject.toString().c_str());
 			}
 
 		}

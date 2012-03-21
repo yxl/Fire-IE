@@ -43,6 +43,13 @@ Cu.import(baseURL.spec + "Utils.jsm");
  */
 let InternetSetCookieW = null;
 
+// NULL pointer
+const NULL = 0;
+
+/**
+ *  DWORD WINAPI GetLastError(void)
+ */
+let GetLastError = null;
 
 
 /**
@@ -51,7 +58,9 @@ let InternetSetCookieW = null;
  */
 let IECookieManager = {
   wininetDll: null,
-
+  kernel32Dll: null,
+  _ieCookieMap: {},
+  
   /**
    * Called on module startup.
    */
@@ -63,7 +72,7 @@ let IECookieManager = {
     // Change the default cookie and cache directories of the IE, which will
     // be restored when the cookie plugin is loaded.
     this._changeIETempDirectorySetting();
-    
+
     CookieObserver.register();
   },
 
@@ -72,9 +81,46 @@ let IECookieManager = {
     this._unloadInternetSetCookieW();
     CookieObserver.unregister();
   },
-
-  saveCookie: function(cookie2)
+  
+  saveFirefoxCookie: function(url, cookieHeader)
   {
+    function getNameValueFromCookieHeader(header)
+    {
+      header = header.trim();
+      let terminate = header.indexOf(";");
+      if (terminate == -1)
+      {
+        terminate = header.length;
+      }
+      let seperate = header.indexOf("=");
+      if (seperate == -1 || seperate > terminate)
+      {
+        return null;
+      }
+      let cookieName = header.substring(0, seperate).trim();
+      let cookieValue = header.substring(seperate + 1, terminate).trim();
+      return {name: cookieName, vlaue: cookieValue};
+    }  
+
+    // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
+    let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
+    this._ieCookieMap[name] = value;
+    
+    Services.cookies.setCookieString(Utils.makeURI(url), null, header, null);  
+  },
+
+  saveIECookie: function(cookie2)
+  {
+    let cookieValue = cookie2.value;
+    
+    // If the cookie is received from IE, does not sync it back
+    let valueInMap = this._ieCookieMap[cookie2.name] || null;
+    if (valueInMap && valueInMap == cookieValue)
+    {
+      this._ieCookieMap[cookie2.name] = undefined;
+      return;
+    }
+    
     let hostname = cookie2.host.trim();
     // 去除hostname开头的“.”
     if (hostname.substring(0, 1) == ".")
@@ -86,62 +132,81 @@ let IECookieManager = {
      * http://baidu.com才能识别
      */
     let url = 'http://' + hostname + cookie2.path;
-    let cookieData = cookie2.name + "=" + decodeURI(cookie2.value) + "; domain=" + cookie2.host + "; path=" + cookie2.path;
+    let cookieData = cookie2.name + "=" + cookieValue + "; domain=" + cookie2.host + "; path=" + cookie2.path;
     if (cookie2.expires > 1)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
-    let ret = InternetSetCookieW(url, 0, cookieData);
+    if (cookie2.isHttpOnly)
+    {
+      //cookieData +="; httponly";
+    }
+    let ret = InternetSetCookieW(url, NULL, cookieData); 
     if (!ret)
     {
-      fireieUtils.ERROR('InternetSetCookieW failed! url:' + url + ' data:' + cookieData);
+      let errCode = GetLastError();
+      Utils.ERROR('InternetSetCookieW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
     }
-    return ret;
   },
 
-  deleteCookie: function(cookie2)
+  deleteIECookie: function(cookie2)
   {
     // @todo 是否需要删除IE中的cookie?
   },
 
-  clearAllCookies: function()
+  clearAllIECookies: function()
   {
     // @todo 
   },
-
+  
   _loadInternetSetCookieW: function()
   {
+    /**
+     * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
+     * anfilat2: 
+     * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
+     * 64bit.
+     * ctypes.default_abi is more universal, but don't works in 32bit callback functions.
+     */
+    let CallBackABI = ctypes.stdcall_abi;
+    let WinABI = ctypes.winapi_abi;
+    if (ctypes.size_t.size == 8)
+    {
+      CallBackABI = ctypes.default_abi;
+      WinABI = ctypes.default_abi;
+    }    
     try
     {
       this.wininetDll = ctypes.open("Wininet.dll");
+      if (this.wininetDll)
+      {
+        InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
+        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
+        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ ); 
+      }      
     }
     catch (e)
     {
       Utils.ERROR(e);
     }
-    if (this.wininetDll)
+    
+    try
     {
-      /**
-       * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
-       * anfilat2: 
-       * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
-       * 64bit.
-       * ctypes.default_abi is more universal, but don't works in 32bit callback functions.
-       */
-      let CallBackABI = ctypes.stdcall_abi;
-      let WinABI = ctypes.winapi_abi;
-      if (ctypes.size_t.size == 8)
+      this.kernel32Dll = ctypes.open("kernel32.dll");
+      if (this.kernel32Dll)
       {
-        CallBackABI = ctypes.default_abi;
-        WinABI = ctypes.default_abi;
-      }
-      InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
-      ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-      ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
-      ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
-    }    
+        GetLastError = this.kernel32Dll.declare("GetLastError",
+                                        WinABI,
+                                        ctypes.uint32_t);
+      }        
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }  
   },
-  
+
   _unloadInternetSetCookieW: function()
   {
     if (this.wininetDll)
@@ -149,8 +214,13 @@ let IECookieManager = {
       this.wininetDll.close();
       this.wininetDll = null;
     }
+    if (this.kernel32Dll)
+    {
+      this.kernel32Dll.close();
+      this.kernel32Dll = null;
+    }
   },
-  
+
   _changeIETempDirectorySetting: function()
   {
     const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
@@ -172,7 +242,7 @@ let IECookieManager = {
         return null;
       }
     }
-    
+
     function setIECtrlRegString(regName, value)
     {
       try
@@ -187,24 +257,24 @@ let IECookieManager = {
         return false;
       }
     }
-    
+
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-    
+
     let originalCookies = getIECtrlRegString("Cookies");
     // Backup the cookie directory setting if needed.
-    if(getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
+    if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
     {
       setIECtrlRegString("Cookies", profileDir + "\\fireie\\cookies");
     }
-    
+
     let originalCache = getIECtrlRegString("Cache");
     // Backup the cache directory setting if needed.
-    if(getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie",originalCache))
+    if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
     {
       setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
     }
   },
-  
+
   _getExpiresString: function(expiresInSeconds)
   {
     // Convert expires seconds to date string of the format "Tue, 28 Feb 2012 17:14:26 GMT"
@@ -215,14 +285,17 @@ let IECookieManager = {
 };
 
 let CookieObserver = {
+  
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "fireie-set-cookie", false);  
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "fireie-set-cookie");    
   },
 
   // nsIObserver
@@ -231,51 +304,69 @@ let CookieObserver = {
     switch (topic)
     {
     case 'cookie-changed':
-      this.onCookieChanged(subject, data);
+      this.onFirefoxCookieChanged(subject, data);
+      break;
+    case 'fireie-set-cookie':
+      this.onIECookieChanged(data);
       break;
     }
   },
 
-  onCookieChanged: function(subject, data)
+  onFirefoxCookieChanged: function(subject, data)
   {
     let cookie = (subject instanceof Ci.nsICookie2) ? subject.QueryInterface(Ci.nsICookie2) : null;
     let cookieArray = (subject instanceof Ci.nsIArray) ? subject.QueryInterface(Ci.nsIArray) : null;
     switch (data)
     {
     case 'deleted':
-      this.logCookie(data, cookie);
-      IECookieManager.deleteCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.deleteIECookie(cookie);
       break;
     case 'added':
-      this.logCookie(data, cookie);
-      IECookieManager.saveCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie);
       break;
     case 'changed':
-      this.logCookie(data, cookie);
-      IECookieManager.saveCookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie);
       break;
     case 'batch-deleted':
       Utils.LOG('[CookieObserver batch-deleted] ' + cookieArray.length + ' cookie(s)');
       for (let i = 0; i < cookieArray.length; i++)
       {
         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
-        IECookieManager.deleteCookie(cookie);
-        this.logCookie(data, cookie);
+        IECookieManager.deleteIECookie(cookie);
+        this.logFirefoxCookie(data, cookie);
       }
       break;
     case 'cleared':
-      fireieUtils.LOG('[CookieObserver cleared]');
-      IECookieManager.clearAllCookies();
+      Utils.LOG('[CookieObserver cleared]');
+      IECookieManager.clearAllIECookies();
       break;
     case 'reload':
-      fireieUtils.LOG('[CookieObserver reload]');
-      IECookieManager.clearAllCookies();
+      Utils.LOG('[CookieObserver reload]');
+      IECookieManager.clearAllIECookies();
       break;
     }
   },
-
-  logCookie: function(tag, cookie2)
+  
+  onIECookieChanged: function(data)
   {
-    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + decodeURI(cookie2.value) + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
+    try
+    {
+      let {url, header} = JSON.parse(data);
+      IECookieManager.saveFirefoxCookie(url, header);
+    }
+    catch(e)
+    {
+      Utils.ERROR(e);
+    }
+  },
+
+  logFirefoxCookie: function(tag, cookie2)
+  {
+    // Don't log!
+    return;
+    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };

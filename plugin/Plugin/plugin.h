@@ -102,9 +102,15 @@ namespace Plugin
 		*/
 		double GetZoomLevel();
 
-		/** 设置Firefox的Cookie
-		* @param strCookie Cookie字符串值, 格式是 cookie1=value1;cookie2=value2;cookie3=value3
-		*/
+		/**
+		 * Sets Firefox Cookie by firing a JavaScript event.
+		 */
+		void SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader);
+
+		/** 
+		 * Sets Firefox Cookie using NPAPI
+		 * @param strCookie Cookie http header string
+		 */
 		void SetURLCookie(const CString& strURL, const CString& strCookie);
 
 		CString GetFirefoxUserAgent();
@@ -120,6 +126,9 @@ namespace Plugin
 
 		/** 向Firefox发送IE窗口标题改变的消息 */
 		void OnIETitleChanged(const CString& strTitle);
+
+		/** 通过消息向Firefox发送IE的UserAgent*/
+		void OnIEUserAgentReceived(const CString& strUserAgent);
 
 		/** 页面加载完成时产生的事件 */
 		void OnDocumentComplete();

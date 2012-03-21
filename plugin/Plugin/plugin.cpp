@@ -46,12 +46,14 @@
 #include "plugin.h"
 #include "npfunctions.h"
 #include "ScriptablePluginObject.h"
+#include "Poco/URI.h"
+#include "json/json.h"
 
 namespace Plugin
 {
 
-	CPlugin::CPlugin(const nsPluginCreateData& data):
-		m_pNPInstance(data.instance),
+	CPlugin::CPlugin(const nsPluginCreateData& data)
+		:m_pNPInstance(data.instance),
 		m_pNPStream(NULL),
 		m_bInitialized(false),
 		m_pScriptableObject(NULL),
@@ -544,6 +546,18 @@ namespace Plugin
 		return level;
 	}
 
+	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader)
+	{
+		USES_CONVERSION;
+		CString strEventType = _T("IESetCookie");
+		CString strDetail;
+		Json::Value json;
+		json["url"] = T2A(strURL);
+		json["header"] = T2A(strCookieHeader);
+		strDetail = A2T(json.toStyledString().c_str());
+		FireEvent(strEventType, strDetail);
+	}
+
 	void CPlugin::SetURLCookie(const CString& strURL, const CString& strCookie)
 	{
 		char* url = CStringToNPStringCharacters(strURL);
@@ -581,6 +595,14 @@ namespace Plugin
 	{
 		CString strEventType = _T("IETitleChanged");
 		CString strDetail = strTitle;
+		FireEvent(strEventType, strDetail);
+	}
+
+	/** 通过消息向Firefox发送IE的UserAgent*/
+	void CPlugin::OnIEUserAgentReceived(const CString& strUserAgent)
+	{
+		CString strEventType = _T("IEUserAgentReceived");
+		CString strDetail = strUserAgent;
 		FireEvent(strEventType, strDetail);
 	}
 
