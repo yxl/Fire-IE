@@ -46,8 +46,6 @@ let InternetSetCookieW = null;
 // NULL pointer
 const NULL = 0;
 
-const cookieSvc = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);  
-
 /**
  *  DWORD WINAPI GetLastError(void)
  */
@@ -108,20 +106,12 @@ let IECookieManager = {
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
     this._ieCookieMap[name] = value;
     
-    cookieSvc.setCookieString(Utils.makeURI(url), null, header, null);  
+    Services.cookies.setCookieString(Utils.makeURI(url), null, header, null);  
   },
 
   saveIECookie: function(cookie2)
   {
     let cookieValue = cookie2.value;
-    try
-    {
-      cookieValue = decodeURI(cookie2.value);
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
     
     // If the cookie is received from IE, does not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
@@ -200,7 +190,6 @@ let IECookieManager = {
     {
       Utils.ERROR(e);
     }
-
     
     try
     {
@@ -378,6 +367,6 @@ let CookieObserver = {
   {
     // Don't log!
     return;
-    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + decodeURI(cookie2.value) + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
+    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };
