@@ -204,10 +204,7 @@ protected:
 	BOOL m_bCanForward;
 	INT32 m_iProgress;
 
-	/** DIRTY FIX: NewWindow3 里面创建的 IE 窗口不能设置 Referrer */
-	CString m_strUrlContext;
-
-	/** 缓存最近的 Favicion URL */
+	/** 缓存最近的 Favicon URL */
 	CString m_strFaviconURL;
 	
 	Plugin::CPlugin* m_pPlugin;

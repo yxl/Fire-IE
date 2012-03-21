@@ -130,6 +130,8 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
+		USES_CONVERSION;
+
 		if (pszAdditionalRequestHeaders)
 		{
 			*pszAdditionalRequestHeaders = 0;
@@ -137,14 +139,22 @@ namespace HttpMonitor
 
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
+
+		// 去除httponly属性, 临时解决httponly Cookie无法同步问题
+		// @todo 寻找更安全的方法解决这个问题。
+		// @author Yuan Xulei
+		CString strResponseHeaderBuffer(szResponseHeaders);
+		strResponseHeaderBuffer.Replace(_T("httponly"), _T(""));
+		strResponseHeaderBuffer.Replace(_T("HttpOnly"), _T(""));
+		
 		HRESULT hr = spHttpNegotiate ?
-			spHttpNegotiate->OnResponse(dwResponseCode, szResponseHeaders,
+			spHttpNegotiate->OnResponse(dwResponseCode, strResponseHeaderBuffer,
 			szRequestHeaders, pszAdditionalRequestHeaders) :
 		E_UNEXPECTED;
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
-			ExportCookies(szResponseHeaders);
+			ExportCookies(strResponseHeaderBuffer);
 		}
 		return hr;
 	}

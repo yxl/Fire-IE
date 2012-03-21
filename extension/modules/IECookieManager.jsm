@@ -149,7 +149,7 @@ let IECookieManager = {
     }
     if (cookie2.isHttpOnly)
     {
-      cookieData +="; httponly";
+      //cookieData +="; httponly";
     }
     let ret = InternetSetCookieW(url, NULL, cookieData); 
     if (!ret)
