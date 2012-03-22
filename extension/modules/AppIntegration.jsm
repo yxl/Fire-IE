@@ -551,10 +551,7 @@ WindowWrapper.prototype = {
   /** 打开切换规则对话框 */
   openRulesDialog: function(url)
   {
-    let wnd = Services.wm.getMostRecentWindow("fireie:rules");
-    if (wnd) wnd.focus();
-    else this.window.openDialog("chrome://fireie/content/rules.xul", "fireieRulesDialog", "chrome,centerscreen,resizable=no");
-
+	Utils.openRulesDialog();
   },
 
   getHandledURL: function(url, isModeIE)

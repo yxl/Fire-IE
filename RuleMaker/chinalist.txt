@@ -1,0 +1,56 @@
+[fireie 0.0.9]
+!  Checksum: chWRkcrwkR1TjnwjkCsHcA
+! Expires: 2 days
+! ===============================================
+!            User Agent Rules  
+! ===============================================
+##||firefox.net.cn^
+##||360buy.com^
+! ===============================================
+!               Engine Rules
+! ===============================================
+! 购物及支付 由魏大鹏提供
+! -----------------------------------------------
+! taobao
+|https://cashier.alipay.com/standard/gateway/ebankPay.htm^
+|https://cashier.alipay.com/standard/gateway/ebankDeposit.htm^
+! 360buy
+||360buy.com/purchase/succeed_online.aspx^
+|http://payment.360buy.com/bank/payment_orderselect.aspx^
+! paipai & tenpay
+||tenpay.com^
+! 99bill
+||99bill.com^
+!amazon
+||www.amazon.cn/gp/buy^
+||www.amazon.cn/gp/css/ep/repay-pending-transactions.html^
+!vancl
+|https://shopping.vancl.com/shoppingcar^
+|http://pay.vancl.com/Shopping_Paid.aspx^
+|http://om.vancl.com/Checkout/ShoppingPay^
+!newegg
+|https://secure.newegg.com.cn/Order/OrderDetail.aspx^
+|https://secure.newegg.com.cn/Order/ChangeSOThankYou.aspx^
+|https://secure.newegg.com.cn/shopping/CheckOut.aspx^
+!第三方连支付宝和财付通
+|https://tradeexprod.alipay.com/gateway/exterfaceAssign.do^
+!12306
+||12306.cn^
+!chinastock
+||chinastock.com.cn^
+!dangdang
+||dangdang.com^
+! -----------------------------------------------
+! 银行
+! -----------------------------------------------
+||icbc.com.cn^
+||cmbchina.com^
+||abchina.com^
+||ecitic.com^
+||cebbank.com^
+||boc.cn^
+||bankcomm.com^
+||cib.com.cn^
+||sdb.com.cn^
+||hxb.com.cn^
+||psbc.com^

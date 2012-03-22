@@ -535,7 +535,7 @@ var Utils = {
    */
   openRulesDialog: function(rule)
   {
-    var dlg = Services.wm.getMostRecentWindow("abp:rules");
+    var dlg = Services.wm.getMostRecentWindow("fireie:rules");
     if (dlg)
     {
       try
@@ -548,7 +548,7 @@ var Utils = {
     }
     else
     {
-      Services.ww.openWindow(null, "chrome://adblockplus/content/ui/rules.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
+      Services.ww.openWindow(null, "chrome://fireie/content/rules.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
         wrappedJSObject: rule
       });
     }
@@ -562,23 +562,21 @@ var Utils = {
    */
   loadInBrowser: function( /**String*/ url)
   {
-    let window = null;
+    let gBrowser = null;
 
     let enumerator = Services.wm.getZOrderDOMWindowEnumerator(null, true);
     while (enumerator.hasMoreElements())
     {
-      window = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
-      let cookieObject = window.document.getElementById(Utils.cookiePluginId);
-      if (cookieObject)
-      {
-        window.focus();
-        break;
-      }
+      let window = enumerator.getNext();
+	  if (window.gBrowser)
+	  {
+		gBrowser = window.gBrowser;
+	  }
     }
 
-    if (window)
+    if (gBrowser)
     {
-      window.addTab(url);
+      gBrowser.addTab(url);
     }
     else
     {

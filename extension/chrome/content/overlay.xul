@@ -53,7 +53,7 @@
   <!-- Switch button context menu -->
   <menupopup id="fireie-switch-button-context-menu">
     <menuitem label="&fireie.options.title;" oncommand="gFireIE.openOptionsDialog();"/>
-    <menuitem label="Switch Rules" oncommand="gFireIE.openRulesDialog();" />
+    <menuitem label="&urlbar.switchRules.label;" oncommand="gFireIE.openRulesDialog();" />
   </menupopup>
 </popupset>
 
