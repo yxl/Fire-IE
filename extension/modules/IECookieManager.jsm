@@ -150,24 +150,24 @@ let IECookieManager = {
       let cookieValue = header.substring(seperate + 1, terminate).trim();
       return {name: cookieName, vlaue: cookieValue};
     }
-    
+
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
     this._ieCookieMap[name] = value;
-    cookieSvc.setCookieString(Utils.makeURI(url), null, cookieHeader, null);
+    
+    // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
+    let uri = Utils.makeURI(url);
+    cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
   },
 
   saveIECookie: function(cookie2)
   {  
     // If the cookie is received from IE, does not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
-    if (valueInMap !== null)
+    if (valueInMap !== null && valueInMap === cookie2.value)
     {
       this._ieCookieMap[cookie2.name] = undefined;
-      if (valueInMap == cookie2.value)
-      {
         return;
-      }
     }
     
     let hostname = cookie2.host.trim();
@@ -419,7 +419,6 @@ let CookieObserver = {
 
   logFirefoxCookie: function(tag, cookie2)
   {
-    // Don't log!
     Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };
