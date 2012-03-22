@@ -11,6 +11,7 @@ pref("extensions.fireie.data_directory", "fireie");
 pref("extensions.fireie.autoswitch_whitelistschemes", "about chrome file irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
 pref("extensions.fireie.autoswitch_enabled", true);
 pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
+pref("extensions.fireie.savestats", true);
 
 pref("extensions.fireie.handleUrlBar", false);
 pref("extensions.fireie.shortcut_key", "C");
