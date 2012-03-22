@@ -149,6 +149,7 @@ function WindowWrapper(window)
 {
 
   this.window = window;
+  this.Utils = Utils;
 
   if (!isPluginListRefreshed)
   {
@@ -172,6 +173,8 @@ WindowWrapper.prototype = {
    * @type Window
    */
   window: null,
+  
+  Utils: null,
 
   /**
    * Whether the UI is updating.
@@ -258,7 +261,7 @@ WindowWrapper.prototype = {
     {
       return;
     }
-    //try
+    try
     {
       this.isUpdating = true;
 
@@ -338,11 +341,11 @@ WindowWrapper.prototype = {
         toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
       }
     }
-    //catch (e)
+    catch (e)
     {
       //Utils.ERROR(e);
     }
-    //finally
+    finally
     {
       this.isUpdating = false;
     }
