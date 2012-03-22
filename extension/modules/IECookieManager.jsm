@@ -188,14 +188,19 @@ let IECookieManager = {
     }
     if (cookie2.isHttpOnly)
     {
-      //cookieData +="; httponly";
+      cookieData +="; httponly";
     }
     let ret = InternetSetCookieW(url, NULL, cookieData); 
-    //let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
     if (!ret)
     {
       let errCode = GetLastError();
       Utils.ERROR('InternetSetCookieW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
+      let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
+      if (!ret)
+      {
+        errCode = GetLastError();
+        Utils.ERROR('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
+      }
     }
   },
 

@@ -2,11 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by plugin.rc
 //
-#define IDD_MAIN_WINDOW                 1005
 #define IDD_IE_HOST_WINDOW              1005
-#define IDC_IEControl                   1009
 #define IDC_IE_CONTROL                  1009
-#define IDC_WIZCOMBO1                   1010
 
 // Next default values for new objects
 // 
