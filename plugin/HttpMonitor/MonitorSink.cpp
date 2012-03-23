@@ -89,54 +89,8 @@ namespace HttpMonitor
 			dwReserved, pszAdditionalHeaders) : E_UNEXPECTED;
 
 		m_strURL = szURL;
-		//SetCustomHeaders(pszAdditionalHeaders);
 
 		return hr;
-	}
-
-	void MonitorSink::SetCustomHeaders(LPWSTR *pszAdditionalHeaders)
-	{
-		if (pszAdditionalHeaders)
-		{
-			USES_CONVERSION;
-
-			CString strHeaders(W2T(*pszAdditionalHeaders));
-
-			static const BOOL SYNC_USER_AGENT = FALSE;
-			if (SYNC_USER_AGENT && m_strURL.Find(_T("cmbchina.com")) == -1)
-			{
-				// Ôö¼Ó User-Agent
-				CString strUserAgent;
-				strUserAgent.Format(_T("User-Agent: %s\r\n"), CIEHostWindow::GetFirefoxUserAgent());
-
-				strHeaders += strUserAgent;
-
-				size_t nLen = strHeaders.GetLength() + 2;
-				if (*pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen*sizeof(WCHAR)))
-				{
-					int cnt = strHeaders.GetLength() + 1;
-					TCHAR* tstr = new TCHAR[cnt];
-					_tcsncpy_s(tstr, cnt, strHeaders, cnt);
-					wcscpy_s(*pszAdditionalHeaders, nLen, T2W(tstr));
-				}
-			}
-
-			if (TRUE)
-			{
-				CString strCookie(_T("Cookie: name=yxl\r\n"));
-
-				strHeaders += strCookie;
-
-				size_t nLen = strHeaders.GetLength() + 2;
-				if (*pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen*sizeof(WCHAR)))
-				{
-					int cnt = strHeaders.GetLength() + 1;
-					TCHAR* tstr = new TCHAR[cnt];
-					_tcsncpy_s(tstr, cnt, strHeaders, cnt);
-					wcscpy_s(*pszAdditionalHeaders, nLen, T2W(tstr));
-				}
-			}
-		}
 	}
 
 	STDMETHODIMP MonitorSink::OnResponse(

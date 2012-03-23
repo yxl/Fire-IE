@@ -305,6 +305,8 @@ buildxpi64.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
+    <ClCompile Include="BrowserHook\HookImportFunction.cpp" />
+    <ClCompile Include="BrowserHook\HookMgr.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
     <ClCompile Include="Cookie\Cookie.cpp" />
     <ClCompile Include="Cookie\CookieManager.cpp" />
@@ -331,6 +333,8 @@ buildxpi64.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
+    <ClInclude Include="BrowserHook\HookImportFunction.h" />
+    <ClInclude Include="BrowserHook\HookMgr.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
     <ClInclude Include="Cookie\Cookie.h" />
     <ClInclude Include="Cookie\CookieManager.h" />
