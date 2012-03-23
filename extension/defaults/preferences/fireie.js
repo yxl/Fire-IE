@@ -17,6 +17,7 @@ pref("extensions.fireie.handleUrlBar", false);
 pref("extensions.fireie.shortcut_key", "C");
 pref("extensions.fireie.shortcut_modifiers", "alt");
 pref("extensions.fireie.showUrlBarLabel", true);
+pref("extensions.fireie.hideUrlBarButton", false);
 pref("extensions.fireie.compatMode", "ie7mode");
 
 

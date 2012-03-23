@@ -96,6 +96,8 @@ windowtype="fireie:options">
             <hbox align="center">
               <checkbox label="&fireie.options.showUrlBarLabel;"
               id="showUrlBarLabel" />
+              <checkbox label="&fireie.options.hideUrlBarButton;"
+              id="hideUrlBarButton" />
             </hbox>
           </groupbox>          
         </vbox>

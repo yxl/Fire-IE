@@ -81,6 +81,7 @@ Options.apply = function(quiet)
     Prefs.shortcut_modifiers = newModifiers;
   }
   Prefs.showUrlBarLabel = E("showUrlBarLabel").checked;
+  Prefs.hideUrlBarButton = E("hideUrlBarButton").checked;
 
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -181,6 +182,7 @@ Options.initDialog = function()
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
   E("showUrlBarLabel").checked = Prefs.showUrlBarLabel;
+  E("hideUrlBarButton").checked = Prefs.hideUrlBarButton;
   
   // updateStatus
   Options.updateApplyButton(false);
