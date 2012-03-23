@@ -63,7 +63,7 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "shortcut_key" || name == "shortcut_modifiers") reloadPrefs();
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" || name == "shortcut_modifiers") reloadPrefs();
   });
   RuleNotifier.addListener(function(action)
   {
@@ -231,6 +231,7 @@ WindowWrapper.prototype = {
   setupUrlBarButton: function()
   {
     this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;
+    this.E("fireie-urlbar-switch").hidden = Prefs.hideUrlBarButton;
   },
 
   /**

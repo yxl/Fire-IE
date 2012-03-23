@@ -12,6 +12,7 @@
 <!ENTITY fireie.options.shorcut.title "快捷键">
 <!ENTITY fireie.options.ui.caption "用户界面">
 <!ENTITY fireie.options.showUrlBarLabel "显示地址栏按钮文字">
+<!ENTITY fireie.options.hideUrlBarButton "隐藏地址栏按钮">
 
 <!ENTITY fireie.options.rule.label "网址过滤">
 <!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">

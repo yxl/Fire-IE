@@ -96,6 +96,8 @@ windowtype="fireie:options">
             <hbox align="center">
               <checkbox label="&fireie.options.showUrlBarLabel;"
               id="showUrlBarLabel" />
+              <checkbox label="&fireie.options.hideUrlBarButton;"
+              id="hideUrlBarButton" />
             </hbox>
           </groupbox>          
         </vbox>
@@ -132,7 +134,7 @@ windowtype="fireie:options">
         oncommand="Options.export();" />
         <menuseparator />
         <menuitem id="default" label="&fireie.options.default;"
-        oncommand="Options.restoreDefaultoptions();" />
+        oncommand="Options.restoreDefaultSettings();" />
       </menupopup>
     </button>
     <spacer flex="1" />

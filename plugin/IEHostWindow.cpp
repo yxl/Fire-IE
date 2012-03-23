@@ -732,7 +732,7 @@ CString CIEHostWindow::GetFaviconURL()
 				return GetURLRelative(url, contentFaviconURL);
 			}
 			host = GetHostFromUrl(url);
-			if (host != "")
+			if (host != _T(""))
 			{
 				CString protocol = GetProtocolFromUrl(url);
 				if (protocol.MakeLower() != _T("http") && protocol.MakeLower() != _T("https")) {
@@ -747,7 +747,7 @@ CString CIEHostWindow::GetFaviconURL()
 	{
 		TRACE(_T("CIEHostWindow::GetURL failed!\n"));
 	}
-	// temporary return baidu's favicon url
+	
 	return favurl;
 }
 
@@ -933,7 +933,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 					{
 						rel = v_rel.bstrVal;
 						rel = rel.MakeLower();
-						if (rel == "shortcut icon" || rel == "icon")
+						if (rel == _T("shortcut icon") || rel == _T("icon"))
 						{
 							CString href;
 							VARIANT v_href;
@@ -948,7 +948,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 						}
 					}
 				}
-				if (CString(bstr_tagName).MakeLower() == "body")
+				if (CString(bstr_tagName).MakeLower() == _T("body"))
 				{
 					// to speed up, only parse elements before the body element
 					pElem->Release();
