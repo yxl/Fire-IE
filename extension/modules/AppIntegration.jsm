@@ -561,10 +561,6 @@ WindowWrapper.prototype = {
   getHandledURL: function(url, isModeIE)
   {
     url = url.trim();
-    if (!/^[\w]+:/.test(url))
-    {
-      url = "http://" + url;
-    }
 
     // 访问firefox特有地址时, 只允许使用firefox内核
     if (Utils.isFirefoxOnly(url))
