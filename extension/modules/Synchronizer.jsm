@@ -43,7 +43,7 @@ const SECONDS_IN_DAY = 24 * SECONDS_IN_HOUR;
 const INITIAL_DELAY = 6 * SECONDS_IN_MINUTE;
 const CHECK_INTERVAL = SECONDS_IN_HOUR;
 const MIN_EXPIRATION_INTERVAL = 1 * SECONDS_IN_DAY;
-const MAX_EXPIRATION_INTERVAL = 14 * SECONDS_IN_DAY;
+const MAX_EXPIRATION_INTERVAL = 4 * SECONDS_IN_DAY;
 const MAX_ABSENSE_INTERVAL = 1 * SECONDS_IN_DAY;
 
 var XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIJSXMLHttpRequest");
@@ -320,7 +320,7 @@ function checkSubscriptions()
 function readRules(subscription, text, errorCallback)
 {
   let lines = text.split(/[\r\n]+/);
-  if (!/\[Adblock(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
+  if (!/\[fireie(?:\s*([\d\.]+)?)?\]/i.test(lines[0]))
   {
     errorCallback("Synchronizer.invalidData");
     return null;

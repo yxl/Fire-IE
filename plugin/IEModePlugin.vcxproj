@@ -168,7 +168,7 @@
     <CustomBuildStep>
       <Command>cd $(SolutionDir)\tools
 buildxpi.bat</Command>
-      <Outputs>$(SolutionDir)fireie.xpi</Outputs>
+      <Outputs>$(SolutionDir)fireie32.xpi</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -204,8 +204,8 @@ buildxpi.bat</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>cd $(SolutionDir)\tools
-buildxpi.bat</Command>
-      <Outputs>$(SolutionDir)fireie.xpi</Outputs>
+buildxpi64.bat</Command>
+      <Outputs>$(SolutionDir)fireie64.xpi</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -242,7 +242,7 @@ buildxpi.bat</Command>
     <CustomBuildStep>
       <Command>cd $(SolutionDir)\tools
 buildxpi.bat</Command>
-      <Outputs>$(SolutionDir)fireie.xpi</Outputs>
+      <Outputs>$(SolutionDir)fireie32.xpi</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -279,8 +279,8 @@ buildxpi.bat</Command>
     </Link>
     <CustomBuildStep>
       <Command>cd $(SolutionDir)\tools
-buildxpi.bat</Command>
-      <Outputs>$(SolutionDir)fireie.xpi</Outputs>
+buildxpi64.bat</Command>
+      <Outputs>$(SolutionDir)fireie64.xpi</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
@@ -305,6 +305,8 @@ buildxpi.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
+    <ClCompile Include="BrowserHook\HookImportFunction.cpp" />
+    <ClCompile Include="BrowserHook\HookMgr.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
     <ClCompile Include="Cookie\Cookie.cpp" />
     <ClCompile Include="Cookie\CookieManager.cpp" />
@@ -331,6 +333,8 @@ buildxpi.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
+    <ClInclude Include="BrowserHook\HookImportFunction.h" />
+    <ClInclude Include="BrowserHook\HookMgr.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
     <ClInclude Include="Cookie\Cookie.h" />
     <ClInclude Include="Cookie\CookieManager.h" />

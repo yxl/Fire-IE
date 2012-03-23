@@ -417,7 +417,7 @@ DownloadableSubscription.prototype = {
   /**
    * Time when the subscription was considered for an update last time (in seconds
    * since the beginning of the epoch). This will be used to increase softExpiration
-   * if the user doesn't use Adblock Plus for some time.
+   * if the user doesn't use Fire IE for some time.
    * @type Number
    */
   get lastCheck() this._lastCheck,
@@ -455,13 +455,13 @@ DownloadableSubscription.prototype = {
   },
 
   /**
-   * Minimal Adblock Plus version required for this subscription
+   * Minimal add-on's version required for this subscription
    * @type String
    */
   requiredVersion: null,
 
   /**
-   * Should be true if requiredVersion is higher than current Adblock Plus version
+   * Should be true if requiredVersion is higher than current add-on's version
    * @type Boolean
    */
   upgradeRequired: false,

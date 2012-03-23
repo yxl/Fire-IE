@@ -13,8 +13,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept"
   title="&dialog.title;"
-  id="abpFirstRun"
-  windowtype="abp:firstRun"
+  id="fireieFirstRun"
+  windowtype="fireie:firstRun"
   onload="init()">
 
   <script type="application/x-javascript;version=1.7" src="utils.js"/>
@@ -32,13 +32,7 @@
       <label class="text-link" id="listHomepage" value="&visitHomepage.label;" onclick="Utils.loadInBrowser(this.getAttribute('_url'))"/>
     </vbox>
     <description id="listNone">&noList;</description>
-
-    <description id="acceptableAds" hidden="true">
-      &acceptableAds2;
-      <label class="text-link" value="&viewList.label;" onclick="Utils.loadInBrowser(Prefs.subscriptions_exceptionsurl);"/>
-      <label class="text-link" value="&readMore.label;" onclick="Utils.loadDocLink('acceptable_ads');"/>
-    </description>
-  </vbox>
+ </vbox>
 
   <description id="changeDescription" _textTemplate="&listSelection2;">
     <label class="text-link" onclick="openRules();"/>

@@ -14,8 +14,8 @@
   buttons="accept,cancel"
   buttonlabelaccept="&addSubscription.label;"
   title="&dialog.title;"
-  id="abpSubscriptionSelection"
-  windowtype="abp:subscriptionSelection"
+  id="fireieSubscriptionSelection"
+  windowtype="fireie:subscriptionSelection"
   onload="init();"
   ondialogaccept="return addSubscription();">
 

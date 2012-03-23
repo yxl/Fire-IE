@@ -1,4 +1,4 @@
-<!ENTITY dialog.title               "Add Adblock Plus rule subscription">
+<!ENTITY dialog.title               "Rule subscription">
 
 <!ENTITY subscriptionSelector.label "Please choose a rule subscription from the list:">
 
@@ -7,7 +7,7 @@
 
 <!ENTITY addSubscription.label      "Add subscription">
 
-<!ENTITY list.download.failed       "Adblock Plus failed to retrieve the list of subscriptions.">
+<!ENTITY list.download.failed       "Failed to retrieve the list of subscriptions.">
 <!ENTITY list.download.retry        "Try again">
 <!ENTITY list.download.website      "View website">
 

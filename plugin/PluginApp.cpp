@@ -20,7 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "PluginApp.h"
-#include "CookieManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -143,12 +142,6 @@ BOOL CPluginApp::InitInstance()
 	AfxOleInit();
 	SetClassName(STR_WINDOW_CLASS_NAME);
 	CWinApp::InitInstance();
-
-	// Restore the IE temperary directory setting to avoid affacting IE browser.
-	if (!Cookie::CookieManager::s_instance.RestoreIETempDirectorySetting())
-	{
-		TRACE(_T("Failed to restore IE temerary directory setting.\n"));
-	}
 
 	return TRUE;
 }

@@ -92,7 +92,7 @@ public:
 		COleControlSite** ppSite, UINT nID, REFCLSID clsid);
 
 	// Dialog Data
-	enum { IDD = IDD_MAIN_WINDOW };
+	enum { IDD = IDD_IE_HOST_WINDOW };
 
 	// Overrides
 	virtual BOOL OnInitDialog();

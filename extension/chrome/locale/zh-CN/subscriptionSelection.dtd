@@ -1,16 +1,16 @@
-<!ENTITY dialog.title "添加 Adblock Plus 过滤规则订阅">
-<!ENTITY subscriptionSelector.label "从列表中选择过滤规则订阅：">
-<!ENTITY viewList.label "查看过滤规则">
+<!ENTITY dialog.title "添加规则订阅">
+<!ENTITY subscriptionSelector.label "从列表中选择规则订阅(这些规则用于智能切换内核和同步Cookie)：">
+<!ENTITY viewList.label "查看规则">
 <!ENTITY visitHomepage.label "查看主页">
 <!ENTITY addSubscription.label "添加订阅">
 <!ENTITY list.download.failed "获取订阅列表失败。">
 <!ENTITY list.download.retry "重试">
 <!ENTITY list.download.website "查看站点">
-<!ENTITY fromWeb.description "请确认您希望添加该过滤规则订阅。在添加之前，您可以更改订阅标题或位置。">
+<!ENTITY fromWeb.description "请确认您希望添加该规则订阅。在添加之前，您可以更改订阅标题或位置。">
 <!ENTITY title.label "订阅的标题:">
 <!ENTITY title.accesskey "T">
-<!ENTITY location.label "过滤规则列表位置:">
+<!ENTITY location.label "规则列表位置:">
 <!ENTITY location.accesskey "L">
-<!ENTITY supplementMessage "该规律规则订阅意味着该订阅将与您未添加的过滤规则订阅 &quot;?1?&quot; 一起使用。">
-<!ENTITY addMain.label "同时添加过滤规则订阅&quot;?1?&quot;">
+<!ENTITY supplementMessage "该规则订阅会同时添加 &quot;?1?&quot; 。">
+<!ENTITY addMain.label "同时添加规则订阅&quot;?1?&quot;">
 <!ENTITY addMain.accesskey "s">

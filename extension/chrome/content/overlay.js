@@ -38,15 +38,15 @@ var gFireIE = null;
   function initializeHooks()
   {
     //hook properties
-    hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
+    gFireIE.hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
     hookURLBarSetter(gURLBar);
 
     //hook functions
     hookCode("gFindBar._onBrowserKeypress", "this._useTypeAheadFind &&", "$& !gFireIE.isIEEngine() &&"); // IE内核时不使用Firefox的查找条, $&指代被替换的代码
-    hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
-    hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
-    hookCode("gBrowser.addTab", "return t;", "hookBrowserGetter(t.linkedBrowser); $&");
-    hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(Utils.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
+    hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
+    hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
+    hookCode("gBrowser.addTab", "return t;", "gFireIE.hookBrowserGetter(t.linkedBrowser); $&");
+    hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
     hookCode("getShortcutOrURI", /return (\S+);/g, "return gFireIE.getHandledURL($1);"); // 访问新的URL
     //hook Interface Commands
     hookCode("BrowserBack", /{/, "$& if(gFireIE.goDoCommand('Back')) return;");
@@ -130,7 +130,7 @@ var gFireIE = null;
     }
   }
 
-  function hookBrowserGetter(aBrowser)
+  gFireIE.hookBrowserGetter = function(aBrowser)
   {
     if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
     // hook aBrowser.currentURI, 在IE引擎内部打开URL时, Firefox也能获取改变后的URL
