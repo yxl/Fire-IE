@@ -81,13 +81,13 @@ namespace BrowserHook
 			MSG * pMsg = reinterpret_cast<MSG *>(lParam);
 			HWND hwnd = pMsg->hwnd;
 
-			// 只处理键盘消息
+			// here we only handle keyboard messages
 			if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST || hwnd == NULL)
 			{
 				goto Exit;
 			}
 
-			// 只处理IE窗口消息，通过检查窗口类名过滤非IE窗口
+			// Check if it is an IE control window by its window class name
 			CString strClassName;
 			GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
 			strClassName.ReleaseBuffer(); 
@@ -102,7 +102,7 @@ namespace BrowserHook
 				goto Exit;
 			}
 
-			// 获取CIEHostWindow对象
+			// Get CIEHostWindow object from its window handle
 			CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
 			if (pIEHostWindow == NULL) 
 			{
@@ -115,7 +115,7 @@ namespace BrowserHook
 				BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
 				BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
 
-				// 当Alt键释放时，也向Firefox窗口转发按钮消息。否则无法通过Alt键选中主菜单。
+				// Send Alt key up message to Firefox, so that use could select the main window menu by press alt key.
 				if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
 				{
 					bAltPressed = TRUE;
@@ -169,7 +169,7 @@ Exit:
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
 				return FALSE;
-				// 以下快捷键由 IE 内部处理, 如果传给 Firefox 的话会导致重复
+				// The above shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
 			case 'F': // Ctrl+F, Find
 			case 'C': // Ctrl+C, Copy
@@ -196,7 +196,7 @@ Exit:
 		if (nCode == HC_ACTION)
 		{
 			CWPRETSTRUCT * info = (CWPRETSTRUCT*) lParam;
-			// info->wParam == NULL 表示焦点移到其它进程去了，我们只有在这个时候才要保护IE的焦点
+			// If the IE control loses its focus, get it back.
 			if (WM_KILLFOCUS == info->message && NULL == info->wParam)
 			{
 				HWND hwnd = info->hwnd;
@@ -205,7 +205,6 @@ Exit:
 				strClassName.ReleaseBuffer(); 
 				if (strClassName ==  _T("Internet Explorer_Server"))
 				{
-					// 重新把焦点移到 plugin 窗口上，这样从别的进程窗口切换回来的时候IE才能有焦点
 					CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
 					if (pIEHostWindow)
 					{
