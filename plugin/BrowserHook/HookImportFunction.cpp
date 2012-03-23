@@ -18,7 +18,8 @@ namespace BrowserHook
 		if ((szImportModule == NULL) || (hModule == NULL))
 			return NULL;
 		pDOSHeader = (PIMAGE_DOS_HEADER) hModule;
-		if (IsBadReadPtr(pDOSHeader, sizeof(IMAGE_DOS_HEADER)) || (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)) {
+		if (IsBadReadPtr(pDOSHeader, sizeof(IMAGE_DOS_HEADER)) || (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)) 
+		{
 			return NULL;
 		}
 		pNTHeader = MakePtr(PIMAGE_NT_HEADERS, pDOSHeader, pDOSHeader->e_lfanew);
@@ -27,7 +28,8 @@ namespace BrowserHook
 		if (pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress == 0)
 			return NULL;
 		pImportDesc = MakePtr(PIMAGE_IMPORT_DESCRIPTOR, pDOSHeader, pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-		while (pImportDesc->Name) {
+		while (pImportDesc->Name) 
+		{
 			PSTR szCurrMod = MakePtr(PSTR, pDOSHeader, pImportDesc->Name);
 			if (_stricmp(szCurrMod, szImportModule) == 0)
 				break;
@@ -73,17 +75,20 @@ namespace BrowserHook
 					pRealThunk++;
 					continue;				
 				}
-				if ('\0' == pByName->Name[0]) {
+				if ('\0' == pByName->Name[0]) 
+				{
 					pOrigThunk++;
 					pRealThunk++;
 					continue;
 				}
 				bDoHook = FALSE;
-				if ((szFunc[0] == pByName->Name[0]) && (_strcmpi(szFunc, (char*)pByName->Name) == 0)) {
+				if ((szFunc[0] == pByName->Name[0]) && (_strcmpi(szFunc, (char*)pByName->Name) == 0)) 
+				{
 					if (pHookFunc)
 						bDoHook = TRUE;
 				}
-				if (bDoHook) {
+				if (bDoHook) 
+				{
 					MEMORY_BASIC_INFORMATION mbi_thunk;
 					DWORD dwOldProtect;
 

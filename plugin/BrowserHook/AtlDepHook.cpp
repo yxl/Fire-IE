@@ -70,6 +70,15 @@ namespace BrowserHook
 		return SetWindowLongW(hWnd, nIndex, dwNewLong);
 	}
 
+	HRESULT WINAPI CoCreateInstance_hook(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv)
+	{
+		TRACE(_T("[AtlDepHook] CoCreateInstance_hook\n"));
+		HRESULT hret =  ::CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
+		AtlDepHook::s_instance.Install();
+		return hret;
+	}
+
+
 	struct FunctionInfo
 	{
 		LPCSTR  szFunctionModule;
@@ -81,7 +90,9 @@ namespace BrowserHook
 	{
 		DEFINE_FUNCTION_INFO("user32.dll", SetWindowLongA),
 		DEFINE_FUNCTION_INFO("user32.dll", SetWindowLongW),
+		DEFINE_FUNCTION_INFO("ole32.dll", CoCreateInstance),
 	};
+
 
 	const size_t s_FunctionsCount = sizeof(s_Functions)/sizeof(FunctionInfo);
 
@@ -151,6 +162,7 @@ namespace BrowserHook
 			"KWSUI", // Kingsoft Webshield Module
 			"KDUMP", // Kingsoft Antivirus Dump Collect Lib
 			"TORTOISE", // Tortoise Veriosn Control Client
+			"UPEDITOR", // China UnionPay ActiveX Control
 		};
 
 		// Converts to upper case string
@@ -188,7 +200,7 @@ namespace BrowserHook
 			{
 				if (!m_hookMgr.IsModuleHooked(me.hModule))
 				{
-					TRACE("[AtlDepHook] New module is hooked! %s\n", me.szModule);
+					TRACE(_T("[AtlDepHook] New module is hooked! %s\n"), me.szModule);
 				}
 				InstallHooksForNewModule(me.hModule);
 			}

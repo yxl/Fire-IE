@@ -21,20 +21,22 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 namespace BrowserHook
 {
 	/**
-	* 这个类用于处理DEP问题。在Win7系统中，如果CPU支持DEP保持，在默认
-	* 操作系统设置下，加载旧版Alt编译的ActiveX会导致Firefox崩溃。
+	* This class is used to work around ATL component conflicts with DEP. 
+	* Some IE ActiveX controls using Older ATL components, cause Firefox to crash.
+	* We hooked the system API SetWindowLong to avoid this problem.
+	* Refer to http://support.microsoft.com/kb/948468 and https://bugzilla.mozilla.org/show_bug.cgi?id=704038
 	*/
 	class AtlDepHook
 	{
 	public:
+		// Single instance of the AtlDepHook for use in the plugin.
 		static AtlDepHook s_instance;
 		void Install(void);
 		void Uninstall(void);
+		void InstallHooksForNewModule(HMODULE hModule);
 	private:
 		AtlDepHook(void){}
 		~AtlDepHook(void){}
-
-		void InstallHooksForNewModule(HMODULE hModule);
 
 		HookMgr m_hookMgr;
 	};
