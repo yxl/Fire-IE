@@ -134,7 +134,7 @@ windowtype="fireie:options">
         oncommand="Options.export();" />
         <menuseparator />
         <menuitem id="default" label="&fireie.options.default;"
-        oncommand="Options.restoreDefaultoptions();" />
+        oncommand="Options.restoreDefaultSettings();" />
       </menupopup>
     </button>
     <spacer flex="1" />

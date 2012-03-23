@@ -214,8 +214,7 @@ Options.init = function()
 Options.close = function() {
   let isModified = !document.getElementById("myApply").disabled;
   if (isModified) {
-    // TODO Replace with localized string
-    if (confirm("选项已修改，是否保存？")) {
+    if (confirm(Utils.getString("fireie.options.alert.modified"))) {
       Options.apply(true);
     }
   }
