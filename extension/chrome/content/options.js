@@ -72,14 +72,14 @@ Options.apply = function(quiet)
   if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
 	{
     requiresRestart = true;
-    Prefs.shortcut_key = newKey;
   }
+  Prefs.shortcut_key = newKey;
   let newModifiers = E("shortcut-modifiers").value;
   if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
 	{
     requiresRestart = true;
-    Prefs.shortcut_modifiers = newModifiers;
   }
+  Prefs.shortcut_modifiers = newModifiers;
   let newEnabled = E("shortcutEnabled").checked;
   if (Prefs.shortcutEnabled != newEnabled) {
     requiresRestart = true;
