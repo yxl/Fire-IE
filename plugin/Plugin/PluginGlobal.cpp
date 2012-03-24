@@ -49,7 +49,6 @@ namespace Plugin
 			BrowserHook::AtlDepHook::s_instance.Install();
 		}
 
-		//_crtBreakAlloc = 1626;
 		return NPERR_NO_ERROR;
 	}
 

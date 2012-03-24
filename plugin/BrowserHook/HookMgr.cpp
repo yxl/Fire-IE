@@ -92,11 +92,16 @@ namespace BrowserHook
 			m_modulesByOriginalFunc.erase(m_modulesByOriginalFunc.begin());
 			delete pHookMap;
 		}
-
+		while (m_modulesByHookFunc.size() > 0)
+		{
+			HookMap* pHookMap = m_modulesByHookFunc.begin()->second;
+			m_modulesByHookFunc.erase(m_modulesByHookFunc.begin());
+			delete pHookMap;
+		}
 		LeaveCriticalSection(&m_cs);
 	}
 
-	void HookMgr::UnInstallAllHooksForOneModule( HMODULE hModule )
+	void HookMgr::UnInstallAllHooksForOneModule(HMODULE hModule)
 	{
 		EnterCriticalSection(&m_cs);
 

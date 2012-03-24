@@ -109,7 +109,7 @@ namespace HttpMonitor
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
-			ExportCookies(strResponseHeaderBuffer);
+			ExportCookies(szResponseHeaders);
 		}
 		return hr;
 	}
