@@ -54,6 +54,8 @@ inline STDMETHODIMP CComClassFactoryProtocol::CreateInstance(
   CComPtr<IUnknown> spUnkObject;
   if (SUCCEEDED(hr))
   {
+	  // @todo Memory leak is detected here
+	  // @autho Yuan Xulei
     hr = BaseClass::CreateInstance(punkOuter, riid,
       reinterpret_cast<void**>(&spUnkObject));
     ATLASSERT(SUCCEEDED(hr) && spUnkObject != 0);
