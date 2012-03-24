@@ -55,6 +55,7 @@ namespace Plugin
 	class nsPluginBase
 	{
 	public:
+		virtual ~nsPluginBase() {}
 		// these three methods must be implemented in the derived
 		// class platform specific way
 		virtual NPBool init(NPWindow* aWindow) = 0;

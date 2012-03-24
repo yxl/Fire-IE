@@ -51,5 +51,3 @@
 
 #include <math.h>
 #include <WinInet.h>
-
-//#include <vld.h>

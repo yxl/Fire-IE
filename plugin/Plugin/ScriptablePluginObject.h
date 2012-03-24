@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
+
 #include "ScriptablePluginObjectBase.h"
 
 class CIEHostWindow;
@@ -60,7 +61,6 @@ namespace Plugin
 	public:
 		ScriptablePluginObject(NPP npp)
 			: ScriptablePluginObjectBase(npp)
-			, m_pMainWindow(NULL)
 		{
 			// methods
 			m_NavigateID = NPN_GetStringIdentifier("Navigate");
@@ -103,10 +103,10 @@ namespace Plugin
 			uint32_t argCount, NPVariant *result);
 		virtual bool InvokeDefault(const NPVariant *args, uint32_t argCount,
 			NPVariant *result);
-		void SetMainWindow(CIEHostWindow* pWnd);
 
 	protected:
-		CIEHostWindow* m_pMainWindow;
+		
+		CIEHostWindow* GetIEHostWindow();
 	};
 
 	static NPObject *

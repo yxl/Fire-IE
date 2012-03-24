@@ -71,9 +71,8 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
   pFuncs->urlnotify     = NPP_URLNotify;
   pFuncs->getvalue      = NPP_GetValue;
   pFuncs->setvalue      = NPP_SetValue;
-  NPError result = NPP_Initialize();
 
-  return result;
+  return NPERR_NO_ERROR;
 }
 
 #endif /* XP_WIN */
@@ -176,8 +175,8 @@ NP_Initialize(NPNetscapeFuncs* pFuncs
   pluginFuncs->getvalue   = (NPP_GetValueProcPtr)(NPP_GetValue);
   pluginFuncs->javaClass  = NULL;
 
-  NPP_Initialize();
 #endif
+  NPError result = NPP_Initialize();
 
   return NPERR_NO_ERROR;
 }

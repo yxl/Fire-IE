@@ -17,6 +17,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 #include "ScriptablePluginObject.h"
 #include "IEHostWindow.h"
+#include "plugin.h"
 
 namespace Plugin
 {
@@ -67,83 +68,84 @@ namespace Plugin
 
 	bool ScriptablePluginObject::GetProperty(NPIdentifier name, NPVariant *result)
 	{
-		if (m_pMainWindow == NULL)
+		CIEHostWindow* pMainWindow = GetIEHostWindow();
+		if (pMainWindow == NULL)
 			return false;
 
 		// readonly property {string} URL
 		if (name == m_URLID) 
 		{
-			CString URL = m_pMainWindow->GetURL();
+			CString URL = pMainWindow->GetURL();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(URL), *result);
 			return true;
 		} 
 		// readonly property {title} LocationURL
 		else if (name == m_TitleID)
 		{
-			CString title = m_pMainWindow->GetTitle();
+			CString title = pMainWindow->GetTitle();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(title), *result);
 			return true;
 		}
 		// readonly property {string} FaviconURL
 		else if (name == m_FaviconURLID)
 		{
-			CString url = m_pMainWindow->GetFaviconURL();
+			CString url = pMainWindow->GetFaviconURL();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(url), *result);
 			return true;
 		}
 		// readonly property {boolean} CanRefresh
 		else if (name == m_CanRefreshID)
 		{
-			BOOL canRefresh = m_pMainWindow->GetCanRefresh();
+			BOOL canRefresh = pMainWindow->GetCanRefresh();
 			BOOLEAN_TO_NPVARIANT(canRefresh, *result);
 			return true;
 		}
 		// readonly property {boolean} CanStop
 		else if (name == m_CanStopID)
 		{
-			BOOL canStop = m_pMainWindow->GetCanStop();
+			BOOL canStop = pMainWindow->GetCanStop();
 			BOOLEAN_TO_NPVARIANT(canStop, *result);
 			return true;
 		}
 		// readonly property {boolean} CanBack
 		else if (name == m_CanBackID)
 		{
-			BOOL canBack = m_pMainWindow->GetCanBack();
+			BOOL canBack = pMainWindow->GetCanBack();
 			BOOLEAN_TO_NPVARIANT(canBack, *result);
 			return true;
 		}
 		// readonly property {boolean} CanForward
 		else if (name == m_CanForwardID)
 		{
-			BOOL canForward = m_pMainWindow->GetCanForward();
+			BOOL canForward = pMainWindow->GetCanForward();
 			BOOLEAN_TO_NPVARIANT(canForward, *result);
 			return true;
 		}
 		// readonly property {boolean} CanCopy
 		else if (name == m_CanCopyID)
 		{
-			BOOL canCopy = m_pMainWindow->GetCanCopy();
+			BOOL canCopy = pMainWindow->GetCanCopy();
 			BOOLEAN_TO_NPVARIANT(canCopy, *result);
 			return true;
 		}
 		// readonly property {boolean} CanCut
 		else if (name == m_CanCutID)
 		{
-			BOOL canCut = m_pMainWindow->GetCanCut();
+			BOOL canCut = pMainWindow->GetCanCut();
 			BOOLEAN_TO_NPVARIANT(canCut, *result);
 			return true;
 		}
 		// readonly property {boolean} CanPaste
 		else if (name == m_CanPasteID)
 		{
-			BOOL canPaste = m_pMainWindow->GetCanPaste();
+			BOOL canPaste = pMainWindow->GetCanPaste();
 			BOOLEAN_TO_NPVARIANT(canPaste, *result);
 			return true;
 		}
 		// readonly property {boolean} Progress
 		else if (name == m_ProgressID)
 		{
-			INT32_TO_NPVARIANT(m_pMainWindow->GetProgress(),*result);
+			INT32_TO_NPVARIANT(pMainWindow->GetProgress(),*result);
 			return true;
 		}
 
@@ -154,7 +156,9 @@ namespace Plugin
 	bool ScriptablePluginObject::Invoke(NPIdentifier name, const NPVariant *args,
 		uint32_t argCount, NPVariant *result)
 	{
-		if (m_pMainWindow == NULL)
+		CIEHostWindow* pMainWindow = GetIEHostWindow();
+
+		if (pMainWindow == NULL)
 			return false;
 
 		// void Navigate({string} URL)
@@ -169,7 +173,7 @@ namespace Plugin
 				return false;
 			CString URL = NPStringToCString(vURL.value.stringValue);
 
-			m_pMainWindow->Navigate(URL);
+			pMainWindow->Navigate(URL);
 
 			VOID_TO_NPVARIANT(*result);
 
@@ -179,77 +183,77 @@ namespace Plugin
 		else if (name == m_RefreshID)
 		{
 			TRACE ("Refresh called!\n");
-			m_pMainWindow->Refresh();
+			pMainWindow->Refresh();
 			return true;
 		}
 		// void Stop()
 		else if (name == m_StopID)
 		{
 			TRACE ("Stop called!\n");
-			m_pMainWindow->Stop();
+			pMainWindow->Stop();
 			return true;
 		}
 		// void Back()
 		else if (name == m_BackID)
 		{
 			TRACE ("Back called!\n");
-			m_pMainWindow->Back();
+			pMainWindow->Back();
 			return true;
 		}
 		// void Forward()
 		else if (name == m_ForwardID)
 		{
 			TRACE ("Forward called!\n");
-			m_pMainWindow->Forward();
+			pMainWindow->Forward();
 			return true;
 		}
 		// void Focus()
 		else if (name == m_FocusID)
 		{
 			TRACE ("Focus called!\n");
-			m_pMainWindow->Focus();
+			pMainWindow->Focus();
 			return true;
 		}
 		// void Copy()
 		else if (name == m_CopyID)
 		{
 			TRACE ("Copy called!\n");
-			m_pMainWindow->Copy();
+			pMainWindow->Copy();
 			return true;
 		}
 		// void Cut()
 		else if (name == m_CutID)
 		{
 			TRACE ("Cut called!\n");
-			m_pMainWindow->Cut();
+			pMainWindow->Cut();
 			return true;
 		}
 		// void Paste()
 		else if (name == m_PasteID)
 		{
 			TRACE ("Paste called!\n");
-			m_pMainWindow->Paste();
+			pMainWindow->Paste();
 			return true;
 		}
 		// void SelectAll()
 		else if (name == m_SelectAllID)
 		{
 			TRACE ("SelectAll called!\n");
-			m_pMainWindow->SelectAll();
+			pMainWindow->SelectAll();
 			return true;
 		}
 		// void Find()
 		else if (name == m_FindID)
 		{
 			TRACE ("Find called!\n");
-			m_pMainWindow->Find();
+			pMainWindow->Find();
 			return true;
 		}
 		// void HandOverFocus()
 		else if (name == m_HandOverFocusID)
 		{
 			TRACE ("HandOverFocus called!\n");
-			m_pMainWindow->HandOverFocus();
+			pMainWindow->HandOverFocus();
 			return true;
 		}
 		// void Zoom({number} level)
@@ -267,42 +271,42 @@ namespace Plugin
 			else if ( NPVARIANT_IS_INT32(args[0]) ) 
 				level = NPVARIANT_TO_INT32(args[0]);
 
-			m_pMainWindow->Zoom(level);
+			pMainWindow->Zoom(level);
 			return true;
 		}
 		// void DisplaySecurityInfo()
 		else if (name == m_DisplaySecurityInfoID)
 		{
 			TRACE ("DisplaySecurityInfo called!\n");
-			m_pMainWindow->DisplaySecurityInfo();
+			pMainWindow->DisplaySecurityInfo();
 			return true;
 		}
 		// void SaveAs()
 		else if (name == m_SaveAsID)
 		{
 			TRACE ("SaveAs called!\n");
-			m_pMainWindow->SaveAs();
+			pMainWindow->SaveAs();
 			return true;
 		}
 		// void Print()
 		else if (name == m_PrintID)
 		{
 			TRACE ("Print called!\n");
-			m_pMainWindow->Print();
+			pMainWindow->Print();
 			return true;
 		}
 		// void PrintPreview()
 		else if (name == m_PrintPreviewID)
 		{
 			TRACE ("PrintPreview called!\n");
-			m_pMainWindow->PrintPreview();
+			pMainWindow->PrintPreview();
 			return true;
 		}
 		// void PrintSetup()
 		else if (name == m_PrintSetupID)
 		{
 			TRACE ("PrintSetup called!\n");
-			m_pMainWindow->PrintSetup();
+			pMainWindow->PrintSetup();
 			return true;
 		}
 		return false;
@@ -316,9 +320,15 @@ namespace Plugin
 		return true;
 	}
 
-	void ScriptablePluginObject::SetMainWindow(CIEHostWindow* pWnd)
+
+	CIEHostWindow* ScriptablePluginObject::GetIEHostWindow()
 	{
-		m_pMainWindow = pWnd;
+		CPlugin* pPlugin =  reinterpret_cast<CPlugin*>(mNpp->pdata);
+		if (pPlugin)
+		{
+			return pPlugin->GetIEHostWindow();
+		}
+		return NULL;
 	}
 }
 

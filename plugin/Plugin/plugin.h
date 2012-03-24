@@ -52,7 +52,7 @@ namespace Plugin
 		// Overrides
 
 		CPlugin(const nsPluginCreateData& data);
-		~CPlugin();
+		virtual ~CPlugin();
 		// 初始化Plugin窗口
 		NPBool init(NPWindow* pNPWindow);
 		// 当Plugin窗口大小或者位置改变时, 通过 NPP_SetWindow 通知 update
@@ -61,6 +61,7 @@ namespace Plugin
 		void shut();
 		NPBool isInitialized();
 
+		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
 	private: 
 		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId);
 

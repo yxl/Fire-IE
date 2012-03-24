@@ -138,13 +138,6 @@ namespace Plugin
 			m_pIEHostWindow->Navigate(url);
 		}
 
-		ScriptablePluginObject* sp = static_cast<ScriptablePluginObject*>(GetScriptableObject());
-		if (sp == NULL) 
-		{
-			return FALSE;
-		}
-		sp->SetMainWindow(m_pIEHostWindow);
-
 		// 有了这两句, Firefox 窗口变化的时候才会通知 IE 窗口刷新显示
 		SetWindowLong(m_hWnd, GWL_STYLE, GetWindowLong(m_hWnd, GWL_STYLE)|WS_CLIPCHILDREN);
 		SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE)|WS_EX_CONTROLPARENT);
