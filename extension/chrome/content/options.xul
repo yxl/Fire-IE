@@ -36,6 +36,7 @@ windowtype="fireie:options">
           <groupbox id="shortcut">
             <caption label="&fireie.options.shorcut.title;" />
             <hbox>
+              <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
               <menulist id="shortcut-modifiers">
                 <menupopup>
                   <menuitem value="alt" label="Alt" />
@@ -45,7 +46,7 @@ windowtype="fireie:options">
                   <menuitem value="alt shift" label="Alt + Shift" />
                 </menupopup>
               </menulist>
-              <label>+</label>
+              <label id="shortcut-plus">+</label>
               <menulist id="shortcut-key">
                 <menupopup>
                   <menuitem value="A" label="A" />

@@ -69,16 +69,21 @@ Options.apply = function(quiet)
   //general
 	Prefs.handleUrlBar = E("handleurl").checked;
   let newKey = E("shortcut-key").value;
-  if (Prefs.shortcut_key != newKey)
+  if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
 	{
     requiresRestart = true;
     Prefs.shortcut_key = newKey;
   }
   let newModifiers = E("shortcut-modifiers").value;
-  if (Prefs.shortcut_modifiers != newModifiers)
+  if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
 	{
     requiresRestart = true;
     Prefs.shortcut_modifiers = newModifiers;
+  }
+  let newEnabled = E("shortcutEnabled").checked;
+  if (Prefs.shortcutEnabled != newEnabled) {
+    requiresRestart = true;
+    Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   }
   Prefs.showUrlBarLabel = E("showUrlBarLabel").checked;
   Prefs.hideUrlBarButton = E("hideUrlBarButton").checked;
@@ -181,18 +186,27 @@ Options.initDialog = function()
   E("handleurl").checked = Prefs.handleUrlBar;
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
+  E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("showUrlBarLabel").checked = Prefs.showUrlBarLabel;
   E("hideUrlBarButton").checked = Prefs.hideUrlBarButton;
   
   // updateStatus
   Options.updateApplyButton(false);
-
+  Options.handleShortcutEnabled();
+  
   // IE Compatibility Mode
   Options.updateIEModeTab();
 }
 
 Options.updateApplyButton = function(e) {
   document.getElementById("myApply").disabled = !e;
+}
+
+Options.handleShortcutEnabled = function(e) {
+  let disable = !E("shortcutEnabled").checked;
+  E("shortcut-modifiers").disabled = disable;
+  E("shortcut-plus").disabled = disable;
+  E("shortcut-key").disabled = disable;
 }
 
 Options.init = function()
@@ -209,6 +223,7 @@ Options.init = function()
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
 	addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
+  E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
 }
 
 Options.close = function() {
