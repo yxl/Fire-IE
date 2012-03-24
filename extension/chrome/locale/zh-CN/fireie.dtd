@@ -10,6 +10,7 @@
 <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
 <!ENTITY fireie.options.shorcut.title "快捷键">
+<!ENTITY fireie.options.shorcut.enable "启用">
 <!ENTITY fireie.options.ui.caption "用户界面">
 <!ENTITY fireie.options.showUrlBarLabel "显示地址栏按钮文字">
 <!ENTITY fireie.options.hideUrlBarButton "隐藏地址栏按钮">

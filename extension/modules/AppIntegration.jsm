@@ -402,10 +402,14 @@ WindowWrapper.prototype = {
       let keyItem = this.E('key_fireieSwitch');
       if (keyItem)
       {
-        // Default key is "C"
-        keyItem.setAttribute('key', Prefs.shortcut_key);
-        // Default modifiers is "alt"
-        keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
+        if (Prefs.shortcutEnabled) {
+          // Default key is "C"
+          keyItem.setAttribute('key', Prefs.shortcut_key);
+          // Default modifiers is "alt"
+          keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
+        } else {
+          keyItem.parentNode.removeChild(keyItem);
+        }
       }
     }
     catch (e)

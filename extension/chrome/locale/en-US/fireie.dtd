@@ -10,6 +10,7 @@
 <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
 <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
 <!ENTITY fireie.options.shorcut.title "Shortcut Key">
+<!ENTITY fireie.options.shorcut.enable "Enable">
 <!ENTITY fireie.options.ui.caption "User Interface">
 <!ENTITY fireie.options.showUrlBarLabel "Show url bar button label.">
 <!ENTITY fireie.options.hideUrlBarButton "Hide url bar button.">

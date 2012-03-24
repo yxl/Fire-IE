@@ -46,7 +46,9 @@ namespace Plugin
 		}
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
+#ifndef _M_X64
 			BrowserHook::AtlDepHook::s_instance.Install();
+#endif
 		}
 
 		return NPERR_NO_ERROR;
