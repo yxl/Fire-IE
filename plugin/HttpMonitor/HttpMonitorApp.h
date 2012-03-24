@@ -19,7 +19,7 @@ namespace HttpMonitor
 
 		HttpMonitorAPP() {}
 
-		~HttpMonitorAPP();
+		~HttpMonitorAPP() {}
 
 		// IInternetProtocolRoot
 		STDMETHODIMP Start(

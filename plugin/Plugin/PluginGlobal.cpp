@@ -20,7 +20,6 @@ namespace Plugin
 	{
 		// 监视http和https请求，同步cookie
 		CComPtr<IInternetSession> spSession;
-		HRESULT hret = S_OK;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )
 		{
 			return NPERR_GENERIC_ERROR;
@@ -45,12 +44,12 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
-
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
 			BrowserHook::AtlDepHook::s_instance.Install();
 		}
 
+		//_crtBreakAlloc = 1626;
 		return NPERR_NO_ERROR;
 	}
 

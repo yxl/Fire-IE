@@ -66,10 +66,6 @@ namespace HttpMonitor
 	{
 	}
 
-	MonitorSink::~MonitorSink()
-	{
-	}
-
 	STDMETHODIMP MonitorSink::BeginningTransaction(
 		LPCWSTR szURL,
 		LPCWSTR szHeaders,
@@ -81,7 +77,6 @@ namespace HttpMonitor
 			*pszAdditionalHeaders = NULL;
 		}
 
-		// 先调用默认的 IHttpNegotiate 处理接口, 因为调用之后 pszAdditionalHeaders 才会有 Referer 的信息
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		HRESULT hr = spHttpNegotiate ?
@@ -99,8 +94,6 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
-		USES_CONVERSION;
-
 		if (pszAdditionalRequestHeaders)
 		{
 			*pszAdditionalRequestHeaders = 0;
@@ -108,16 +101,9 @@ namespace HttpMonitor
 
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
-
-		// 去除httponly属性, 临时解决httponly Cookie无法同步问题
-		// @todo 寻找更安全的方法解决这个问题。
-		// @author Yuan Xulei
-		CString strResponseHeaderBuffer(szResponseHeaders);
-		//strResponseHeaderBuffer.Replace(_T("httponly"), _T(""));
-		//strResponseHeaderBuffer.Replace(_T("HttpOnly"), _T(""));
 		
 		HRESULT hr = spHttpNegotiate ?
-			spHttpNegotiate->OnResponse(dwResponseCode, strResponseHeaderBuffer,
+			spHttpNegotiate->OnResponse(dwResponseCode, szResponseHeaders,
 			szRequestHeaders, pszAdditionalRequestHeaders) :
 		E_UNEXPECTED;
 

@@ -3,13 +3,8 @@
 
 namespace HttpMonitor
 {
-
-	HttpMonitorAPP::~HttpMonitorAPP()
+	HRESULT HttpMonitorAPP::FinalConstruct() 
 	{
-	}
-
-	HRESULT HttpMonitorAPP::FinalConstruct() {
-
 		return S_OK;
 	}
 
