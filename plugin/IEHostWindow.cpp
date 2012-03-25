@@ -909,7 +909,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 	}
 	CComQIPtr<IHTMLElementCollection> elems;
 	pDoc->get_all(&elems);
-	if (!pDoc)
+	if (!elems)
 	{
 		return favurl;
 	}
@@ -957,7 +957,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 			continue;
 		}
 		CString rel(vRel);
-		rel = rel.MakeLower();
+		rel.MakeLower();
 		if (rel == _T("shortcut icon") || rel == _T("icon"))
 		{
 			CComVariant vHref;
