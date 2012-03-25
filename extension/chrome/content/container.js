@@ -43,6 +43,8 @@ let FireIEContainer = {};
 
   function init()
   {
+	window.removeEventListener("load", init, false);
+	
     let container = E('container');
     if (!container)
     {
@@ -62,16 +64,12 @@ let FireIEContainer = {};
       container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
       registerEventHandler();
     }
-    window.setTimeout(function()
-    {
-      let pluginObject = E(Utils.containerPluginId);
-      if (pluginObject)
-        document.title = pluginObject.Title;
-    }, 200);
   }
 
   function destory()
   {
+	window.removeEventListener("unload", destory, false);
+	
 	unregisterEventHandler();
     let c = E("container");
     while (c.hasChildNodes())
@@ -112,11 +110,7 @@ let FireIEContainer = {};
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
-    let pluginObject = E(Utils.containerPluginId);
-    if (pluginObject)
-    {
-      pluginObject.addEventListener("focus", onPluginFocus, false);
-    }
+    E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
   }
   
   function unregisterEventHandler()
@@ -124,11 +118,7 @@ let FireIEContainer = {};
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
-    let pluginObject = E(Utils.containerPluginId);
-    if (pluginObject)
-    {
-      pluginObject.removeEventListener("focus", onPluginFocus, false);
-    }  
+    E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
   }
 
 

@@ -33,7 +33,7 @@ var Utils = {
    */
   get addonID()
   {
-    return "fireie@yxl.name";
+    return "fireie@fireie.org";
   },
 
   /**

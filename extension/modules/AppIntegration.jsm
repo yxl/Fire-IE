@@ -75,7 +75,7 @@ function init()
  * Exported app integration functions.
  * @class
  */
-var AppIntegration = {
+let AppIntegration = {
   /**
    * Adds an application window to the tracked list.
    */
@@ -267,7 +267,7 @@ WindowWrapper.prototype = {
       this.isUpdating = true;
 
       let pluginObject = this.getContainerPlugin();
-      var url = this.getURL();
+      let url = this.getURL();
       let isIEEngine = this.isIEEngine();
 
       // 更新前进、后退、停止和刷新铵钮状态
@@ -309,10 +309,10 @@ WindowWrapper.prototype = {
       }
 
       // 仅设置当前Tab的Favicon
-      var po = this.getContainerPlugin(this.window.gBrowser.selectedTab);
+      let po = this.getContainerPlugin(this.window.gBrowser.selectedTab);
       if (po)
       {
-        var faviconURL = po.FaviconURL;
+        let faviconURL = po.FaviconURL;
         if (faviconURL && faviconURL != "")
         {
           Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
@@ -355,10 +355,10 @@ WindowWrapper.prototype = {
   /** 改变页面元素启用状态*/
   _updateObjectDisabledStatus: function(objId, isEnabled)
   {
-    var obj = (typeof(objId) == "object" ? objId : this.E(objId));
+    let obj = (typeof(objId) == "object" ? objId : this.E(objId));
     if (obj)
     {
-      var d = obj.hasAttribute("disabled");
+      let d = obj.hasAttribute("disabled");
       if (d == isEnabled)
       {
         if (d) obj.removeAttribute("disabled");
@@ -371,7 +371,7 @@ WindowWrapper.prototype = {
   updateEditMenuItems: function(e)
   {
     if (e.originalTarget != this.E("menu_EditPopup")) return;
-    var pluginObject = this.getContainerPlugin();
+    let pluginObject = this.getContainerPlugin();
     if (pluginObject)
     {
       this._updateObjectDisabledStatus("cmd_cut", pluginObject.CanCut);
@@ -421,12 +421,12 @@ WindowWrapper.prototype = {
   /** 获取IE内核Plugin对象 */
   getContainerPlugin: function(aTab)
   {
-    var aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
+    let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
     if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
     {
       if (aBrowser.contentDocument)
       {
-        var obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
+        let obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
         if (obj)
         {
           return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
@@ -459,11 +459,11 @@ WindowWrapper.prototype = {
   {
     try
     {
-      var docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
-      var wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+      let docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
+      let wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
       if (wNav.currentURI && Utils.startsWith(wNav.currentURI.spec, Utils.containerUrl))
       {
-        var pluginObject = wNav.document.getElementById(Utils.containerPluginId);
+        let pluginObject = wNav.document.getElementById(Utils.containerPluginId);
         if (pluginObject)
         {
           if (pluginObject.wrappedJSObject) pluginObject = pluginObject.wrappedJSObject;
@@ -505,9 +505,9 @@ WindowWrapper.prototype = {
     {
 
       // 实际浏览的URL
-      var url = this.getURL(aTab);
+      let url = this.getURL(aTab);
 
-      var isIEEngineAfterSwitch = !this.isIEEngine(aTab);
+      let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
 
       if (aTab.linkedBrowser)
       {
@@ -591,7 +591,7 @@ WindowWrapper.prototype = {
   updateProgressStatus: function()
   {
     let mTabs = this.window.gBrowser.mTabContainer.childNodes;
-    for (var i = 0; i < mTabs.length; i++)
+    for (let i = 0; i < mTabs.length; i++)
     {
       if (mTabs[i].localName == "tab")
       {
@@ -602,11 +602,11 @@ WindowWrapper.prototype = {
           if (aCurTotalProgress != mTabs[i].mProgress)
           {
             const wpl = Ci.nsIWebProgressListener;
-            var aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
-            var aTabListener = this.window.gBrowser.mTabListeners[mTabs[i]._tPos];
-            var aWebProgress = mTabs[i].linkedBrowser.webProgress;
-            var aRequest = Services.io.newChannelFromURI(mTabs[i].linkedBrowser.currentURI);
-            var aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
+            let aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
+            let aTabListener = this.window.gBrowser.mTabListeners[mTabs[i]._tPos];
+            let aWebProgress = mTabs[i].linkedBrowser.webProgress;
+            let aRequest = Services.io.newChannelFromURI(mTabs[i].linkedBrowser.currentURI);
+            let aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
             aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
             aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
             mTabs[i].mProgress = aCurTotalProgress;
@@ -739,7 +739,7 @@ WindowWrapper.prototype = {
         pluginObject.HandOverFocus();
         break;
       case "Zoom":
-        var zoomLevel = this.getZoomLevel();
+        let zoomLevel = this.getZoomLevel();
         pluginObject.Zoom(zoomLevel);
         break;
       case "DisplaySecurityInfo":

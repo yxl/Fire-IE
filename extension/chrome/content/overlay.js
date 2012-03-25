@@ -56,7 +56,7 @@ var gFireIE = null;
     hookCode("BrowserReloadSkipCache", /{/, "$& if(gFireIE.goDoCommand('Refresh')) return;");
 
     hookCode("saveDocument", /{/, "$& if(gFireIE.goDoCommand('SaveAs')) return;");
-    hookCode("MailIntegration.sendMessage", /{/, "$& var pluginObject = gFireIE.getContainerPlugin(); if(pluginObject){ arguments[0]=pluginObject.URL; arguments[1]=pluginObject.Title; }"); // @todo 发送邮件？
+    hookCode("MailIntegration.sendMessage", /{/, "$& let pluginObject = gFireIE.getContainerPlugin(); if(pluginObject){ arguments[0]=pluginObject.URL; arguments[1]=pluginObject.Title; }"); // @todo 发送邮件？
     hookCode("PrintUtils.print", /{/, "$& if(gFireIE.goDoCommand('Print')) return;");
     hookCode("PrintUtils.showPageSetup", /{/, "$& if(gFireIE.goDoCommand('PrintSetup')) return;");
     hookCode("PrintUtils.printPreview", /{/, "$& if(gFireIE.goDoCommand('PrintPreview')) return;");
@@ -100,8 +100,8 @@ var gFireIE = null;
 
   function hookProp(parentNode, propName, myGetter, mySetter)
   {
-    var oGetter = parentNode.__lookupGetter__(propName);
-    var oSetter = parentNode.__lookupSetter__(propName);
+    let oGetter = parentNode.__lookupGetter__(propName);
+    let oSetter = parentNode.__lookupSetter__(propName);
     if (oGetter && myGetter) myGetter = oGetter.toString().replace(/{/, "{" + myGetter.toString().replace(/^.*{/, "").replace(/.*}$/, ""));
     if (oSetter && mySetter) mySetter = oSetter.toString().replace(/{/, "{" + mySetter.toString().replace(/^.*{/, "").replace(/.*}$/, ""));
     if (!myGetter) myGetter = oGetter;
@@ -162,7 +162,7 @@ var gFireIE = null;
     if (!aURLBar) return;
     aURLBar.onclick = function(e)
     {
-      var pluginObject = gFireIE.getContainerPlugin();
+      let pluginObject = gFireIE.getContainerPlugin();
       if (pluginObject)
       {
         gFireIE.goDoCommand("HandOverFocus");
