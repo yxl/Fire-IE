@@ -177,8 +177,20 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
-  window.addEventListener('pageshow', init, false);
-  window.addEventListener('pagehide', destory, false);
+  window.addEventListener('load', init, false);
+  window.addEventListener('unload', destory, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
+  FireIEContainer.getZoomLevel = function () 
+  {
+    let win = Utils.getChromeWindow();
+    if (win && win.gFireIE)
+    {
+      return win.gFireIE.getZoomLevel();
+    }
+    else
+    {
+      return 1;
+    }
+  }
 })();

@@ -500,8 +500,8 @@ namespace Plugin
 		double level = 1;
 
 		NPObject* pWindow = NULL;
-		NPVariant vFireIE;
-		VOID_TO_NPVARIANT(vFireIE);
+		NPVariant vFireIEContainer;
+		VOID_TO_NPVARIANT(vFireIEContainer);
 		NPVariant vLevel;
 		VOID_TO_NPVARIANT(vLevel);
 
@@ -512,14 +512,14 @@ namespace Plugin
 				throw(CString(_T("Cannot get window")));
 			}
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIE"), &vFireIE)) || !NPVARIANT_IS_OBJECT (vFireIE))
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
 			{
-				throw(CString(_T("Cannot get window.FireIE")));
+				throw(CString(_T("Cannot get window.FireIEContainer")));
 			}
 
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIE), NPN_GetStringIdentifier("getZoomLevel"), NULL, 0, &vLevel))
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("getZoomLevel"), NULL, 0, &vLevel))
 			{
-				throw(CString(_T("Cannot execute window.FireIE.getZoomLevel()")));
+				throw(CString(_T("Cannot execute window.FireIEContainer.getZoomLevel()")));
 			}
 			if (NPVARIANT_IS_DOUBLE(vLevel)) 
 				level = NPVARIANT_TO_DOUBLE(vLevel);
@@ -529,11 +529,11 @@ namespace Plugin
 		catch (CString strMessage)
 		{
 			level = 1;
-			TRACE(_T("[CPlugin::FireEvent Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::GetZoomLevel Exception] %s"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vLevel))	NPN_ReleaseVariantValue(&vLevel);
-		if (!NPVARIANT_IS_VOID(vFireIE))	NPN_ReleaseVariantValue(&vFireIE);
+		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return level;
