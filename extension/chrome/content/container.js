@@ -72,6 +72,7 @@ let FireIEContainer = {};
 
   function destory()
   {
+	unregisterEventHandler();
     let c = E("container");
     while (c.hasChildNodes())
     {
@@ -116,6 +117,18 @@ let FireIEContainer = {};
     {
       pluginObject.addEventListener("focus", onPluginFocus, false);
     }
+  }
+  
+  function unregisterEventHandler()
+  {
+    window.removeEventListener("IETitleChanged", onIETitleChanged, false);
+    window.removeEventListener("CloseIETab", onCloseIETab, false);
+    window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    let pluginObject = E(Utils.containerPluginId);
+    if (pluginObject)
+    {
+      pluginObject.removeEventListener("focus", onPluginFocus, false);
+    }  
   }
 
 
