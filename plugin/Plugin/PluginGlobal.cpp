@@ -74,7 +74,9 @@ namespace Plugin
 		}
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
+#ifndef _M_X64
 			BrowserHook::AtlDepHook::s_instance.Uninstall();
+#endif
 		}
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
 	}
