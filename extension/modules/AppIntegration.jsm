@@ -282,7 +282,7 @@ WindowWrapper.prototype = {
 
       // 更新访问https网址时的安全标识
       let securityButton = this.E("security-button");
-      if (securityButton)
+      if (securityButton && pluginObject)
       {
         const wpl = Components.interfaces.nsIWebProgressListener;
         let state = (Utils.startsWith(url, "https://") ? wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH : wpl.STATE_IS_INSECURE);
@@ -309,15 +309,14 @@ WindowWrapper.prototype = {
       }
 
       // 仅设置当前Tab的Favicon
-      let po = this.getContainerPlugin(this.window.gBrowser.selectedTab);
-      if (po)
-      {
-        let faviconURL = po.FaviconURL;
-        if (faviconURL && faviconURL != "")
-        {
-          Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
-        }
-      }
+	  if (pluginObject)
+	  {
+		let faviconURL = pluginObject.FaviconURL;
+		if (faviconURL && faviconURL != "")
+		{
+		  Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
+		}
+	  }
 
       // 更新收藏状态(星星按钮黄色时表示该页面已收藏)
       this.window.PlacesStarButton.updateState();
@@ -344,7 +343,7 @@ WindowWrapper.prototype = {
     }
     catch (e)
     {
-      //Utils.ERROR(e);
+      Utils.ERROR(e);
     }
     finally
     {
@@ -750,7 +749,6 @@ WindowWrapper.prototype = {
     catch (ex)
     {
       Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
-      this.window.gBrowser.mCurrentBrowser.reload();
       return false;
     }
     this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
