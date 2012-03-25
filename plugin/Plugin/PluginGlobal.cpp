@@ -58,6 +58,11 @@ namespace Plugin
 	// global shutdown
 	void NS_PluginShutdown()
 	{
+		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
+		{
+			BrowserHook::AtlDepHook::s_instance.Uninstall();
+		}
+
 		// 取消监视http和https请求
 		CComPtr<IInternetSession> spSession;
 		if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession )
@@ -72,12 +77,9 @@ namespace Plugin
 				spSession->UnregisterNameSpace(g_spCFHTTPS, L"https");
 				g_spCFHTTPS.Release();
 			}
+			Sleep(100);
 		}
 
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
-		//if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
-		//{
-		//	BrowserHook::AtlDepHook::s_instance.Uninstall();
-		//}
 	}
 }

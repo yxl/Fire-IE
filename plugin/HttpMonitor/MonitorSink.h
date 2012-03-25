@@ -13,6 +13,7 @@ namespace HttpMonitor
 		typedef PassthroughAPP::CInternetProtocolSinkWithSP<MonitorSink> BaseClass;
 	public:
 		MonitorSink();
+		~MonitorSink() {}
 
 		BEGIN_COM_MAP(MonitorSink)
 			COM_INTERFACE_ENTRY(IHttpNegotiate)
