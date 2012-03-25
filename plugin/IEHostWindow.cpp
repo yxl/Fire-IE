@@ -747,7 +747,7 @@ CString CIEHostWindow::GetFaviconURL()
 	{
 		TRACE(_T("CIEHostWindow::GetURL failed!\n"));
 	}
-	
+
 	return favurl;
 }
 
@@ -896,72 +896,78 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 CString CIEHostWindow::GetFaviconURLFromContent()
 {
 	CString favurl = _T("");
-	CComQIPtr<IHTMLDocument2> pDoc = m_ie.get_Document();
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	if (!pDisp)
+	{
+		return favurl;
+	}
+	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
 	if (!pDoc)
 	{
 		return favurl;
 	}
-	IHTMLElementCollection* elems = NULL;
-	if (FAILED(pDoc->get_all(&elems)))
+	CComQIPtr<IHTMLElementCollection> elems;
+	pDoc->get_all(&elems);
+	if (!pDoc)
 	{
 		return favurl;
 	}
 	long length;
 	if (FAILED(elems->get_length(&length)))
 	{
-		elems->Release();
 		return favurl;
 	}
 	/** iterate over elements in the document */
 	for (int i = 0; i < length; i++)
 	{
-		_variant_t index = i;
-		IDispatch* pDisp = NULL;
-
-		if (SUCCEEDED(elems->item(index, index, &pDisp)) && pDisp)
+		CComVariant index = i;
+		CComQIPtr<IDispatch> pElemDisp;
+		elems->item(index, index, &pElemDisp);
+		if (!pElemDisp)
 		{
-			IHTMLElement* pElem = NULL;
-			if (SUCCEEDED(pDisp->QueryInterface(IID_IHTMLElement, (void**)&pElem)))
+			continue;
+		}
+		CComQIPtr<IHTMLElement> pElem = pElemDisp;
+		if (!pElem)
+		{
+			continue;
+		}
+
+		CComBSTR bstrTagName;
+		if (FAILED(pElem->get_tagName(&bstrTagName)))
+		{
+			continue;
+		}
+
+		CString strTagName = bstrTagName;
+		strTagName.MakeLower();
+		// to speed up, only parse elements before the body element
+		if (strTagName == _T("body"))
+		{
+			break;
+		}
+		if (strTagName != _T("link"))
+		{
+			continue;
+		}
+		CComVariant vRel;
+		if (FAILED(pElem->getAttribute(_T("rel"), 2, &vRel)))
+		{
+			continue;
+		}
+		CString rel(vRel);
+		rel = rel.MakeLower();
+		if (rel == _T("shortcut icon") || rel == _T("icon"))
+		{
+			CComVariant vHref;
+			if (SUCCEEDED(pElem->getAttribute(_T("href"), 2, &vHref)))
 			{
-				BSTR bstr_tagName;
-				if (SUCCEEDED(pElem->get_tagName(&bstr_tagName)) 
-					&& CString(bstr_tagName).MakeLower() == _T("link"))
-				{
-					CString rel;
-					VARIANT v_rel;
-					if (SUCCEEDED(pElem->getAttribute(_T("rel"), 2, &v_rel)))
-					{
-						rel = v_rel.bstrVal;
-						rel = rel.MakeLower();
-						if (rel == _T("shortcut icon") || rel == _T("icon"))
-						{
-							CString href;
-							VARIANT v_href;
-							if (SUCCEEDED(pElem->getAttribute(_T("href"), 2, &v_href)))
-							{
-								href = v_href.bstrVal;
-								favurl = href;
-								pElem->Release();
-								pDisp->Release();
-								break; // Assume only one favicon link
-							}
-						}
-					}
-				}
-				if (CString(bstr_tagName).MakeLower() == _T("body"))
-				{
-					// to speed up, only parse elements before the body element
-					pElem->Release();
-					pDisp->Release();
-					break;
-				}
-				pElem->Release();
+				favurl = vHref;
+				break; // Assume only one favicon link
 			}
-			pDisp->Release();
 		}
 	}
-	elems->Release();
-
 	return favurl;
 }
 
@@ -969,7 +975,9 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 CString CIEHostWindow::GetDocumentUserAgent()
 {
 	CString strUserAgent(_T(""));
-	CComQIPtr<IHTMLDocument2> pDoc = m_ie.get_Document();
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
 	if (!pDoc)
 	{
 		return strUserAgent;

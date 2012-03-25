@@ -51,10 +51,6 @@ let FireIEContainer = {};
       Utils.ERROR('Cannot find container to insert fireie-object.');
       return;
     }
-    while (container.hasChildNodes())
-    {
-      container.removeChild(container.firstChild);
-    }
     if (Prefs.privateBrowsing)
     {
       container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
@@ -70,12 +66,7 @@ let FireIEContainer = {};
   {
 	window.removeEventListener("unload", destory, false);
 	
-	unregisterEventHandler();
-    let c = E("container");
-    while (c.hasChildNodes())
-    {
-      c.removeChild(c.firstChild);
-    }
+	unregisterEventHandler();	
   }
 
   function getNavigateParam(name)

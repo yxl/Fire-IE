@@ -44,13 +44,14 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
+#ifndef _M_X64
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
-#ifndef _M_X64
-			BrowserHook::AtlDepHook::s_instance.Install();
-#endif
-		}
 
+			BrowserHook::AtlDepHook::s_instance.Install();
+
+		}
+#endif
 		return NPERR_NO_ERROR;
 	}
 
@@ -72,12 +73,11 @@ namespace Plugin
 				g_spCFHTTPS.Release();
 			}
 		}
-		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
-		{
-#ifndef _M_X64
-			BrowserHook::AtlDepHook::s_instance.Uninstall();
-#endif
-		}
+
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
+		//if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
+		//{
+		//	BrowserHook::AtlDepHook::s_instance.Uninstall();
+		//}
 	}
 }
