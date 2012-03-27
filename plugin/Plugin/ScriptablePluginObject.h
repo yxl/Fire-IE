@@ -46,6 +46,7 @@ namespace Plugin
 		NPIdentifier m_PrintID;
 		NPIdentifier m_PrintPreviewID;
 		NPIdentifier m_PrintSetupID;
+		NPIdentifier m_ViewPageSourceID;
 
 		// properties
 		NPIdentifier m_URLID;
@@ -88,6 +89,7 @@ namespace Plugin
 			m_PrintID = NPN_GetStringIdentifier("Print");
 			m_PrintPreviewID = NPN_GetStringIdentifier("PrintPreview");
 			m_PrintSetupID = NPN_GetStringIdentifier("PrintSetup");
+			m_ViewPageSourceID = NPN_GetStringIdentifier("ViewPageSource");
 
 			// properties
 			m_URLID = NPN_GetStringIdentifier("URL");

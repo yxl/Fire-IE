@@ -686,6 +686,29 @@ void CIEHostWindow::PrintSetup()
 	ExecOleCmd(OLECMDID_PAGESETUP);
 }
 
+void CIEHostWindow::ViewPageSource()
+{
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	if (!pDisp)
+	{
+		return;
+	}
+	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+	if (!pDoc)
+	{
+		return;
+	}
+	CComQIPtr<IOleCommandTarget> pCmd;
+	if(SUCCEEDED(pDoc.QueryInterface<IOleCommandTarget>(&pCmd)))
+	{
+		_variant_t varinput = _T("");
+		_variant_t varoutput;
+		varinput = _T("");
+		pCmd->Exec(&CGID_MSHTML, IDM_VIEWSOURCE, OLECMDEXECOPT_DODEFAULT, &varinput, &varoutput);
+	}
+}
+
 CString CIEHostWindow::GetURL()
 {
 	CString url;

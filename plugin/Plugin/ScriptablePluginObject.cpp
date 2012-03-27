@@ -42,7 +42,8 @@ namespace Plugin
 			name == m_SaveAsID ||
 			name == m_PrintID ||
 			name == m_PrintPreviewID ||
-			name == m_PrintSetupID)
+			name == m_PrintSetupID ||
+			name == m_ViewPageSourceID)
 		{
 			return true;
 		}
@@ -347,6 +348,12 @@ namespace Plugin
 		{
 			TRACE ("PrintSetup called!\n");
 			pMainWindow->PrintSetup();
+			return true;
+		}
+		else if (name == m_ViewPageSourceID)
+		{
+			TRACE ("ViewPageSource called!\n");
+			pMainWindow->ViewPageSource();
 			return true;
 		}
 		return false;

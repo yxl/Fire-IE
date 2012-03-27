@@ -753,6 +753,9 @@ WindowWrapper.prototype = {
       case "DisplaySecurityInfo":
         pluginObject.DisplaySecurityInfo();
         break;
+      case "ViewPageSource":
+        pluginObject.ViewPageSource();
+        break;
       }
     }
     catch (ex)

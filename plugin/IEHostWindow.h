@@ -179,6 +179,7 @@ public:
 	void Print();
 	void PrintPreview();
 	void PrintSetup();
+	void ViewPageSource();
 
 	// read only plugin properties
 	CString GetURL();
