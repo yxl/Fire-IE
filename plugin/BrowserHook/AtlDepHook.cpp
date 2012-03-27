@@ -46,6 +46,25 @@ namespace BrowserHook
 {
 	BOOL FixThunk(LONG dwLong);
 
+	HMODULE WINAPI ModuleFromAddress(PVOID pv)
+	{
+		MEMORY_BASIC_INFORMATION mbi;
+		if(::VirtualQuery(pv, &mbi, sizeof(mbi)) != 0)
+		{
+			return (HMODULE)mbi.AllocationBase;
+		}
+		else
+		{
+			return NULL;
+		}
+	}
+
+	HMODULE GetThisModule() 
+	{
+		return ModuleFromAddress(GetThisModule);
+	}
+
+
 	LONG WINAPI SetWindowLongA_hook(HWND hWnd, int nIndex, LONG dwNewLong) 
 	{
 		TRACE("[fireie] SetWindowLongA_hook\n");
@@ -73,11 +92,63 @@ namespace BrowserHook
 	HRESULT WINAPI CoCreateInstance_hook(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv)
 	{
 		TRACE(_T("[AtlDepHook] CoCreateInstance_hook\n"));
+		AtlDepHook::s_instance.Install();
 		HRESULT hret =  ::CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
 		AtlDepHook::s_instance.Install();
 		return hret;
 	}
 
+	HRESULT WINAPI  CoGetClassObject_hook(REFCLSID rclsid, DWORD dwClsContext, LPVOID pvReserved,
+										  REFIID riid, LPVOID FAR* ppv)
+	{
+	  TRACE("[AtlDepHook] CoGetClassObject_hook\n");
+	  AtlDepHook::s_instance.Install();
+	  HRESULT hret =  ::CoGetClassObject(rclsid, dwClsContext, pvReserved, riid, ppv);
+	  AtlDepHook::s_instance.Install();
+	  return hret;
+	}
+
+	HMODULE WINAPI LoadLibraryA_hook(PCSTR pszModulePath) 
+	{
+		TRACE("[AtlDepHook] LoadLibraryA_hook(%s)\n", pszModulePath);
+		HMODULE hmod = ::LoadLibraryA(pszModulePath);
+		if (strstr(pszModulePath, DLL_NAME) != NULL)
+			return hmod;
+		if (hmod != GetThisModule())
+			AtlDepHook::s_instance.InstallHooksForNewModule(hmod);
+		return(hmod);
+	}
+
+	HMODULE WINAPI LoadLibraryW_hook(PCWSTR pszModulePath) 
+	{
+		TRACE(L"[AtlDepHook] LoadLibraryW_hook(%s)\n", pszModulePath);
+		HMODULE hmod = ::LoadLibraryW(pszModulePath);
+		if (wcsstr(pszModulePath, DLL_NAME_WIDE) != NULL)
+			return hmod;
+		if (hmod != GetThisModule())
+			AtlDepHook::s_instance.InstallHooksForNewModule(hmod);
+		return(hmod);
+	}
+
+	HMODULE WINAPI LoadLibraryExA_hook(PCSTR pszModulePath, 
+		HANDLE hFile, DWORD dwFlags) 
+	{
+		TRACE("[AtlDepHook] LoadLibraryExA_hook(%s)\n", pszModulePath);
+		HMODULE hmod = ::LoadLibraryExA(pszModulePath, hFile, dwFlags);
+		if (hmod != GetThisModule() && (dwFlags & LOAD_LIBRARY_AS_DATAFILE) == 0)
+			AtlDepHook::s_instance.InstallHooksForNewModule(hmod);
+		return(hmod);
+	}
+
+	HMODULE WINAPI LoadLibraryExW_hook(PCWSTR pszModulePath, 
+		HANDLE hFile, DWORD dwFlags) 
+	{
+		TRACE(L"[MuterHook] LoadLibraryExW_hook(%s)\n", pszModulePath);
+		HMODULE hmod = ::LoadLibraryExW(pszModulePath, hFile, dwFlags);
+		if (hmod != GetThisModule() && (dwFlags & LOAD_LIBRARY_AS_DATAFILE) == 0)
+			AtlDepHook::s_instance.InstallHooksForNewModule(hmod);
+		return(hmod);
+	}
 
 	struct FunctionInfo
 	{
@@ -91,6 +162,12 @@ namespace BrowserHook
 		DEFINE_FUNCTION_INFO("user32.dll", SetWindowLongA),
 		DEFINE_FUNCTION_INFO("user32.dll", SetWindowLongW),
 		DEFINE_FUNCTION_INFO("ole32.dll", CoCreateInstance),
+		DEFINE_FUNCTION_INFO("ole32.dll", CoGetClassObject),
+		DEFINE_FUNCTION_INFO("Kernel32.dll", LoadLibraryA),
+		DEFINE_FUNCTION_INFO("Kernel32.dll", LoadLibraryW),
+		DEFINE_FUNCTION_INFO("Kernel32.dll", LoadLibraryExA),
+		DEFINE_FUNCTION_INFO("Kernel32.dll", LoadLibraryExW),
+
 	};
 
 
