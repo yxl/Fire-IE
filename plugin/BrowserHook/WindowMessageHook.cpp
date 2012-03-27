@@ -176,6 +176,8 @@ Exit:
 			case 'V': // Ctrl+V, Paste
 			case 'X': // Ctrl+X, Cut
 			case 'A': // Ctrl+A, Select ALl
+			case 'Z': // Ctrl+Z, undo
+			case 'Y': // Ctrl+Y, redo 
 			case VK_HOME: // Ctrl+HOME, Scroll to Top
 			case VK_END:  // Ctrl+END, Scroll to end
 				return FALSE;
