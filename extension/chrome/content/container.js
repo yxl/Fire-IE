@@ -111,6 +111,7 @@ let FireIEContainer = {};
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
+    window.removeEventListener("keydown", onKeyDown, false);
   }
 
 
