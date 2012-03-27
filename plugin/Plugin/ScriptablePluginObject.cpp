@@ -33,6 +33,8 @@ namespace Plugin
 			name == m_CutID ||
 			name == m_PasteID ||
 			name == m_SelectAllID ||
+			name == m_UndoID ||
+			name == m_RedoID ||
 			name == m_FindID ||
 			name == m_HandOverFocusID ||
 			name == m_ZoomID ||
@@ -59,6 +61,9 @@ namespace Plugin
 			name == m_CanCopyID ||
 			name == m_CanCutID || 
 			name == m_CanPasteID ||
+			name == m_CanSelectAllID ||
+			name == m_CanUndoID ||
+			name == m_CanRedoID ||
 			name == m_ProgressID)
 		{
 			return true;
@@ -140,6 +145,27 @@ namespace Plugin
 		{
 			BOOL canPaste = pMainWindow->GetCanPaste();
 			BOOLEAN_TO_NPVARIANT(canPaste, *result);
+			return true;
+		}
+		// readonly property {boolean} CanSelectAll
+		else if (name == m_CanSelectAllID)
+		{
+			BOOL canSelectAll = pMainWindow->GetCanSelectAll();
+			BOOLEAN_TO_NPVARIANT(canSelectAll, *result);
+			return true;
+		}
+		// readonly property {boolean} CanUndo
+		else if (name == m_CanUndoID)
+		{
+			BOOL canUndo = pMainWindow->GetCanUndo();
+			BOOLEAN_TO_NPVARIANT(canUndo, *result);
+			return true;
+		}
+		// readonly property {boolean} CanRedo
+		else if (name == m_CanRedoID)
+		{
+			BOOL canRedo = pMainWindow->GetCanRedo();
+			BOOLEAN_TO_NPVARIANT(canRedo, *result);
 			return true;
 		}
 		// readonly property {boolean} Progress
@@ -240,6 +266,20 @@ namespace Plugin
 		{
 			TRACE ("SelectAll called!\n");
 			pMainWindow->SelectAll();
+			return true;
+		}
+		// void Undo()
+		else if (name == m_UndoID)
+		{
+			TRACE ("Undo called!\n");
+			pMainWindow->Undo();
+			return true;
+		}
+		// void Redo()
+		else if (name == m_RedoID)
+		{
+			TRACE ("Redo called!\n");
+			pMainWindow->Redo();
 			return true;
 		}
 		// void Find()

@@ -548,6 +548,16 @@ void CIEHostWindow::SelectAll()
 	ExecOleCmd(OLECMDID_SELECTALL);
 }
 
+void CIEHostWindow::Undo()
+{
+	ExecOleCmd(OLECMDID_UNDO);
+}
+
+void CIEHostWindow::Redo()
+{
+	ExecOleCmd(OLECMDID_REDO);
+}
+
 void CIEHostWindow::Find()
 {
 	ExecOleCmd(OLECMDID_FIND);

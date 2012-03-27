@@ -36,6 +36,8 @@ namespace Plugin
 		NPIdentifier m_CutID;
 		NPIdentifier m_PasteID;
 		NPIdentifier m_SelectAllID;
+		NPIdentifier m_UndoID;
+		NPIdentifier m_RedoID;
 		NPIdentifier m_FindID;
 		NPIdentifier m_HandOverFocusID;
 		NPIdentifier m_ZoomID;
@@ -56,6 +58,9 @@ namespace Plugin
 		NPIdentifier m_CanCopyID;
 		NPIdentifier m_CanCutID;
 		NPIdentifier m_CanPasteID;
+		NPIdentifier m_CanSelectAllID;
+		NPIdentifier m_CanUndoID;
+		NPIdentifier m_CanRedoID;
 		NPIdentifier m_ProgressID;
 
 	public:
@@ -73,6 +78,8 @@ namespace Plugin
 			m_CutID = NPN_GetStringIdentifier("Cut");
 			m_PasteID = NPN_GetStringIdentifier("Paste");
 			m_SelectAllID = NPN_GetStringIdentifier("SelectAll");
+			m_UndoID = NPN_GetStringIdentifier("Undo");
+			m_RedoID = NPN_GetStringIdentifier("Redo");
 			m_FindID = NPN_GetStringIdentifier("Find");
 			m_HandOverFocusID = NPN_GetStringIdentifier("HandOverFocus");
 			m_ZoomID = NPN_GetStringIdentifier("Zoom");
@@ -93,6 +100,9 @@ namespace Plugin
 			m_CanCopyID = NPN_GetStringIdentifier("CanCopy");
 			m_CanCutID = NPN_GetStringIdentifier("CanCut");
 			m_CanPasteID = NPN_GetStringIdentifier("CanPaste");
+			m_CanSelectAllID = NPN_GetStringIdentifier("CanSelectAll");
+			m_CanUndoID = NPN_GetStringIdentifier("CanUndo");
+			m_CanRedoID = NPN_GetStringIdentifier("CanRedo");
 			m_ProgressID = NPN_GetStringIdentifier("Progress");
 		}
 

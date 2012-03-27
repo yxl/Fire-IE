@@ -169,6 +169,8 @@ public:
 	void Cut();
 	void Paste();
 	void SelectAll();
+	void Undo();
+	void Redo();
 	void Find();
 	void HandOverFocus();
 	void Zoom(double level);
@@ -191,6 +193,8 @@ public:
 	BOOL GetCanCut(){return IsOleCmdEnabled(OLECMDID_CUT);}
 	BOOL GetCanPaste(){return IsOleCmdEnabled(OLECMDID_PASTE);}
 	BOOL GetCanSelectAll(){return IsOleCmdEnabled(OLECMDID_SELECTALL);}
+	BOOL GetCanUndo(){return IsOleCmdEnabled(OLECMDID_UNDO);}
+	BOOL GetCanRedo(){return IsOleCmdEnabled(OLECMDID_REDO);}
 	INT32 GetProgress() {return m_iProgress;}
 
 	// plugin events

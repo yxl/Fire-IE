@@ -376,6 +376,9 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("cmd_cut", pluginObject.CanCut);
       this._updateObjectDisabledStatus("cmd_copy", pluginObject.CanCopy);
       this._updateObjectDisabledStatus("cmd_paste", pluginObject.CanPaste);
+      this._updateObjectDisabledStatus("cmd_selectAll", pluginObject.CanSelectAll);
+      this._updateObjectDisabledStatus("cmd_undo", pluginObject.CanUndo);
+      this._updateObjectDisabledStatus("cmd_redo", pluginObject.CanRedo);
     }
   },
 
@@ -730,6 +733,12 @@ WindowWrapper.prototype = {
         break;
       case "cmd_selectAll":
         pluginObject.SelectAll();
+        break;
+      case "cmd_undo":
+        pluginObject.Undo();
+        break;
+      case "cmd_redo":
+        pluginObject.Redo();
         break;
       case "Focus":
         pluginObject.Focus();

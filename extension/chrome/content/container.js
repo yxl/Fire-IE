@@ -102,6 +102,7 @@ let FireIEContainer = {};
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
+    window.addEventListener("keydown", onKeyDown, false);
   }
   
   function unregisterEventHandler()
@@ -156,6 +157,30 @@ let FireIEContainer = {};
     let pluginObject = event.originalTarget;
     pluginObject.blur();
     pluginObject.Focus();
+  }
+  /* 
+   * In special cases, certain key combinations will make plugin
+   * lose focus.
+   * Temporarily solve this by detecting certain keys that 'leaks'
+   * from the plugin, then tell the plugin to take the appropriate
+   * action.
+   */
+  function onKeyDown(event) {
+    if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+    {
+      if (String.fromCharCode(event.which).toUpperCase() == "Z")
+      {
+        let pluginObject = E(Utils.containerPluginId);
+        pluginObject.Focus();
+        pluginObject.Undo();
+      }
+      else if (String.fromCharCode(event.which).toUpperCase() == "Y")
+      {
+        let pluginObject = E(Utils.containerPluginId);
+        pluginObject.Focus();
+        pluginObject.Redo();
+      }
+    }
   }
 
   window.addEventListener('load', init, false);
