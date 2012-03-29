@@ -694,17 +694,11 @@ void CIEHostWindow::ViewPageSource()
 	{
 		return;
 	}
-	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
-	if (!pDoc)
+	CComQIPtr<IOleCommandTarget> pCmd = pDisp;
+	if(pCmd)
 	{
-		return;
-	}
-	CComQIPtr<IOleCommandTarget> pCmd;
-	if(SUCCEEDED(pDoc.QueryInterface<IOleCommandTarget>(&pCmd)))
-	{
-		_variant_t varinput = _T("");
-		_variant_t varoutput;
-		varinput = _T("");
+		CComVariant varinput = _T("");
+		CComVariant varoutput;
 		pCmd->Exec(&CGID_MSHTML, IDM_VIEWSOURCE, OLECMDEXECOPT_DODEFAULT, &varinput, &varoutput);
 	}
 }
