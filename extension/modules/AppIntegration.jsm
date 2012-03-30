@@ -69,6 +69,21 @@ function init()
   {
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
+  
+  installCookiePlugin();
+}
+
+/**
+ * Install the plugin used to sync cookie
+ */
+function installCookiePlugin()
+{
+  let doc = Utils.getHiddenWindow().document;
+  let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
+  embed.hidden = true;
+  embed.setAttribute("id", Utils.cookiePluginId);
+  embed.setAttribute("type", "application/fireie");
+  doc.body.appendChild(embed);
 }
 
 /**
@@ -173,7 +188,7 @@ WindowWrapper.prototype = {
    * @type Window
    */
   window: null,
-  
+
   Utils: null,
 
   /**
@@ -204,25 +219,18 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    this.installCookiePlugin();
+    // Work around the bug #35: Cannot input in the address bar when starting
+    // Firefox with blank page.
+    this.window.setTimeout(function()
+    {
+      this.window.gURLBar.blur();
+      this.window.gURLBar.focus();
+  
+    }, 200);
 
     this.registerEventListeners();
 
     this.updateState();
-  },
-
-  /**
-   * Install the plugin used to sync cookie
-   */
-  installCookiePlugin: function()
-  {
-    let doc = this.window.document;
-    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.hidden = true;
-    embed.setAttribute("id", Utils.cookiePluginId);
-    embed.setAttribute("type", "application/fireie");
-    let mainWindow = this.E("main-window");
-    mainWindow.appendChild(embed);
   },
 
   /**
@@ -303,20 +311,21 @@ WindowWrapper.prototype = {
           let self = this;
           if (this.window.gURLBar.selectionEnd != this.window.gURLBar.selectionStart) this.window.setTimeout(function()
           {
+            self.window.gURLBar.blur();
             self.window.gURLBar.focus();
           }, 0);
         }
       }
 
       // 仅设置当前Tab的Favicon
-	  if (pluginObject)
-	  {
-		let faviconURL = pluginObject.FaviconURL;
-		if (faviconURL && faviconURL != "")
-		{
-		  Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
-		}
-	  }
+      if (pluginObject)
+      {
+        let faviconURL = pluginObject.FaviconURL;
+        if (faviconURL && faviconURL != "")
+        {
+          Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
+        }
+      }
 
       // 更新收藏状态(星星按钮黄色时表示该页面已收藏)
       this.window.PlacesStarButton.updateState();
@@ -404,12 +413,15 @@ WindowWrapper.prototype = {
       let keyItem = this.E('key_fireieSwitch');
       if (keyItem)
       {
-        if (Prefs.shortcutEnabled) {
+        if (Prefs.shortcutEnabled)
+        {
           // Default key is "C"
           keyItem.setAttribute('key', Prefs.shortcut_key);
           // Default modifiers is "alt"
           keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
-        } else {
+        }
+        else
+        {
           keyItem.parentNode.removeChild(keyItem);
         }
       }
@@ -561,7 +573,7 @@ WindowWrapper.prototype = {
   /** 打开切换规则对话框 */
   openRulesDialog: function(url)
   {
-	Utils.openRulesDialog();
+    Utils.openRulesDialog();
   },
 
   getHandledURL: function(url, isModeIE)
@@ -638,6 +650,7 @@ WindowWrapper.prototype = {
     let self = this;
     if (this.window.gURLBar && (url == 'about:blank')) window.setTimeout(function()
     {
+      self.window.gURLBar.blur();
       self.window.gURLBar.focus();
     }, 0);
 
@@ -655,7 +668,7 @@ WindowWrapper.prototype = {
     Utils.LOG("onIEUserAgentReceived: " + userAgent);
     this._restoreIETempDirectorySetting();
   },
-  
+
   /**
    * Handles 'IESetCookie' event receiving from the plugin
    */
@@ -672,7 +685,7 @@ WindowWrapper.prototype = {
     let subject = null;
     let topic = "fireie-restoreIETempDirectorySetting";
     let data = null;
-    Services.obs.notifyObservers(subject, topic, data);    
+    Services.obs.notifyObservers(subject, topic, data);
   },
 
   /** plugin方法的调用*/
