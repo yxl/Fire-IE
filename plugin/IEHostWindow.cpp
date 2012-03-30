@@ -200,20 +200,6 @@ void CIEHostWindow::InitIE()
 	s_IEWindowMap.Add(GetSafeHwnd(), this);
 	s_csIEWindowMap.Unlock();
 
-	// 启用IE控件的一些特性, 详细信息见MSDN的CoInternetSetFeatureEnabled Function
-	INTERNETFEATURELIST features[] = {FEATURE_WEBOC_POPUPMANAGEMENT
-		, FEATURE_WEBOC_POPUPMANAGEMENT		// 启用IE的弹出窗口管理
-		, FEATURE_SECURITYBAND				// 下载和安装插件时提示
-		, FEATURE_LOCALMACHINE_LOCKDOWN		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
-		, FEATURE_SAFE_BINDTOOBJECT			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
-		, FEATURE_TABBED_BROWSING			// 启用多标签浏览
-	};			
-	int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
-	for (int i=0; i<n; i++)
-	{
-		CoInternetSetFeatureEnabled(features[i], SET_FEATURE_ON_PROCESS, TRUE);
-	}
-
 	m_ie.put_RegisterAsBrowser(TRUE);
 
 	// 允许打开拖拽到浏览器窗口的文件。
