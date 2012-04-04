@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include <Wininet.h>
 #include <string>
-#include "Cookie.h"
 #pragma comment(lib, "Wininet.lib")
 
 #include "plugin.h"
@@ -72,11 +71,6 @@ namespace HttpMonitor
 		DWORD dwReserved,
 		LPWSTR *pszAdditionalHeaders)
 	{
-		if (pszAdditionalHeaders)
-		{
-			*pszAdditionalHeaders = NULL;
-		}
-
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		HRESULT hr = spHttpNegotiate ?
@@ -94,11 +88,6 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
-		if (pszAdditionalRequestHeaders)
-		{
-			*pszAdditionalRequestHeaders = 0;
-		}
-
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		
@@ -111,6 +100,7 @@ namespace HttpMonitor
 		{
 			ExportCookies(szResponseHeaders);
 		}
+
 		return hr;
 	}
 
@@ -131,9 +121,6 @@ namespace HttpMonitor
 				VirtualFree(lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;
-
-				Cookie::Cookie cookieObject(m_strURL, strCookie);
-				TRACE("Cookie %s\n", cookieObject.toString().c_str());
 			}
 
 		}

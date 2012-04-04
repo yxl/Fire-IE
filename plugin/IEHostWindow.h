@@ -18,7 +18,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"
 #include "IECtrl.h"
-#include "Cookie\CookieManager.h"
 namespace Plugin
 {
 	class CPlugin;
@@ -58,8 +57,6 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 	friend class HttpMonitor::MonitorSink;
-	friend class Cookie::CookieManager;
-	
 public:
 	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
 

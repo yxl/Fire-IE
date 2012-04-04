@@ -156,7 +156,7 @@ namespace Plugin
 
 char* CStringToNPStringCharacters(const CString &str)
 {
-	USES_CONVERSION;
+	USES_CONVERSION_EX;
 	char* utf8str = NULL;
 	int cnt = str.GetLength() + 1;
 	TCHAR* tstr = new TCHAR[cnt];
@@ -179,7 +179,7 @@ char* CStringToNPStringCharacters(const CString &str)
 
 CString NPStringToCString(NPString npstr)
 {
-	USES_CONVERSION;
+	USES_CONVERSION_EX;
 	CString str;
 	int nWide =  MultiByteToWideChar(CP_UTF8, 0, npstr.UTF8Characters, npstr.UTF8Length + 1, NULL, 0);
 	if (nWide == 0)

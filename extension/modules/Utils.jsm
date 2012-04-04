@@ -705,12 +705,6 @@ var Utils = {
       }
     }
     return selectedItem;
-  },
-  
-  getHiddenWindow: function() {
-    return Cc["@mozilla.org/appshell/appShellService;1"]
-               .getService(Ci.nsIAppShellService)
-               .hiddenDOMWindow;
   }
 };
 

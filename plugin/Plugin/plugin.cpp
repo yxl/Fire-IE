@@ -59,20 +59,24 @@ namespace Plugin
 		m_pScriptableObject(NULL),
 		m_pIEHostWindow(NULL)
 	{
-		USES_CONVERSION;
+		USES_CONVERSION_EX;
 		// <html:embed id='fireie-cookie-object' type='application/fireie' hidden='true' width='0' height='0'/>
 		// argc == 5
 		// argn[0] = "id",                   argn[1] = "type",               argn[2] = "hidden", argn[3] = "width", argn[4] = "height"
 		// argn[0] = "fireie-cookie-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
 
 		// 从Plugin参数中获取Plugin ID
-		for (int i=0; i<data.argc; i++)
+		int i = 0;
+		for (i=0; i<data.argc; i++)
 		{
 			if (_stricmp(data.argn[i], "id") == 0)
 			{
-				m_strId = A2T(data.argv[i]);
-				break;
+				break;			
 			}
+		}
+		if (i < data.argc)
+		{
+			m_strId = A2T_EX(data.argv[i], strlen(data.argv[i]) + 1);
 		}
 	}
 
@@ -90,8 +94,6 @@ namespace Plugin
 
 	NPBool CPlugin::init(NPWindow* pNPWindow)
 	{
-		AfxEnableControlContainer();
-
 		if(pNPWindow == NULL)
 			return FALSE;
 
@@ -197,8 +199,6 @@ namespace Plugin
 		if (m_pIEHostWindow)
 		{
 			m_pIEHostWindow->DestroyWindow(); 
-			delete m_pIEHostWindow;
-			m_pIEHostWindow = NULL;
 		}
 		m_hWnd = NULL;
 		m_bInitialized = FALSE;
@@ -541,13 +541,14 @@ namespace Plugin
 
 	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader)
 	{
-		USES_CONVERSION;
+		USES_CONVERSION_EX;
 		CString strEventType = _T("IESetCookie");
 		CString strDetail;
 		Json::Value json;
-		json["url"] = T2A(strURL);
-		json["header"] = T2A(strCookieHeader);
-		strDetail = A2T(json.toStyledString().c_str());
+		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
+		json["header"] = T2A_EX(strCookieHeader, strCookieHeader + 1);
+		const char* szDetail = json.toStyledString().c_str();
+		strDetail = A2T_EX(szDetail, stlen(szDetail) + 1);
 		FireEvent(strEventType, strDetail);
 	}
 

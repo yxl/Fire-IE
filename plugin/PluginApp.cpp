@@ -95,7 +95,7 @@ BOOL SetClassName(CString sName)
 
 char* CStringToUTF8String(const CString &str)
 {
-	USES_CONVERSION;
+	USES_CONVERSION_EX;
 	char* utf8str = NULL;
 	int cnt = str.GetLength() + 1;
 	TCHAR* tstr = new TCHAR[cnt];
@@ -118,7 +118,7 @@ char* CStringToUTF8String(const CString &str)
 
 CString UTF8ToCString(const char* szUTF8)
 {
-	USES_CONVERSION;
+	USES_CONVERSION_EX;
 	CString str;
 	if (szUTF8 == NULL) return str;
 	int len = (int)strlen(szUTF8) + 1;
@@ -140,6 +140,8 @@ CString UTF8ToCString(const char* szUTF8)
 BOOL CPluginApp::InitInstance()
 {
 	AfxOleInit();
+	AfxEnableControlContainer();
+
 	SetClassName(STR_WINDOW_CLASS_NAME);
 	CWinApp::InitInstance();
 

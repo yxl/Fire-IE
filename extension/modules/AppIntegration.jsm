@@ -68,22 +68,7 @@ function init()
   RuleNotifier.addListener(function(action)
   {
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
-  });
-  
-  installCookiePlugin();
-}
-
-/**
- * Install the plugin used to sync cookie
- */
-function installCookiePlugin()
-{
-  let doc = Utils.getHiddenWindow().document;
-  let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-  embed.hidden = true;
-  embed.setAttribute("id", Utils.cookiePluginId);
-  embed.setAttribute("type", "application/fireie");
-  doc.body.appendChild(embed);
+  });  
 }
 
 /**
@@ -131,6 +116,7 @@ let AppIntegration = {
 
     let wrapper = new WindowWrapper(window);
     wrappers.push(wrapper);
+	
   },
 
   /**
@@ -196,6 +182,11 @@ WindowWrapper.prototype = {
    * @type Boolean
    */
   isUpdating: false,
+  
+  /**
+   * Whether the cookie plugin is installed
+   */
+  isCookiePluginInstalled: false,
 
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
@@ -219,6 +210,8 @@ WindowWrapper.prototype = {
 
   init: function()
   {
+   this.installCookiePlugin();
+   
     // Work around the bug #35: Cannot input in the address bar when starting
     // Firefox with blank page.
     this.window.setTimeout(function()
@@ -232,6 +225,21 @@ WindowWrapper.prototype = {
 
     this.updateState();
   },
+  
+  /**
+   * Install the plugin used to sync cookie
+   */
+  installCookiePlugin: function()
+  {
+    let doc = this.window.document;
+    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
+    embed.hidden = true;
+    embed.setAttribute("id", Utils.cookiePluginId);
+    embed.setAttribute("type", "application/fireie");
+    let mainWindow = this.E("main-window");
+    mainWindow.appendChild(embed);
+  },
+  
 
   /**
    * Sets up URL bar button

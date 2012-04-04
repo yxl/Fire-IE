@@ -162,6 +162,10 @@ BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer,
 	COleControlSite** ppSite, UINT nID, REFCLSID clsid)
 {
 	ASSERT(ppSite != NULL);
+	if (ppSite == NULL)
+	{
+		return FALSE;
+	}
 	*ppSite = new CIEControlSite(pContainer, this);
 	return TRUE;
 }
@@ -964,8 +968,12 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 		{
 			continue;
 		}
+
+		CComBSTR bstrAttributeName;
+
 		CComVariant vRel;
-		if (FAILED(pElem->getAttribute(_T("rel"), 2, &vRel)))
+		bstrAttributeName = _T("rel");
+		if (FAILED(pElem->getAttribute(bstrAttributeName, 2, &vRel)))
 		{
 			continue;
 		}
@@ -974,7 +982,8 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 		if (rel == _T("shortcut icon") || rel == _T("icon"))
 		{
 			CComVariant vHref;
-			if (SUCCEEDED(pElem->getAttribute(_T("href"), 2, &vHref)))
+			bstrAttributeName = _T("href");
+			if (SUCCEEDED(pElem->getAttribute(bstrAttributeName, 2, &vHref)))
 			{
 				favurl = vHref;
 				break; // Assume only one favicon link
