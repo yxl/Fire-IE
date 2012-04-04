@@ -39,6 +39,7 @@ Cu.import(baseURL.spec + "RuleNotifier.jsm");
 Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
+Cu.import(baseURL.spec + "LightweightTheme.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -63,12 +64,12 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" || name == "shortcut_modifiers") reloadPrefs();
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme") reloadPrefs();
   });
   RuleNotifier.addListener(function(action)
   {
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
-  });  
+  });
 }
 
 /**
@@ -116,7 +117,7 @@ let AppIntegration = {
 
     let wrapper = new WindowWrapper(window);
     wrappers.push(wrapper);
-	
+
   },
 
   /**
@@ -182,7 +183,7 @@ WindowWrapper.prototype = {
    * @type Boolean
    */
   isUpdating: false,
-  
+
   /**
    * Whether the cookie plugin is installed
    */
@@ -210,22 +211,22 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-   this.installCookiePlugin();
-   
+    this.installCookiePlugin();
+
     // Work around the bug #35: Cannot input in the address bar when starting
     // Firefox with blank page.
     this.window.setTimeout(function()
     {
       this.window.gURLBar.blur();
       this.window.gURLBar.focus();
-  
+
     }, 200);
 
     this.registerEventListeners();
 
     this.updateState();
   },
-  
+
   /**
    * Install the plugin used to sync cookie
    */
@@ -239,7 +240,7 @@ WindowWrapper.prototype = {
     let mainWindow = this.E("main-window");
     mainWindow.appendChild(embed);
   },
-  
+
 
   /**
    * Sets up URL bar button
@@ -257,16 +258,23 @@ WindowWrapper.prototype = {
   {
     this.window.addEventListener("unload", removeWindow, false);
 
-    this.window.addEventListener("DOMContentLoaded", this._bindMethod(this.onPageShowOrLoad));
-    this.window.addEventListener("pageshow", this._bindMethod(this.onPageShowOrLoad));
-    this.window.addEventListener("resize", this._bindMethod(this.onResize));
-    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this.onTabSelected));
-    this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems));
-    this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange));
-    this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab));
-    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this.onIEUserAgentReceived));
-    this.window.addEventListener("IESetCookie", this._bindMethod(this.onIESetCookie));
-    this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown));
+    this.window.addEventListener("DOMContentLoaded", this._bindMethod(this.onPageShowOrLoad), false);
+    this.window.addEventListener("pageshow", this._bindMethod(this.onPageShowOrLoad), false);
+    this.window.addEventListener("resize", this._bindMethod(this.onResize), false);
+    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this.onTabSelected), false);
+    this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems), false);
+    this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown), false);
+
+    // Listen to plugin events
+    this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange), false);
+    this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab), false);
+    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this.onIEUserAgentReceived), false);
+    this.window.addEventListener("IESetCookie", this._bindMethod(this.onIESetCookie), false);
+
+    // Listen for theme related events that bubble up from content
+    this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
+    this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
+    this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
   },
 
   /**
@@ -286,7 +294,7 @@ WindowWrapper.prototype = {
       let url = this.getURL();
       let isIEEngine = this.isIEEngine();
 
-      // 更新前进、后退、停止和刷新铵钮状态
+      // Update the enable status of back, forward, reload and stop buttons.
       let canBack = (pluginObject ? pluginObject.CanBack : false) || this.window.gBrowser.webNavigation.canGoBack;
       let canForward = (pluginObject ? pluginObject.CanForward : false) || this.window.gBrowser.webNavigation.canGoForward;
       let isBlank = (this.window.gBrowser.currentURI.spec == "about:blank");
@@ -296,7 +304,7 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 
-      // 更新访问https网址时的安全标识
+      // Update the enable status of security button
       let securityButton = this.E("security-button");
       if (securityButton && pluginObject)
       {
@@ -306,7 +314,7 @@ WindowWrapper.prototype = {
         securityButton.setAttribute("label", Utils.getHostname(pluginObject.URL));
       }
 
-      // 更新地址输入框内容
+      // Update the content of the URL bar.
       if (this.window.gURLBar && this.isIEEngine())
       {
         if (!this.window.gBrowser.userTypedValue)
@@ -325,7 +333,7 @@ WindowWrapper.prototype = {
         }
       }
 
-      // 仅设置当前Tab的Favicon
+      // udpate current tab's favicon
       if (pluginObject)
       {
         let faviconURL = pluginObject.FaviconURL;
@@ -335,27 +343,33 @@ WindowWrapper.prototype = {
         }
       }
 
-      // 更新收藏状态(星星按钮黄色时表示该页面已收藏)
+      // Update the star button indicating whether current page is bookmarked.
       this.window.PlacesStarButton.updateState();
 
-      // 更新地址栏按钮
-      let urlbarButton = this.E("fireie-urlbar-switch");
-      if (urlbarButton)
-      {
-        urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
-        urlbarButton.style.visibility = "visible";
-        urlbarButton.setAttribute("engine", (isIEEngine ? "ie" : "fx"));
-        let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-        urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
-        let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
-        urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
-      }
-      // 工具栏按钮的状态与地址栏状态相同
+	  function escapeURLForCSS(url)
+	  {
+		return url.replace(/[(),\s'"]/g, "\$&");
+	  }
+	  
+      // Update the engine button on the URL bar
+      urlbarButton = this.E("fireie-urlbar-switch");
+	  urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
+	  urlbarButton.style.visibility = "visible";
+	  let fxURL = urlbarButton.getAttribute("fx-icon-url");
+	  let ieURL = urlbarButton.getAttribute("ie-icon-url");
+	  let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
+	  this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
+	  let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+	  urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+	  let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
+	  urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
+      
+	  // If there exists a tool button of FireIE, make it's status the same with that on the URL bar.
       let toolbarButton = this.E("fireie-toolbar-palette-button");
       if (toolbarButton)
       {
         toolbarButton.disabled = urlbarButton.disabled;
-        toolbarButton.setAttribute("engine", urlbarButton.getAttribute("engine"));
+		toolbarButton.style.listStyleImage = engineIconCSS;
       }
     }
     catch (e)
@@ -368,7 +382,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** 改变页面元素启用状态*/
+  /** chang the disable status of specified DOM object*/
   _updateObjectDisabledStatus: function(objId, isEnabled)
   {
     let obj = (typeof(objId) == "object" ? objId : this.E(objId));
@@ -383,7 +397,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  // 更新编辑菜单中cmd_cut、cmd_copy、cmd_paste状态
+  // update the disabled status of cmd_cut, cmd_copy and cmd_paste menu items in the main menu
   updateEditMenuItems: function(e)
   {
     if (e.originalTarget != this.E("menu_EditPopup")) return;
@@ -404,11 +418,22 @@ WindowWrapper.prototype = {
    */
   updateState: function()
   {
+   	this._setupTheme();
+	
     this.setupUrlBarButton();
 
     this.configureKeys();
 
     this.updateInterface();
+  },
+  
+
+  /**
+   * Setup up the theme
+   */
+  _setupTheme: function()
+  {
+	this._applyTheme(LightweightTheme.currentTheme);
   },
 
   /**
@@ -440,7 +465,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** 获取IE内核Plugin对象 */
+  /** Get the IE engine plugin object */
   getContainerPlugin: function(aTab)
   {
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
@@ -458,7 +483,7 @@ WindowWrapper.prototype = {
     return null;
   },
 
-  /** 获取当前内核实际访问的URL*/
+  /** Get current navigation URL with current engine.*/
   getURL: function(aTab)
   {
     let tab = aTab || null;
@@ -474,8 +499,9 @@ WindowWrapper.prototype = {
   },
 
 
-  /** 获取当前内核实际访问的URI
-   *  与WindowWrapper#getURL功能相同
+  /**
+   *  Get current navigation URI with current engine.
+   *  It's of the same function with 与WindowWrapper#getURL.
    */
   getURI: function(aBrowser)
   {
@@ -504,7 +530,7 @@ WindowWrapper.prototype = {
     return null;
   },
 
-  /** 是否是IE内核*/
+  /** Check whether current engine is IE.*/
   isIEEngine: function(aTab)
   {
     let tab = aTab || this.window.gBrowser.mCurrentTab;
@@ -516,10 +542,8 @@ WindowWrapper.prototype = {
     return false;
   },
 
-  /** 切换某个Tab的内核
-   *  通过设置不同的URL实现切换内核的功能。
-   *  使用IE内核时，将URL转换为ie tab URL再访问；
-   *  使用Firefox内核时，不需转换直接访问。
+  /**
+   *  Switch the engine of specified tab.
    */
   _switchTabEngine: function(aTab)
   {
@@ -563,13 +587,13 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** 切换当前页面内核*/
+  /** Switch current tab's engine */
   switchEngine: function()
   {
     this._switchTabEngine(this.window.gBrowser.mCurrentTab);
   },
 
-  /** 打开选项对话框 */
+  /** Show the options dialog */
   openOptionsDialog: function(url)
   {
     if (!url) url = this.getURL();
@@ -578,7 +602,7 @@ WindowWrapper.prototype = {
     else this.window.openDialog("chrome://fireie/content/options.xul", "fireieOptionsDialog", "chrome,centerscreen,resizable=no", Utils.getHostname(url));
   },
 
-  /** 打开切换规则对话框 */
+  /** Show the rules dialog */
   openRulesDialog: function(url)
   {
     Utils.openRulesDialog();
@@ -686,6 +710,110 @@ WindowWrapper.prototype = {
     let topic = "fireie-set-cookie";
     let data = event.detail;
     Services.obs.notifyObservers(subject, topic, data);
+  },
+
+  /**
+   * Install the theme specified by a web page via a InstallBrowserTheme event.
+   *
+   * @param event   {Event}
+   *        the InstallBrowserTheme DOM event
+   */
+  _onInstallTheme: function(event)
+  {
+	Utils.ERROR("_onInstallTheme");
+    // Get the theme data from the DOM node target of the event.
+    let node = event.target;
+	let themeData = this._getThemeDataFromNode(node);
+	
+    if (themeData != null)
+    {
+      LightweightTheme.installTheme(themeData);
+    }
+  },
+
+  /**
+   * Get the theme data from node attribute of 'data-fireietheme'.
+   * @returns {object} JSON object of the theme data if succeeded. Otherwise returns null.
+   */
+  _getThemeDataFromNode: function(node)
+  {
+    let defValue = null;
+    if (!node.hasAttribute("data-fireietheme")) return defValue;
+    let themeData = defValue;
+    try
+    {
+      themeData = JSON.parse(node.getAttribute("data-fireietheme"));
+    }
+    catch (e)
+    {
+	  Utils.ERROR(e);
+      return defValue;
+    }
+    return themeData;
+  },
+
+  /**
+   * Preview the theme specified by a web page via a PreviewBrowserTheme event.
+   *
+   * @param   event   {Event}
+   *          the PreviewBrowserTheme DOM event
+   */
+  _onPreviewTheme: function(event)
+  {
+    // Get the theme data from the DOM node target of the event.
+    let node = event.target;
+	let themeData = this._getThemeDataFromNode(node);
+	if (themeData != null)
+	{
+	  this._applyTheme(themeData);
+	}
+  },
+
+  /**
+   * Reset the theme as specified by a web page via a ResetBrowserThemePreview event.
+   *
+   * @param event   {Event}
+   *        the ResetBrowserThemePreview DOM event
+   */
+  _onResetThemePreview: function(event)
+  {
+	this._applyTheme(LightweightTheme.currentTheme);
+  },
+  
+  /**
+   * Change the appearance specified by the theme data
+   */
+  _applyTheme: function(themeData)
+  {
+	// Style URL bar engie button
+	let urlbarButton = this.E("fireie-urlbar-switch");
+
+    // First try to obtain the images from the cache
+    let images = LightweightTheme.getCachedThemeImages(themeData);
+    if (images && images.fxURL && images.ieURL)
+	{
+	  urlbarButton.setAttribute("fx-icon-url", images.fxURL);
+	  urlbarButton.setAttribute("ie-icon-url", images.ieURL);	
+    }
+	// Else set them from their original source
+	else
+	{
+	  urlbarButton.setAttribute("fx-icon-url", themeData.fxURL);
+	  urlbarButton.setAttribute("ie-icon-url", themeData.ieURL);
+	}
+	
+    // Style the text color.
+	let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+	if (themeData.textcolor)
+	{
+	  urlbarButtonLabel.style.color = themeData.textcolor;
+	}
+	else
+	{
+	  urlbarButtonLabel.style.color = "";
+	}
+	
+	this.updateInterface();
   },
 
   _restoreIETempDirectorySetting: function()

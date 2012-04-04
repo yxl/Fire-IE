@@ -1,11 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#fireie-urlbar-switch[engine="fx"] .fireie-status-image, #fireie-toolbar-palette-button[engine="fx"]{
+#fireie-urlbar-switch .fireie-status-image, #fireie-toolbar-palette-button{
   list-style-image: url("chrome://fireie/skin/engine-fx.png");
-}
-
-#fireie-urlbar-switch[engine="ie"] .fireie-status-image, #fireie-toolbar-palette-button[engine="ie"]{
-  list-style-image: url("chrome://fireie/skin/engine-ie.png");
 }
 
 #fireie-urlbar-switch {
