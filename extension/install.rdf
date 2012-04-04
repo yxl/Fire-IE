@@ -27,7 +27,7 @@
    
    <em:localized>
      <Description>
-       <em:locale>en-US</em:locale>
+       <em:locale>en</em:locale>
        <em:name>Fire IE</em:name>
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>

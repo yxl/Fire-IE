@@ -10,5 +10,5 @@ component {4CD0BB64-942B-4EBA-A260-BCB721EAECBE} components/Initializer.js
 contract @fireie.org/fireie/startup;1 {4CD0BB64-942B-4EBA-A260-BCB721EAECBE}
 category profile-after-change @fireie.org/fireie/startup;1 @fireie.org/fireie/startup;1
 
-locale  fireie  en-US  chrome/locale/en-US/
+locale  fireie  en  chrome/locale/en/
 locale  fireie  zh-CN  chrome/locale/zh-CN/

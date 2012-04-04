@@ -90,8 +90,15 @@ let LightweightTheme = {
    */
   installTheme: function(themeData)
   {
-    Utils.ERROR("installTheme: " + JSON.stringify(themeData));
     this.currentTheme = themeData;
+  },
+  
+  /**
+   * Reset to default theme
+   */
+  changeToDefaultTheme: function()
+  {
+    Prefs.currentTheme = "";
   },
 
   /**

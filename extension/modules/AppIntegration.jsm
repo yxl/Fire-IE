@@ -185,11 +185,6 @@ WindowWrapper.prototype = {
   isUpdating: false,
 
   /**
-   * Whether the cookie plugin is installed
-   */
-  isCookiePluginInstalled: false,
-
-  /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
    */
@@ -211,7 +206,7 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    this.installCookiePlugin();
+    this._installCookiePlugin();
 
     // Work around the bug #35: Cannot input in the address bar when starting
     // Firefox with blank page.
@@ -222,7 +217,7 @@ WindowWrapper.prototype = {
 
     }, 200);
 
-    this.registerEventListeners();
+    this._registerEventListeners();
 
     this.updateState();
   },
@@ -230,7 +225,7 @@ WindowWrapper.prototype = {
   /**
    * Install the plugin used to sync cookie
    */
-  installCookiePlugin: function()
+  _installCookiePlugin: function()
   {
     let doc = this.window.document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
@@ -245,7 +240,7 @@ WindowWrapper.prototype = {
   /**
    * Sets up URL bar button
    */
-  setupUrlBarButton: function()
+  _setupUrlBarButton: function()
   {
     this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;
     this.E("fireie-urlbar-switch").hidden = Prefs.hideUrlBarButton;
@@ -254,22 +249,22 @@ WindowWrapper.prototype = {
   /**
    * Attaches event listeners to a window represented by hooks element
    */
-  registerEventListeners: function( /**Boolean*/ addProgressListener)
+  _registerEventListeners: function( /**Boolean*/ addProgressListener)
   {
     this.window.addEventListener("unload", removeWindow, false);
 
-    this.window.addEventListener("DOMContentLoaded", this._bindMethod(this.onPageShowOrLoad), false);
-    this.window.addEventListener("pageshow", this._bindMethod(this.onPageShowOrLoad), false);
-    this.window.addEventListener("resize", this._bindMethod(this.onResize), false);
-    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this.onTabSelected), false);
-    this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this.updateEditMenuItems), false);
-    this.window.addEventListener("mousedown", this._bindMethod(this.onMouseDown), false);
+    this.window.addEventListener("DOMContentLoaded", this._bindMethod(this._onPageShowOrLoad), false);
+    this.window.addEventListener("pageshow", this._bindMethod(this._onPageShowOrLoad), false);
+    this.window.addEventListener("resize", this._bindMethod(this._onResize), false);
+    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this._onTabSelected), false);
+    this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this._updateEditMenuItems), false);
+    this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), false);
 
     // Listen to plugin events
-    this.window.addEventListener("IEProgressChanged", this._bindMethod(this.onIEProgressChange), false);
-    this.window.addEventListener("IENewTab", this._bindMethod(this.onIENewTab), false);
-    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this.onIEUserAgentReceived), false);
-    this.window.addEventListener("IESetCookie", this._bindMethod(this.onIESetCookie), false);
+    this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
+    this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
+    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this._onIEUserAgentReceived), false);
+    this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -280,7 +275,7 @@ WindowWrapper.prototype = {
   /**
    * Updates the UI for an application window.
    */
-  updateInterface: function()
+  _updateInterface: function()
   {
     if (this.isUpdating)
     {
@@ -398,7 +393,7 @@ WindowWrapper.prototype = {
   },
 
   // update the disabled status of cmd_cut, cmd_copy and cmd_paste menu items in the main menu
-  updateEditMenuItems: function(e)
+  _updateEditMenuItems: function(e)
   {
     if (e.originalTarget != this.E("menu_EditPopup")) return;
     let pluginObject = this.getContainerPlugin();
@@ -420,11 +415,11 @@ WindowWrapper.prototype = {
   {
    	this._setupTheme();
 	
-    this.setupUrlBarButton();
+    this._setupUrlBarButton();
 
-    this.configureKeys();
+    this._configureKeys();
 
-    this.updateInterface();
+    this._updateInterface();
   },
   
 
@@ -439,7 +434,7 @@ WindowWrapper.prototype = {
   /**
    * Sets up hotkeys for the window.
    */
-  configureKeys: function()
+  _configureKeys: function()
   {
     try
     {
@@ -634,7 +629,7 @@ WindowWrapper.prototype = {
     return url;
   },
 
-  updateProgressStatus: function()
+  _updateProgressStatus: function()
   {
     let mTabs = this.window.gBrowser.mTabContainer.childNodes;
     for (let i = 0; i < mTabs.length; i++)
@@ -663,16 +658,16 @@ WindowWrapper.prototype = {
   },
 
   /** 响应页面正在加载的消息*/
-  onIEProgressChange: function(event)
+  _onIEProgressChange: function(event)
   {
     let progress = parseInt(event.detail);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
-    this.updateProgressStatus();
-    this.updateInterface();
+    this._updateProgressStatus();
+    this._updateInterface();
   },
 
   /** 响应新开IE标签的消息*/
-  onIENewTab: function(event)
+  _onIENewTab: function(event)
   {
     let data = JSON.parse(event.detail);
     let url = data.url;
@@ -693,18 +688,18 @@ WindowWrapper.prototype = {
   },
 
   /** 响应获取到IE UserAgent的消息 */
-  onIEUserAgentReceived: function(event)
+  _onIEUserAgentReceived: function(event)
   {
     let userAgent = event.detail;
     Utils.ieUserAgent = userAgent;
-    Utils.LOG("onIEUserAgentReceived: " + userAgent);
+    Utils.LOG("_onIEUserAgentReceived: " + userAgent);
     this._restoreIETempDirectorySetting();
   },
 
   /**
    * Handles 'IESetCookie' event receiving from the plugin
    */
-  onIESetCookie: function(event)
+  _onIESetCookie: function(event)
   {
     let subject = null;
     let topic = "fireie-set-cookie";
@@ -720,7 +715,6 @@ WindowWrapper.prototype = {
    */
   _onInstallTheme: function(event)
   {
-	Utils.ERROR("_onInstallTheme");
     // Get the theme data from the DOM node target of the event.
     let node = event.target;
 	let themeData = this._getThemeDataFromNode(node);
@@ -781,6 +775,14 @@ WindowWrapper.prototype = {
   },
   
   /**
+   * Reset to default theme.
+   */
+  changeToDefaultTheme: function()
+  {
+	LightweightTheme.changeToDefaultTheme();
+  },
+  
+  /**
    * Change the appearance specified by the theme data
    */
   _applyTheme: function(themeData)
@@ -813,7 +815,7 @@ WindowWrapper.prototype = {
 	  urlbarButtonLabel.style.color = "";
 	}
 	
-	this.updateInterface();
+	this._updateInterface();
   },
 
   _restoreIETempDirectorySetting: function()
@@ -912,7 +914,7 @@ WindowWrapper.prototype = {
       Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
       return false;
     }
-    this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
+    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
     return true;
   },
 
@@ -935,15 +937,15 @@ WindowWrapper.prototype = {
   },
 
   /** 将焦点设置到IE窗口上*/
-  focusIE: function()
+  _focusIE: function()
   {
     this.goDoCommand("Focus");
   },
 
-  onTabSelected: function(e)
+  _onTabSelected: function(e)
   {
-    this.updateInterface();
-    this.focusIE();
+    this._updateInterface();
+    this._focusIE();
   },
 
 
@@ -967,9 +969,9 @@ WindowWrapper.prototype = {
   },
 
   /** 加载或显示页面时更新界面*/
-  onPageShowOrLoad: function(e)
+  _onPageShowOrLoad: function(e)
   {
-    this.updateInterface();
+    this._updateInterface();
 
     let doc = e.originalTarget;
 
@@ -990,13 +992,13 @@ WindowWrapper.prototype = {
   /**
    * 响应界面大小变化事件
    */
-  onResize: function(e)
+  _onResize: function(e)
   {
     // Resize可能是由Zoom引起的，所以这里需要调用Zoom方法
     this.goDoCommand("Zoom");
   },
 
-  onMouseDown: function(event)
+  _onMouseDown: function(event)
   {
     let target = event.target;
     Utils.LOG("type:" + event.type + " target: " + target.id);
@@ -1023,6 +1025,14 @@ WindowWrapper.prototype = {
     let wnd = Services.wm.getMostRecentWindow("abp:sendReport");
     if (wnd) wnd.focus();
     else this.window.openDialog("chrome://adblockplus/content/ui/sendReport.xul", "_blank", "chrome,centerscreen,resizable=no", this.window.content, this.getCurrentLocation());
+  },
+  
+  /**
+  * Opens our contribution page.
+  */
+  openMoreThemesPage: function()
+  {
+    Utils.loadDocLink("skins");
   },
 
   /**
