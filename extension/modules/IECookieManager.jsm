@@ -411,7 +411,7 @@ let CookieObserver = {
     }
     catch(e)
     {
-      Utils.ERROR(e);
+      Utils.ERROR("onIECookieChanged(" + data + "): " + e);
     }
   },
 

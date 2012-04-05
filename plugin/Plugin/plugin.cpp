@@ -546,9 +546,8 @@ namespace Plugin
 		CString strDetail;
 		Json::Value json;
 		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
-		json["header"] = T2A_EX(strCookieHeader, strCookieHeader + 1);
-		const char* szDetail = json.toStyledString().c_str();
-		strDetail = A2T_EX(szDetail, stlen(szDetail) + 1);
+		json["header"] = T2A_EX(strCookieHeader, strCookieHeader.GetLength() + 1);
+		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 
