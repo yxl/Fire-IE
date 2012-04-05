@@ -27,6 +27,7 @@ namespace BrowserHook
 		{
 			// Nothing to do in here, thread continues to run normally
 			// with NULL for pImportDesc
+			pImportDesc = NULL;
 		}
 
 		if (pImportDesc == NULL)
