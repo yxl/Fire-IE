@@ -48,8 +48,14 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bCanForward(FALSE)
 	, m_iProgress(-1)
 	, m_strFaviconURL(_T("NONE"))
+	, m_bFBHighlight(false)
+	, m_bFBCase(false)
+	, m_strFBText(_T(""))
+	, m_bFBInProgress(false)
+	, m_pFBDoc(NULL)
+	, m_pFBTxtRange(NULL)
 {
-
+	FBResetFindStatus();
 }
 
 CIEHostWindow::~CIEHostWindow()
@@ -900,6 +906,10 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	/** »º´æ Favicon URL */
 	m_strFaviconURL = GetFaviconURLFromContent();
 
+	/** Reset Find Bar state */
+	if (m_bFBInProgress)
+		FBResetFindRange();
+
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnDocumentComplete();
@@ -1054,4 +1064,353 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
+}
+
+void CIEHostWindow::FBFindText(const CString& text)
+{
+	FBSetFindText(text);
+	if (m_bFBInProgress)
+		FBRestartFind();
+}
+
+void CIEHostWindow::FBEndFindText()
+{
+	//FBCancelHighlight();
+	FBResetFindStatus();
+	m_bFBInProgress = false;
+	m_pFBDoc = NULL;
+	m_pFBTxtRange = NULL;
+	m_strFBText = _T("");
+}
+
+void CIEHostWindow::FBSetFindText(const CString& text)
+{
+	if (m_strFBText == text) return;
+
+	m_strFBText = text;
+
+	if (!m_bFBInProgress)
+	{
+		m_bFBInProgress = text.GetLength() != 0;
+		if (m_bFBInProgress)
+		{
+			FBResetFindRange();
+		}
+	}
+	if (m_bFBInProgress && m_bFBHighlight)
+		FBHighlightAll();
+	else FBCancelHighlight();
+}
+
+void CIEHostWindow::FBRestartFind()
+{
+	FBResetFindStatus();
+	m_lFBLastFindLength = 0;
+	FBFindAgainInternal();
+}
+
+void CIEHostWindow::FBResetFindStatus()
+{
+	m_bFBFound = false;
+	m_bFBCrossHead = false;
+	m_bFBCrossTail = false;
+}
+
+bool CIEHostWindow::FBResetFindRange()
+{
+	if (!FBObtainFindRange())
+	{
+		FBEndFindText();
+		return false;
+	}
+
+	m_bFBTxtRangeChanged = false;
+	m_lFBLastFindLength = 0;
+	FBResetFindStatus();
+
+	return true;
+}
+
+bool CIEHostWindow::FBObtainFindRange()
+{
+	m_pFBTxtRange = NULL;
+	m_pFBDoc = NULL;
+
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+	if (!pDoc) return false;
+
+	CComPtr<IHTMLElement> pBodyElem;
+	if (FAILED(pDoc->get_body(&pBodyElem)))
+		return false;
+
+	CComQIPtr<IHTMLBodyElement> pBody = pBodyElem;
+	if (!pBody) return false;
+
+	if (FAILED(pBody->createTextRange(&m_pFBTxtRange)))
+		return false;
+
+	m_pFBDoc = pDoc;
+	return true;
+}
+
+void CIEHostWindow::FBMatchDocSelection()
+{
+	CComQIPtr<IServiceProvider> pSP = m_pFBDoc;
+	CComQIPtr<IMarkupContainer> pMC = m_pFBDoc;
+	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
+	if (pSP && pMC && pMS)
+	{
+		CComPtr<IMarkupPointer> pMPStart, pMPEnd;
+		pMS->CreateMarkupPointer(&pMPStart);
+		pMS->CreateMarkupPointer(&pMPEnd);
+		CComPtr<IHTMLEditServices> pES;
+		if (pMPStart && pMPEnd && SUCCEEDED(pSP->QueryService(SID_SHTMLEditServices, &pES)))
+		{
+			pMS->MovePointersToRange(m_pFBTxtRange, pMPStart, pMPEnd);
+			pES->SelectRange(pMPStart, pMPEnd, SELECTION_TYPE_None);
+		}
+	}
+}
+
+void CIEHostWindow::FBFindAgain()
+{
+	if (!m_bFBInProgress) return;
+	FBResetFindStatus();
+	FBFindAgainInternal();
+}
+
+void CIEHostWindow::FBFindAgainInternal()
+{
+	long tmp;
+	if (m_lFBLastFindLength)
+	{
+		m_pFBTxtRange->moveStart(CComBSTR("character"), m_lFBLastFindLength, &tmp);
+		m_lFBLastFindLength = 0;
+	}
+	m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+
+	if (m_strFBText.GetLength() == 0)
+	{
+		// should clear selection
+		m_pFBTxtRange->collapse(VARIANT_TRUE);
+		FBMatchDocSelection();
+		return;
+	}
+
+	CComBSTR bstr_Text = m_strFBText;
+	VARIANT_BOOL bFound;
+	if (m_pFBTxtRange->findText(bstr_Text, 0, (m_bFBCase ? 4 : 0), &bFound), bFound)
+	{
+		m_bFBFound = true;
+		m_pFBTxtRange->select();
+
+		m_lFBLastFindLength = m_strFBText.GetLength();
+		m_bFBTxtRangeChanged = true;
+	} else {
+		if (m_bFBTxtRangeChanged)
+		{
+			m_bFBCrossTail = true;
+
+			m_bFBTxtRangeChanged = false;
+			CComPtr<IHTMLTxtRange> pPrevTxtRange;
+			m_pFBTxtRange->duplicate(&pPrevTxtRange);
+			m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
+			m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+			FBFindAgainInternal();
+			if (!m_lFBLastFindLength)
+			{
+				m_pFBTxtRange = pPrevTxtRange;
+				m_bFBTxtRangeChanged = true;
+			}
+		}
+		if (!m_lFBLastFindLength && m_bFBTxtRangeChanged)
+		{
+			m_pFBTxtRange->collapse(VARIANT_TRUE);
+			FBMatchDocSelection();
+		}
+	}
+}
+
+void CIEHostWindow::FBFindPrevious()
+{
+	if (!m_bFBInProgress) return;
+	FBResetFindStatus();
+	FBFindPreviousInternal();
+}
+
+void CIEHostWindow::FBFindPreviousInternal()
+{
+	long tmp;
+	if (m_lFBLastFindLength)
+	{
+		m_pFBTxtRange->moveEnd(CComBSTR("character"), -m_lFBLastFindLength, &tmp);
+		m_lFBLastFindLength = 0;
+	}
+	m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
+
+	if (m_strFBText.GetLength() == 0)
+	{
+		// should clear selection
+		m_pFBTxtRange->collapse(VARIANT_FALSE);
+		FBMatchDocSelection();
+		return;
+	}
+
+	CComBSTR bstr_Text = m_strFBText;
+	VARIANT_BOOL bFound;
+	if (m_pFBTxtRange->findText(bstr_Text, -0x7F000000, (m_bFBCase ? 4 : 0), &bFound), bFound)
+	{
+		m_bFBFound = true;
+		m_pFBTxtRange->select();
+
+		m_lFBLastFindLength = m_strFBText.GetLength();
+		m_bFBTxtRangeChanged = true;
+	} else {
+		if (m_bFBTxtRangeChanged)
+		{
+			m_bFBCrossHead = true;
+
+			m_bFBTxtRangeChanged = false;
+			CComPtr<IHTMLTxtRange> pPrevTxtRange;
+			m_pFBTxtRange->duplicate(&pPrevTxtRange);
+			m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
+			m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+			FBFindPreviousInternal();
+			if (!m_lFBLastFindLength)
+			{
+				m_pFBTxtRange = pPrevTxtRange;
+				m_bFBTxtRangeChanged = true;
+			}
+		}
+		if (!m_lFBLastFindLength)
+		{
+			m_pFBTxtRange->collapse(VARIANT_FALSE);
+			FBMatchDocSelection();
+		}
+	}
+}
+
+void CIEHostWindow::FBToggleHighlight(bool bHighlight)
+{
+	if (m_bFBHighlight == bHighlight) return;
+	m_bFBHighlight = bHighlight;
+
+	if (m_bFBInProgress && bHighlight)
+	{
+		FBHighlightAll();
+	}
+	if (!bHighlight)
+	{
+		FBCancelHighlight();
+	}
+}
+
+void CIEHostWindow::FBToggleCase(bool bCase)
+{
+	if (m_bFBCase == bCase) return;
+	m_bFBCase = bCase;
+
+	if (m_bFBInProgress)
+	{
+		if (m_bFBHighlight)
+			FBHighlightAll();
+	}
+}
+
+void CIEHostWindow::FBHighlightAll()
+{
+	FBResetFindStatus();
+
+	if (m_vFBHighlightSegments.size())
+		FBCancelHighlight();
+
+	if (m_strFBText.GetLength() == 0) return;
+
+	long tmp;
+
+	CComPtr<IHTMLTxtRange> pPrevTxtRange;
+	m_pFBTxtRange->duplicate(&pPrevTxtRange);
+	m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
+	m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+
+	CComQIPtr<IHighlightRenderingServices> pHRS = m_pFBDoc;
+	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
+	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
+	CComQIPtr<IHTMLDocument4> pDoc4 = m_pFBDoc;
+	if (pHRS && pDS && pMS && pDoc4)
+	{
+		CComBSTR bstr_Text = m_strFBText;
+		VARIANT_BOOL bFound;
+		long length = m_strFBText.GetLength();
+		CComPtr<IHTMLRenderStyle> pRenderStyle;
+		if (SUCCEEDED(pDoc4->createRenderStyle(NULL, &pRenderStyle)))
+		{
+			pRenderStyle->put_defaultTextSelection(CComBSTR("false"));
+			pRenderStyle->put_textBackgroundColor(CComVariant("fuchsia"));
+			pRenderStyle->put_textColor(CComVariant("white"));
+
+			while (m_pFBTxtRange->findText(bstr_Text, 0, (m_bFBCase ? 4 : 0), &bFound), bFound)
+			{
+				CComPtr<IDisplayPointer> pDStart, pDEnd;
+				CComPtr<IMarkupPointer> pMStart, pMEnd;
+				pDS->CreateDisplayPointer(&pDStart);
+				pDS->CreateDisplayPointer(&pDEnd);
+				pMS->CreateMarkupPointer(&pMStart);
+				pMS->CreateMarkupPointer(&pMEnd);
+				if (pDStart && pDEnd && pMStart && pMEnd)
+				{
+					if (SUCCEEDED(pMS->MovePointersToRange(m_pFBTxtRange, pMStart, pMEnd)))
+					{
+						HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
+						HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
+						if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
+						{
+							CComPtr<IHighlightSegment> pHSegment;
+							pHRS->AddSegment(pDStart, pDEnd, pRenderStyle, &pHSegment);
+							if (pHSegment)
+							{
+								m_vFBHighlightSegments.push_back(std::make_pair(pHRS, pHSegment));
+							}
+						}
+					}
+				}
+				m_pFBTxtRange->moveStart(CComBSTR("character"), length, &tmp);
+				m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+			}
+			m_bFBFound = (m_vFBHighlightSegments.size() != 0);
+		}
+	}
+	m_pFBTxtRange = pPrevTxtRange;
+}
+
+void CIEHostWindow::FBCancelHighlight()
+{
+	if (!m_vFBHighlightSegments.size()) return;
+
+	for (std::vector<std::pair<CComPtr<IHighlightRenderingServices>, CComPtr<IHighlightSegment> > >::iterator iter = m_vFBHighlightSegments.begin();
+		iter != m_vFBHighlightSegments.end(); ++iter)
+	{
+		iter->first->RemoveSegment(iter->second);
+	}
+
+	m_vFBHighlightSegments.clear();
+}
+
+CString CIEHostWindow::FBGetLastFindStatus()
+{
+	if (m_bFBFound)
+	{
+		if (m_bFBCrossHead)
+		{
+			return _T("crosshead");
+		}
+		if (m_bFBCrossTail)
+		{
+			return _T("crosstail");
+		}
+		return _T("found");
+	}
+	return _T("notfound");
 }

@@ -65,9 +65,28 @@ var gFireIE = null;
     hookCode("displaySecurityInfo", /{/, "$& if(gFireIE.goDoCommand('DisplaySecurityInfo')) return;");
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
 
-    hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
-    hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
-    hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
+    initializeFindBarHooks();
+  }
+
+  function initializeFindBarHooks()
+  {
+    let setFindParamsCode = "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); return; }";
+    
+    hookCode("gFindBar.onFindAgainCommand", /{/, "$& if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain')) { gFireIE.updateFindBarUI(gFindBar); return; }"); // find_next, find_prev, arguments[0] denotes whether find_prev
+
+    hookAttr(gFindBar.getElement("highlight"), "oncommand", setFindParamsCode);
+    
+    hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", setFindParamsCode);
+
+    hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
+
+    hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
+
+    hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked);", true);
+    
+    //hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
+    //hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
+    //hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
   }
 
   function hookCode(orgFunc, orgCode, myCode)
@@ -84,12 +103,14 @@ var gFireIE = null;
 
   /** 将attribute值V替换为myFunc+V*/
 
-  function hookAttr(parentNode, attrName, myFunc)
+  function hookAttr(parentNode, attrName, myFunc, insertAtEnd)
   {
     if (typeof(parentNode) == "string") parentNode = document.getElementById(parentNode);
     try
     {
-      parentNode.setAttribute(attrName, myFunc + parentNode.getAttribute(attrName));
+      parentNode.setAttribute(attrName,
+        insertAtEnd ? parentNode.getAttribute(attrName) + myFunc
+                    : myFunc + parentNode.getAttribute(attrName));
     }
     catch (e)
     {

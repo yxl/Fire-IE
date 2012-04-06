@@ -19,6 +19,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 #include "IECtrl.h"
 #include "Cookie\CookieManager.h"
+#include <vector>
+
 namespace Plugin
 {
 	class CPlugin;
@@ -152,6 +154,15 @@ protected:
 	void OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL);
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
 
+	void FBRestartFind();
+	bool FBObtainFindRange();
+	bool FBResetFindRange();
+	void FBResetFindStatus();
+	void FBFindAgainInternal();
+	void FBFindPreviousInternal();
+	void FBHighlightAll();
+	void FBCancelHighlight();
+	void FBMatchDocSelection();
 public:
 	CIECtrl m_ie;
 
@@ -180,6 +191,16 @@ public:
 	void PrintPreview();
 	void PrintSetup();
 	void ViewPageSource();
+
+	// FindBar methods
+	void FBFindText(const CString& text);
+	void FBEndFindText();
+	void FBSetFindText(const CString& text);
+	void FBFindAgain();
+	void FBFindPrevious();
+	void FBToggleHighlight(bool bHighlight);
+	void FBToggleCase(bool bCase);
+	CString FBGetLastFindStatus();
 
 	// read only plugin properties
 	CString GetURL();
@@ -211,6 +232,21 @@ protected:
 
 	/** »º´æ×î½üµÄ Favicon URL */
 	CString m_strFaviconURL;
+
+	// Find Bar states
+	bool m_bFBInProgress;
+	bool m_bFBHighlight;
+	bool m_bFBCase;
+	bool m_bFBTxtRangeChanged;
+	CString m_strFBText;
+	CComPtr<IHTMLTxtRange> m_pFBTxtRange;
+	CComPtr<IHTMLDocument2> m_pFBDoc;
+	long m_lFBLastFindLength;
+	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)
+	std::vector<std::pair<CComPtr<IHighlightRenderingServices>, CComPtr<IHighlightSegment> > > m_vFBHighlightSegments;
+	bool m_bFBFound;
+	bool m_bFBCrossHead;
+	bool m_bFBCrossTail;
 	
 	Plugin::CPlugin* m_pPlugin;
 };

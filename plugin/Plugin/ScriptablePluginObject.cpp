@@ -23,53 +23,12 @@ namespace Plugin
 {
 	bool ScriptablePluginObject::HasMethod(NPIdentifier name)
 	{
-		if (name == m_NavigateID ||
-			name == m_RefreshID ||
-			name == m_StopID ||
-			name == m_BackID ||
-			name == m_ForwardID ||
-			name == m_FocusID ||
-			name == m_CopyID ||
-			name == m_CutID ||
-			name == m_PasteID ||
-			name == m_SelectAllID ||
-			name == m_UndoID ||
-			name == m_RedoID ||
-			name == m_FindID ||
-			name == m_HandOverFocusID ||
-			name == m_ZoomID ||
-			name == m_DisplaySecurityInfoID ||
-			name == m_SaveAsID ||
-			name == m_PrintID ||
-			name == m_PrintPreviewID ||
-			name == m_PrintSetupID ||
-			name == m_ViewPageSourceID)
-		{
-			return true;
-		}
-		return false;
+		return m_setMethods.find(name) != m_setMethods.end();
 	}
 
 	bool ScriptablePluginObject::HasProperty(NPIdentifier name)
 	{
-		if (name == m_URLID ||
-			name == m_TitleID ||
-			name == m_FaviconURLID ||
-			name == m_CanRefreshID ||
-			name == m_CanStopID ||
-			name == m_CanBackID ||
-			name == m_CanForwardID ||
-			name == m_CanCopyID ||
-			name == m_CanCutID || 
-			name == m_CanPasteID ||
-			name == m_CanSelectAllID ||
-			name == m_CanUndoID ||
-			name == m_CanRedoID ||
-			name == m_ProgressID)
-		{
-			return true;
-		}
-		return false;
+		return m_setProperties.find(name) != m_setProperties.end();
 	}
 
 	bool ScriptablePluginObject::GetProperty(NPIdentifier name, NPVariant *result)
@@ -79,100 +38,107 @@ namespace Plugin
 			return false;
 
 		// readonly property {string} URL
-		if (name == m_URLID) 
+		if (name == NPI_ID(URL)) 
 		{
 			CString URL = pMainWindow->GetURL();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(URL), *result);
 			return true;
 		} 
 		// readonly property {title} LocationURL
-		else if (name == m_TitleID)
+		else if (name == NPI_ID(Title))
 		{
 			CString title = pMainWindow->GetTitle();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(title), *result);
 			return true;
 		}
 		// readonly property {string} FaviconURL
-		else if (name == m_FaviconURLID)
+		else if (name == NPI_ID(FaviconURL))
 		{
 			CString url = pMainWindow->GetFaviconURL();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(url), *result);
 			return true;
 		}
 		// readonly property {boolean} CanRefresh
-		else if (name == m_CanRefreshID)
+		else if (name == NPI_ID(CanRefresh))
 		{
 			BOOL canRefresh = pMainWindow->GetCanRefresh();
 			BOOLEAN_TO_NPVARIANT(canRefresh, *result);
 			return true;
 		}
 		// readonly property {boolean} CanStop
-		else if (name == m_CanStopID)
+		else if (name == NPI_ID(CanStop))
 		{
 			BOOL canStop = pMainWindow->GetCanStop();
 			BOOLEAN_TO_NPVARIANT(canStop, *result);
 			return true;
 		}
 		// readonly property {boolean} CanBack
-		else if (name == m_CanBackID)
+		else if (name == NPI_ID(CanBack))
 		{
 			BOOL canBack = pMainWindow->GetCanBack();
 			BOOLEAN_TO_NPVARIANT(canBack, *result);
 			return true;
 		}
 		// readonly property {boolean} CanForward
-		else if (name == m_CanForwardID)
+		else if (name == NPI_ID(CanForward))
 		{
 			BOOL canForward = pMainWindow->GetCanForward();
 			BOOLEAN_TO_NPVARIANT(canForward, *result);
 			return true;
 		}
 		// readonly property {boolean} CanCopy
-		else if (name == m_CanCopyID)
+		else if (name == NPI_ID(CanCopy))
 		{
 			BOOL canCopy = pMainWindow->GetCanCopy();
 			BOOLEAN_TO_NPVARIANT(canCopy, *result);
 			return true;
 		}
 		// readonly property {boolean} CanCut
-		else if (name == m_CanCutID)
+		else if (name == NPI_ID(CanCut))
 		{
 			BOOL canCut = pMainWindow->GetCanCut();
 			BOOLEAN_TO_NPVARIANT(canCut, *result);
 			return true;
 		}
 		// readonly property {boolean} CanPaste
-		else if (name == m_CanPasteID)
+		else if (name == NPI_ID(CanPaste))
 		{
 			BOOL canPaste = pMainWindow->GetCanPaste();
 			BOOLEAN_TO_NPVARIANT(canPaste, *result);
 			return true;
 		}
 		// readonly property {boolean} CanSelectAll
-		else if (name == m_CanSelectAllID)
+		else if (name == NPI_ID(CanSelectAll))
 		{
 			BOOL canSelectAll = pMainWindow->GetCanSelectAll();
 			BOOLEAN_TO_NPVARIANT(canSelectAll, *result);
 			return true;
 		}
 		// readonly property {boolean} CanUndo
-		else if (name == m_CanUndoID)
+		else if (name == NPI_ID(CanUndo))
 		{
 			BOOL canUndo = pMainWindow->GetCanUndo();
 			BOOLEAN_TO_NPVARIANT(canUndo, *result);
 			return true;
 		}
 		// readonly property {boolean} CanRedo
-		else if (name == m_CanRedoID)
+		else if (name == NPI_ID(CanRedo))
 		{
 			BOOL canRedo = pMainWindow->GetCanRedo();
 			BOOLEAN_TO_NPVARIANT(canRedo, *result);
 			return true;
 		}
 		// readonly property {boolean} Progress
-		else if (name == m_ProgressID)
+		else if (name == NPI_ID(Progress))
 		{
 			INT32_TO_NPVARIANT(pMainWindow->GetProgress(),*result);
+			return true;
+		}
+		// readonly property {string} FBLastFindStatus
+		else if (name == NPI_ID(FBLastFindStatus))
+		{
+			CString status = pMainWindow->FBGetLastFindStatus();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(status), *result);
 			return true;
 		}
 
@@ -189,7 +155,7 @@ namespace Plugin
 			return false;
 
 		// void Navigate({string} URL)
-		if (name == m_NavigateID) 
+		if (name == NPI_ID(Navigate)) 
 		{
 			TRACE ("Navigate called!\n");
 			if (argCount < 1)
@@ -207,98 +173,98 @@ namespace Plugin
 			return true;
 		}
 		// void Refresh()
-		else if (name == m_RefreshID)
+		else if (name == NPI_ID(Refresh))
 		{
 			TRACE ("Refresh called!\n");
 			pMainWindow->Refresh();
 			return true;
 		}
 		// void Stop()
-		else if (name == m_StopID)
+		else if (name == NPI_ID(Stop))
 		{
 			TRACE ("Stop called!\n");
 			pMainWindow->Stop();
 			return true;
 		}
 		// void Back()
-		else if (name == m_BackID)
+		else if (name == NPI_ID(Back))
 		{
 			TRACE ("Back called!\n");
 			pMainWindow->Back();
 			return true;
 		}
 		// void Forward()
-		else if (name == m_ForwardID)
+		else if (name == NPI_ID(Forward))
 		{
 			TRACE ("Forward called!\n");
 			pMainWindow->Forward();
 			return true;
 		}
 		// void Focus()
-		else if (name == m_FocusID)
+		else if (name == NPI_ID(Focus))
 		{
 			TRACE ("Focus called!\n");
 			pMainWindow->Focus();
 			return true;
 		}
 		// void Copy()
-		else if (name == m_CopyID)
+		else if (name == NPI_ID(Copy))
 		{
 			TRACE ("Copy called!\n");
 			pMainWindow->Copy();
 			return true;
 		}
 		// void Cut()
-		else if (name == m_CutID)
+		else if (name == NPI_ID(Cut))
 		{
 			TRACE ("Cut called!\n");
 			pMainWindow->Cut();
 			return true;
 		}
 		// void Paste()
-		else if (name == m_PasteID)
+		else if (name == NPI_ID(Paste))
 		{
 			TRACE ("Paste called!\n");
 			pMainWindow->Paste();
 			return true;
 		}
 		// void SelectAll()
-		else if (name == m_SelectAllID)
+		else if (name == NPI_ID(SelectAll))
 		{
 			TRACE ("SelectAll called!\n");
 			pMainWindow->SelectAll();
 			return true;
 		}
 		// void Undo()
-		else if (name == m_UndoID)
+		else if (name == NPI_ID(Undo))
 		{
 			TRACE ("Undo called!\n");
 			pMainWindow->Undo();
 			return true;
 		}
 		// void Redo()
-		else if (name == m_RedoID)
+		else if (name == NPI_ID(Redo))
 		{
 			TRACE ("Redo called!\n");
 			pMainWindow->Redo();
 			return true;
 		}
 		// void Find()
-		else if (name == m_FindID)
+		else if (name == NPI_ID(Find))
 		{
 			TRACE ("Find called!\n");
 			pMainWindow->Find();
 			return true;
 		}
 		// void HandOverFocus()
-		else if (name == m_HandOverFocusID)
+		else if (name == NPI_ID(HandOverFocus))
 		{
 			TRACE ("HandOverFocus called!\n");
 			pMainWindow->HandOverFocus();
 			return true;
 		}
 		// void Zoom({number} level)
-		else if (name == m_ZoomID)
+		else if (name == NPI_ID(Zoom))
 		{
 			TRACE ("Zoom called!\n");
 
@@ -316,44 +282,123 @@ namespace Plugin
 			return true;
 		}
 		// void DisplaySecurityInfo()
-		else if (name == m_DisplaySecurityInfoID)
+		else if (name == NPI_ID(DisplaySecurityInfo))
 		{
 			TRACE ("DisplaySecurityInfo called!\n");
 			pMainWindow->DisplaySecurityInfo();
 			return true;
 		}
 		// void SaveAs()
-		else if (name == m_SaveAsID)
+		else if (name == NPI_ID(SaveAs))
 		{
 			TRACE ("SaveAs called!\n");
 			pMainWindow->SaveAs();
 			return true;
 		}
 		// void Print()
-		else if (name == m_PrintID)
+		else if (name == NPI_ID(Print))
 		{
 			TRACE ("Print called!\n");
 			pMainWindow->Print();
 			return true;
 		}
 		// void PrintPreview()
-		else if (name == m_PrintPreviewID)
+		else if (name == NPI_ID(PrintPreview))
 		{
 			TRACE ("PrintPreview called!\n");
 			pMainWindow->PrintPreview();
 			return true;
 		}
 		// void PrintSetup()
-		else if (name == m_PrintSetupID)
+		else if (name == NPI_ID(PrintSetup))
 		{
 			TRACE ("PrintSetup called!\n");
 			pMainWindow->PrintSetup();
 			return true;
 		}
-		else if (name == m_ViewPageSourceID)
+		else if (name == NPI_ID(ViewPageSource))
 		{
 			TRACE ("ViewPageSource called!\n");
 			pMainWindow->ViewPageSource();
+			return true;
+		}
+		else if (name == NPI_ID(FBFindText))
+		{
+			TRACE ("FBFindText called!\n");
+			if (argCount < 1) return false;
+
+			CString text = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				text = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			pMainWindow->FBFindText(text);
+			return true;
+		}
+		else if (name == NPI_ID(FBEndFindText))
+		{
+			TRACE ("FBEndFindText called!\n");
+
+			pMainWindow->FBEndFindText();
+			return true;
+		}
+		else if (name == NPI_ID(FBFindAgain))
+		{
+			TRACE ("FBFindAgain called!\n");
+			
+			pMainWindow->FBFindAgain();
+			return true;
+		}
+		else if (name == NPI_ID(FBFindPrevious))
+		{
+			TRACE ("FBFindPrevious called!\n");
+			
+			pMainWindow->FBFindPrevious();
+			return true;
+		}
+		else if (name == NPI_ID(FBToggleHighlight))
+		{
+			TRACE ("FBToggleHighlight called!\n");
+			if (argCount < 1) return false;
+
+			bool ifHighlight;
+
+			if (NPVARIANT_IS_BOOLEAN(args[0]))
+				ifHighlight = NPVARIANT_TO_BOOLEAN(args[0]);
+			else
+				return false;
+
+			pMainWindow->FBToggleHighlight(ifHighlight);
+			return true;
+		}
+		else if (name == NPI_ID(FBToggleCase))
+		{
+			TRACE ("FBToggleCase called!\n");
+			if (argCount < 1) return false;
+
+			bool ifCase;
+
+			if (NPVARIANT_IS_BOOLEAN(args[0]))
+				ifCase = NPVARIANT_TO_BOOLEAN(args[0]);
+			else
+				return false;
+
+			pMainWindow->FBToggleCase(ifCase);
+			return true;
+		}
+		else if (name == NPI_ID(FBSetFindText))
+		{
+			TRACE ("FBSetFindText called!\n");
+			if (argCount < 1) return false;
+
+			CString text = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				text = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			pMainWindow->FBSetFindText(text);
 			return true;
 		}
 		return false;

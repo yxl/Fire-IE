@@ -756,6 +756,27 @@ WindowWrapper.prototype = {
       case "ViewPageSource":
         pluginObject.ViewPageSource();
         break;
+      case "FindAgain":
+        pluginObject.FBFindAgain();
+        break;
+      case "FindPrevious":
+        pluginObject.FBFindPrevious();
+        break;
+      case "ToggleHighlightOn":
+        pluginObject.FBToggleHighlight(true);
+        break;
+      case "ToggleHighlightOff":
+        pluginObject.FBToggleHighlight(false);
+        break;
+      case "ToggleCaseOn":
+        pluginObject.FBToggleCase(true);
+        break;
+      case "ToggleCaseOff":
+        pluginObject.FBToggleCase(false);
+        break;
+      default:
+        throw cmd;
+        break;
       }
     }
     catch (ex)
@@ -766,7 +787,115 @@ WindowWrapper.prototype = {
     this.window.setTimeout(this._bindMethod(this.updateInterface), 0);
     return true;
   },
-
+  /* called when original findbar issues a find */
+  findText: function(text)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      pluginObject.FBFindText(text);
+      return true;
+    } catch (ex)
+    {
+      Utils.ERROR("findText(" + text + "): " + ex);
+    }
+  },
+  /* called when find bar is closed */
+  endFindText: function()
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      pluginObject.FBEndFindText();
+      return true;
+    } catch (ex)
+    {
+      Utils.ERROR("endFindText(): " + ex);
+    }
+  },
+  /* since plugin find state may not sync with firefox, we 
+  transfer those params to the plugin object after user brings up
+  the find bar */
+  setFindParams: function(text, highlight, cases)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      pluginObject.FBToggleCase(cases);
+      pluginObject.FBToggleHighlight(highlight);
+      pluginObject.FBSetFindText(text);
+      return true;
+    } catch (ex)
+    {
+      Utils.ERROR("setFindParams(): " + ex);
+    }
+  },
+  setFindText: function(text)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      pluginObject.FBSetFindText(text);
+      return true;
+    } catch (ex)
+    {
+      Utils.ERROR("setFindText(): " + ex);
+    }
+  },
+  updateFindBarUI: function(findbar)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      let text = findbar.getElement('findbar-textbox').value;
+      findbar._enableFindButtons(text.length != 0);
+      if (text.length == 0)
+      {
+        findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_FOUND);
+        return true;
+      }
+      let status = pluginObject.FBLastFindStatus;
+      switch (status)
+      {
+      case "notfound":
+        findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_NOTFOUND);
+        break;
+      case "found":
+        findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_FOUND);
+        break;
+      case "crosshead":
+        findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_WRAPPED, true);
+        break;
+      case "crosstail":
+        findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_WRAPPED, false);
+        break;
+      }
+      return true;
+    } catch (ex)
+    {
+      Utils.ERROR("updateFindBarUI(): " + ex);
+    }
+  },
   // 响应内核切换按钮点击事件
   clickSwitchButton: function(e)
   {

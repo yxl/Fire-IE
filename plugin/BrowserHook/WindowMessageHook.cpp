@@ -171,7 +171,7 @@ Exit:
 				return FALSE;
 				// The above shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
-			case 'F': // Ctrl+F, Find
+			//case 'F': // Ctrl+F, Find
 			case 'C': // Ctrl+C, Copy
 			case 'V': // Ctrl+V, Paste
 			case 'X': // Ctrl+X, Cut
