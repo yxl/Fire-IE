@@ -62,12 +62,10 @@ namespace HttpMonitor
 		STDMETHODIMP Switch(PROTOCOLDATA *pProtocolData);
 
 	private:
-		// 把我们要定制的 Headers 加上去
-		void SetCustomHeaders(LPWSTR *pszAdditionalHeaders);
+		// Current http request URL
+		CString GetBindURL() const;
 
-		/** 从 HTTP Response Headers 中扫描出 Cookies 并设置到 Firefox 中 */
+		// Export IE cookies to firefox by parsing the HTTP response headers
 		void ExportCookies(LPCWSTR szResponseHeaders);
-		/** 本次请求的 URL */
-		CString m_strURL;
 	};
 }

@@ -21,4 +21,7 @@ pref("extensions.fireie.showUrlBarLabel", true);
 pref("extensions.fireie.hideUrlBarButton", false);
 pref("extensions.fireie.compatMode", "ie7mode");
 
+pref("extensions.fireie.currentTheme", "");
+
+
 

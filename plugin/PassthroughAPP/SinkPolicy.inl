@@ -34,6 +34,10 @@ inline HRESULT NoSinkStartPolicy::OnStart(LPCWSTR szUrl,
   IInternetProtocol* pTargetProtocol) const
 {
   ATLASSERT(pTargetProtocol != 0);
+  if (pTargetProtocol == NULL)
+  {
+	  return E_POINTER;
+  }
   return pTargetProtocol->Start(szUrl, pOIProtSink, pOIBindInfo,
     grfPI, dwReserved);
 }
@@ -45,6 +49,10 @@ inline HRESULT NoSinkStartPolicy::OnStartEx(IUri *pUri,
     IInternetProtocolEx* pTargetProtocol) const
 {
   ATLASSERT(pTargetProtocol != 0);
+  if (pTargetProtocol == NULL)
+  {
+	  return E_POINTER;
+  }
   return pTargetProtocol->StartEx(pUri, pOIProtSink, pOIBindInfo,
       grfPI, dwReserved);
 }
@@ -369,6 +377,10 @@ inline HRESULT CustomSinkStartPolicy<Protocol, Sink>::OnStart(LPCWSTR szUrl,
   IInternetProtocol* pTargetProtocol) const
 {
   ATLASSERT(pTargetProtocol != 0);
+  if (pTargetProtocol == NULL)
+  {
+	  return E_POINTER;
+  }
 
   Sink* pSink = GetSink(static_cast<const Protocol*>(this));
   HRESULT hr = pSink->OnStart(szUrl, pOIProtSink, pOIBindInfo, grfPI,
@@ -404,6 +416,10 @@ inline HRESULT CustomSinkStartPolicy<Protocol, Sink>::OnStartEx(IUri *pUri,
     IInternetProtocolEx* pTargetProtocol) const
 {
   ATLASSERT(pTargetProtocol);
+  if (pTargetProtocol == NULL)
+  {
+	  return E_POINTER;
+  }
 
   Sink* pSink = GetSink(static_cast<const Protocol*>(this));
   HRESULT hr = pSink->OnStartEx(pUri, pOIProtSink, pOIBindInfo,
@@ -411,19 +427,22 @@ inline HRESULT CustomSinkStartPolicy<Protocol, Sink>::OnStartEx(IUri *pUri,
 
   CComPtr<IInternetProtocolSink> spSink;
   CComPtr<IInternetBindInfo> spBindInfo;
-  if (SUCCEEDED(hr)) {
+  if (SUCCEEDED(hr)) 
+  {
     hr = pSink->QueryInterface(IID_IInternetProtocolSink,
       reinterpret_cast<void**>(&spSink));
     ATLASSERT(SUCCEEDED(hr) && spSink != 0);
   }
 
-  if (SUCCEEDED(hr)) {
+  if (SUCCEEDED(hr)) 
+  {
     hr = pSink->QueryInterface(IID_IInternetBindInfo,
       reinterpret_cast<void**>(&spBindInfo));
     ATLASSERT(SUCCEEDED(hr) && spBindInfo != 0);
   }
 
-  if (SUCCEEDED(hr)) {
+  if (SUCCEEDED(hr)) 
+  {
     hr = pTargetProtocol->StartEx(pUri, spSink, spBindInfo, grfPI, dwReserved);
   }
 

@@ -16,7 +16,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 let FireIEContainer = {};
 
-(function() {
+(function()
+{
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cr = Components.results;
@@ -43,15 +44,15 @@ let FireIEContainer = {};
 
   function init()
   {
-	window.removeEventListener("load", init, false);
-	
+    window.removeEventListener("load", init, false);
+
     let container = E('container');
     if (!container)
     {
       Utils.ERROR('Cannot find container to insert fireie-object.');
       return;
     }
-    if (Prefs.privateBrowsing)
+    if (needPrivateBrowsingWarning())
     {
       container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
     }
@@ -62,11 +63,38 @@ let FireIEContainer = {};
     }
   }
 
+  function needPrivateBrowsingWarning()
+  {
+    let needed = false;
+    if (Prefs.privateBrowsing && Prefs.privatebrowsingwarning)
+    {
+	  needed = true;
+      let cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
+      let cookieManager = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager);
+      try
+      {
+        let pbwFlag = cookieService.getCookieString(Utils.makeURI("http://fireie/", null, null), null);
+        if (pbwFlag)
+        {
+          needed = pbwFlag.indexOf("privatebrowsingwarning=no") < 0;
+          cookieManager.remove("fireie", "privatebrowsingwarning", "/", false);
+        }
+      }
+      catch (e)
+      {}
+    }
+
+    return needed;
+  }
+
   function destory()
   {
-	window.removeEventListener("unload", destory, false);
-	
-	unregisterEventHandler();	
+    window.removeEventListener("unload", destory, false);
+
+    if (E("fireie-object"))
+    {
+      unregisterEventHandler();
+    }
   }
 
   function getNavigateParam(name)
@@ -104,7 +132,7 @@ let FireIEContainer = {};
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     window.addEventListener("keydown", onKeyDown, false);
   }
-  
+
   function unregisterEventHandler()
   {
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
@@ -160,14 +188,14 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
-  function onKeyDown(event) {
-  }
+  function onKeyDown(event)
+  {}
 
   window.addEventListener('load', init, false);
   window.addEventListener('unload', destory, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
-  FireIEContainer.getZoomLevel = function () 
+  FireIEContainer.getZoomLevel = function()
   {
     let win = Utils.getChromeWindow();
     if (win && win.gFireIE)

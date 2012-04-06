@@ -20,7 +20,12 @@ namespace BrowserHook
 	{
 		EnterCriticalSection(&m_cs);
 
-		HookItem* pItem = new HookItem(hModule, szImportModule, szFunc, pHookFunc);
+		HookItem* pItem = NULL;
+		pItem = new HookItem(hModule, szImportModule, szFunc, pHookFunc);
+		if (pItem == NULL)
+		{
+			return;
+		}
 		if (!HookImportFunction(hModule, szImportModule, szFunc, pHookFunc, &pItem->pOrigFunc))
 		{
 			delete pItem;

@@ -273,8 +273,8 @@ inline HRESULT CMetaFactory<Factory, Protocol, FactoryComObject>::
 
   Factory* pObj = 0;
   HRESULT hr = CreateInstance(&pObj);
-  ATLASSERT(SUCCEEDED(hr) && pObj != 0);
-  if (SUCCEEDED(hr))
+  ATLASSERT(SUCCEEDED(hr) && pObj != NULL);
+  if (SUCCEEDED(hr) && pObj != NULL)
   {
     pObj->AddRef();
 

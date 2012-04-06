@@ -1,0 +1,46 @@
+<html>
+<head>
+<script>
+function relativeUrlToAbsoluteUrl(relativeUrl) 
+{
+    var fullUrl = location.href;
+    var dt = fullUrl.split("?")[0].split("/");
+    dt.length--;
+    while (relativeUrl.indexOf("../") == 0) 
+    {
+        relativeUrl = relativeUrl.slice(3);
+        dt.length--;
+    }
+    return unescape(dt.join("/") + "/" + relativeUrl);
+}
+
+var themeData =
+{  
+  id: "hi@fireie.org/20120404",
+  fxURL: relativeUrlToAbsoluteUrl("images/1/fx.png"),  
+  ieURL: relativeUrlToAbsoluteUrl("images/1/ie.png"),  
+  textcolor: "#f00",  
+};
+  
+const INSTALL = "InstallBrowserTheme";  
+const PREVIEW = "PreviewBrowserTheme";  
+const RESET_PREVIEW = "ResetBrowserThemePreview";  
+  
+function setTheme(node, action) 
+{  
+  node.setAttribute("data-fireietheme", JSON.stringify(themeData));  
+  var event = document.createEvent("Events");  
+  event.initEvent(action, true, false);  
+  node.dispatchEvent(event);
+} 
+</script>
+</head>
+<p>To preview the theme, hover your mouse over the following block: <p/>
+<div id="preview" style="width:200; cursor:pointer;"
+  onmouseover="setTheme(this, PREVIEW);" 
+  onmouseout="setTheme(this, RESET_PREVIEW);">
+  <img src="images/1/fx.png" /> <font color="#f00"> Fast </font>
+  <img src="images/1/ie.png" /> <font color="#f00"> Compatible </font>
+</div>
+<p><button onclick="setTheme(this, INSTALL);" >Install Theme</button></p>
+</html>

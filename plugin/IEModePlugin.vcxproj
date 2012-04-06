@@ -135,7 +135,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -174,7 +174,7 @@ buildxpi.bat</Command>
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -218,7 +218,7 @@ buildxpi64.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -255,7 +255,7 @@ buildxpi.bat</Command>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -282,7 +282,7 @@ buildxpi64.bat</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
     <Link />
     <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
@@ -292,7 +292,7 @@ buildxpi64.bat</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
     <Link />
     <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\Cookie;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\poco\Net\include;.\poco\Foundation\include;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
@@ -304,8 +304,6 @@ buildxpi64.bat</Command>
     <ClCompile Include="BrowserHook\HookImportFunction.cpp" />
     <ClCompile Include="BrowserHook\HookMgr.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
-    <ClCompile Include="Cookie\Cookie.cpp" />
-    <ClCompile Include="Cookie\CookieManager.cpp" />
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
     <ClCompile Include="IEHostWindow.cpp" />
@@ -332,8 +330,6 @@ buildxpi64.bat</Command>
     <ClInclude Include="BrowserHook\HookImportFunction.h" />
     <ClInclude Include="BrowserHook\HookMgr.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
-    <ClInclude Include="Cookie\Cookie.h" />
-    <ClInclude Include="Cookie\CookieManager.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />
     <ClInclude Include="IEHostWindow.h" />

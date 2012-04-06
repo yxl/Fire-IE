@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include <Wininet.h>
 #include <string>
-#include "Cookie.h"
 #pragma comment(lib, "Wininet.lib")
 
 #include "plugin.h"
@@ -72,18 +71,11 @@ namespace HttpMonitor
 		DWORD dwReserved,
 		LPWSTR *pszAdditionalHeaders)
 	{
-		if (pszAdditionalHeaders)
-		{
-			*pszAdditionalHeaders = NULL;
-		}
-
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		HRESULT hr = spHttpNegotiate ?
 			spHttpNegotiate->BeginningTransaction(szURL, szHeaders,
 			dwReserved, pszAdditionalHeaders) : E_UNEXPECTED;
-
-		m_strURL = szURL;
 
 		return hr;
 	}
@@ -94,11 +86,6 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
-		if (pszAdditionalRequestHeaders)
-		{
-			*pszAdditionalRequestHeaders = 0;
-		}
-
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		
@@ -111,7 +98,29 @@ namespace HttpMonitor
 		{
 			ExportCookies(szResponseHeaders);
 		}
+
 		return hr;
+	}
+
+	CString MonitorSink::GetBindURL() const
+	{
+		USES_CONVERSION_EX;
+
+		CString strURL;
+		WCHAR* pURL = NULL;
+		ULONG cEl = 1;
+
+		if (SUCCEEDED(m_spInternetBindInfo->GetBindString(BINDSTRING_URL,	&pURL, cEl, &cEl)))
+		{
+			strURL = (LPCTSTR)CW2T(pURL);	
+		}
+
+		if (pURL)
+		{
+			CoTaskMemFree(pURL);
+		}
+
+		return strURL;
 	}
 
 	void MonitorSink::ExportCookies(LPCWSTR szResponseHeaders)
@@ -125,15 +134,13 @@ namespace HttpMonitor
 		{
 			if (lpCookies)
 			{
+				CString strURL = GetBindURL();
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), m_strURL, strCookie);
-				CIEHostWindow::SetFirefoxCookie(m_strURL, strCookie);
+				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), strURL, strCookie);
+				CIEHostWindow::SetFirefoxCookie(strURL, strCookie);
 				VirtualFree(lpCookies, 0, MEM_RELEASE);
 				lpCookies = NULL;
 				nCookieLen = 0;
-
-				Cookie::Cookie cookieObject(m_strURL, strCookie);
-				TRACE("Cookie %s\n", cookieObject.toString().c_str());
 			}
 
 		}
@@ -149,17 +156,17 @@ namespace HttpMonitor
 		switch ( ulStatusCode )
 		{
 			 
-			// 重定向了, 更新记录的 URL
+		// 重定向了, 更新记录的 URL
 		case BINDSTATUS_REDIRECTING:
 			{
 				// 很多网站登录的时候会在302跳转时设置Cookie, 例如Gmail, 所以我们在这里也要处理 Cookie
 				CComPtr<IWinInetHttpInfo> spWinInetHttpInfo;
-				if ( SUCCEEDED(m_spTargetProtocol->QueryInterface(&spWinInetHttpInfo)) && spWinInetHttpInfo )
+				if (SUCCEEDED(m_spTargetProtocol->QueryInterface(&spWinInetHttpInfo)) && spWinInetHttpInfo )
 				{
 					CHAR szRawHeader[8192];		// IWinInetHttpInfo::QueryInfo() 返回的 Raw Header 不是 Unicode 的
 					DWORD dwBuffSize = ARRAYSIZE(szRawHeader);
-
-					if ( SUCCEEDED(spWinInetHttpInfo->QueryInfo(HTTP_QUERY_RAW_HEADERS, szRawHeader, &dwBuffSize, 0, NULL)) )
+									
+					if (SUCCEEDED(spWinInetHttpInfo->QueryInfo(HTTP_QUERY_RAW_HEADERS, szRawHeader, &dwBuffSize, 0, NULL)))
 					{
 						// 注意 HTTP_QUERY_RAW_HEADERS 返回的 Raw Header 是 \0 分隔的, 以 \0\0 作为结束, 所以这里要做转换
 						CString strHeader;

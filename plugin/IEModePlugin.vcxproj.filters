@@ -42,12 +42,6 @@
     <ClCompile Include="Plugin\PluginGlobal.cpp">
       <Filter>Plugin</Filter>
     </ClCompile>
-    <ClCompile Include="Cookie\CookieManager.cpp">
-      <Filter>Cookie</Filter>
-    </ClCompile>
-    <ClCompile Include="Cookie\Cookie.cpp">
-      <Filter>Cookie</Filter>
-    </ClCompile>
     <ClCompile Include="BrowserHook\HookImportFunction.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
@@ -120,12 +114,6 @@
     <ClInclude Include="Plugin\PluginGlobal.h">
       <Filter>Plugin</Filter>
     </ClInclude>
-    <ClInclude Include="Cookie\CookieManager.h">
-      <Filter>Cookie</Filter>
-    </ClInclude>
-    <ClInclude Include="Cookie\Cookie.h">
-      <Filter>Cookie</Filter>
-    </ClInclude>
     <ClInclude Include="BrowserHook\HookImportFunction.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
@@ -161,9 +149,6 @@
     </Filter>
     <Filter Include="BrowserHook">
       <UniqueIdentifier>{e9cf651e-492b-4a66-bd8a-9be8e0a77e3c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Cookie">
-      <UniqueIdentifier>{f08b1100-713c-4a7b-ae7d-ae40404ddb5d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>

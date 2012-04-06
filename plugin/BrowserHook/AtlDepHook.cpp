@@ -263,7 +263,7 @@ namespace BrowserHook
 
 	void AtlDepHook::Install(void)
 	{
-		USES_CONVERSION;
+		USES_CONVERSION_EX;
 
 		HANDLE hSnapshot;
 		MODULEENTRY32 me = {sizeof(MODULEENTRY32)};
@@ -273,7 +273,7 @@ namespace BrowserHook
 		BOOL bOk = Module32First(hSnapshot,&me);
 		while (bOk) 
 		{
-			if (ShouldHookModule(T2A(me.szModule)))
+			if (ShouldHookModule(T2CA_EX(me.szModule, sizeof(me.szModule)/(TCHAR))))
 			{
 				if (!m_hookMgr.IsModuleHooked(me.hModule))
 				{

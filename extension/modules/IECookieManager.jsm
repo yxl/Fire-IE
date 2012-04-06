@@ -193,12 +193,10 @@ let IECookieManager = {
     let ret = InternetSetCookieW(url, NULL, cookieData); 
     if (!ret)
     {
-      let errCode = GetLastError();
-      Utils.ERROR('InternetSetCookieW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
       let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
       if (!ret)
       {
-        errCode = GetLastError();
+        let errCode = GetLastError();
         Utils.ERROR('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
       }
     }
@@ -413,7 +411,7 @@ let CookieObserver = {
     }
     catch(e)
     {
-      Utils.ERROR(e);
+      Utils.ERROR("onIECookieChanged(" + data + "): " + e);
     }
   },
 

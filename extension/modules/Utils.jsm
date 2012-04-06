@@ -568,9 +568,10 @@ var Utils = {
     while (enumerator.hasMoreElements())
     {
       let window = enumerator.getNext();
-	  if (window.gBrowser)
+	  if (window.gBrowser && window.gBrowser.addTab)
 	  {
 		gBrowser = window.gBrowser;
+		break;
 	  }
     }
 

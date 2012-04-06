@@ -17,7 +17,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 var gFireIE = null;
 
-(function(){
+(function()
+{
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cr = Components.results;
@@ -33,7 +34,6 @@ var gFireIE = null;
   } = jsm;
   AppIntegration.addWindow(window);
   gFireIE = AppIntegration.getWrapperForWindow(window);
-
 
   function initializeHooks()
   {

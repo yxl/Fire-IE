@@ -296,12 +296,16 @@ int16_t	NPP_HandleEvent(NPP instance, void* event)
 NPObject *NPP_GetScriptableInstance(NPP instance)
 {
 	if(!instance)
-		return 0;
+	{
+		return NULL;
+	}
 
-	NPObject *npobj = 0;
-	CPlugin * pPlugin = (CPlugin *)instance->pdata;
-	if (!pPlugin)
+	NPObject *npobj = NULL;
+	CPlugin * pPlugin = static_cast<CPlugin*>(instance->pdata);
+	if (pPlugin != NULL)
+	{
 		npobj = pPlugin->GetScriptableObject();
+	}
 
 	return npobj;
 }
