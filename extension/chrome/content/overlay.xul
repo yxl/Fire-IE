@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://fireie/skin/fireie.css" type="text/css"?>
-<!DOCTYPE window
+<!DOCTYPE overlay
 [
 <!ENTITY % fireieDTD SYSTEM "chrome://fireie/locale/fireie.dtd" >
 %fireieDTD;
