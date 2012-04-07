@@ -160,6 +160,7 @@ protected:
 	void FBHighlightAll();
 	void FBCancelHighlight();
 	void FBMatchDocSelection();
+	bool FBCheckRangeVisible(CComPtr<IDisplayServices> pDS, CComPtr<IMarkupServices> pMS, CComPtr<IHTMLTxtRange> pRange);
 public:
 	CIECtrl m_ie;
 
@@ -236,7 +237,7 @@ protected:
 	bool m_bFBCase;
 	bool m_bFBTxtRangeChanged;
 	CString m_strFBText;
-	CComPtr<IHTMLTxtRange> m_pFBTxtRange;
+	CComPtr<IHTMLTxtRange> m_pFBTxtRange, m_pFBOriginalRange;
 	CComPtr<IHTMLDocument2> m_pFBDoc;
 	long m_lFBLastFindLength;
 	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)

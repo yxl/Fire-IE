@@ -54,6 +54,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bFBInProgress(false)
 	, m_pFBDoc(NULL)
 	, m_pFBTxtRange(NULL)
+	, m_pFBOriginalRange(NULL)
 {
 	FBResetFindStatus();
 }
@@ -1089,6 +1090,7 @@ void CIEHostWindow::FBEndFindText()
 	m_bFBInProgress = false;
 	m_pFBDoc = NULL;
 	m_pFBTxtRange = NULL;
+	m_pFBOriginalRange = NULL;
 	m_strFBText = _T("");
 }
 
@@ -1143,8 +1145,9 @@ bool CIEHostWindow::FBResetFindRange()
 bool CIEHostWindow::FBObtainFindRange()
 {
 	m_pFBTxtRange = NULL;
+	m_pFBOriginalRange = NULL;
 	m_pFBDoc = NULL;
-
+	
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
 	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
@@ -1158,6 +1161,9 @@ bool CIEHostWindow::FBObtainFindRange()
 	if (!pBody) return false;
 
 	if (FAILED(pBody->createTextRange(&m_pFBTxtRange)))
+		return false;
+
+	if (FAILED(m_pFBTxtRange->duplicate(&m_pFBOriginalRange)))
 		return false;
 
 	m_pFBDoc = pDoc;
@@ -1193,12 +1199,12 @@ void CIEHostWindow::FBFindAgain()
 void CIEHostWindow::FBFindAgainInternal()
 {
 	long tmp;
+	m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
 	if (m_lFBLastFindLength)
 	{
 		m_pFBTxtRange->moveStart(CComBSTR("character"), m_lFBLastFindLength, &tmp);
 		m_lFBLastFindLength = 0;
 	}
-	m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
 
 	if (m_strFBText.GetLength() == 0)
 	{
@@ -1208,16 +1214,36 @@ void CIEHostWindow::FBFindAgainInternal()
 		return;
 	}
 
-	CComBSTR bstr_Text = m_strFBText;
-	VARIANT_BOOL bFound;
-	if (m_pFBTxtRange->findText(bstr_Text, 0, (m_bFBCase ? 4 : 0), &bFound), bFound)
-	{
-		m_bFBFound = true;
-		m_pFBTxtRange->select();
+	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
+	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
 
-		m_lFBLastFindLength = m_strFBText.GetLength();
+	if (!pDS || !pMS) return;
+
+	CComBSTR bstr_Text = m_strFBText;
+	VARIANT_BOOL bFound = VARIANT_FALSE;
+	CComPtr<IHTMLTxtRange> pTmpTxtRange;
+	m_pFBTxtRange->duplicate(&pTmpTxtRange);
+	long length = m_strFBText.GetLength();
+
+	while (m_pFBTxtRange->findText(bstr_Text, 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
+	{
+		if (FAILED(m_pFBTxtRange->select()))
+		{
+			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
+			m_pFBTxtRange->moveStart(CComBSTR("character"), length, &tmp);
+			continue;
+		}
+
+		m_bFBFound = true;
+
+		m_lFBLastFindLength = length;
 		m_bFBTxtRangeChanged = true;
-	} else {
+
+		break;
+	}
+	if (!m_bFBFound)
+	{
+		m_pFBTxtRange = pTmpTxtRange;
 		if (m_bFBTxtRangeChanged)
 		{
 			m_bFBCrossTail = true;
@@ -1225,8 +1251,8 @@ void CIEHostWindow::FBFindAgainInternal()
 			m_bFBTxtRangeChanged = false;
 			CComPtr<IHTMLTxtRange> pPrevTxtRange;
 			m_pFBTxtRange->duplicate(&pPrevTxtRange);
-			m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
-			m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
+			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
 			FBFindAgainInternal();
 			if (!m_lFBLastFindLength)
 			{
@@ -1252,12 +1278,12 @@ void CIEHostWindow::FBFindPrevious()
 void CIEHostWindow::FBFindPreviousInternal()
 {
 	long tmp;
+	m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
 	if (m_lFBLastFindLength)
 	{
 		m_pFBTxtRange->moveEnd(CComBSTR("character"), -m_lFBLastFindLength, &tmp);
 		m_lFBLastFindLength = 0;
 	}
-	m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
 
 	if (m_strFBText.GetLength() == 0)
 	{
@@ -1267,16 +1293,37 @@ void CIEHostWindow::FBFindPreviousInternal()
 		return;
 	}
 
-	CComBSTR bstr_Text = m_strFBText;
-	VARIANT_BOOL bFound;
-	if (m_pFBTxtRange->findText(bstr_Text, -0x7F000000, (m_bFBCase ? 4 : 0), &bFound), bFound)
-	{
-		m_bFBFound = true;
-		m_pFBTxtRange->select();
 
-		m_lFBLastFindLength = m_strFBText.GetLength();
+	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
+	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
+
+	if (!pDS || !pMS) return;
+
+	CComBSTR bstr_Text = m_strFBText;
+	VARIANT_BOOL bFound = VARIANT_FALSE;
+	CComPtr<IHTMLTxtRange> pTmpTxtRange;
+	m_pFBTxtRange->duplicate(&pTmpTxtRange);
+	long length = m_strFBText.GetLength();
+
+	while (m_pFBTxtRange->findText(bstr_Text, -0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
+	{
+		if (FAILED(m_pFBTxtRange->select()))
+		{
+			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
+			m_pFBTxtRange->moveEnd(CComBSTR("character"), -length, &tmp);
+			continue;
+		}
+
+		m_bFBFound = true;
+
+		m_lFBLastFindLength = length;
 		m_bFBTxtRangeChanged = true;
-	} else {
+
+		break;
+	}
+	if (!m_bFBFound)
+	{
+		m_pFBTxtRange = pTmpTxtRange;
 		if (m_bFBTxtRangeChanged)
 		{
 			m_bFBCrossHead = true;
@@ -1284,8 +1331,8 @@ void CIEHostWindow::FBFindPreviousInternal()
 			m_bFBTxtRangeChanged = false;
 			CComPtr<IHTMLTxtRange> pPrevTxtRange;
 			m_pFBTxtRange->duplicate(&pPrevTxtRange);
-			m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
-			m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
+			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
 			FBFindPreviousInternal();
 			if (!m_lFBLastFindLength)
 			{
@@ -1341,8 +1388,8 @@ void CIEHostWindow::FBHighlightAll()
 
 	CComPtr<IHTMLTxtRange> pPrevTxtRange;
 	m_pFBTxtRange->duplicate(&pPrevTxtRange);
-	m_pFBTxtRange->moveStart(CComBSTR("textedit"), -1, &tmp);
-	m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
+	m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
+	m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
 
 	CComQIPtr<IHighlightRenderingServices> pHRS = m_pFBDoc;
 	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
@@ -1385,10 +1432,13 @@ void CIEHostWindow::FBHighlightAll()
 						}
 					}
 				}
+				m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
 				m_pFBTxtRange->moveStart(CComBSTR("character"), length, &tmp);
-				m_pFBTxtRange->moveEnd(CComBSTR("textedit"), 1, &tmp);
 			}
 			m_bFBFound = (m_vFBHighlightSegments.size() != 0);
+			//_TCHAR i[20] = {0};
+			//wsprintf(i, _T("%d"), m_vFBHighlightSegments.size());
+			//MessageBox(CString(i) + _T(" instances"), NULL, MB_OK);
 		}
 	}
 	m_pFBTxtRange = pPrevTxtRange;
@@ -1422,4 +1472,27 @@ CString CIEHostWindow::FBGetLastFindStatus()
 		return _T("found");
 	}
 	return _T("notfound");
+}
+
+bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IDisplayServices> pDS, CComPtr<IMarkupServices> pMS, CComPtr<IHTMLTxtRange> pRange)
+{
+	CComPtr<IDisplayPointer> pDStart, pDEnd;
+	CComPtr<IMarkupPointer> pMStart, pMEnd;
+	pDS->CreateDisplayPointer(&pDStart);
+	pDS->CreateDisplayPointer(&pDEnd);
+	pMS->CreateMarkupPointer(&pMStart);
+	pMS->CreateMarkupPointer(&pMEnd);
+	if (pDStart && pDEnd && pMStart && pMEnd)
+	{
+		if (SUCCEEDED(pMS->MovePointersToRange(m_pFBTxtRange, pMStart, pMEnd)))
+		{
+			HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
+			HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
+			if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
