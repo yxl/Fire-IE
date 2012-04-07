@@ -45,18 +45,17 @@ var Policy = {
    * Map containing all schemes that should be ignored by content policy.
    * @type Object
    */
-  whitelistSchemes: {},
+  ignoredSchemes: {},
 
   /**
    * Called on module startup.
    */
   startup: function()
   {
-    // whitelisted URL schemes
-    for each(var scheme in Prefs.autoswitch_whitelistschemes.toLowerCase().split(" "))
-	{
-	  Policy.whitelistSchemes[scheme] = true;
-	}
+    for each(var scheme in Prefs.contentPolicy_ignoredSchemes.toLowerCase().split(" "))
+    {
+      Policy.ignoredSchemes[scheme] = true;
+    }
 
     // Register our content policy
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
@@ -79,7 +78,7 @@ var Policy = {
 
   shutdown: function()
   {
-    PolicyPrivate.previousRequest = null;
+    Services.obs.removeObserver(PolicyPrivate, "http-on-modify-request");
   },
 
   /**
@@ -89,13 +88,20 @@ var Policy = {
    */
   checkEngineRule: function(url)
   {
-    let docDomain = Utils.getHostname(url);
-    let match = EngineMatcher.matchesAny(url, docDomain);
-    if (match)
+    try
     {
-      RuleStorage.increaseHitCount(match);
+      let docDomain = Utils.getHostname(url);
+      let match = EngineMatcher.matchesAny(url, docDomain);
+      if (match)
+      {
+        RuleStorage.increaseHitCount(match);
+      }
+      return match && match instanceof EngineRule;
     }
-    return match && match instanceof EngineRule;
+    catch (ex)
+    {
+      Utils.ERROR(ex);
+    }
   },
 
   /**
@@ -114,13 +120,13 @@ var Policy = {
   },
 
   /**
-   * Checks whether the location's scheme is blockable.
+   * Checks whether the engine of given location's scheme is switchable.
    * @param {nsIURI} location  
    * @return {Boolean}
    */
-  isBlockableScheme: function(location)
+  isSwitchableScheme: function(location)
   {
-    return !(location.scheme in Policy.whitelistSchemes);
+    return !(location.scheme in Policy.ignoredSchemes);
   }
 };
 
@@ -155,15 +161,20 @@ var PolicyPrivate = {
     let location = Utils.unwrapURL(contentLocation);
 
     // Ignore whitelisted schemes
-    if (!Policy.isBlockableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
+    if (!Policy.isSwitchableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
 
     // User has manually switched to Firefox engine
-    if (browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(location.spec)) return Ci.nsIContentPolicy.ACCEPT;
+    let hostName = Utils.getHostname(location.spec);
+    if (hostName && browserNode.getAttribute('manuallySwitchToFirefox') == hostName) return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
     if (Policy.checkEngineRule(location.spec))
     {
-      contentLocation.spec = Utils.toContainerUrl(location.spec);
+      Utils.runAsync(function()
+      {
+        browserNode.loadURI(Utils.toContainerUrl(location.spec));
+      }, this);
+      return Ci.nsIContentPolicy.REJECT_OTHER;
     }
 
     return Ci.nsIContentPolicy.ACCEPT;
@@ -194,15 +205,44 @@ var PolicyPrivate = {
           {
             domain = Utils.getHostname(wnd.location.href);
           }
+
+          // Changes the UserAgent to that of IE if necessary.
           if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
           {
             // Change user agent
             subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
           }
+
+          // Checks whether we need switch to IE 
+          let isWindowURI = subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+          if (isWindowURI)
+          {
+            let tab = Utils.getTabFromWindow(wnd);
+            if (!tab || !tab.linkedBrowser) return;
+
+            let browserNode = tab.linkedBrowser.QueryInterface(Ci.nsIDOMNode) || null;
+            if (browserNode)
+            {
+              // User has manually switched to Firefox engine
+              let hostName = Utils.getHostname(url);
+              let manualSwitch = hostName && browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(url);
+              if (manualSwitch) return;
+            }
+
+            // Check engine switch list
+            if (!Policy.checkEngineRule(url))
+            {
+              return;
+            }
+
+            subject.cancel(Cr.NS_BINDING_ABORTED);
+
+            this._switchToIEEngine(url, tab, subject);
+          }
         }
         break;
       }
-    }
+    } // switch (topic)
   },
 
   //
@@ -212,5 +252,49 @@ var PolicyPrivate = {
   {
     if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
     return this.QueryInterface(iid);
+  },
+
+  _switchToIEEngine: function(url, tab, httpChannel)
+  {
+    // http headers
+    let headers = this._getAllRequestHeaders(httpChannel);
+
+    // post data
+    let post = "";
+    let uploadChannel = httpChannel.QueryInterface(Ci.nsIUploadChannel);
+    if (uploadChannel && uploadChannel.uploadStream)
+    {
+      let len = uploadChannel.uploadStream.available();
+      post = NetUtil.readInputStreamToString(uploadChannel.uploadStream, len);
+    }
+
+    // Pass the navigation paramters througth tab attributes
+    let param = {
+      headers: headers,
+      post: post
+    };
+    Utils.setTabAttributeJSON(tab, "fireieNavigateParams", param);
+    Utils.ERROR(JSON.stringify(param));
+
+    Utils.runAsync(function()
+    {
+      tab.linkedBrowser.loadURI(Utils.toContainerUrl(url));
+    }, this);
+
+  },
+
+  _getAllRequestHeaders: function(httpChannel)
+  {
+    let visitor = function()
+    {
+      this.headers = "";
+    };
+    visitor.prototype.visitHeader = function(aHeader, aValue)
+    {
+      this.headers += aHeader + ":" + aValue + "\r\n";
+    };
+    let v = new visitor();
+    httpChannel.visitRequestHeaders(v);
+    return v.headers;
   }
 };

@@ -108,6 +108,16 @@ let FireIEContainer = {};
     }
     return headers;
   }
+  
+  function getNavigateHeaders()
+  {
+	  return getNavigateParam("headers");
+  }
+  
+  function getNavigatePostData()
+  {
+	  return getNavigateParam("post");
+  }
 
   function getNavigateWindowId()
   {
@@ -130,7 +140,6 @@ let FireIEContainer = {};
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
-    window.addEventListener("keydown", onKeyDown, false);
   }
 
   function unregisterEventHandler()
@@ -139,7 +148,6 @@ let FireIEContainer = {};
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
-    window.removeEventListener("keydown", onKeyDown, false);
   }
 
 
@@ -188,12 +196,11 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
-  function onKeyDown(event)
-  {}
-
   window.addEventListener('load', init, false);
   window.addEventListener('unload', destory, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
+  FireIEContainer.getNavigateHeaders = getNavigateHeaders;
+  FireIEContainer.getNavigatePostData = getNavigatePostData;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {

@@ -8,7 +8,7 @@ pref("extensions.fireie.subscriptions_listurl", "http://fireie.org/sites/rules/s
 pref("extensions.fireie.subscriptions_fallbackurl", "https://fireie.org/getSubscription?version=%VERSION%&url=%SUBSCRIPTION%&downloadURL=%URL%&error=%ERROR%&channelStatus=%CHANNELSTATUS%&responseStatus=%RESPONSESTATUS%");
 pref("extensions.fireie.subscriptions_fallbackerrors", 5);
 pref("extensions.fireie.data_directory", "fireie");
-pref("extensions.fireie.autoswitch_whitelistschemes", "about chrome file irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
+pref("extensions.fireie.contentPolicy_ignoredSchemes", "http https about irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
 pref("extensions.fireie.autoswitch_enabled", true);
 pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
 pref("extensions.fireie.savestats", true);

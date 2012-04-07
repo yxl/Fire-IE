@@ -310,24 +310,6 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 	return NOERROR;
 }
 
-CString GetHostName(const CString& strHeaders)
-{
-	const CString HOST_HEADER(_T("Host:"));
-	int start = strHeaders.Find(HOST_HEADER);
-	if (start != -1) 
-	{
-		start += HOST_HEADER.GetLength();
-		int stop = strHeaders.Find(_T("\r\n"), start);
-		if (stop != -1)
-		{
-			int count = stop - start + 1;
-			CString strHost = strHeaders.Mid(start, count).Trim();
-			return strHost;
-		}
-	}
-	return _T("");
-}
-
 CString GetHostFromUrl(const CString& strUrl)
 {
 	CString strHost(strUrl);
@@ -417,36 +399,30 @@ CString GetURLRelative(const CString& baseURL, const CString relativeURL)
 	}
 }
 
-void FetchCookie(const CString& strUrl, const CString& strHeaders)
-{
-	const CString COOKIE_HEADER(_T("Cookie:"));
-	int start = strHeaders.Find(COOKIE_HEADER);
-	if (start != -1) 
-	{
-		start += COOKIE_HEADER.GetLength();
-		int stop = strHeaders.Find(_T("\r\n"), start);
-		if (stop != -1)
-		{
-			int count = stop - start + 1;
-			CString strCookie = strHeaders.Mid(start, count);
-			CString strHost = GetHostName(strHeaders);
-			if (strHost.IsEmpty()) 
-			{
-				strHost = GetHostFromUrl(strUrl);
-			}
-			InternetSetCookie(strHost, NULL, strCookie + _T(";Sat,01-Jan-2020 00:00:00 GMT"));
-		}
-	} 
-}
-
-void CIEHostWindow::Navigate(const CString& strURL)
+/** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
+void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
 	m_strLoadingUrl = strURL;
 	if (m_ie.GetSafeHwnd())
 	{
 		try
 		{
-			m_ie.Navigate(strURL, NULL, NULL, NULL, NULL);
+			_variant_t vFlags(0l);
+			_variant_t vTarget(_T(""));
+			_variant_t vPost;
+			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
+			if (!strPost.IsEmpty()) 
+			{
+				// 去除postContent-Type和Content-Length这样的header信息
+				int pos = strPost.Find(_T("\r\n\r\n"));
+
+				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
+				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
+				char* szPostData = new char[size + 1];
+				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
+				FillSafeArray(vPost, szPostData);
+			}
+			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
 		}
 		catch(...)
 		{
@@ -1155,7 +1131,7 @@ bool CIEHostWindow::FBObtainFindRange()
 {
 	m_vFBDocs.clear();
 	m_lFBCurrentDoc = 0;
-	
+
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
 	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
@@ -1205,7 +1181,7 @@ void CIEHostWindow::FBObtainFindRangeRecursive(CComPtr<IHTMLDocument2> pDoc)
 
 void CIEHostWindow::FBMatchDocSelection()
 {
-	
+
 	CComQIPtr<IServiceProvider> pSP = FBGetCurrentDocStatus().doc;
 	CComQIPtr<IMarkupContainer> pMC = FBGetCurrentDocStatus().doc;
 	CComQIPtr<IMarkupServices> pMS = FBGetCurrentDocStatus().doc;

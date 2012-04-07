@@ -46,7 +46,6 @@
 #include "plugin.h"
 #include "npfunctions.h"
 #include "ScriptablePluginObject.h"
-#include "Poco/URI.h"
 #include "json/json.h"
 
 namespace Plugin
@@ -65,7 +64,7 @@ namespace Plugin
 		// argn[0] = "id",                   argn[1] = "type",               argn[2] = "hidden", argn[3] = "width", argn[4] = "height"
 		// argn[0] = "fireie-cookie-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
 
-		// 从Plugin参数中获取Plugin ID
+		// Get Plugin ID
 		int i = 0;
 		for (i=0; i<data.argc; i++)
 		{
@@ -103,6 +102,8 @@ namespace Plugin
 
 		DWORD navId = 0;
 		CString url;
+		CString post;
+		CString headers;
 
 		if (m_strId == _T("fireie-object"))
 		{
@@ -111,7 +112,7 @@ namespace Plugin
 			CString strHostUrl = GetHostURL();
 			static const CString PREFIX(_T("chrome://fireie/content/container.xhtml?url="));
 
-			// 安全检查, 检查Plugin所在页面的URL，不允许其他插件或页面调用这个Plugin
+			// Secrity check. Do not allow other pages to load this plugin.
 			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
 				return FALSE;
 
@@ -120,6 +121,8 @@ namespace Plugin
 
 			// 获取从Firefox传入的其他参数
 			navId = GetNavigateWindowId();
+			post = GetNavigatePostData();
+			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
 		}
 
@@ -137,7 +140,7 @@ namespace Plugin
 		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
 		if (navId == 0)
 		{
-			m_pIEHostWindow->Navigate(url);
+			m_pIEHostWindow->Navigate(url, post, headers);
 		}
 
 		// 有了这两句, Firefox 窗口变化的时候才会通知 IE 窗口刷新显示
@@ -236,7 +239,7 @@ namespace Plugin
 		return m_pScriptableObject;
 	}
 
-	// 获取Plugin所在页面的URL
+	// Get the URL of the page where the plugin is hosted
 	CString CPlugin::GetHostURL() const
 	{
 		CString url;
@@ -338,14 +341,26 @@ namespace Plugin
 		return strParam;
 	}
 
-	// 获取CIEHostWindow ID
+	// Get CIEHostWindow ID
 	DWORD CPlugin::GetNavigateWindowId() const
 	{
 		CString strID = GetNavigateParam("getNavigateWindowId");
 		return _tcstoul(strID, NULL, 10);
 	}
 
-	// 清空IECtrl::Navigate的参数
+	// Get Http headers paramter for IECtrl::Navigate
+	CString CPlugin::GetNavigateHeaders() const
+	{
+		return GetNavigateParam("getNavigateHeaders");
+	}
+
+	// Get post data paramter for IECtrl::Navigate
+	CString CPlugin::GetNavigatePostData() const
+	{
+		return GetNavigateParam("getNavigatePostData");
+	}
+
+	// Clear all the paramters for IECtrl::Navigate
 	void CPlugin::RemoveNavigateParams()
 	{
 		NPObject* pWindow = NULL;
@@ -583,7 +598,7 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	/** 向Firefox发送IE窗口标题改变的消息 */
+	/** Notify the Firefox that the page title has changed. */
 	void CPlugin::OnIETitleChanged(const CString& strTitle)
 	{
 		CString strEventType = _T("IETitleChanged");
@@ -591,7 +606,7 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	/** 通过消息向Firefox发送IE的UserAgent*/
+	/** Send the IE UserAgent to the Firefox. */
 	void CPlugin::OnIEUserAgentReceived(const CString& strUserAgent)
 	{
 		CString strEventType = _T("IEUserAgentReceived");

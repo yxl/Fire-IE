@@ -171,7 +171,7 @@ public:
 	CString m_strLoadingUrl;
 
 	// plugin methods
-	void Navigate(const CString& strURL);
+	void Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders);
 	void Refresh();
 	void Stop();
 	void Back();

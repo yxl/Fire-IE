@@ -154,11 +154,11 @@ namespace Plugin
 		if (pMainWindow == NULL)
 			return false;
 
-		// void Navigate({string} URL)
+		// void Navigate({string} URL, {string} post, {string} headers)
 		if (name == NPI_ID(Navigate)) 
 		{
 			TRACE ("Navigate called!\n");
-			if (argCount < 1)
+			if (argCount < 3)
 				return false;
 
 			NPVariant vURL = args[0];
@@ -166,7 +166,17 @@ namespace Plugin
 				return false;
 			CString URL = NPStringToCString(vURL.value.stringValue);
 
-			pMainWindow->Navigate(URL);
+			NPVariant vHeaders = args[1];
+			if (vHeaders.type != NPVariantType_String)
+				return false;
+			CString headers = NPStringToCString(vHeaders.value.stringValue);
+
+			NPVariant vPost = args[2];
+			if (vPost.type != NPVariantType_String)
+				return false;
+			CString post = NPStringToCString(vPost.value.stringValue);
+
+			pMainWindow->Navigate(URL, post, headers);
 
 			VOID_TO_NPVARIANT(*result);
 

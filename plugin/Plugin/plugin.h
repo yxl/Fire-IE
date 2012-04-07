@@ -53,12 +53,13 @@ namespace Plugin
 
 		CPlugin(const nsPluginCreateData& data);
 		virtual ~CPlugin();
-		// 初始化Plugin窗口
+		// Initialize plugin window
 		NPBool init(NPWindow* pNPWindow);
-		// 当Plugin窗口大小或者位置改变时, 通过 NPP_SetWindow 通知 update
+		// Update plugin window when its size or position changes.
 		NPError SetWindow(NPWindow* pNPWindow);
-		// 释放Plugin
+		// Destruction of the plugin
 		void shut();
+
 		NPBool isInitialized();
 
 		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
@@ -67,18 +68,24 @@ namespace Plugin
 
 	public:
 
-		// 设置Plugin状态文本, 会在Firefox的状态栏中显示出来
+		// Set the plugin status text, which will be shown in the Firefox status bar
 		void SetStatus(const CString& text);
 
-		// 获取Plugin所在页面的URL
+		// Get the URL of the page where the plugin is hosted
 		CString GetHostURL() const;
 
 		CString GetNavigateParam(const NPUTF8* name) const;
 
-		// 获取CIEHostWindow ID
+		// Get CIEHostWindow ID
 		DWORD GetNavigateWindowId() const;
 
-		// 清空IECtrl::Navigate的参数
+		// Get Http headers paramter for IECtrl::Navigate
+		CString GetNavigateHeaders() const;
+
+		// Get post data paramter for IECtrl::Navigate
+		CString GetNavigatePostData() const;
+
+		// Clear all the paramters for IECtrl::Navigate
 		void RemoveNavigateParams();
 
 		NPObject *GetScriptableObject();
@@ -97,10 +104,9 @@ namespace Plugin
 		*/
 		BOOL FireEvent(const CString &strEventType, const CString &strDetail);
 
-		/** 获取Firefox窗口放大系数
-		*  对应的JavaScript代码为IMode.getZoomLevel()，这里省略了window，
-		*  完整的代码 window.IMode.getZoomLevel()
-		*/
+		/** Get the window zoom level of Firefox by calling the JavaScript method of
+		 * window.FireIEContainer.getZoomLevel()
+		 */
 		double GetZoomLevel();
 
 		/**
@@ -116,22 +122,23 @@ namespace Plugin
 
 		CString GetFirefoxUserAgent();
 
-		/** 打开一个新IE标签, 使用已创建的CIEHostWindow
-		 * @param id CIEHostWindow ID
-		 * @param strURL 新IE标签页面URL
+		/** 
+		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
+		 * @param id The ID of the CIEHostWindow object.
+		 * @param strURL The page URL to be loaded in the new tab.
 		 */
 		void IENewTab(DWORD id, const CString& strURL);
 
-		/** 关闭当前的IE标签窗口*/
+		/** Close current IE engie tab. */
 		void CloseIETab();
 
-		/** 向Firefox发送IE窗口标题改变的消息 */
+		/** Notify the Firefox that the page title has changed. */
 		void OnIETitleChanged(const CString& strTitle);
 
-		/** 通过消息向Firefox发送IE的UserAgent*/
+		/** Send the IE UserAgent to the Firefox. */
 		void OnIEUserAgentReceived(const CString& strUserAgent);
 
-		/** 页面加载完成时产生的事件 */
+		/** Send the page loaded message to the Firefox. */
 		void OnDocumentComplete();
 	protected:
 
