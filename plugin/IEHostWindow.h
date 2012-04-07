@@ -19,6 +19,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 #include "IECtrl.h"
 #include <vector>
+#include <tuple>
 
 namespace Plugin
 {
@@ -48,7 +49,6 @@ namespace UserMessage
 // 对于插件，是放在 GeckoPluginWindow 窗口里，往上有一个 MozillaWindowClass，再往上是顶层的
 // MozillaWindowClass，我们的消息要发到顶层，所以再写一个查找的函数
 HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl);
-
 
 // CIEHostWindow dialog
 
@@ -153,10 +153,13 @@ protected:
 
 	void FBRestartFind();
 	bool FBObtainFindRange();
+	void FBObtainFindRangeRecursive(CComPtr<IHTMLDocument2> pDoc);
+	struct FBDocFindStatus;
+	FBDocFindStatus& FBGetCurrentDocStatus();
 	bool FBResetFindRange();
 	void FBResetFindStatus();
-	void FBFindAgainInternal();
-	void FBFindPreviousInternal();
+	void FBResetFindStatusGood();
+	void FBFindAgainInternal(bool backwards, bool norecur = false);
 	void FBHighlightAll();
 	void FBCancelHighlight();
 	void FBMatchDocSelection();
@@ -237,8 +240,24 @@ protected:
 	bool m_bFBCase;
 	bool m_bFBTxtRangeChanged;
 	CString m_strFBText;
-	CComPtr<IHTMLTxtRange> m_pFBTxtRange, m_pFBOriginalRange;
-	CComPtr<IHTMLDocument2> m_pFBDoc;
+
+	// Find status struct for findbar methods
+	struct FBDocFindStatus
+	{
+		CComPtr<IHTMLDocument2> doc;
+		CComPtr<IHTMLTxtRange> txtRange, originalRange;
+
+		FBDocFindStatus(const CComPtr<IHTMLDocument2>& doc, const CComPtr<IHTMLTxtRange>& txtRange, const CComPtr<IHTMLTxtRange>& originalRange)
+		{
+			this->doc = doc;
+			this->txtRange = txtRange;
+			this->originalRange = originalRange;
+		}
+	};
+
+	std::vector<FBDocFindStatus> m_vFBDocs;
+	long m_lFBCurrentDoc;
+
 	long m_lFBLastFindLength;
 	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)
 	std::vector<std::pair<CComPtr<IHighlightRenderingServices>, CComPtr<IHighlightSegment> > > m_vFBHighlightSegments;

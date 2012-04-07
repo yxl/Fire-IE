@@ -52,9 +52,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bFBCase(false)
 	, m_strFBText(_T(""))
 	, m_bFBInProgress(false)
-	, m_pFBDoc(NULL)
-	, m_pFBTxtRange(NULL)
-	, m_pFBOriginalRange(NULL)
+	, m_lFBCurrentDoc(0)
 {
 	FBResetFindStatus();
 }
@@ -1088,9 +1086,8 @@ void CIEHostWindow::FBEndFindText()
 	//FBCancelHighlight();
 	FBResetFindStatus();
 	m_bFBInProgress = false;
-	m_pFBDoc = NULL;
-	m_pFBTxtRange = NULL;
-	m_pFBOriginalRange = NULL;
+	m_vFBDocs.clear();
+	m_lFBCurrentDoc = 0;
 	m_strFBText = _T("");
 }
 
@@ -1117,12 +1114,19 @@ void CIEHostWindow::FBRestartFind()
 {
 	FBResetFindStatus();
 	m_lFBLastFindLength = 0;
-	FBFindAgainInternal();
+	FBFindAgainInternal(false);
 }
 
 void CIEHostWindow::FBResetFindStatus()
 {
 	m_bFBFound = false;
+	m_bFBCrossHead = false;
+	m_bFBCrossTail = false;
+}
+
+void CIEHostWindow::FBResetFindStatusGood()
+{
+	m_bFBFound = true;
 	m_bFBCrossHead = false;
 	m_bFBCrossTail = false;
 }
@@ -1142,39 +1146,69 @@ bool CIEHostWindow::FBResetFindRange()
 	return true;
 }
 
+CIEHostWindow::FBDocFindStatus& CIEHostWindow::FBGetCurrentDocStatus()
+{
+	return m_vFBDocs[m_lFBCurrentDoc];
+}
+
 bool CIEHostWindow::FBObtainFindRange()
 {
-	m_pFBTxtRange = NULL;
-	m_pFBOriginalRange = NULL;
-	m_pFBDoc = NULL;
+	m_vFBDocs.clear();
+	m_lFBCurrentDoc = 0;
 	
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
 	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
 	if (!pDoc) return false;
 
+	FBObtainFindRangeRecursive(pDoc);
+	return m_vFBDocs.size() != 0;
+}
+
+void CIEHostWindow::FBObtainFindRangeRecursive(CComPtr<IHTMLDocument2> pDoc)
+{
 	CComPtr<IHTMLElement> pBodyElem;
-	if (FAILED(pDoc->get_body(&pBodyElem)))
-		return false;
+	if (SUCCEEDED(pDoc->get_body(&pBodyElem)))
+	{
+		CComQIPtr<IHTMLBodyElement> pBody = pBodyElem;
+		if (pBody)
+		{
+			CComPtr<IHTMLTxtRange> pTxtRange, pOrgRange;
+			if (SUCCEEDED(pBody->createTextRange(&pTxtRange)) && SUCCEEDED(pTxtRange->duplicate(&pOrgRange)))
+			{
+				m_vFBDocs.push_back(FBDocFindStatus(pDoc, pTxtRange, pOrgRange));
+			}
+		}
+	}
 
-	CComQIPtr<IHTMLBodyElement> pBody = pBodyElem;
-	if (!pBody) return false;
-
-	if (FAILED(pBody->createTextRange(&m_pFBTxtRange)))
-		return false;
-
-	if (FAILED(m_pFBTxtRange->duplicate(&m_pFBOriginalRange)))
-		return false;
-
-	m_pFBDoc = pDoc;
-	return true;
+	CComPtr<IHTMLFramesCollection2> pFrames;
+	long length;
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && SUCCEEDED(pFrames->get_length(&length)))
+	{
+		for (long i = 0; i < length; i++)
+		{
+			CComVariant varindex = i;
+			CComVariant vDisp;
+			if (SUCCEEDED(pFrames->item(&varindex, &vDisp)))
+			{
+				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
+				CComQIPtr<IHTMLWindow2> pWindow;
+				CComPtr<IHTMLDocument2> pSubDoc;
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)))
+				{
+					FBObtainFindRangeRecursive(pSubDoc);
+				}
+			}
+		}
+	}
 }
 
 void CIEHostWindow::FBMatchDocSelection()
 {
-	CComQIPtr<IServiceProvider> pSP = m_pFBDoc;
-	CComQIPtr<IMarkupContainer> pMC = m_pFBDoc;
-	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
+	
+	CComQIPtr<IServiceProvider> pSP = FBGetCurrentDocStatus().doc;
+	CComQIPtr<IMarkupContainer> pMC = FBGetCurrentDocStatus().doc;
+	CComQIPtr<IMarkupServices> pMS = FBGetCurrentDocStatus().doc;
 	if (pSP && pMC && pMS)
 	{
 		CComPtr<IMarkupPointer> pMPStart, pMPEnd;
@@ -1183,7 +1217,7 @@ void CIEHostWindow::FBMatchDocSelection()
 		CComPtr<IHTMLEditServices> pES;
 		if (pMPStart && pMPEnd && SUCCEEDED(pSP->QueryService(SID_SHTMLEditServices, &pES)))
 		{
-			pMS->MovePointersToRange(m_pFBTxtRange, pMPStart, pMPEnd);
+			pMS->MovePointersToRange(FBGetCurrentDocStatus().txtRange, pMPStart, pMPEnd);
 			pES->SelectRange(pMPStart, pMPEnd, SELECTION_TYPE_None);
 		}
 	}
@@ -1193,44 +1227,47 @@ void CIEHostWindow::FBFindAgain()
 {
 	if (!m_bFBInProgress) return;
 	FBResetFindStatus();
-	FBFindAgainInternal();
+	FBFindAgainInternal(false);
 }
 
-void CIEHostWindow::FBFindAgainInternal()
+void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 {
 	long tmp;
-	m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
+	FBDocFindStatus& dfs = FBGetCurrentDocStatus();
+
+	dfs.txtRange->setEndPoint(CComBSTR(backwards ? "StartToStart" : "EndToEnd"), dfs.originalRange);
 	if (m_lFBLastFindLength)
 	{
-		m_pFBTxtRange->moveStart(CComBSTR("character"), m_lFBLastFindLength, &tmp);
+		if (backwards)
+			dfs.txtRange->moveEnd(CComBSTR("character"), -m_lFBLastFindLength, &tmp);
+		else
+			dfs.txtRange->moveStart(CComBSTR("character"), m_lFBLastFindLength, &tmp);
 		m_lFBLastFindLength = 0;
 	}
 
 	if (m_strFBText.GetLength() == 0)
 	{
 		// should clear selection
-		m_pFBTxtRange->collapse(VARIANT_TRUE);
+		dfs.txtRange->collapse(backwards ? VARIANT_FALSE : VARIANT_TRUE);
 		FBMatchDocSelection();
 		return;
 	}
 
-	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
-	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
-
-	if (!pDS || !pMS) return;
-
 	CComBSTR bstr_Text = m_strFBText;
 	VARIANT_BOOL bFound = VARIANT_FALSE;
 	CComPtr<IHTMLTxtRange> pTmpTxtRange;
-	m_pFBTxtRange->duplicate(&pTmpTxtRange);
+	dfs.txtRange->duplicate(&pTmpTxtRange);
 	long length = m_strFBText.GetLength();
 
-	while (m_pFBTxtRange->findText(bstr_Text, 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
+	while (dfs.txtRange->findText(bstr_Text, backwards ? -0x7FFFFFFF : 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
 	{
-		if (FAILED(m_pFBTxtRange->select()))
+		if (FAILED(dfs.txtRange->select()))
 		{
-			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
-			m_pFBTxtRange->moveStart(CComBSTR("character"), length, &tmp);
+			dfs.txtRange->setEndPoint(CComBSTR(backwards? "StartToStart" : "EndToEnd"), dfs.originalRange);
+		if (backwards)
+			dfs.txtRange->moveEnd(CComBSTR("character"), -length, &tmp);
+		else
+			dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
 			continue;
 		}
 
@@ -1243,26 +1280,49 @@ void CIEHostWindow::FBFindAgainInternal()
 	}
 	if (!m_bFBFound)
 	{
-		m_pFBTxtRange = pTmpTxtRange;
-		if (m_bFBTxtRangeChanged)
+		dfs.txtRange = pTmpTxtRange;
+		if (!norecur)
 		{
-			m_bFBCrossTail = true;
-
+			bool findSelfAgain = m_bFBTxtRangeChanged;
 			m_bFBTxtRangeChanged = false;
 			CComPtr<IHTMLTxtRange> pPrevTxtRange;
-			m_pFBTxtRange->duplicate(&pPrevTxtRange);
-			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
-			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
-			FBFindAgainInternal();
-			if (!m_lFBLastFindLength)
+			dfs.txtRange->duplicate(&pPrevTxtRange);
+			dfs.txtRange->setEndPoint(CComBSTR("StartToStart"), dfs.originalRange);
+			dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
+
+			long lOriginalIndex = m_lFBCurrentDoc;
+			do 
 			{
-				m_pFBTxtRange = pPrevTxtRange;
+				if (backwards)
+				{
+					m_lFBCurrentDoc--; 
+					if (m_lFBCurrentDoc < 0)
+					{
+						m_lFBCurrentDoc = m_vFBDocs.size() - 1;
+						m_bFBCrossHead = true;
+					}
+				} else
+				{
+					m_lFBCurrentDoc++;
+					if (m_lFBCurrentDoc == m_vFBDocs.size())
+					{
+						m_lFBCurrentDoc = 0;
+						m_bFBCrossTail = true;
+					}
+				}
+				if (m_lFBCurrentDoc != lOriginalIndex || findSelfAgain)
+					FBFindAgainInternal(backwards, true);
+			} while (!m_bFBFound && m_lFBCurrentDoc != lOriginalIndex);
+
+			if (!m_bFBFound)
+			{
+				dfs.txtRange = pPrevTxtRange;
 				m_bFBTxtRangeChanged = true;
 			}
 		}
 		if (!m_lFBLastFindLength && m_bFBTxtRangeChanged)
 		{
-			m_pFBTxtRange->collapse(VARIANT_TRUE);
+			dfs.txtRange->collapse(backwards ? VARIANT_FALSE : VARIANT_TRUE);
 			FBMatchDocSelection();
 		}
 	}
@@ -1272,86 +1332,15 @@ void CIEHostWindow::FBFindPrevious()
 {
 	if (!m_bFBInProgress) return;
 	FBResetFindStatus();
-	FBFindPreviousInternal();
-}
-
-void CIEHostWindow::FBFindPreviousInternal()
-{
-	long tmp;
-	m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
-	if (m_lFBLastFindLength)
-	{
-		m_pFBTxtRange->moveEnd(CComBSTR("character"), -m_lFBLastFindLength, &tmp);
-		m_lFBLastFindLength = 0;
-	}
-
-	if (m_strFBText.GetLength() == 0)
-	{
-		// should clear selection
-		m_pFBTxtRange->collapse(VARIANT_FALSE);
-		FBMatchDocSelection();
-		return;
-	}
-
-
-	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
-	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
-
-	if (!pDS || !pMS) return;
-
-	CComBSTR bstr_Text = m_strFBText;
-	VARIANT_BOOL bFound = VARIANT_FALSE;
-	CComPtr<IHTMLTxtRange> pTmpTxtRange;
-	m_pFBTxtRange->duplicate(&pTmpTxtRange);
-	long length = m_strFBText.GetLength();
-
-	while (m_pFBTxtRange->findText(bstr_Text, -0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
-	{
-		if (FAILED(m_pFBTxtRange->select()))
-		{
-			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
-			m_pFBTxtRange->moveEnd(CComBSTR("character"), -length, &tmp);
-			continue;
-		}
-
-		m_bFBFound = true;
-
-		m_lFBLastFindLength = length;
-		m_bFBTxtRangeChanged = true;
-
-		break;
-	}
-	if (!m_bFBFound)
-	{
-		m_pFBTxtRange = pTmpTxtRange;
-		if (m_bFBTxtRangeChanged)
-		{
-			m_bFBCrossHead = true;
-
-			m_bFBTxtRangeChanged = false;
-			CComPtr<IHTMLTxtRange> pPrevTxtRange;
-			m_pFBTxtRange->duplicate(&pPrevTxtRange);
-			m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
-			m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
-			FBFindPreviousInternal();
-			if (!m_lFBLastFindLength)
-			{
-				m_pFBTxtRange = pPrevTxtRange;
-				m_bFBTxtRangeChanged = true;
-			}
-		}
-		if (!m_lFBLastFindLength)
-		{
-			m_pFBTxtRange->collapse(VARIANT_FALSE);
-			FBMatchDocSelection();
-		}
-	}
+	FBFindAgainInternal(true);
 }
 
 void CIEHostWindow::FBToggleHighlight(bool bHighlight)
 {
 	if (m_bFBHighlight == bHighlight) return;
 	m_bFBHighlight = bHighlight;
+
+	FBResetFindStatusGood();
 
 	if (m_bFBInProgress && bHighlight)
 	{
@@ -1367,6 +1356,8 @@ void CIEHostWindow::FBToggleCase(bool bCase)
 {
 	if (m_bFBCase == bCase) return;
 	m_bFBCase = bCase;
+
+	FBResetFindStatusGood();
 
 	if (m_bFBInProgress)
 	{
@@ -1384,64 +1375,67 @@ void CIEHostWindow::FBHighlightAll()
 
 	if (m_strFBText.GetLength() == 0) return;
 
-	long tmp;
-
-	CComPtr<IHTMLTxtRange> pPrevTxtRange;
-	m_pFBTxtRange->duplicate(&pPrevTxtRange);
-	m_pFBTxtRange->setEndPoint(CComBSTR("StartToStart"), m_pFBOriginalRange);
-	m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
-
-	CComQIPtr<IHighlightRenderingServices> pHRS = m_pFBDoc;
-	CComQIPtr<IDisplayServices> pDS = m_pFBDoc;
-	CComQIPtr<IMarkupServices> pMS = m_pFBDoc;
-	CComQIPtr<IHTMLDocument4> pDoc4 = m_pFBDoc;
-	if (pHRS && pDS && pMS && pDoc4)
+	long lOriginalIndex = m_lFBCurrentDoc;
+	for (m_lFBCurrentDoc = 0; m_lFBCurrentDoc < m_vFBDocs.size(); m_lFBCurrentDoc++)
 	{
-		CComBSTR bstr_Text = m_strFBText;
-		VARIANT_BOOL bFound;
-		long length = m_strFBText.GetLength();
-		CComPtr<IHTMLRenderStyle> pRenderStyle;
-		if (SUCCEEDED(pDoc4->createRenderStyle(NULL, &pRenderStyle)))
-		{
-			pRenderStyle->put_defaultTextSelection(CComBSTR("false"));
-			pRenderStyle->put_textBackgroundColor(CComVariant("fuchsia"));
-			pRenderStyle->put_textColor(CComVariant("white"));
+		FBDocFindStatus& dfs = FBGetCurrentDocStatus();
+		long tmp;
 
-			while (m_pFBTxtRange->findText(bstr_Text, 0, (m_bFBCase ? 4 : 0), &bFound), bFound)
+		CComPtr<IHTMLTxtRange> pPrevTxtRange;
+		dfs.txtRange->duplicate(&pPrevTxtRange);
+		dfs.txtRange->setEndPoint(CComBSTR("StartToStart"), dfs.originalRange);
+		dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
+
+		CComQIPtr<IHighlightRenderingServices> pHRS = dfs.doc;
+		CComQIPtr<IDisplayServices> pDS = dfs.doc;
+		CComQIPtr<IMarkupServices> pMS = dfs.doc;
+		CComQIPtr<IHTMLDocument4> pDoc4 = dfs.doc;
+		if (pHRS && pDS && pMS && pDoc4)
+		{
+			CComBSTR bstr_Text = m_strFBText;
+			VARIANT_BOOL bFound;
+			long length = m_strFBText.GetLength();
+			CComPtr<IHTMLRenderStyle> pRenderStyle;
+			if (SUCCEEDED(pDoc4->createRenderStyle(NULL, &pRenderStyle)))
 			{
-				CComPtr<IDisplayPointer> pDStart, pDEnd;
-				CComPtr<IMarkupPointer> pMStart, pMEnd;
-				pDS->CreateDisplayPointer(&pDStart);
-				pDS->CreateDisplayPointer(&pDEnd);
-				pMS->CreateMarkupPointer(&pMStart);
-				pMS->CreateMarkupPointer(&pMEnd);
-				if (pDStart && pDEnd && pMStart && pMEnd)
+				pRenderStyle->put_defaultTextSelection(CComBSTR("false"));
+				pRenderStyle->put_textBackgroundColor(CComVariant("fuchsia"));
+				pRenderStyle->put_textColor(CComVariant("white"));
+
+				while (dfs.txtRange->findText(bstr_Text, 0, (m_bFBCase ? 4 : 0), &bFound), bFound)
 				{
-					if (SUCCEEDED(pMS->MovePointersToRange(m_pFBTxtRange, pMStart, pMEnd)))
+					CComPtr<IDisplayPointer> pDStart, pDEnd;
+					CComPtr<IMarkupPointer> pMStart, pMEnd;
+					pDS->CreateDisplayPointer(&pDStart);
+					pDS->CreateDisplayPointer(&pDEnd);
+					pMS->CreateMarkupPointer(&pMStart);
+					pMS->CreateMarkupPointer(&pMEnd);
+					if (pDStart && pDEnd && pMStart && pMEnd)
 					{
-						HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
-						HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
-						if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
+						if (SUCCEEDED(pMS->MovePointersToRange(dfs.txtRange, pMStart, pMEnd)))
 						{
-							CComPtr<IHighlightSegment> pHSegment;
-							pHRS->AddSegment(pDStart, pDEnd, pRenderStyle, &pHSegment);
-							if (pHSegment)
+							HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
+							HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
+							if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
 							{
-								m_vFBHighlightSegments.push_back(std::make_pair(pHRS, pHSegment));
+								CComPtr<IHighlightSegment> pHSegment;
+								pHRS->AddSegment(pDStart, pDEnd, pRenderStyle, &pHSegment);
+								if (pHSegment)
+								{
+									m_vFBHighlightSegments.push_back(std::make_pair(pHRS, pHSegment));
+								}
 							}
 						}
 					}
+					dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
+					dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
 				}
-				m_pFBTxtRange->setEndPoint(CComBSTR("EndToEnd"), m_pFBOriginalRange);
-				m_pFBTxtRange->moveStart(CComBSTR("character"), length, &tmp);
 			}
-			m_bFBFound = (m_vFBHighlightSegments.size() != 0);
-			//_TCHAR i[20] = {0};
-			//wsprintf(i, _T("%d"), m_vFBHighlightSegments.size());
-			//MessageBox(CString(i) + _T(" instances"), NULL, MB_OK);
 		}
+		dfs.txtRange = pPrevTxtRange;
 	}
-	m_pFBTxtRange = pPrevTxtRange;
+	m_lFBCurrentDoc = lOriginalIndex;
+	m_bFBFound = (m_vFBHighlightSegments.size() != 0);
 }
 
 void CIEHostWindow::FBCancelHighlight()
@@ -1484,7 +1478,7 @@ bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IDisplayServices> pDS, CComPtr<I
 	pMS->CreateMarkupPointer(&pMEnd);
 	if (pDStart && pDEnd && pMStart && pMEnd)
 	{
-		if (SUCCEEDED(pMS->MovePointersToRange(m_pFBTxtRange, pMStart, pMEnd)))
+		if (SUCCEEDED(pMS->MovePointersToRange(FBGetCurrentDocStatus().txtRange, pMStart, pMEnd)))
 		{
 			HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
 			HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
