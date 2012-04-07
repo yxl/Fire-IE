@@ -78,7 +78,7 @@ var gFireIE = null;
     
     hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", setFindParamsCode);
 
-    hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
+    hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.setFindParams(gFireIE_value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
 
     hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
