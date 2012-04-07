@@ -153,17 +153,19 @@ protected:
 
 	void FBRestartFind();
 	bool FBObtainFindRange();
-	void FBObtainFindRangeRecursive(CComPtr<IHTMLDocument2> pDoc);
+	void FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pDoc);
 	struct FBDocFindStatus;
 	FBDocFindStatus& FBGetCurrentDocStatus();
 	bool FBResetFindRange();
 	void FBResetFindStatus();
 	void FBResetFindStatusGood();
-	void FBFindAgainInternal(bool backwards, bool norecur = false);
+	void FBFindAgainInternal(bool backwards, bool norecur = false, bool noselect = false);
 	void FBHighlightAll();
 	void FBCancelHighlight();
 	void FBMatchDocSelection();
-	static bool FBCheckRangeVisible(CComPtr<IHTMLTxtRange> pRange);
+	static bool FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange);
+	static bool FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2);
+	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
 public:
 	CIECtrl m_ie;
 
