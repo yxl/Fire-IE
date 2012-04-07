@@ -1261,13 +1261,13 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 
 	while (dfs.txtRange->findText(bstr_Text, backwards ? -0x7FFFFFFF : 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
 	{
-		if (FAILED(dfs.txtRange->select()))
+		if (!FBCheckRangeVisible(dfs.txtRange) || FAILED(dfs.txtRange->select()))
 		{
 			dfs.txtRange->setEndPoint(CComBSTR(backwards? "StartToStart" : "EndToEnd"), dfs.originalRange);
-		if (backwards)
-			dfs.txtRange->moveEnd(CComBSTR("character"), -length, &tmp);
-		else
-			dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
+			if (backwards)
+				dfs.txtRange->moveEnd(CComBSTR("character"), -length, &tmp);
+			else
+				dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
 			continue;
 		}
 
@@ -1468,25 +1468,35 @@ CString CIEHostWindow::FBGetLastFindStatus()
 	return _T("notfound");
 }
 
-bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IDisplayServices> pDS, CComPtr<IMarkupServices> pMS, CComPtr<IHTMLTxtRange> pRange)
+bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IHTMLTxtRange> pRange)
 {
-	CComPtr<IDisplayPointer> pDStart, pDEnd;
-	CComPtr<IMarkupPointer> pMStart, pMEnd;
-	pDS->CreateDisplayPointer(&pDStart);
-	pDS->CreateDisplayPointer(&pDEnd);
-	pMS->CreateMarkupPointer(&pMStart);
-	pMS->CreateMarkupPointer(&pMEnd);
-	if (pDStart && pDEnd && pMStart && pMEnd)
+	CComPtr<IHTMLElement> pElement;
+	pRange->parentElement(&pElement);
+	if(pElement)
 	{
-		if (SUCCEEDED(pMS->MovePointersToRange(FBGetCurrentDocStatus().txtRange, pMStart, pMEnd)))
+		while (true)
 		{
-			HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
-			HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
-			if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
+			CComPtr<IHTMLElement> pParentElement = NULL;
+			if (S_OK != pElement->get_parentElement(&pParentElement) || NULL == pParentElement)
+				break;
+
+			CComPtr<IHTMLCurrentStyle> pHtmlStyle = NULL;
+			CComQIPtr<IHTMLElement2, &IID_IHTMLElement2> pIHtmlElement2(pElement);
+			pIHtmlElement2->get_currentStyle(&pHtmlStyle);
+			CComBSTR bszDisplay, bszVisible;
+			if( pHtmlStyle != NULL )
 			{
-				return true;
+				pHtmlStyle->get_display(&bszDisplay);
+				pHtmlStyle->get_visibility(&bszVisible);
 			}
+
+			if (0 == StrCmpI( _T("none") , bszDisplay) || 0 == StrCmpI(_T("hidden") , bszVisible) || 0 == StrCmpI(_T("collapse") , bszVisible))
+			{
+				return false;
+			}
+
+			pElement = pParentElement;
 		}
 	}
-	return false;
+	return true;
 }

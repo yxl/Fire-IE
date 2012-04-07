@@ -163,7 +163,7 @@ protected:
 	void FBHighlightAll();
 	void FBCancelHighlight();
 	void FBMatchDocSelection();
-	bool FBCheckRangeVisible(CComPtr<IDisplayServices> pDS, CComPtr<IMarkupServices> pMS, CComPtr<IHTMLTxtRange> pRange);
+	static bool FBCheckRangeVisible(CComPtr<IHTMLTxtRange> pRange);
 public:
 	CIECtrl m_ie;
 
