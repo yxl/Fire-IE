@@ -1239,9 +1239,9 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 	if (m_lFBLastFindLength)
 	{
 		if (backwards)
-			dfs.txtRange->moveEnd(CComBSTR("character"), -m_lFBLastFindLength, &tmp);
+			dfs.txtRange->moveEnd(CComBSTR("character"), -1, &tmp);
 		else
-			dfs.txtRange->moveStart(CComBSTR("character"), m_lFBLastFindLength, &tmp);
+			dfs.txtRange->moveStart(CComBSTR("character"), 1, &tmp);
 		m_lFBLastFindLength = 0;
 	}
 
@@ -1265,9 +1265,9 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 		{
 			dfs.txtRange->setEndPoint(CComBSTR(backwards? "StartToStart" : "EndToEnd"), dfs.originalRange);
 			if (backwards)
-				dfs.txtRange->moveEnd(CComBSTR("character"), -length, &tmp);
+				dfs.txtRange->moveEnd(CComBSTR("character"), -1, &tmp);
 			else
-				dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
+				dfs.txtRange->moveStart(CComBSTR("character"), 1, &tmp);
 			continue;
 		}
 
@@ -1428,7 +1428,7 @@ void CIEHostWindow::FBHighlightAll()
 						}
 					}
 					dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
-					dfs.txtRange->moveStart(CComBSTR("character"), length, &tmp);
+					dfs.txtRange->moveStart(CComBSTR("character"), 1, &tmp);
 				}
 			}
 		}
