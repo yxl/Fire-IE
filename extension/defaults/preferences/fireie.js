@@ -23,5 +23,6 @@ pref("extensions.fireie.compatMode", "ie7mode");
 
 pref("extensions.fireie.currentTheme", "");
 
-
-
+// History & Privacy control
+pref("privacy.cpd.extensions-fireie", true);
+pref("privacy.clearOnShutdown.extensions-fireie", true);

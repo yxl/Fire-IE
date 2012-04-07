@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!--
+ * Copyright (C) 2004-2007 Federico Parodi and Stefano Verna.
+ * Copyright (C) 2007-2011 Federico Parodi, Stefano Verna and Nils Maier.
+ * This Source Code is GPL 2.0.
+ * The Original Code is DownThemAll!.
+ *
+ * Contributor(s):
+ *   Yuan Xulei(hi@yxl.name)
+-->
+<!DOCTYPE overlay
+[
+  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
+  %sanitizeDTD;
+  <!ENTITY % overlaySanitizePrefDTD SYSTEM "chrome://fireie/locale/overlaySanitizePref.dtd">
+  %overlaySanitizePrefDTD;
+]>
+<overlay id="fireieSanitizePref"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <prefwindow id="SanitizeDialog">
+    <prefpane id="SanitizeDialogPane">
+      <preferences>
+        <preference id="privacy.clearOnShutdown.extensions-fireie"
+        name="privacy.clearOnShutdown.extensions-fireie" type="bool" />
+      </preferences>
+      <groupbox id="firieGroup" orient="horizontal">
+        <caption label="&fireieSection.label;" />
+        <grid flex="1">
+          <columns>
+            <column style="width: &column.width;" />
+            <column flex="1" />
+          </columns>
+          <rows>
+            <row>
+              <checkbox label="&itemFireieHistory.label;"
+              preference="privacy.clearOnShutdown.extensions-fireie" />
+            </row>
+          </rows>
+        </grid>
+      </groupbox>
+    </prefpane>
+  </prefwindow>
+</overlay>

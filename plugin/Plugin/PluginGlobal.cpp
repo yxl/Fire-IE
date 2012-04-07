@@ -59,12 +59,14 @@ namespace Plugin
 			CoInternetSetFeatureEnabled(features[i], SET_FEATURE_ON_PROCESS, TRUE);
 		}
 
+#ifndef _M_X64
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
 
 			BrowserHook::AtlDepHook::s_instance.Install();
 
 		}
+#endif
 		return NPERR_NO_ERROR;
 	}
 
@@ -92,7 +94,8 @@ namespace Plugin
 			}
 			Sleep(100);
 		}
-
+#ifndef _M_X64
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
+#endif
 	}
 }
