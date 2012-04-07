@@ -1165,7 +1165,7 @@ bool CIEHostWindow::FBObtainFindRange()
 	return m_vFBDocs.size() != 0;
 }
 
-void CIEHostWindow::FBObtainFindRangeRecursive(CComPtr<IHTMLDocument2> pDoc)
+void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pDoc)
 {
 	CComPtr<IHTMLElement> pBodyElem;
 	if (SUCCEEDED(pDoc->get_body(&pBodyElem)))
@@ -1230,10 +1230,22 @@ void CIEHostWindow::FBFindAgain()
 	FBFindAgainInternal(false);
 }
 
-void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
+void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur, bool noselect)
 {
 	long tmp;
 	FBDocFindStatus& dfs = FBGetCurrentDocStatus();
+
+	CComQIPtr<IDisplayServices> pDS = dfs.doc;
+	CComQIPtr<IMarkupServices> pMS = dfs.doc;
+	if (!pDS || !pMS) return;
+
+	if (m_strFBText.GetLength() == 0)
+	{
+		// should clear selection
+		dfs.txtRange->collapse(backwards ? VARIANT_FALSE : VARIANT_TRUE);
+		FBMatchDocSelection();
+		return;
+	}
 
 	dfs.txtRange->setEndPoint(CComBSTR(backwards ? "StartToStart" : "EndToEnd"), dfs.originalRange);
 	if (m_lFBLastFindLength)
@@ -1245,14 +1257,6 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 		m_lFBLastFindLength = 0;
 	}
 
-	if (m_strFBText.GetLength() == 0)
-	{
-		// should clear selection
-		dfs.txtRange->collapse(backwards ? VARIANT_FALSE : VARIANT_TRUE);
-		FBMatchDocSelection();
-		return;
-	}
-
 	CComBSTR bstr_Text = m_strFBText;
 	VARIANT_BOOL bFound = VARIANT_FALSE;
 	CComPtr<IHTMLTxtRange> pTmpTxtRange;
@@ -1261,7 +1265,7 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 
 	while (dfs.txtRange->findText(bstr_Text, backwards ? -0x7FFFFFFF : 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
 	{
-		if (!FBCheckRangeVisible(dfs.txtRange) || FAILED(dfs.txtRange->select()))
+		if (!FBCheckRangeVisible(dfs.txtRange) || !FBCheckRangeHighlightable(pDS, pMS, dfs.txtRange) || (!noselect && FAILED(dfs.txtRange->select())))
 		{
 			dfs.txtRange->setEndPoint(CComBSTR(backwards? "StartToStart" : "EndToEnd"), dfs.originalRange);
 			if (backwards)
@@ -1311,7 +1315,7 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 					}
 				}
 				if (m_lFBCurrentDoc != lOriginalIndex || findSelfAgain)
-					FBFindAgainInternal(backwards, true);
+					FBFindAgainInternal(backwards, true, noselect);
 			} while (!m_bFBFound && m_lFBCurrentDoc != lOriginalIndex);
 
 			if (!m_bFBFound)
@@ -1320,7 +1324,7 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur)
 				m_bFBTxtRangeChanged = true;
 			}
 		}
-		if (!m_lFBLastFindLength && m_bFBTxtRangeChanged)
+		if (!m_bFBFound && m_bFBTxtRangeChanged)
 		{
 			dfs.txtRange->collapse(backwards ? VARIANT_FALSE : VARIANT_TRUE);
 			FBMatchDocSelection();
@@ -1332,7 +1336,61 @@ void CIEHostWindow::FBFindPrevious()
 {
 	if (!m_bFBInProgress) return;
 	FBResetFindStatus();
-	FBFindAgainInternal(true);
+	//FBFindAgainInternal(true);
+
+	// workaround for IE backwards find bug
+	// calls FindAgainInternal() repeatedly until range merges
+	long lOriginalIndex, lLastIndex;
+	CComPtr<IHTMLTxtRange> pOriginalRange, pLastRange;
+	bool bLastCrossTail;
+	// do a restart find in case last forwards find is successful
+	m_lFBLastFindLength = 0;
+	FBFindAgainInternal(false, false, true);
+	if (m_bFBFound)
+	{
+		lOriginalIndex = m_lFBCurrentDoc;
+		FBGetCurrentDocStatus().txtRange->duplicate(&pOriginalRange);
+		do
+		{
+			lLastIndex = m_lFBCurrentDoc;
+			pLastRange = NULL;
+			FBGetCurrentDocStatus().txtRange->duplicate(&pLastRange);
+			bLastCrossTail = m_bFBCrossTail;
+			m_bFBFound = false;
+			FBFindAgainInternal(false, false, true);
+		} while (lOriginalIndex != m_lFBCurrentDoc || !FBRangesEqual(pOriginalRange, FBGetCurrentDocStatus().txtRange));
+		// the result is pLastRange
+		pLastRange->select();
+		
+		// setting the appropriate find status
+		m_bFBCrossTail = false;
+		if (!bLastCrossTail) // if not cross tail, then backwards find must cross head
+			m_bFBCrossHead = true;
+
+		// setting the appropriate find range
+		if (lLastIndex == m_lFBCurrentDoc)
+		{
+			// same doc, just restore the txtRange
+			FBGetCurrentDocStatus().txtRange = NULL;
+			pLastRange->duplicate(&FBGetCurrentDocStatus().txtRange);
+		} else
+		{
+			// different docs, restore current doc to maximum range
+			FBGetCurrentDocStatus().txtRange = NULL;
+			FBGetCurrentDocStatus().originalRange->duplicate(&FBGetCurrentDocStatus().txtRange);
+			// restore last doc's find range
+			m_vFBDocs[lLastIndex].txtRange = NULL;
+			pLastRange->duplicate(&m_vFBDocs[lLastIndex].txtRange);
+			// restore doc pointer
+			m_lFBCurrentDoc = lLastIndex;
+		}
+	} else // not found
+	{
+		// setting the appropriate find status
+		m_bFBCrossTail = false;
+		m_bFBCrossHead = true;
+		return;
+	}
 }
 
 void CIEHostWindow::FBToggleHighlight(bool bHighlight)
@@ -1468,7 +1526,7 @@ CString CIEHostWindow::FBGetLastFindStatus()
 	return _T("notfound");
 }
 
-bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IHTMLTxtRange> pRange)
+bool CIEHostWindow::FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange)
 {
 	CComPtr<IHTMLElement> pElement;
 	pRange->parentElement(&pElement);
@@ -1499,4 +1557,45 @@ bool CIEHostWindow::FBCheckRangeVisible(CComPtr<IHTMLTxtRange> pRange)
 		}
 	}
 	return true;
+}
+
+bool CIEHostWindow::FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange)
+{
+	CComPtr<IDisplayPointer> pDStart, pDEnd;
+	CComPtr<IMarkupPointer> pMStart, pMEnd;
+	pDS->CreateDisplayPointer(&pDStart);
+	pDS->CreateDisplayPointer(&pDEnd);
+	pMS->CreateMarkupPointer(&pMStart);
+	pMS->CreateMarkupPointer(&pMEnd);
+	if (pDStart && pDEnd && pMStart && pMEnd)
+	{
+		if (SUCCEEDED(pMS->MovePointersToRange(pRange, pMStart, pMEnd)))
+		{
+			HRESULT hr1 = pDStart->MoveToMarkupPointer(pMStart, NULL);
+			HRESULT hr2 = pDEnd->MoveToMarkupPointer(pMEnd, NULL);
+			if (SUCCEEDED(hr1) && SUCCEEDED(hr2))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool CIEHostWindow::FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2)
+{
+	long lret;
+	HRESULT hr;
+	hr = pRange1->compareEndPoints(CComBSTR("StartToStart"), pRange2, &lret);
+	if (SUCCEEDED(hr))
+	{
+		if (lret) return false;
+		hr = pRange1->compareEndPoints(CComBSTR("EndToEnd"), pRange2, &lret);
+		if (SUCCEEDED(hr))
+		{
+			return lret == 0;
+		}
+	}
+	// the comparison magically fails = =||
+	return false;
 }
