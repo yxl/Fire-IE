@@ -47,6 +47,7 @@ namespace BrowserHook
 		//  where I will do the actual bash.
 		PIMAGE_THUNK_DATA pRealThunk = MakePtr(PIMAGE_THUNK_DATA, hModule, pImportDesc->FirstThunk);
 
+		BOOL bHooked = FALSE;
 		// Loop through and look for the one that matches the name.
 		while (pOrigThunk->u1.Function) 
 		{
@@ -80,6 +81,8 @@ namespace BrowserHook
 				// Change the protection back to what it was before I blasted.
 				DWORD dwOldProtect;
 				VERIFY(VirtualProtect(mbi_thunk.BaseAddress, mbi_thunk.RegionSize, mbi_thunk.Protect, &dwOldProtect));
+
+				return TRUE;
 			}
 			// Increment both tables.
 			pOrigThunk++;
