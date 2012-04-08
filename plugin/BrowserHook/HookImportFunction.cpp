@@ -7,25 +7,40 @@ namespace BrowserHook
 
 #define MakePtr(cast, ptr, AddValue) (cast)((size_t)(ptr)+(size_t)(AddValue))
 
+	static PIMAGE_IMPORT_DESCRIPTOR GetNamedImportDescriptor(HMODULE hModule, LPCSTR szImportModule)
+	{
+		PIMAGE_DOS_HEADER pDOSHeader;
+		PIMAGE_NT_HEADERS pNTHeader;
+		PIMAGE_IMPORT_DESCRIPTOR pImportDesc;
+
+		if ((szImportModule == NULL) || (hModule == NULL))
+			return NULL;
+		pDOSHeader = (PIMAGE_DOS_HEADER) hModule;
+		if (IsBadReadPtr(pDOSHeader, sizeof(IMAGE_DOS_HEADER)) || (pDOSHeader->e_magic != IMAGE_DOS_SIGNATURE)) 
+		{
+			return NULL;
+		}
+		pNTHeader = MakePtr(PIMAGE_NT_HEADERS, pDOSHeader, pDOSHeader->e_lfanew);
+		if (IsBadReadPtr(pNTHeader, sizeof(IMAGE_NT_HEADERS)) || (pNTHeader->Signature != IMAGE_NT_SIGNATURE))
+			return NULL;
+		if (pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress == 0)
+			return NULL;
+		pImportDesc = MakePtr(PIMAGE_IMPORT_DESCRIPTOR, pDOSHeader, pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+		while (pImportDesc->Name) 
+		{
+			PSTR szCurrMod = MakePtr(PSTR, pDOSHeader, pImportDesc->Name);
+			if (_stricmp(szCurrMod, szImportModule) == 0)
+				break;
+			pImportDesc++;
+		}
+		if (pImportDesc->Name == (DWORD)0)
+			return NULL;
+		return pImportDesc;
+	}
+
 	BOOL HookImportFunction(HMODULE hModule, LPCSTR szImportModule, LPCSTR szFunc, PROC pHookFunc, PROC* ppOrigFunc)
 	{
-		// Get the address of the module's import section
-		ULONG ulSize;
-
-		// An exception was triggered by Explorer (when browsing the content of
-		// a folder) into imagehlp.dll. It looks like one module was unloaded...
-		// Maybe some threading problem: the list of modules from Toolhelp might
-		// not be accurate if FreeLibrary is called during the enumeration.
-		PIMAGE_IMPORT_DESCRIPTOR pImportDesc = NULL;
-
-		__try 
-		{
-			pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR) ImageDirectoryEntryToData(
-				hModule, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
-		}
-		__finally
-		{
-		}
+		PIMAGE_IMPORT_DESCRIPTOR pImportDesc = GetNamedImportDescriptor(hModule, szImportModule);
 
 		if (pImportDesc == NULL)
 		{
