@@ -674,6 +674,31 @@ void CIEHostWindow::ViewPageSource()
 	}
 }
 
+void CIEHostWindow::SendKey(WORD key)
+{
+	//this->Focus();
+	//INPUT inputs[2];
+	//inputs[1].type = INPUT_KEYBOARD;
+	//inputs[1].ki.wVk = key;
+	//inputs[1].ki.dwFlags = 0;
+	//inputs[2].type = INPUT_KEYBOARD;
+	//inputs[2].ki.wVk = key;
+	//inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+	//SendInput(2, inputs, sizeof(INPUT));
+	SendMessageToDescendants(WM_KEYDOWN, (WPARAM)key, 0x00000001);
+	SendMessageToDescendants(WM_KEYUP, (WPARAM)key, 0xC0000001);
+}
+
+void CIEHostWindow::ScrollPage(bool up)
+{
+	SendKey(up ? VK_PRIOR : VK_NEXT);
+}
+
+void CIEHostWindow::ScrollLine(bool up)
+{
+	SendKey(up ? VK_UP : VK_DOWN);
+}
+
 CString CIEHostWindow::GetURL()
 {
 	CString url;
@@ -1117,7 +1142,7 @@ bool CIEHostWindow::FBResetFindRange()
 
 	m_bFBTxtRangeChanged = false;
 	m_lFBLastFindLength = 0;
-	FBResetFindStatus();
+	FBResetFindStatusGood();
 
 	return true;
 }

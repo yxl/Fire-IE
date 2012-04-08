@@ -925,6 +925,18 @@ WindowWrapper.prototype = {
       case "ToggleCaseOff":
         pluginObject.FBToggleCase(false);
         break;
+      case "PageUp":
+        pluginObject.PageUp();
+        break;
+      case "PageDown":
+        pluginObject.PageDown();
+        break;
+      case "LineUp":
+        pluginObject.LineUp();
+        break;
+      case "LineDown":
+        pluginObject.LineDown();
+        break;
       default:
         throw cmd;
         break;

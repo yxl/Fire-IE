@@ -151,6 +151,7 @@ protected:
 	void OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL);
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
 
+	void SendKey(WORD vkey);
 	void FBRestartFind();
 	bool FBObtainFindRange();
 	void FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pDoc);
@@ -194,6 +195,8 @@ public:
 	void PrintPreview();
 	void PrintSetup();
 	void ViewPageSource();
+	void ScrollPage(bool up);
+	void ScrollLine(bool up);
 
 	// FindBar methods
 	void FBFindText(const CString& text);

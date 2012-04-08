@@ -332,6 +332,30 @@ namespace Plugin
 			pMainWindow->ViewPageSource();
 			return true;
 		}
+		else if (name == NPI_ID(PageUp))
+		{
+			TRACE ("PageUp called!\n");
+			pMainWindow->ScrollPage(true);
+			return true;
+		}
+		else if (name == NPI_ID(PageDown))
+		{
+			TRACE ("PageDown called!\n");
+			pMainWindow->ScrollPage(false);
+			return true;
+		}
+		else if (name == NPI_ID(LineUp))
+		{
+			TRACE ("LineUp called!\n");
+			pMainWindow->ScrollLine(true);
+			return true;
+		}
+		else if (name == NPI_ID(LineDown))
+		{
+			TRACE ("LineDown called!\n");
+			pMainWindow->ScrollLine(false);
+			return true;
+		}
 		else if (name == NPI_ID(FBFindText))
 		{
 			TRACE ("FBFindText called!\n");

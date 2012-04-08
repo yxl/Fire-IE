@@ -56,6 +56,10 @@ namespace Plugin
 		NPI_DEF(PrintPreview);
 		NPI_DEF(PrintSetup);
 		NPI_DEF(ViewPageSource);
+		NPI_DEF(PageUp);
+		NPI_DEF(PageDown);
+		NPI_DEF(LineUp);
+		NPI_DEF(LineDown);
 
 		NPI_DEF(FBFindText); // FB stands for firefox FindBar
 		NPI_DEF(FBEndFindText);
@@ -108,6 +112,10 @@ namespace Plugin
 			NPN_GSI_M(PrintPreview);
 			NPN_GSI_M(PrintSetup);
 			NPN_GSI_M(ViewPageSource);
+			NPN_GSI_M(PageUp);
+			NPN_GSI_M(PageDown);
+			NPN_GSI_M(LineUp);
+			NPN_GSI_M(LineDown);
 			NPN_GSI_M(FBFindText);
 			NPN_GSI_M(FBEndFindText);
 			NPN_GSI_M(FBFindAgain);

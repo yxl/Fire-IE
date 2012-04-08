@@ -83,6 +83,31 @@ var gFireIE = null;
     hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
     hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked);", true);
+
+    gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
+    {
+        var shouldHandle = !event.altKey && !event.ctrlKey &&
+                           !event.metaKey && !event.shiftKey;
+
+        switch (event.keyCode) {
+          case KeyEvent.DOM_VK_PAGE_UP:
+            if (shouldHandle) {
+              gFireIE.goDoCommand("PageUp");
+            }
+            break;
+          case KeyEvent.DOM_VK_PAGE_DOWN:
+            if (shouldHandle) {
+              gFireIE.goDoCommand("PageDown");
+            }
+            break;
+          case KeyEvent.DOM_VK_UP:
+            gFireIE.goDoCommand("LineUp");
+            break;
+          case KeyEvent.DOM_VK_DOWN:
+            gFireIE.goDoCommand("LineDown");
+            break;
+        }
+    });
     
     //hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
     //hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
