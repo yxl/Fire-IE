@@ -170,9 +170,6 @@ protected:
 public:
 	CIECtrl m_ie;
 
-	/** 正在加载的 URL. */
-	CString m_strLoadingUrl;
-
 	// plugin methods
 	void Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders);
 	void Refresh();
