@@ -3,10 +3,10 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Switch rendering engine">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
 <!ENTITY urlbar.switchRules.label "Switch Rules">
+<!ENTITY internetProperties.lable "IE's Internet Properties">
 <!ENTITY skin.label "Skins">
 <!ENTITY default.lable "Default">
 <!ENTITY skin.more.lable "More...">
-
 
 <!ENTITY fireie.options.title "Fire IE Options">
 
