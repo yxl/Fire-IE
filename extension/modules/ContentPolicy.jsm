@@ -90,6 +90,7 @@ var Policy = {
   {
     try
     {
+      if (Utils.isFirefoxOnly(url)) return false;
       let docDomain = Utils.getHostname(url);
       let match = EngineMatcher.matchesAny(url, docDomain);
       if (match)
