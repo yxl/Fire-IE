@@ -90,6 +90,14 @@ var Utils = {
     Utils.__defineGetter__("platformVersion", function() platformVersion);
     return Utils.platformVersion;
   },
+  
+  /**
+   * Whether running in 64bit environment.
+   */
+  get is64bit()
+  {
+	return Services.appinfo.XPCOMABI.indexOf('64') != -1;
+  },
 
   get ieUserAgent()
   {

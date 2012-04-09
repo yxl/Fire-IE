@@ -116,7 +116,7 @@ Options.applyIECompatMode = function()
 {
   let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
+  wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
 
   let value = 7000;
   switch (mode)
@@ -136,14 +136,13 @@ Options.applyIECompatMode = function()
   }
 
   wrk.writeIntValue("firefox.exe", value);
-  wrk.writeIntValue("plugin-container.exe", value);
 }
 
 // 获取IE主版本号
 Options.getIEMainVersion = function()
 {
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+  wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Internet Explorer", wrk.ACCESS_READ);
 
   let versionString = "";
   try
