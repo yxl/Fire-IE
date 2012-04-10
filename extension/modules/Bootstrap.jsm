@@ -60,7 +60,7 @@ let factoryPrivate = {
 };
 
 let defaultModules = [
-baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm", baseURL.spec + "IECookieManager.jsm"];
+baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm", baseURL.spec + "IECookieManager.jsm", baseURL.spec + "FontObserver.jsm"];
 
 let loadedModules = {
   __proto__: null

@@ -46,12 +46,12 @@ namespace Plugin
 		}
 
 		// Enable some new features of IE. Refer to CoInternetSetFeatureEnabled Function on MSDN for more information.
-		INTERNETFEATURELIST features[] = {FEATURE_WEBOC_POPUPMANAGEMENT
-			, FEATURE_WEBOC_POPUPMANAGEMENT		// 启用IE的弹出窗口管理
-			, FEATURE_SECURITYBAND				// 下载和安装插件时提示
-			, FEATURE_LOCALMACHINE_LOCKDOWN		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
-			, FEATURE_SAFE_BINDTOOBJECT			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
-			, FEATURE_TABBED_BROWSING			// 启用多标签浏览
+		INTERNETFEATURELIST features[] = {
+			FEATURE_WEBOC_POPUPMANAGEMENT,		// 启用IE的弹出窗口管理
+			FEATURE_SECURITYBAND,				// 下载和安装插件时提示
+			FEATURE_LOCALMACHINE_LOCKDOWN,		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
+			FEATURE_SAFE_BINDTOOBJECT,			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
+			FEATURE_TABBED_BROWSING			// 启用多标签浏览
 		};			
 		int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
 		for (int i=0; i<n; i++)

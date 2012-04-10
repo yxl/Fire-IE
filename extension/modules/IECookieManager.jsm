@@ -86,6 +86,7 @@ function setIECtrlRegString(regName, value)
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     wrk.writeStringValue(regName, value);
+    wrk.close();
     return true;
   }
   catch (e)

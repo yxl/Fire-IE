@@ -622,7 +622,7 @@ WindowWrapper.prototype = {
     {
       WinABI = ctypes.default_abi;
     }
-    //try
+    try
     {
 
       let lib = ctypes.open("shell32.dll");
@@ -638,7 +638,7 @@ WindowWrapper.prototype = {
       ShellExecuteW(NULL, "open", "rundll32.exe", "shell32.dll,Control_RunDLL inetcpl.cpl", "", SW_SHOW);
 	  lib.close();
     }
-    //catch (e)
+    catch (e)
     {
       Utils.ERROR(e);
     }

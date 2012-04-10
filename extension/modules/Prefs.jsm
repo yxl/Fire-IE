@@ -5,7 +5,7 @@
  */
 
 /**
- * @fileOverview Manages Adblock Plus preferences.
+ * @fileOverview Manages Fire-IE preferences.
  */
 
 var EXPORTED_SYMBOLS = ["Prefs"];
@@ -33,7 +33,7 @@ const prefRoot = "extensions.fireie.";
 let willBeUninstalled = false;
 
 /**
- * Preferences branch containing Adblock Plus preferences.
+ * Preferences branch containing Fire-IE preferences.
  * @type nsIPrefBranch
  */
 let branch = Services.prefs.getBranch(prefRoot);
@@ -45,7 +45,7 @@ let branch = Services.prefs.getBranch(prefRoot);
 let listeners = [];
 
 /**
- * This object allows easy access to Adblock Plus preferences, all defined
+ * This object allows easy access to Fire-IE's preferences, all defined
  * preferences will be available as its members.
  * @class
  */

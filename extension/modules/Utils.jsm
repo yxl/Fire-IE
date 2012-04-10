@@ -90,13 +90,13 @@ var Utils = {
     Utils.__defineGetter__("platformVersion", function() platformVersion);
     return Utils.platformVersion;
   },
-  
+
   /**
    * Whether running in 64bit environment.
    */
   get is64bit()
   {
-	return Services.appinfo.XPCOMABI.indexOf('64') != -1;
+    return Services.appinfo.XPCOMABI.indexOf('64') != -1;
   },
 
   get ieUserAgent()
@@ -576,11 +576,11 @@ var Utils = {
     while (enumerator.hasMoreElements())
     {
       let window = enumerator.getNext();
-	  if (window.gBrowser && window.gBrowser.addTab)
-	  {
-		gBrowser = window.gBrowser;
-		break;
-	  }
+      if (window.gBrowser && window.gBrowser.addTab)
+      {
+        gBrowser = window.gBrowser;
+        break;
+      }
     }
 
     if (gBrowser)
