@@ -302,16 +302,6 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 
-      // Update the enable status of security button
-      let securityButton = this.E("security-button");
-      if (securityButton && pluginObject)
-      {
-        const wpl = Components.interfaces.nsIWebProgressListener;
-        let state = (Utils.startsWith(url, "https://") ? wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH : wpl.STATE_IS_INSECURE);
-        this.window.XULBrowserWindow.onSecurityChange(null, null, state);
-        securityButton.setAttribute("label", Utils.getHostname(pluginObject.URL));
-      }
-
       // Update the content of the URL bar.
       if (this.window.gURLBar && this.isIEEngine())
       {
