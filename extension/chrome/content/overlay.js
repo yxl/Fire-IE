@@ -81,7 +81,7 @@ var gFireIE = null;
 
     hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
-    hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked);", true);
+    hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.updateFindBarUI(gFindBar);", true);
 
     hookCode("gFindBar._getInitialSelection", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(this._selectionMaxLen); if (gFireIE_value != null) return gFireIE_value; }");
 
