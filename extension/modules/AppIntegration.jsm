@@ -355,7 +355,7 @@ WindowWrapper.prototype = {
       let fxURL = urlbarButton.getAttribute("fx-icon-url");
       let ieURL = urlbarButton.getAttribute("ie-icon-url");
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
-      if (engineIconCSS) this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
+      this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
       urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
       let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
@@ -366,7 +366,7 @@ WindowWrapper.prototype = {
       if (toolbarButton)
       {
         toolbarButton.disabled = urlbarButton.disabled;
-        if (engineIconCSS) toolbarButton.style.listStyleImage = engineIconCSS;
+        toolbarButton.style.listStyleImage = engineIconCSS;
       }
     }
     catch (e)
