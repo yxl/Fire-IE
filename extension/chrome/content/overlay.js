@@ -70,7 +70,7 @@ var gFireIE = null;
 
   function initializeFindBarHooks()
   {
-    hookCode("gFindBar.onFindAgainCommand", /{/, "$& if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain')) { gFireIE.updateFindBarUI(gFindBar); return; }"); // find_next, find_prev, arguments[0] denotes whether find_prev
+    hookCode("gFindBar.onFindAgainCommand", /{/, "$& if (gFindBar.getElement('findbar-textbox').value.length != 0 && gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain')) { gFireIE.updateFindBarUI(gFindBar); return; }"); // find_next, find_prev, arguments[0] denotes whether find_prev
 
     hookAttr(gFindBar.getElement("highlight"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); return; }");
 
@@ -79,7 +79,8 @@ var gFireIE = null;
 
     hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.setFindParams(gFireIE_value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
 
-    hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
+    // disabled, in order to support F3 findNext/Prev
+    hookCode("gFindBar.close", /{/, "$& if (false && !this.hidden) gFireIE.endFindText();");
 
     hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.updateFindBarUI(gFindBar);", true);
 

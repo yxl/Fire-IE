@@ -189,6 +189,16 @@ Exit:
 		{
 			return TRUE;
 		}
+		else // shift-F3 works in FF...
+		{
+			switch (keyCode)
+			{
+			case VK_F3:
+				return TRUE;
+			default:
+				return FALSE;
+			}
+		}
 
 		return FALSE;
 	}
