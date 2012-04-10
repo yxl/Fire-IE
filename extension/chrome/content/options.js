@@ -18,7 +18,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * @namespace
  */
-if (typeof(Options) == "undefined") {
+if (typeof(Options) == "undefined")
+{
   var Options = {};
 }
 
@@ -34,18 +35,18 @@ Options.export = function()
 Options.import = function()
 {
   let aOld = Options._getAllOptions(false);
-  let [result, aList] = Options._loadFromFile();
+  let[result, aList] = Options._loadFromFile();
   if (result)
-	{
+  {
     if (aList)
-		{
+    {
       Options._setAllOptions(aList);
       Options.initDialog();
       Options._setAllOptions(aOld);
       Options.updateApplyButton(true);
     }
-		else
-		{
+    else
+    {
       alert(Utils.getString("fireie.options.import.error"));
     }
   }
@@ -67,21 +68,22 @@ Options.apply = function(quiet)
   let requiresRestart = false;
 
   //general
-	Prefs.handleUrlBar = E("handleurl").checked;
+  Prefs.handleUrlBar = E("handleurl").checked;
   let newKey = E("shortcut-key").value;
   if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
-	{
+  {
     requiresRestart = true;
   }
   Prefs.shortcut_key = newKey;
   let newModifiers = E("shortcut-modifiers").value;
   if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
-	{
+  {
     requiresRestart = true;
   }
   Prefs.shortcut_modifiers = newModifiers;
   let newEnabled = E("shortcutEnabled").checked;
-  if (Prefs.shortcutEnabled != newEnabled) {
+  if (Prefs.shortcutEnabled != newEnabled)
+  {
     requiresRestart = true;
     Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   }
@@ -92,11 +94,11 @@ Options.apply = function(quiet)
   let newMode = "ie7mode";
   let iemode = E("iemode");
   if (iemode)
-	{
+  {
     newMode = iemode.value;
   }
   if (Prefs.compatMode != newMode)
-	{
+  {
     requiresRestart = true;
     Prefs.compatMode = newMode;
     Options.applyIECompatMode();
@@ -107,7 +109,7 @@ Options.apply = function(quiet)
 
   //notify of restart requirement
   if (requiresRestart && !quiet)
-	{
+  {
     alert(Utils.getString("fireie.options.alert.restart"));
   }
 }
@@ -115,12 +117,9 @@ Options.apply = function(quiet)
 Options.applyIECompatMode = function()
 {
   let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
-
   let value = 7000;
   switch (mode)
-	{
+  {
   case 'ie7mode':
     value = 7000;
     break;
@@ -134,27 +133,35 @@ Options.applyIECompatMode = function()
     value = 7000;
     break;
   }
-
-  wrk.writeIntValue("firefox.exe", value);
-  wrk.writeIntValue("plugin-container.exe", value);
+  
+  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  try
+  {
+	wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
+	wrk.writeIntValue("firefox.exe", value);
+	wrk.close();
+  }
+  catch (e)
+  {
+	Utils.ERROR(e);
+  }
 }
 
 // 获取IE主版本号
 Options.getIEMainVersion = function()
 {
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
-
-  let versionString = "";
+  let versionString = "0";
   try
-	{
+  {
+	wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Internet Explorer", wrk.ACCESS_READ);
     versionString = wrk.readStringValue("version");
+    wrk.close();
   }
-	catch (e)
-	{
+  catch (e)
+  {
     Utils.ERROR(e);
-    return '0';
-  }
+  }  
   return parseInt(versionString);
 }
 
@@ -163,11 +170,11 @@ Options.updateIEModeTab = function()
   let mainIEVersion = Options.getIEMainVersion();
   // IE 8之前不显示这个设置页面
   if (mainIEVersion < 8)
-	{
+  {
     return;
   }
   switch (mainIEVersion)
-	{
+  {
   case 9:
     document.getElementById("ie9mode-radio").hidden = false;
   case 8:
@@ -189,20 +196,22 @@ Options.initDialog = function()
   E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("showUrlBarLabel").checked = Prefs.showUrlBarLabel;
   E("hideUrlBarButton").checked = Prefs.hideUrlBarButton;
-  
+
   // updateStatus
   Options.updateApplyButton(false);
   Options.handleShortcutEnabled();
-  
+
   // IE Compatibility Mode
   Options.updateIEModeTab();
 }
 
-Options.updateApplyButton = function(e) {
+Options.updateApplyButton = function(e)
+{
   document.getElementById("myApply").disabled = !e;
 }
 
-Options.handleShortcutEnabled = function(e) {
+Options.handleShortcutEnabled = function(e)
+{
   let disable = !E("shortcutEnabled").checked;
   E("shortcut-modifiers").disabled = disable;
   E("shortcut-plus").disabled = disable;
@@ -211,25 +220,28 @@ Options.handleShortcutEnabled = function(e) {
 
 Options.init = function()
 {
-	function addEventListenerByTagName(tag, type, listener)
-	{
-   let objs = document.getElementsByTagName(tag);
-   for (let i = 0; i < objs.length; i++)
-	 {
+  function addEventListenerByTagName(tag, type, listener)
+  {
+    let objs = document.getElementsByTagName(tag);
+    for (let i = 0; i < objs.length; i++)
+    {
       objs[i].addEventListener(type, listener, false);
-   }	
-	}
+    }
+  }
   Options.initDialog();
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
-	addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
+  addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
 }
 
-Options.close = function() {
+Options.close = function()
+{
   let isModified = !document.getElementById("myApply").disabled;
-  if (isModified) {
-    if (confirm(Utils.getString("fireie.options.alert.modified"))) {
+  if (isModified)
+  {
+    if (confirm(Utils.getString("fireie.options.alert.modified")))
+    {
       Options.apply(true);
     }
   }
@@ -247,28 +259,30 @@ Options._saveToFile = function(aList)
   fp.appendFilters(fp.ruleText);
 
   if (fp.show() != fp.returnCancel)
-	{
+  {
     try
-		{
+    {
       if (fp.file.exists()) fp.file.remove(true);
       fp.file.create(fp.file.NORMAL_FILE_TYPE, 0666);
       stream.init(fp.file, 0x02, 0x200, null);
       converter.init(stream, "UTF-8", 0, 0x0000);
 
-      for (var i = 0; i < aList.length; i++) {
+      for (var i = 0; i < aList.length; i++)
+      {
         aList[i] = aList[i] + "\n";
         converter.writeString(aList[i]);
       }
     }
-		finally
-		{
+    finally
+    {
       converter.close();
       stream.close();
     }
   }
 }
 
-Options._loadFromFile = function() {
+Options._loadFromFile = function()
+{
   let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
   let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
   let converter = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
@@ -278,9 +292,9 @@ Options._loadFromFile = function() {
   fp.appendFilters(fp.ruleText);
 
   if (fp.show() != fp.returnCancel)
-	{
+  {
     try
-		{
+    {
       let input = {};
       stream.init(fp.file, 0x01, 0444, null);
       converter.init(stream, "UTF-8", 0, 0x0000);
@@ -288,8 +302,8 @@ Options._loadFromFile = function() {
       let linebreak = input.value.match(/(((\n+)|(\r+))+)/m)[1];
       return [true, input.value.split(linebreak)];
     }
-		finally
-		{
+    finally
+    {
       converter.close();
       stream.close();
     }
@@ -297,19 +311,20 @@ Options._loadFromFile = function() {
   return [false, null];
 }
 
-Options._getAllOptions = function(isDefault) {
+Options._getAllOptions = function(isDefault)
+{
   let prefix = "extensions.fireie.";
   let prefs = (isDefault ? Services.prefs.getDefaultBranch("") : Services.prefs.getBranch(""));
   let preflist = prefs.getChildList(prefix, {});
 
   let aList = ["FireIEPref"];
   for (var i = 0; i < preflist.length; i++)
-	{
+  {
     try
-		{
+    {
       let value = null;
       switch (prefs.getPrefType(preflist[i]))
-			{
+      {
       case prefs.PREF_BOOL:
         value = prefs.getBoolPref(preflist[i]);
         break;
@@ -322,10 +337,10 @@ Options._getAllOptions = function(isDefault) {
       }
       aList.push(preflist[i] + "=" + value);
     }
-		catch (e)
-		{
-			Utils.ERROR(e);
-		}
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
   }
   return aList;
 }
@@ -340,23 +355,23 @@ Options._setAllOptions = function(aList)
 
   let aPrefs = [];
   for (let i = 1; i < aList.length; i++)
-	{
+  {
     let index = aList[i].indexOf("=");
     if (index > 0)
-		{
+    {
       var name = aList[i].substring(0, index);
       var value = aList[i].substring(index + 1, aList[i].length);
       aPrefs.push([name, value]);
     }
   }
   for (let i = 0; i < aPrefs.length; i++)
-	{
+  {
     try
-		{
+    {
       let name = aPrefs[i][0];
       let value = aPrefs[i][1];
       switch (prefs.getPrefType(name))
-			{
+      {
       case prefs.PREF_BOOL:
         prefs.setBoolPref(name, /true/i.test(value));
         break;
@@ -371,9 +386,9 @@ Options._setAllOptions = function(aList)
         break;
       }
     }
-		catch (e)
-		{
-			Utils.ERROR(e);
-		}
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
   }
 }

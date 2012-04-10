@@ -58,11 +58,6 @@ const NULL = 0;
 
 const INTERNET_COOKIE_HTTPONLY = 0x00002000;
 
-/**
- *  DWORD WINAPI GetLastError(void)
- */
-let GetLastError = null;
-
 const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
 const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
 
@@ -91,6 +86,7 @@ function setIECtrlRegString(regName, value)
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     wrk.writeStringValue(regName, value);
+    wrk.close();
     return true;
   }
   catch (e)
@@ -107,7 +103,6 @@ function setIECtrlRegString(regName, value)
  */
 let IECookieManager = {
   wininetDll: null,
-  kernel32Dll: null,
   _ieCookieMap: {},
   
   /**
@@ -196,7 +191,7 @@ let IECookieManager = {
       let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
       if (!ret)
       {
-        let errCode = GetLastError();
+        let errCode = ctypes.winLastError || 0;
         Utils.ERROR('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
       }
     }
@@ -257,21 +252,6 @@ let IECookieManager = {
     {
       Utils.ERROR(e);
     }
-    
-    try
-    {
-      this.kernel32Dll = ctypes.open("kernel32.dll");
-      if (this.kernel32Dll)
-      {
-        GetLastError = this.kernel32Dll.declare("GetLastError",
-                                        WinABI,
-                                        ctypes.uint32_t);
-      }        
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }  
   },
 
   _unloadInternetSetCookieW: function()
@@ -280,11 +260,6 @@ let IECookieManager = {
     {
       this.wininetDll.close();
       this.wininetDll = null;
-    }
-    if (this.kernel32Dll)
-    {
-      this.kernel32Dll.close();
-      this.kernel32Dll = null;
     }
   },
 

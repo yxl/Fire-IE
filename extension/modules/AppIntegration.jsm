@@ -29,6 +29,8 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ctypes.jsm");
+
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "Favicon.jsm");
@@ -341,30 +343,30 @@ WindowWrapper.prototype = {
       // Update the star button indicating whether current page is bookmarked.
       this.window.PlacesStarButton.updateState();
 
-	  function escapeURLForCSS(url)
-	  {
-		return url.replace(/[(),\s'"]/g, "\$&");
-	  }
-	  
+      function escapeURLForCSS(url)
+      {
+        return url.replace(/[(),\s'"]/g, "\$&");
+      }
+
       // Update the engine button on the URL bar
       urlbarButton = this.E("fireie-urlbar-switch");
-	  urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
-	  urlbarButton.style.visibility = "visible";
-	  let fxURL = urlbarButton.getAttribute("fx-icon-url");
-	  let ieURL = urlbarButton.getAttribute("ie-icon-url");
-	  let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
-	  this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
-	  let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-	  urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
-	  let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
-	  urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
-      
-	  // If there exists a tool button of FireIE, make it's status the same with that on the URL bar.
+      urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
+      urlbarButton.style.visibility = "visible";
+      let fxURL = urlbarButton.getAttribute("fx-icon-url");
+      let ieURL = urlbarButton.getAttribute("ie-icon-url");
+      let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
+      this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
+      let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+      urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+      let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
+      urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
+
+      // If there exists a tool button of FireIE, make it's status the same with that on the URL bar.
       let toolbarButton = this.E("fireie-toolbar-palette-button");
       if (toolbarButton)
       {
         toolbarButton.disabled = urlbarButton.disabled;
-		toolbarButton.style.listStyleImage = engineIconCSS;
+        toolbarButton.style.listStyleImage = engineIconCSS;
       }
     }
     catch (e)
@@ -413,22 +415,22 @@ WindowWrapper.prototype = {
    */
   updateState: function()
   {
-   	this._setupTheme();
-	
+    this._setupTheme();
+
     this._setupUrlBarButton();
 
     this._configureKeys();
 
     this._updateInterface();
   },
-  
+
 
   /**
    * Setup up the theme
    */
   _setupTheme: function()
   {
-	this._applyTheme(LightweightTheme.currentTheme);
+    this._applyTheme(LightweightTheme.currentTheme);
   },
 
   /**
@@ -603,6 +605,45 @@ WindowWrapper.prototype = {
     Utils.openRulesDialog();
   },
 
+  /**
+   * Show IE's Internet Properties dialog.
+   * ShellExecuteW(NULL, "open", "rundll32.exe", "shell32.dll,Control_RunDLL inetcpl.cpl", "", SW_SHOW);
+   */
+  openInternetPropertiesDialog: function()
+  {
+    /**
+     * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
+     * anfilat2: 
+     * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
+     * 64bit.
+     */
+    let WinABI = ctypes.winapi_abi;
+    if (ctypes.size_t.size == 8)
+    {
+      WinABI = ctypes.default_abi;
+    }
+    try
+    {
+
+      let lib = ctypes.open("shell32.dll");
+      const SW_SHOW = 5;
+      const NULL = 0;
+      let ShellExecuteW = lib.declare("ShellExecuteW", WinABI, ctypes.int32_t, /* HINSTANCE (return) */
+      ctypes.int32_t, /* HWND hwnd */
+      ctypes.jschar.ptr, /* LPCTSTR lpOperation */
+      ctypes.jschar.ptr, /* LPCTSTR lpFile */
+      ctypes.jschar.ptr, /* LPCTSTR lpParameters */
+      ctypes.jschar.ptr, /* LPCTSTR lpDirectory */
+      ctypes.int32_t /* int nShowCmd */ );
+      ShellExecuteW(NULL, "open", "rundll32.exe", "shell32.dll,Control_RunDLL inetcpl.cpl", "", SW_SHOW);
+	  lib.close();
+    }
+    catch (e)
+    {
+      Utils.ERROR(e);
+    }
+  },
+
   getHandledURL: function(url, isModeIE)
   {
     url = url.trim();
@@ -717,8 +758,8 @@ WindowWrapper.prototype = {
   {
     // Get the theme data from the DOM node target of the event.
     let node = event.target;
-	let themeData = this._getThemeDataFromNode(node);
-	
+    let themeData = this._getThemeDataFromNode(node);
+
     if (themeData != null)
     {
       LightweightTheme.installTheme(themeData);
@@ -740,7 +781,7 @@ WindowWrapper.prototype = {
     }
     catch (e)
     {
-	  Utils.ERROR(e);
+      Utils.ERROR(e);
       return defValue;
     }
     return themeData;
@@ -756,11 +797,11 @@ WindowWrapper.prototype = {
   {
     // Get the theme data from the DOM node target of the event.
     let node = event.target;
-	let themeData = this._getThemeDataFromNode(node);
-	if (themeData != null)
-	{
-	  this._applyTheme(themeData);
-	}
+    let themeData = this._getThemeDataFromNode(node);
+    if (themeData != null)
+    {
+      this._applyTheme(themeData);
+    }
   },
 
   /**
@@ -771,51 +812,51 @@ WindowWrapper.prototype = {
    */
   _onResetThemePreview: function(event)
   {
-	this._applyTheme(LightweightTheme.currentTheme);
+    this._applyTheme(LightweightTheme.currentTheme);
   },
-  
+
   /**
    * Reset to default theme.
    */
   changeToDefaultTheme: function()
   {
-	LightweightTheme.changeToDefaultTheme();
+    LightweightTheme.changeToDefaultTheme();
   },
-  
+
   /**
    * Change the appearance specified by the theme data
    */
   _applyTheme: function(themeData)
   {
-	// Style URL bar engie button
-	let urlbarButton = this.E("fireie-urlbar-switch");
+    // Style URL bar engie button
+    let urlbarButton = this.E("fireie-urlbar-switch");
 
     // First try to obtain the images from the cache
     let images = LightweightTheme.getCachedThemeImages(themeData);
     if (images && images.fxURL && images.ieURL)
-	{
-	  urlbarButton.setAttribute("fx-icon-url", images.fxURL);
-	  urlbarButton.setAttribute("ie-icon-url", images.ieURL);	
+    {
+      urlbarButton.setAttribute("fx-icon-url", images.fxURL);
+      urlbarButton.setAttribute("ie-icon-url", images.ieURL);
     }
-	// Else set them from their original source
-	else
-	{
-	  urlbarButton.setAttribute("fx-icon-url", themeData.fxURL);
-	  urlbarButton.setAttribute("ie-icon-url", themeData.ieURL);
-	}
-	
+    // Else set them from their original source
+    else
+    {
+      urlbarButton.setAttribute("fx-icon-url", themeData.fxURL);
+      urlbarButton.setAttribute("ie-icon-url", themeData.ieURL);
+    }
+
     // Style the text color.
-	let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-	if (themeData.textcolor)
-	{
-	  urlbarButtonLabel.style.color = themeData.textcolor;
-	}
-	else
-	{
-	  urlbarButtonLabel.style.color = "";
-	}
-	
-	this._updateInterface();
+    let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
+    if (themeData.textcolor)
+    {
+      urlbarButtonLabel.style.color = themeData.textcolor;
+    }
+    else
+    {
+      urlbarButtonLabel.style.color = "";
+    }
+
+    this._updateInterface();
   },
 
   _restoreIETempDirectorySetting: function()
@@ -962,7 +1003,8 @@ WindowWrapper.prototype = {
       }
       pluginObject.FBFindText(text);
       return true;
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("findText(" + text + "): " + ex);
       return false;
@@ -980,13 +1022,14 @@ WindowWrapper.prototype = {
       }
       pluginObject.FBEndFindText();
       return true;
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("endFindText(): " + ex);
       return false;
     }
   },
-  /* since plugin find state may not sync with firefox, we 
+/* since plugin find state may not sync with firefox, we 
   transfer those params to the plugin object after user brings up
   the find bar */
   setFindParams: function(text, highlight, cases)
@@ -1002,7 +1045,8 @@ WindowWrapper.prototype = {
       pluginObject.FBToggleHighlight(highlight);
       pluginObject.FBSetFindText(text);
       return true;
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("setFindParams(): " + ex);
       return false;
@@ -1019,7 +1063,8 @@ WindowWrapper.prototype = {
       }
       pluginObject.FBSetFindText(text);
       return true;
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("setFindText(): " + ex);
       return false;
@@ -1058,7 +1103,8 @@ WindowWrapper.prototype = {
         break;
       }
       return true;
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("updateFindBarUI(): " + ex);
       return false;
@@ -1205,10 +1251,10 @@ WindowWrapper.prototype = {
     if (wnd) wnd.focus();
     else this.window.openDialog("chrome://adblockplus/content/ui/sendReport.xul", "_blank", "chrome,centerscreen,resizable=no", this.window.content, this.getCurrentLocation());
   },
-  
+
   /**
-  * Opens our contribution page.
-  */
+   * Opens our contribution page.
+   */
   openMoreThemesPage: function()
   {
     Utils.loadDocLink("skins");

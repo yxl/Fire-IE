@@ -53,17 +53,19 @@ xmlns:html="http://www.w3.org/1999/xhtml">
       oncommand="gFireIE.openOptionsDialog();" />
       <menuitem label="&urlbar.switchRules.label;"
       oncommand="gFireIE.openRulesDialog();" />
-	  <!-- Theme sub-menu -->
+      <menuitem label="&internetProperties.lable;"
+      oncommand="gFireIE.openInternetPropertiesDialog();" />
+      <!-- Theme sub-menu -->
       <menu id="fireie-skin-menu" label="&skin.label;">
         <menupopup id="fireie-skin-menu-popup">
-            <menuitem id='fireie-skin-menu-item-default' class="menuitem-iconic"
-                      label="&default.lable;"
-					  oncommand="gFireIE.changeToDefaultTheme();" />
-            <menuitem id='fireie-skin-menu-item-more' class="menuitem-iconic"
-                      label="&skin.more.lable;"
-					  oncommand="gFireIE.openMoreThemesPage();" />					  
+          <menuitem id='fireie-skin-menu-item-default' class="menuitem-iconic"
+          label="&default.lable;"
+          oncommand="gFireIE.changeToDefaultTheme();" />
+          <menuitem id='fireie-skin-menu-item-more' class="menuitem-iconic"
+          label="&skin.more.lable;"
+          oncommand="gFireIE.openMoreThemesPage();" />
         </menupopup>
-      </menu>	  
+      </menu>
     </menupopup>
   </popupset>
 </overlay>

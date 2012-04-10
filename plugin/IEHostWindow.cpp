@@ -402,7 +402,6 @@ CString GetURLRelative(const CString& baseURL, const CString relativeURL)
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
-	m_strLoadingUrl = strURL;
 	if (m_ie.GetSafeHwnd())
 	{
 		try
@@ -869,13 +868,29 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 	else 
 		m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
+	// 按Firefox的设置缩放页面
+	if (m_pPlugin)
+	{
+		double level = m_pPlugin->GetZoomLevel();
+		if (fabs(level - 1.0) > 0.01) 
+		{
+			Zoom(level);
+		}
+	}
 }
 
 
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
-	COLE2T szURL(URL->bstrVal);
-	m_strLoadingUrl = szURL;
+	// 按Firefox的设置缩放页面
+	if (m_pPlugin)
+	{
+		double level = m_pPlugin->GetZoomLevel();
+		if (fabs(level - 1.0) > 0.01) 
+		{
+			Zoom(level);
+		}
+	}
 }
 
 

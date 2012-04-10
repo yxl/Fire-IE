@@ -88,21 +88,14 @@ var Policy = {
    */
   checkEngineRule: function(url)
   {
-    try
-    {
-      if (Utils.isFirefoxOnly(url)) return false;
-      let docDomain = Utils.getHostname(url);
-      let match = EngineMatcher.matchesAny(url, docDomain);
-      if (match)
-      {
-        RuleStorage.increaseHitCount(match);
-      }
-      return match && match instanceof EngineRule;
-    }
-    catch (ex)
-    {
-      Utils.ERROR(ex);
-    }
+	if (Utils.isFirefoxOnly(url)) return false;
+	let docDomain = Utils.getHostname(url);
+	let match = EngineMatcher.matchesAny(url, docDomain);
+	if (match)
+	{
+	  RuleStorage.increaseHitCount(match);
+	}
+	return match && match instanceof EngineRule;
   },
 
   /**
@@ -275,7 +268,6 @@ var PolicyPrivate = {
       post: post
     };
     Utils.setTabAttributeJSON(tab, "fireieNavigateParams", param);
-    Utils.ERROR(JSON.stringify(param));
 
     Utils.runAsync(function()
     {
