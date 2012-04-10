@@ -141,6 +141,13 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(text), *result);
 			return true;
 		}
+		// readonly property {string} SecureLockInfo
+		else if (name == NPI_ID(SecureLockInfo))
+		{
+			CString text = pMainWindow->GetSecureLockInfo();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(text), *result);
+			return true;
+		}
 		// readonly property {string} FBLastFindStatus
 		else if (name == NPI_ID(FBLastFindStatus))
 		{

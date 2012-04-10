@@ -140,6 +140,9 @@ namespace Plugin
 
 		/** Send the page loaded message to the Firefox. */
 		void OnDocumentComplete();
+
+		/** Set the security info icon */
+		void OnSetSecureLockIcon(const CString& description);
 	protected:
 
 		NPP m_pNPInstance;

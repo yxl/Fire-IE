@@ -62,7 +62,12 @@ var gFireIE = null;
     hookCode("PrintUtils.printPreview", /{/, "$& if(gFireIE.goDoCommand('PrintPreview')) return;");
 
     hookCode("goDoCommand", /{/, "$& if(gFireIE.goDoCommand(arguments[0])) return;"); // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
-    hookCode("displaySecurityInfo", /{/, "$& if(gFireIE.goDoCommand('DisplaySecurityInfo')) return;");
+    let displaySecurityInfoCode = "if(gFireIE.goDoCommand('DisplaySecurityInfo')) return;";
+    hookCode("displaySecurityInfo", /{/, "$& " + displaySecurityInfoCode);
+    hookAttr("identity-box", "onclick", displaySecurityInfoCode);
+    hookAttr("identity-box", "onkeypress", displaySecurityInfoCode);
+    hookCode("gIdentityHandler.checkIdentity", /{/, "$& if (gFireIE.checkIdentity()) return; ");
+    gFireIE.gIdentityHandler = gIdentityHandler;
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
 
     initializeFindBarHooks();
@@ -80,7 +85,7 @@ var gFireIE = null;
     hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.setFindParams(gFireIE_value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
 
     // disabled, in order to support F3 findNext/Prev
-    hookCode("gFindBar.close", /{/, "$& if (false && !this.hidden) gFireIE.endFindText();");
+    //hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
     hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.updateFindBarUI(gFindBar);", true);
 

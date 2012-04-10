@@ -267,6 +267,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
     this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this._onIEUserAgentReceived), false);
     this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
+    this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -748,6 +749,71 @@ WindowWrapper.prototype = {
     Services.obs.notifyObservers(subject, topic, data);
   },
 
+  _onIESetSecureLockIcon: function(event)
+  {
+    this.checkIdentity();
+  },
+  /**
+   * Sets the secure info icon
+   */
+  _setSecureLockIcon: function(info)
+  {  
+    let self = this.gIdentityHandler;
+    if (!self._identityBox) return;
+
+    let classname = null;
+    let tooltip = "";
+    let icon_label = "";
+    switch(info)
+    {
+    case "Unsecure":
+      classname = self.IDENTITY_MODE_UNKNOWN;
+      tooltip = Utils.getString("fireie.security.notEntrypted");
+      break;
+    case "Mixed":
+      classname = self.IDENTITY_MODE_MIXED_CONTENT;
+      tooltip = Utils.getString("fireie.security.partiallyEncrypted");
+      break;
+    default:
+      classname = self.IDENTITY_MODE_DOMAIN_VERIFIED;
+      tooltip = Utils.getString("fireie.security.encrypted");
+      switch (info)
+      {
+      case "Secure40Bit":
+        tooltip += "40 " + Utils.getString("fireie.security.encryption.bit");
+        break;
+      case "Secure56Bit":
+        tooltip += "56 " + Utils.getString("fireie.security.encryption.bit");
+        break;
+      case "Secure128Bit":
+        tooltip += "128 " + Utils.getString("fireie.security.encryption.bit");
+        break;
+      case "SecureFortezza":
+        tooltip += "Fortezza";
+        break;
+      default:
+        tooltip +=  Utils.getString("fireie.security.encryption.unknown");
+        break;
+      }
+      icon_label = this.getEffectiveHost();
+      break;
+    }
+
+    let identityBox = self._identityBox;
+    let identityIconLabel = self._identityIconLabel;
+    let identityIconCountryLabel = self._identityIconCountryLabel;
+
+    identityBox.className = classname;
+    identityBox.tooltipText = tooltip;
+    identityIconLabel.value = icon_label;
+    identityIconCountryLabel.value = "";
+    identityIconLabel.crop = "center";
+    identityIconLabel.parentNode.style.direction = "ltr";
+    identityIconLabel.parentNode.collapsed = icon_label ? false : true;
+
+    self._mode = classname;
+  },
+
   /**
    * Install the theme specified by a web page via a InstallBrowserTheme event.
    *
@@ -1088,6 +1154,7 @@ WindowWrapper.prototype = {
       }
       let status = pluginObject.FBLastFindStatus;
       switch (status)
+
       {
       case "notfound":
         findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_NOTFOUND);
@@ -1140,6 +1207,59 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("setFindText(): " + ex);
+      return null;
+    }
+  },
+  checkIdentity: function()
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      this._setSecureLockIcon(pluginObject.SecureLockInfo);
+      return true;
+    }
+    catch (ex)
+    {
+      Utils.ERROR("checkIdentity(): " + ex);
+      return false;
+    }
+  },
+  getEffectiveHost: function()
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return null;
+      }
+      let url = pluginObject.URL;
+      return Utils.getEffectiveHost(url);
+    }
+    catch (ex)
+    {
+      Utils.ERROR("getEffectiveHost(): " + ex);
+      return null;
+    }
+  },
+  getIdentityData: function()
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return null;
+      }
+      throw "Not Implemented";
+    }
+    catch (ex)
+    {
+      Utils.ERROR("getIdentityData(): " + ex);
       return null;
     }
   },

@@ -53,6 +53,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_strFBText(_T(""))
 	, m_bFBInProgress(false)
 	, m_lFBCurrentDoc(0)
+	, m_strSecureLockInfo(_T("Unsecure"))
 {
 	FBResetFindStatus();
 }
@@ -271,6 +272,7 @@ BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_BEFORENAVIGATE2   , CIEHostWindow::OnBeforeNavigate2, VTS_DISPATCH VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PVARIANT VTS_PBOOL)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOCUMENTCOMPLETE  , CIEHostWindow::OnDocumentComplete, VTS_DISPATCH VTS_PVARIANT)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_NEWWINDOW3        , CIEHostWindow::OnNewWindow3Ie, VTS_PDISPATCH VTS_PBOOL VTS_UI4 VTS_BSTR VTS_BSTR)
+	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_SETSECURELOCKICON , CIEHostWindow::OnSetSecureLockIcon, VTS_I4)
 END_EVENTSINK_MAP()
 
 
@@ -633,7 +635,28 @@ void CIEHostWindow::Zoom(double level)
 
 void CIEHostWindow::DisplaySecurityInfo()
 {
+	const DWORD SHDVID_SSLSTATUS = 33;
 
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	if (!pDisp)
+	{
+		return;
+	}
+	CComQIPtr<IServiceProvider> pSP = pDisp;
+	if (!pSP) return;
+
+	CComQIPtr<IWebBrowser2> pWB2;
+	if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
+		return;
+
+	CComQIPtr<IOleCommandTarget> pCmd = pWB2;
+	if(!pCmd) return;
+
+	CComVariant varinput;
+	varinput.vt = VT_EMPTY;
+	CComVariant varoutput;
+	pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
 }
 
 void CIEHostWindow::SaveAs()
@@ -935,6 +958,32 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	}
 }
 
+void CIEHostWindow::OnSetSecureLockIcon(int state)
+{
+	//secureLockIconUnsecure = 0
+	//secureLockIconMixed = 1
+	//secureLockIconSecureUnknownBits = 2
+	//secureLockIconSecure40Bit = 3
+	//secureLockIconSecure56Bit = 4
+	//secureLockIconSecureFortezza = 5
+	//secureLockIconSecure128Bit = 6
+	static CString descs[] = { 
+		_T("Unsecure"),
+		_T("Mixed"),
+		_T("SecureUnknownBits"),
+		_T("Secure40Bit"),
+		_T("Secure56Bit"),
+		_T("SecureFortezza"),
+		_T("Secure128Bit")
+	};
+
+	if ((unsigned int)state > 6) state = 0;
+	CString description = descs[state];
+
+	this->m_strSecureLockInfo = description;
+	m_pPlugin->OnSetSecureLockIcon(description);
+}
+
 CString CIEHostWindow::GetFaviconURLFromContent()
 {
 	CString favurl = _T("");
@@ -1106,6 +1155,11 @@ CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pD
 	}
 
 	return strFail;
+}
+
+CString CIEHostWindow::GetSecureLockInfo()
+{
+	return m_strSecureLockInfo;
 }
 
 BOOL CIEHostWindow::DestroyWindow()

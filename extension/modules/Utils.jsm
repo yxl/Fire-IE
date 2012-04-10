@@ -431,7 +431,26 @@ var Utils = {
       return null;
     }
   },
-
+  getEffectiveHost: function( /**String*/ url) /**String*/
+  {
+      // Cache the eTLDService if this is our first time through
+      // Do not cache to gIdentityHandler, thus minimizing the impact
+    var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
+    var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+    this.getEffectiveHost = function(u)
+    {
+      let hostname = this.getHostname(u);
+      try {
+        let baseDomain = _eTLDService.getBaseDomainFromHost(hostname);
+        return _IDNService.convertToDisplayIDN(baseDomain, {});
+      } catch (e) {
+        // If something goes wrong (e.g. hostname is an IP address) just fail back
+        // to the full domain.
+        return hostname;
+      }
+    };
+    return this.getEffectiveHost(url);
+  },
   startsWith: function(s, prefix)
   {
     if (s) return ((s.substring(0, prefix.length) == prefix));

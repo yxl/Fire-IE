@@ -223,12 +223,14 @@ public:
 	BOOL GetCanRedo(){return IsOleCmdEnabled(OLECMDID_REDO);}
 	INT32 GetProgress() {return m_iProgress;}
 	CString GetSelectionText();
+	CString GetSecureLockInfo();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
 	void OnIEProgressChanged(INT32 iProgress);
 	void OnStatusChanged(const CString& message);
 	void OnCloseIETab();
+	void OnSetSecureLockIcon(int state);
 
 protected:
 	BOOL m_bCanBack;
@@ -268,6 +270,9 @@ protected:
 	bool m_bFBFound;
 	bool m_bFBCrossHead;
 	bool m_bFBCrossTail;
+
+	// secure lock infomation
+	CString m_strSecureLockInfo;
 	
 	Plugin::CPlugin* m_pPlugin;
 };

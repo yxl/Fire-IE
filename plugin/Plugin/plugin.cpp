@@ -620,4 +620,10 @@ namespace Plugin
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}
+
+	void CPlugin::OnSetSecureLockIcon(const CString& description)
+	{
+		CString strEventType = _T("IESetSecureLockIcon");
+		FireEvent(strEventType, description);
+	}
 }
