@@ -99,7 +99,8 @@ public:
 	virtual BOOL Create(UINT nIDTemplate,CWnd* pParentWnd = NULL);
 
 	/** 设置窗口关联的Plugin对象 */
-	void SetPlugin(Plugin::CPlugin* pPlugin) {m_pPlugin = pPlugin;}
+	void SetPlugin(Plugin::CPlugin* pPlugin);
+
 protected:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
@@ -123,6 +124,8 @@ protected:
 
 	/** IE控件的UserAgent */
 	static CString s_strIEUserAgent;
+
+	static const CString s_strSecureLockInfos[];
 
 	void InitIE();
 	void UninitIE();

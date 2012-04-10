@@ -958,6 +958,17 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	}
 }
 
+const CString CIEHostWindow::s_strSecureLockInfos[] =
+{
+	_T("Unsecure"),
+	_T("Mixed"),
+	_T("SecureUnknownBits"),
+	_T("Secure40Bit"),
+	_T("Secure56Bit"),
+	_T("SecureFortezza"),
+	_T("Secure128Bit") 
+};
+
 void CIEHostWindow::OnSetSecureLockIcon(int state)
 {
 	//secureLockIconUnsecure = 0
@@ -967,21 +978,13 @@ void CIEHostWindow::OnSetSecureLockIcon(int state)
 	//secureLockIconSecure56Bit = 4
 	//secureLockIconSecureFortezza = 5
 	//secureLockIconSecure128Bit = 6
-	static CString descs[] = { 
-		_T("Unsecure"),
-		_T("Mixed"),
-		_T("SecureUnknownBits"),
-		_T("Secure40Bit"),
-		_T("Secure56Bit"),
-		_T("SecureFortezza"),
-		_T("Secure128Bit")
-	};
 
 	if ((unsigned int)state > 6) state = 0;
-	CString description = descs[state];
+	CString description = s_strSecureLockInfos[state];
 
 	this->m_strSecureLockInfo = description;
-	m_pPlugin->OnSetSecureLockIcon(description);
+	if (m_pPlugin)
+		m_pPlugin->OnSetSecureLockIcon(description);
 }
 
 CString CIEHostWindow::GetFaviconURLFromContent()
@@ -1174,6 +1177,10 @@ BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 	return CDialog::Create(nIDTemplate,pParentWnd);
 }
 
+void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
+{
+	m_pPlugin = pPlugin;
+}
 
 /** 
 *  这里之所有要使用NewWindow3而不使用NewWindow2，是因为NewWindow3提供了bstrUrlContext参数，

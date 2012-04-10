@@ -341,6 +341,10 @@ WindowWrapper.prototype = {
         }
       }
 
+      // update current tab's secure lock info
+      if (pluginObject)
+        this.checkIdentity();
+
       // Update the star button indicating whether current page is bookmarked.
       this.window.PlacesStarButton.updateState();
 
@@ -757,6 +761,7 @@ WindowWrapper.prototype = {
    * Sets the secure info icon
    */
   _setSecureLockIcon: function(info)
+
   {  
     let self = this.gIdentityHandler;
     if (!self._identityBox) return;
