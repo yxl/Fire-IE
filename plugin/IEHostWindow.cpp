@@ -1032,6 +1032,67 @@ CString CIEHostWindow::GetDocumentUserAgent()
 	return strUserAgent;
 }
 
+// Obtain user-selected text
+CString CIEHostWindow::GetSelectionText()
+{
+	CString strFail = _T("");
+
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+	if (!pDoc) return strFail;
+
+	return GetSelectionTextFromDoc(pDoc);
+}
+
+CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	CString strFail = _T("");
+
+	CComPtr<IHTMLSelectionObject> pSO;
+	if (SUCCEEDED(pDoc->get_selection(&pSO)))
+	{
+		CComPtr<IDispatch> pDisp2;
+		if (SUCCEEDED(pSO->createRange(&pDisp2)))
+		{
+			CComQIPtr<IHTMLTxtRange> pTxtRange = pDisp2;
+			if (pTxtRange)
+			{
+				CComBSTR bstrSelectionText;
+				if (SUCCEEDED(pTxtRange->get_text(&bstrSelectionText)))
+				{
+					CString text = CString(bstrSelectionText);
+					if (text != strFail) return text;
+				}
+			}
+		}
+	}
+
+	CComPtr<IHTMLFramesCollection2> pFrames;
+	long length;
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && SUCCEEDED(pFrames->get_length(&length)))
+	{
+		for (long i = 0; i < length; i++)
+		{
+			CComVariant varindex = i;
+			CComVariant vDisp;
+			if (SUCCEEDED(pFrames->item(&varindex, &vDisp)))
+			{
+				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
+				CComQIPtr<IHTMLWindow2> pWindow;
+				CComPtr<IHTMLDocument2> pSubDoc;
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)))
+				{
+					CString text = GetSelectionTextFromDoc(pSubDoc);
+					if (text != strFail) return text;
+				}
+			}
+		}
+	}
+
+	return strFail;
+}
+
 BOOL CIEHostWindow::DestroyWindow()
 {
 	UninitIE();

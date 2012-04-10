@@ -965,6 +965,7 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("findText(" + text + "): " + ex);
+      return false;
     }
   },
   /* called when find bar is closed */
@@ -982,6 +983,7 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("endFindText(): " + ex);
+      return false;
     }
   },
   /* since plugin find state may not sync with firefox, we 
@@ -1003,6 +1005,7 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("setFindParams(): " + ex);
+      return false;
     }
   },
   setFindText: function(text)
@@ -1019,6 +1022,7 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("setFindText(): " + ex);
+      return false;
     }
   },
   updateFindBarUI: function(findbar)
@@ -1057,6 +1061,40 @@ WindowWrapper.prototype = {
     } catch (ex)
     {
       Utils.ERROR("updateFindBarUI(): " + ex);
+      return false;
+    }
+  },
+  getSelectionText: function(selectionMaxLen)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+
+      if (pluginObject == null)
+      {
+        return null;
+      }
+      var selText = pluginObject.SelectionText;
+      if (selText && selText.length > 0)
+      {
+        // Process our text to get rid of unwanted characters
+        if (selText.length > selectionMaxLen) {
+          var pattern = new RegExp("^(?:\\s*.){0," + selectionMaxLen + "}");
+          pattern.test(selText);
+          selText = RegExp.lastMatch;
+        }
+        return selText.replace(/^\s+/, "")
+                      .replace(/\s+$/, "")
+                      .replace(/\s+/g, " ")
+                      .substr(0, selectionMaxLen);
+      } else
+      {
+        return "";
+      }
+    } catch (ex)
+    {
+      Utils.ERROR("setFindText(): " + ex);
+      return null;
     }
   },
   // 响应内核切换按钮点击事件

@@ -70,19 +70,20 @@ var gFireIE = null;
 
   function initializeFindBarHooks()
   {
-    let setFindParamsCode = "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); return; }";
-    
     hookCode("gFindBar.onFindAgainCommand", /{/, "$& if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain')) { gFireIE.updateFindBarUI(gFindBar); return; }"); // find_next, find_prev, arguments[0] denotes whether find_prev
 
-    hookAttr(gFindBar.getElement("highlight"), "oncommand", setFindParamsCode);
-    
-    hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", setFindParamsCode);
+    hookAttr(gFindBar.getElement("highlight"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); return; }");
+
+    // do not return in order to let findbar set the case sensitivity pref
+    hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); }");
 
     hookCode("gFindBar._find", /{/, "$& { let gFireIE_value = arguments[0] || gFindBar.getElement('findbar-textbox').value; if (gFireIE.setFindParams(gFireIE_value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked) && gFireIE.findText(gFireIE_value)) { gFireIE.updateFindBarUI(gFindBar); return; }; }");
 
     hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
     hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked);", true);
+
+    hookCode("gFindBar._getInitialSelection", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(this._selectionMaxLen); if (gFireIE_value != null) return gFireIE_value; }");
 
     gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
     {

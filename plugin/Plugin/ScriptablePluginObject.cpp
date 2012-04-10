@@ -134,6 +134,13 @@ namespace Plugin
 			INT32_TO_NPVARIANT(pMainWindow->GetProgress(),*result);
 			return true;
 		}
+		// readonly property {string} SelectionText
+		else if (name == NPI_ID(SelectionText))
+		{
+			CString text = pMainWindow->GetSelectionText();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(text), *result);
+			return true;
+		}
 		// readonly property {string} FBLastFindStatus
 		else if (name == NPI_ID(FBLastFindStatus))
 		{

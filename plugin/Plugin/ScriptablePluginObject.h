@@ -84,6 +84,7 @@ namespace Plugin
 		NPI_DEF(CanUndo);
 		NPI_DEF(CanRedo);
 		NPI_DEF(Progress);
+		NPI_DEF(SelectionText);
 		NPI_DEF(FBLastFindStatus);
 
 	public:
@@ -139,6 +140,7 @@ namespace Plugin
 			NPN_GSI_P(CanUndo);
 			NPN_GSI_P(CanRedo);
 			NPN_GSI_P(Progress);
+			NPN_GSI_P(SelectionText);
 			NPN_GSI_P(FBLastFindStatus);
 		}
 

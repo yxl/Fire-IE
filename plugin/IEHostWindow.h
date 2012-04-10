@@ -152,6 +152,7 @@ protected:
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
 
 	void SendKey(WORD vkey);
+	CString GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pDoc);
 	void FBRestartFind();
 	bool FBObtainFindRange();
 	void FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pDoc);
@@ -224,6 +225,7 @@ public:
 	BOOL GetCanUndo(){return IsOleCmdEnabled(OLECMDID_UNDO);}
 	BOOL GetCanRedo(){return IsOleCmdEnabled(OLECMDID_REDO);}
 	INT32 GetProgress() {return m_iProgress;}
+	CString GetSelectionText();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
