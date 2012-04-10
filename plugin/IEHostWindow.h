@@ -33,7 +33,7 @@ namespace HttpMonitor
 
 namespace UserMessage
 {
-	// 自定义窗口消息
+	// User defined window message
 	static const UINT WM_USER_MESSAGE =  WM_USER + 200;
 
 	// Sub-types of the user defined window message
@@ -62,24 +62,20 @@ class CIEHostWindow : public CDialog
 public:
 	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
 
-	/** 根据 CIEHostWindow 的 HWND 寻找对应的 CIEHostWindow 对象 */
+	/** Get CIEHostWindow object by its window handle */
 	static CIEHostWindow* GetInstance(HWND hwnd);
 
-	/** 根据Internet Explorer_Server窗口找到对应的 CIEHostWindow 对象*/
+	/** Get CIEHostWindow object by its embeded Internet Explorer_Server window handle*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
 	static void AddCookieIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
 
-	/** 获取Firefox UserAgent*/
-	static CString GetFirefoxUserAgent();
-
 	/** 
-	 * 获取IE控件UserAgent
-	 * 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
-	 * 文档中获取UserAgent。
-	 * @return 在IE控件首次加载完毕后，该类函数才能返回正确的UserAgent;否则返回空字符串。
+	 * Get the UserAgent of the IE control.
+	 * As the IE control provides no explicit interface for querying the UserAgent, we have to parse it from the HTML document.
+	 * @return The IE control's UserAgent. It will be ready when the page completes loading for the first time. Before that, empty string will be returned.
 	 */
 	static CString GetIEUserAgentString() {return s_strIEUserAgent;}
 		
@@ -98,31 +94,30 @@ public:
 	virtual BOOL DestroyWindow();
 	virtual BOOL Create(UINT nIDTemplate,CWnd* pParentWnd = NULL);
 
-	/** 设置窗口关联的Plugin对象 */
 	void SetPlugin(Plugin::CPlugin* pPlugin);
 
 protected:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
-	/** HWND到 CIEWindow 对象的映射, 用于通过 HWND 快速找到已打开的 CIEWindow 对象 */
+	/** Map used to search the CIEHostWindow object by its window handle  */
 	static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
 	
-	/** 与 s_IEWindowMap 配对使用的, 保证线程安全 */
+	/** Ensure the operations on s_IEWindowMap are thread safe. */
 	static CCriticalSection s_csIEWindowMap;
 
-	/** ID到 CIEWindow 对象的映射, 用于通过 ID 快速找到创建后未使用的 CIEWindow 对象 */
+	/** Map used to search the CIEHostWindow object by its ID */
 	static CSimpleMap<DWORD, CIEHostWindow *> s_NewIEWindowMap;
 
-	/** 与 s_csNewIEWindowMap 配对使用的, 保证线程安全 */
+	/** Ensure the operations on s_NewIEWindowMap are thread safe. */
 	static CCriticalSection s_csNewIEWindowMap;
 
-	/** 用于同步Cookie的 CIEHostWindow 对象 */
+	/** Plugins used to transfer cookies to the Firfox */
 	static CSimpleMap<HWND, CIEHostWindow *> s_CookieIEWindowMap;
 
-	/** 与 s_CookieIEWindowMap 配对使用的, 保证线程安全 */
+	/** Ensure the operations on s_CookieIEWindowMap are thread safe. */
 	static CCriticalSection s_csCookieIEWindowMap;
 
-	/** IE控件的UserAgent */
+	/** IE controls' UserAgent */
 	static CString s_strIEUserAgent;
 
 	static const CString s_strSecureLockInfos[];
@@ -130,7 +125,7 @@ protected:
 	void InitIE();
 	void UninitIE();
 
-	// 从IE控件的HTML文档中获取UserAgent
+	// Get IE control's UserAgent from the HTML document
 	CString GetDocumentUserAgent();
 
 	// 检测浏览器命令是否可用

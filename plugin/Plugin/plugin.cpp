@@ -578,11 +578,6 @@ namespace Plugin
 		NPN_MemFree(url);
 	}
 
-	CString CPlugin::GetFirefoxUserAgent()
-	{
-		return UTF8ToCString(NPN_UserAgent(m_pNPInstance));
-	}
-
 	void CPlugin::IENewTab(DWORD id, const CString& strURL)
 	{
 		CString strEventType = _T("IENewTab");

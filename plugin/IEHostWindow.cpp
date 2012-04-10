@@ -27,7 +27,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IEHostWindow.h"
 #include "plugin.h"
 
-// CIEHostWindow类变量初始化
+// Initilizes the static member variables of CIEHostWindow
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
@@ -62,7 +62,6 @@ CIEHostWindow::~CIEHostWindow()
 {
 }
 
-/** 根据 CIEHostWindow 的 HWND 寻找对应的 CIEHostWindow 对象 */
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 {
 	CIEHostWindow *pInstance = NULL;
@@ -72,7 +71,6 @@ CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 	return pInstance;
 }
 
-/** 根据Internet Explorer_Server找到对应的 CIEHostWindow 对象*/
 CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 {
 	// Internet Explorer_Server 往上三级是 plugin 窗口
@@ -96,7 +94,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 
 	if (dwId != 0)
 	{
-		// 如果提供了ID参数，说明IEHostWindow窗口已创建，不需要再新建。
+		// The CIEHostWindow has been created that we needn't recreate it.
 		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
 		if (pIEHostWindow)
@@ -144,24 +142,6 @@ void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 		LParamSetFirefoxCookie param = {strURL, strCookie};
 		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
 	}
-}
-
-CString CIEHostWindow::GetFirefoxUserAgent()
-{
-	CString strUserAgent;
-	CIEHostWindow *pIEHostWindow = NULL;
-	s_csCookieIEWindowMap.Lock();
-	if (s_CookieIEWindowMap.GetSize() > 0)
-	{
-		pIEHostWindow = s_CookieIEWindowMap.GetValueAt(0);
-	}
-
-	if (pIEHostWindow && pIEHostWindow->m_pPlugin)
-	{
-		strUserAgent = pIEHostWindow->m_pPlugin->GetFirefoxUserAgent();
-	}
-	s_csCookieIEWindowMap.Unlock();
-	return strUserAgent;
 }
 
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
@@ -1572,7 +1552,7 @@ void CIEHostWindow::FBHighlightAll()
 	if (m_strFBText.GetLength() == 0) return;
 
 	long lOriginalIndex = m_lFBCurrentDoc;
-	for (m_lFBCurrentDoc = 0; m_lFBCurrentDoc < m_vFBDocs.size(); m_lFBCurrentDoc++)
+	for (m_lFBCurrentDoc = 0; m_lFBCurrentDoc < static_cast<long>(m_vFBDocs.size()); m_lFBCurrentDoc++)
 	{
 		FBDocFindStatus& dfs = FBGetCurrentDocStatus();
 		long tmp;

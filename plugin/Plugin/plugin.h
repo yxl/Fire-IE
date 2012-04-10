@@ -65,12 +65,7 @@ namespace Plugin
 		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
 	private: 
 		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId);
-
-	public:
-
-		// Set the plugin status text, which will be shown in the Firefox status bar
-		void SetStatus(const CString& text);
-
+		
 		// Get the URL of the page where the plugin is hosted
 		CString GetHostURL() const;
 
@@ -87,6 +82,10 @@ namespace Plugin
 
 		// Clear all the paramters for IECtrl::Navigate
 		void RemoveNavigateParams();
+	public:
+
+		// Set the plugin status text, which will be shown in the Firefox status bar
+		void SetStatus(const CString& text);
 
 		NPObject *GetScriptableObject();
 
@@ -119,8 +118,6 @@ namespace Plugin
 		 * @param strCookie Cookie http header string
 		 */
 		void SetURLCookie(const CString& strURL, const CString& strCookie);
-
-		CString GetFirefoxUserAgent();
 
 		/** 
 		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
