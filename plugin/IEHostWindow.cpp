@@ -27,6 +27,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IEHostWindow.h"
 #include "plugin.h"
 
+using namespace UserMessage;
+
 // Initilizes the static member variables of CIEHostWindow
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
@@ -54,12 +56,14 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_bFBInProgress(false)
 	, m_lFBCurrentDoc(0)
 	, m_strSecureLockInfo(_T("Unsecure"))
+	, m_pNavigateParams(NULL)
 {
 	FBResetFindStatus();
 }
 
 CIEHostWindow::~CIEHostWindow()
 {
+	SAFE_DELETE(m_pNavigateParams);
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
@@ -129,7 +133,6 @@ void CIEHostWindow::AddCookieIEWindow(CIEHostWindow *pWnd)
 
 void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 {
-	using namespace UserMessage;
 	HWND hwnd = NULL;
 	s_csCookieIEWindowMap.Lock();
 	if (s_CookieIEWindowMap.GetSize() > 0)
@@ -139,8 +142,8 @@ void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 	s_csCookieIEWindowMap.Unlock();
 	if (hwnd)
 	{
-		LParamSetFirefoxCookie param = {strURL, strCookie};
-		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&param));
+		SetFirefoxCookieParams params = {strURL, strCookie};
+		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&params));
 	}
 }
 
@@ -165,7 +168,7 @@ void CIEHostWindow::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CIEHostWindow, CDialog)
 	ON_WM_SIZE()
-	ON_MESSAGE(UserMessage::WM_USER_MESSAGE, OnUserMessage)
+	ON_MESSAGE(WM_USER_MESSAGE, OnUserMessage)
 	ON_WM_PARENTNOTIFY()
 END_MESSAGE_MAP()
 
@@ -230,13 +233,37 @@ void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 
 LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 {
-	using namespace UserMessage;
 	switch(wParam)
 	{
 	case WPARAM_SET_FIREFOX_COOKIE:
 		{
-			LParamSetFirefoxCookie* pData = reinterpret_cast<LParamSetFirefoxCookie*>(lParam);
+			SetFirefoxCookieParams* pData = reinterpret_cast<SetFirefoxCookieParams*>(lParam);
 			OnSetFirefoxCookie(pData->strURL, pData->strCookie);
+		}
+		break;
+	case WPARAM_NAVIGATE:
+		{
+			OnNavigate();
+		}
+		break;
+	case WPARAM_REFRESH:
+		{
+			OnRefresh();
+		}
+		break;
+	case WPARAM_STOP:
+		{
+			OnStop();
+		}
+		break;
+	case WPARAM_BACK:
+		{
+			OnBack();
+		}
+		break;
+	case WPARAM_FORWARD:
+		{
+			OnForward();
 		}
 		break;
 	}
@@ -381,95 +408,42 @@ CString GetURLRelative(const CString& baseURL, const CString relativeURL)
 	}
 }
 
-/** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
-	if (m_ie.GetSafeHwnd())
+	if (m_pNavigateParams == NULL)
 	{
-		try
-		{
-			_variant_t vFlags(0l);
-			_variant_t vTarget(_T(""));
-			_variant_t vPost;
-			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
-			if (!strPost.IsEmpty()) 
-			{
-				// 去除postContent-Type和Content-Length这样的header信息
-				int pos = strPost.Find(_T("\r\n\r\n"));
-
-				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
-				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
-				char* szPostData = new char[size + 1];
-				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
-				FillSafeArray(vPost, szPostData);
-			}
-			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
-		}
-		catch(...)
-		{
-			TRACE(_T("CIEHostWindow::Navigate URL=%s failed!\n"), strURL);
-		}
+		m_pNavigateParams = new NavigateParams();
 	}
+	if (m_pNavigateParams == NULL)
+	{
+		return;
+	}
+
+	m_pNavigateParams->strURL = strURL;
+	m_pNavigateParams->strPost = strPost;
+	m_pNavigateParams->strHeaders = strHeaders;
+
+	PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
 }
 
 void CIEHostWindow::Refresh()
 {
-	if (m_ie.GetSafeHwnd())
-	{
-		try
-		{
-			m_ie.Refresh();
-		}
-		catch(...)
-		{
-			TRACE(_T("CIEHostWindow::Refresh failed!\n"));
-		}
-	}
+	PostMessage(WM_USER_MESSAGE, WPARAM_REFRESH, 0);
 }
 
 void CIEHostWindow::Stop()
 {
-	if (m_ie.GetSafeHwnd())
-	{
-		try
-		{
-			m_ie.Stop();
-		}
-		catch(...)
-		{
-			TRACE(_T("CIEHostWindow::Stop failed!\n"));
-		}
-	}
+	PostMessage(WM_USER_MESSAGE, WPARAM_STOP, 0);
 }
 
 void CIEHostWindow::Back()
 {
-	if (m_ie.GetSafeHwnd() && m_bCanBack)
-	{
-		try
-		{
-			m_ie.GoBack();
-		}
-		catch(...)
-		{
-			TRACE(_T("CIEHostWindow::Back failed!\n"));
-		}
-	}
+	PostMessage(WM_USER_MESSAGE, WPARAM_BACK, 0);
 }
 
 void CIEHostWindow::Forward()
 {
-	if (m_ie.GetSafeHwnd() && m_bCanForward)
-	{
-		try
-		{
-			m_ie.GoForward();
-		}
-		catch(...)
-		{
-			TRACE(_T("CIEHostWindow::Forward failed!\n"));
-		}
-	}
+	PostMessage(WM_USER_MESSAGE, WPARAM_FORWARD, 0);
 }
 
 void CIEHostWindow::Focus()
@@ -592,22 +566,6 @@ void CIEHostWindow::Zoom(double level)
 		return;
 	}
 	catch (...)
-	{
-		TRACE(_T("CIEHostWindow::Zoom failed!\n"));
-	}
-
-	// IE6
-	try
-	{
-		// IE6 只支持文字缩放, 最小为0, 最大为4, 默认为2
-		int nLegecyZoomLevel = (int)((level - 0.8) * 10 + 0.5);
-		nLegecyZoomLevel = max(nLegecyZoomLevel, 0);
-		nLegecyZoomLevel = min(nLegecyZoomLevel, 4);
-
-		vZoomLevel.intVal = nLegecyZoomLevel;
-		m_ie.ExecWB(OLECMDID_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vZoomLevel, NULL );
-	}
-	catch(...)
 	{
 		TRACE(_T("CIEHostWindow::Zoom failed!\n"));
 	}
@@ -814,6 +772,107 @@ void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& str
 	if (m_pPlugin)
 	{
 		m_pPlugin->SetFirefoxCookie(strURL, strCookie);
+	}
+}
+
+/** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
+void CIEHostWindow::OnNavigate()
+{
+	if (m_pNavigateParams == NULL)
+	{
+		return;
+	}
+
+	CString strURL = m_pNavigateParams->strURL;
+	CString strHeaders = m_pNavigateParams->strHeaders;
+	CString strPost = m_pNavigateParams->strPost;
+	SAFE_DELETE(m_pNavigateParams);
+
+	if (m_ie.GetSafeHwnd())
+	{
+		try
+		{
+			_variant_t vFlags(0l);
+			_variant_t vTarget(_T(""));
+			_variant_t vPost;
+			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
+			if (!strPost.IsEmpty()) 
+			{
+				// 去除postContent-Type和Content-Length这样的header信息
+				int pos = strPost.Find(_T("\r\n\r\n"));
+
+				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
+				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
+				char* szPostData = new char[size + 1];
+				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
+				FillSafeArray(vPost, szPostData);
+			}
+			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::Navigate URL=%s failed!\n"), strURL);
+		}	
+	}
+}
+
+void CIEHostWindow::OnRefresh()
+{
+	if (m_ie.GetSafeHwnd())
+	{
+		try
+		{
+			m_ie.Refresh();
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::Refresh failed!\n"));
+		}
+	}
+}
+
+void CIEHostWindow::OnStop()
+{
+	if (m_ie.GetSafeHwnd())
+	{
+		try
+		{
+			m_ie.Stop();
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::Stop failed!\n"));
+		}
+	}
+}
+
+void CIEHostWindow::OnBack()
+{
+  	if (m_ie.GetSafeHwnd() && m_bCanBack)
+	{
+		try
+		{
+			m_ie.GoBack();
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::Back failed!\n"));
+		}
+	}
+}
+
+void CIEHostWindow::OnForward()
+{
+  	if (m_ie.GetSafeHwnd() && m_bCanForward)
+	{
+		try
+		{
+			m_ie.GoForward();
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::Forward failed!\n"));
+		}
 	}
 }
 
@@ -1479,7 +1538,7 @@ void CIEHostWindow::FBFindPrevious()
 		} while (lOriginalIndex != m_lFBCurrentDoc || !FBRangesEqual(pOriginalRange, FBGetCurrentDocStatus().txtRange));
 		// the result is pLastRange
 		pLastRange->select();
-		
+
 		// setting the appropriate find status
 		m_bFBCrossTail = false;
 		if (!bLastCrossTail) // if not cross tail, then backwards find must cross head

@@ -109,10 +109,15 @@ namespace HttpMonitor
 		CString strURL;
 		WCHAR* pURL = NULL;
 		ULONG cEl = 1;
-
-		if (SUCCEEDED(m_spInternetBindInfo->GetBindString(BINDSTRING_URL,	&pURL, cEl, &cEl)))
+		try
 		{
-			strURL = (LPCTSTR)CW2T(pURL);	
+			if (SUCCEEDED(m_spInternetBindInfo->GetBindString(BINDSTRING_URL, &pURL, cEl, &cEl)))
+			{
+				strURL = (LPCTSTR)CW2T(pURL);	
+			}
+		}
+		catch(...)
+		{
 		}
 
 		if (pURL)

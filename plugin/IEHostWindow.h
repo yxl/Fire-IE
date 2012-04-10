@@ -26,23 +26,34 @@ namespace Plugin
 	class CPlugin;
 }
 
-namespace HttpMonitor
-{
-	class MonitorSink;
-}
-
 namespace UserMessage
 {
 	// User defined window message
 	static const UINT WM_USER_MESSAGE =  WM_USER + 200;
 
+	//
 	// Sub-types of the user defined window message
+	//
+
 	static const WPARAM WPARAM_SET_FIREFOX_COOKIE = 0;
-	struct LParamSetFirefoxCookie
+	struct SetFirefoxCookieParams
 	{
 		CString strURL;
 		CString strCookie;
 	};
+
+	static const WPARAM WPARAM_NAVIGATE = 1;
+	struct NavigateParams
+	{
+		CString strURL;
+		CString strPost;
+		CString strHeaders;
+	};
+
+	static const WPARAM WPARAM_REFRESH = 2;
+	static const WPARAM WPARAM_STOP = 3;
+	static const WPARAM WPARAM_BACK = 4;
+	static const WPARAM WPARAM_FORWARD = 5;
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -58,7 +69,6 @@ class CIEHostWindow : public CDialog
 	DECLARE_EVENTSINK_MAP()
 	DECLARE_MESSAGE_MAP()
 
-	friend class HttpMonitor::MonitorSink;
 public:
 	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
 
@@ -136,6 +146,11 @@ protected:
 
 	// 自定义窗口消息响应函数
 	void OnSetFirefoxCookie(const CString& strURL, const CString& strCookie);
+	void OnNavigate();
+	void OnRefresh();
+	void OnStop();
+	void OnBack();
+	void OnForward();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
@@ -273,4 +288,6 @@ protected:
 	CString m_strSecureLockInfo;
 	
 	Plugin::CPlugin* m_pPlugin;
+
+	UserMessage::NavigateParams* m_pNavigateParams;
 };

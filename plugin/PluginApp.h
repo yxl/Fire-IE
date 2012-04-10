@@ -28,6 +28,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define STR_WINDOW_CLASS_NAME	_T("FireIE")	// CIEHostWindow窗口类名
 
+#define SAFE_DELETE(X) if(X){delete X; X = NULL;}
+
 /** 将CString转换为UTF8字符串，
  *  使用完毕后，需调用delete[]释放字符串
  */
