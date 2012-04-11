@@ -332,8 +332,7 @@ WindowWrapper.prototype = {
       }
 
       // update current tab's secure lock info
-      if (pluginObject)
-        this.checkIdentity();
+      if (pluginObject) this.checkIdentity();
 
       // Update the star button indicating whether current page is bookmarked.
       this.window.PlacesStarButton.updateState();
@@ -570,12 +569,37 @@ WindowWrapper.prototype = {
         zoomLevel: zoomLevel
       });
 
+      if (!isIEEngineAfterSwitch)
+      {
+        // Stop loading and hide the IE plugin if we switch to Firefox engine
+        let pluginObject = this.getContainerPlugin();
+        if (pluginObject)
+        {
+          pluginObject.style.visibility = "hidden";
+          this.goDoCommand("Stop");
+        }
+		
+		// Switch to Firefox engine by loading blank page
+        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+        if (aTab.linkedBrowser) aTab.linkedBrowser.loadURIWithFlags("about:blank", flags);
+      }
+
       // firefox特有地址只允许使用Firefox内核
       if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
       {
         url = Utils.toContainerUrl(url);
       }
-      if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url) aTab.linkedBrowser.loadURI(url);
+      if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url)
+      {
+        let self = this;
+        this.window.setTimeout(function()
+        {
+          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+          aTab.linkedBrowser.loadURIWithFlags(url, flags);
+          self._updateInterface();
+          self.window.gURLBar.value = url;
+        }, 100);
+      }
     }
   },
 
@@ -631,7 +655,7 @@ WindowWrapper.prototype = {
       ctypes.jschar.ptr, /* LPCTSTR lpDirectory */
       ctypes.int32_t /* int nShowCmd */ );
       ShellExecuteW(NULL, "open", "rundll32.exe", "shell32.dll,Control_RunDLL inetcpl.cpl", "", SW_SHOW);
-	  lib.close();
+      lib.close();
     }
     catch (e)
     {
@@ -752,14 +776,14 @@ WindowWrapper.prototype = {
    */
   _setSecureLockIcon: function(info)
 
-  {  
+  {
     let self = this.gIdentityHandler;
     if (!self._identityBox) return;
 
     let classname = null;
     let tooltip = "";
     let icon_label = "";
-    switch(info)
+    switch (info)
     {
     case "Unsecure":
       classname = self.IDENTITY_MODE_UNKNOWN;
@@ -787,7 +811,7 @@ WindowWrapper.prototype = {
         tooltip += "Fortezza";
         break;
       default:
-        tooltip +=  Utils.getString("fireie.security.encryption.unknown");
+        tooltip += Utils.getString("fireie.security.encryption.unknown");
         break;
       }
       icon_label = this.getEffectiveHost();
@@ -1186,20 +1210,20 @@ WindowWrapper.prototype = {
       if (selText && selText.length > 0)
       {
         // Process our text to get rid of unwanted characters
-        if (selText.length > selectionMaxLen) {
+        if (selText.length > selectionMaxLen)
+        {
           var pattern = new RegExp("^(?:\\s*.){0," + selectionMaxLen + "}");
           pattern.test(selText);
           selText = RegExp.lastMatch;
         }
-        return selText.replace(/^\s+/, "")
-                      .replace(/\s+$/, "")
-                      .replace(/\s+/g, " ")
-                      .substr(0, selectionMaxLen);
-      } else
+        return selText.replace(/^\s+/, "").replace(/\s+$/, "").replace(/\s+/g, " ").substr(0, selectionMaxLen);
+      }
+      else
       {
         return "";
       }
-    } catch (ex)
+    }
+    catch (ex)
     {
       Utils.ERROR("setFindText(): " + ex);
       return null;
