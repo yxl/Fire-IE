@@ -1479,7 +1479,7 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur, bool nosel
 					m_lFBCurrentDoc--; 
 					if (m_lFBCurrentDoc < 0)
 					{
-						m_lFBCurrentDoc = m_vFBDocs.size() - 1;
+						m_lFBCurrentDoc = (long)(m_vFBDocs.size() - 1);
 						m_bFBCrossHead = true;
 					}
 				} else
@@ -1611,7 +1611,7 @@ void CIEHostWindow::FBHighlightAll()
 	if (m_strFBText.GetLength() == 0) return;
 
 	long lOriginalIndex = m_lFBCurrentDoc;
-	for (m_lFBCurrentDoc = 0; m_lFBCurrentDoc < m_vFBDocs.size(); m_lFBCurrentDoc++)
+	for (m_lFBCurrentDoc = 0; m_lFBCurrentDoc < (long)m_vFBDocs.size(); m_lFBCurrentDoc++)
 	{
 		FBDocFindStatus& dfs = FBGetCurrentDocStatus();
 		long tmp;

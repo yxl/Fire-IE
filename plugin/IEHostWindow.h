@@ -275,7 +275,7 @@ protected:
 	};
 
 	std::vector<FBDocFindStatus> m_vFBDocs;
-	size_t m_lFBCurrentDoc;
+	long m_lFBCurrentDoc;
 
 	long m_lFBLastFindLength;
 	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)
