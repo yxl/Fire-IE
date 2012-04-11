@@ -1541,6 +1541,7 @@ void CIEHostWindow::FBFindPrevious()
 	long lOriginalIndex, lLastIndex;
 	CComPtr<IHTMLTxtRange> pOriginalRange, pLastRange;
 	bool bLastCrossTail;
+
 	// do a restart find in case last forwards find is successful
 	m_lFBLastFindLength = 0;
 	FBFindAgainInternal(false, false, true);
@@ -1548,6 +1549,27 @@ void CIEHostWindow::FBFindPrevious()
 	{
 		lOriginalIndex = m_lFBCurrentDoc;
 		FBGetCurrentDocStatus().txtRange->duplicate(&pOriginalRange);
+
+		// since backwards find always finds a correct match (although it might not be the closest one)
+		// we start from there, and it might be potentially faster, avoiding many visibility tests
+		long lLastFindLength = m_lFBLastFindLength;
+		m_bFBFound = false;
+		FBFindAgainInternal(true, false, true);
+		if (m_bFBFound && (lOriginalIndex != m_lFBCurrentDoc || !FBRangesEqual(pOriginalRange, FBGetCurrentDocStatus().txtRange)))
+		{
+			if (!m_bFBCrossHead)
+			{
+				m_bFBCrossTail = true;
+			}
+			m_bFBCrossHead = false;
+		} else
+		{
+			// not found, restore original range
+			m_bFBCrossHead = false;
+			m_lFBCurrentDoc = lOriginalIndex;
+			pOriginalRange->duplicate(&FBGetCurrentDocStatus().txtRange);
+			m_lFBLastFindLength = lLastFindLength;
+		}
 		do
 		{
 			lLastIndex = m_lFBCurrentDoc;
