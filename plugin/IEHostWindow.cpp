@@ -266,6 +266,17 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 			OnForward();
 		}
 		break;
+	case WPARAM_EXEC_OLE_CMD:
+		{
+			OLECMDID id = (OLECMDID)lParam;
+			ExecOleCmd(id);
+		}
+		break;
+	case WPARAM_DISPLAY_SECURITY_INFO:
+		{
+			OnDisplaySecurityInfo();
+		}
+		break;
 	}
 	return 0;
 }
@@ -573,48 +584,27 @@ void CIEHostWindow::Zoom(double level)
 
 void CIEHostWindow::DisplaySecurityInfo()
 {
-	const DWORD SHDVID_SSLSTATUS = 33;
-
-	CComQIPtr<IDispatch> pDisp;
-	pDisp.Attach(m_ie.get_Document());
-	if (!pDisp)
-	{
-		return;
-	}
-	CComQIPtr<IServiceProvider> pSP = pDisp;
-	if (!pSP) return;
-
-	CComQIPtr<IWebBrowser2> pWB2;
-	if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
-		return;
-
-	CComQIPtr<IOleCommandTarget> pCmd = pWB2;
-	if(!pCmd) return;
-
-	CComVariant varinput;
-	varinput.vt = VT_EMPTY;
-	CComVariant varoutput;
-	pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
+	PostMessage(WM_USER_MESSAGE, WPARAM_DISPLAY_SECURITY_INFO);
 }
 
 void CIEHostWindow::SaveAs()
 {
-	ExecOleCmd(OLECMDID_SAVEAS);
+	PostOleCmd(OLECMDID_SAVEAS);
 }
 
 void CIEHostWindow::Print()
 {
-	ExecOleCmd(OLECMDID_PRINT);
+	PostOleCmd(OLECMDID_PRINT);
 }
 
 void CIEHostWindow::PrintPreview()
 {
-	ExecOleCmd(OLECMDID_PRINTPREVIEW);
+	PostOleCmd(OLECMDID_PRINTPREVIEW);
 }
 
 void CIEHostWindow::PrintSetup()
 {
-	ExecOleCmd(OLECMDID_PAGESETUP);
+	PostOleCmd(OLECMDID_PAGESETUP);
 }
 
 void CIEHostWindow::ViewPageSource()
@@ -767,6 +757,11 @@ void CIEHostWindow::ExecOleCmd(OLECMDID cmdID)
 	}
 }
 
+void CIEHostWindow::PostOleCmd(OLECMDID cmdID)
+{
+	PostMessage(WM_USER_MESSAGE, WPARAM_EXEC_OLE_CMD, (LPARAM)cmdID);
+}
+
 void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& strCookie)
 {
 	if (m_pPlugin)
@@ -874,6 +869,32 @@ void CIEHostWindow::OnForward()
 			TRACE(_T("CIEHostWindow::Forward failed!\n"));
 		}
 	}
+}
+
+void CIEHostWindow::OnDisplaySecurityInfo()
+{
+	const DWORD SHDVID_SSLSTATUS = 33;
+
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	if (!pDisp)
+	{
+		return;
+	}
+	CComQIPtr<IServiceProvider> pSP = pDisp;
+	if (!pSP) return;
+
+	CComQIPtr<IWebBrowser2> pWB2;
+	if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
+		return;
+
+	CComQIPtr<IOleCommandTarget> pCmd = pWB2;
+	if(!pCmd) return;
+
+	CComVariant varinput;
+	varinput.vt = VT_EMPTY;
+	CComVariant varoutput;
+	pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)

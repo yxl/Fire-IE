@@ -62,7 +62,7 @@ var gFireIE = null;
     hookCode("PrintUtils.printPreview", /{/, "$& if(gFireIE.goDoCommand('PrintPreview')) return;");
 
     hookCode("goDoCommand", /{/, "$& if(gFireIE.goDoCommand(arguments[0])) return;"); // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
-    let displaySecurityInfoCode = "if(gFireIE.goDoCommand('DisplaySecurityInfo')) return;";
+    let displaySecurityInfoCode = "if((typeof(event)=='undefined'||(event.type=='click'&&event.button == 0)||(event.type=='keypress'&&(event.charCode==KeyEvent.DOM_VK_SPACE||event.keyCode==KeyEvent.DOM_VK_RETURN)))&&gFireIE.goDoCommand('DisplaySecurityInfo')) return;";
     hookCode("displaySecurityInfo", /{/, "$& " + displaySecurityInfoCode);
     hookAttr("identity-box", "onclick", displaySecurityInfoCode);
     hookAttr("identity-box", "onkeypress", displaySecurityInfoCode);

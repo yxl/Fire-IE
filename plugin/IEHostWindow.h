@@ -54,6 +54,9 @@ namespace UserMessage
 	static const WPARAM WPARAM_STOP = 3;
 	static const WPARAM WPARAM_BACK = 4;
 	static const WPARAM WPARAM_FORWARD = 5;
+	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
+	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
+
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -143,6 +146,8 @@ protected:
 
 	// 执行浏览器命令
 	void ExecOleCmd(OLECMDID cmdID);
+	// delay ole cmd execution to next message loop
+	void PostOleCmd(OLECMDID cmdID);
 
 	// 自定义窗口消息响应函数
 	void OnSetFirefoxCookie(const CString& strURL, const CString& strCookie);
@@ -151,6 +156,7 @@ protected:
 	void OnStop();
 	void OnBack();
 	void OnForward();
+	void OnDisplaySecurityInfo();
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
