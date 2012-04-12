@@ -1567,6 +1567,7 @@ void CIEHostWindow::FBFindPrevious()
 			// not found, restore original range
 			m_bFBCrossHead = false;
 			m_lFBCurrentDoc = lOriginalIndex;
+			FBGetCurrentDocStatus().txtRange = NULL;
 			pOriginalRange->duplicate(&FBGetCurrentDocStatus().txtRange);
 			m_lFBLastFindLength = lLastFindLength;
 		}
