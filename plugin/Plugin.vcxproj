@@ -28,7 +28,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E86D2430-709C-46DC-9464-E9F1572B765C}</ProjectGuid>
-    <RootNamespace>IEModePlugin</RootNamespace>
+    <RootNamespace>Plugin</RootNamespace>
     <Keyword>MFCDLLProj</Keyword>
     <ProjectName>plugin</ProjectName>
   </PropertyGroup>

@@ -68,7 +68,7 @@ let FireIEContainer = {};
     let needed = false;
     if (Prefs.privateBrowsing && Prefs.privatebrowsingwarning)
     {
-	  needed = true;
+      needed = true;
       let cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
       let cookieManager = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager);
       try
@@ -91,10 +91,18 @@ let FireIEContainer = {};
   {
     window.removeEventListener("unload", destory, false);
 
-    if (E("fireie-object"))
+    let container = E('container');
+
+    if (E('fireie-object'))
     {
       unregisterEventHandler();
     }
+
+    while (container.hasChildNodes())
+    {
+      container.removeChild(container.firstChild);
+    }
+
   }
 
   function getNavigateParam(name)
@@ -108,15 +116,15 @@ let FireIEContainer = {};
     }
     return headers;
   }
-  
+
   function getNavigateHeaders()
   {
-	  return getNavigateParam("headers");
+    return getNavigateParam("headers");
   }
-  
+
   function getNavigatePostData()
   {
-	  return getNavigateParam("post");
+    return getNavigateParam("post");
   }
 
   function getNavigateWindowId()
