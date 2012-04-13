@@ -16,8 +16,10 @@
 <!ENTITY fireie.options.shorcut.title "Shortcut Key">
 <!ENTITY fireie.options.shorcut.enable "Enable">
 <!ENTITY fireie.options.ui.caption "User Interface">
-<!ENTITY fireie.options.showUrlBarLabel "Show url bar button label.">
-<!ENTITY fireie.options.hideUrlBarButton "Hide url bar button.">
+<!ENTITY fireie.options.ui.iconDisplay "URL bar button display:">
+<!ENTITY fireie.options.ui.iconHidden "Hidden">
+<!ENTITY fireie.options.ui.iconOnly "Show Icon">
+<!ENTITY fireie.options.ui.iconAndText "Show Icon and Text">
 
 <!ENTITY fireie.options.rule.label "Sites Rule">
 <!ENTITY fireie.options.rule.enabled "Enable Sites Rule">

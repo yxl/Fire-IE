@@ -94,12 +94,16 @@ windowtype="fireie:options">
           </groupbox>
           <groupbox>
             <caption label="&fireie.options.ui.caption;" />
-            <hbox align="center">
-              <checkbox label="&fireie.options.showUrlBarLabel;"
-              id="showUrlBarLabel" />
-              <checkbox label="&fireie.options.hideUrlBarButton;"
-              id="hideUrlBarButton" />
-            </hbox>
+            <vbox>
+              <label>&fireie.options.ui.iconDisplay;</label>
+              <radiogroup id="iconDisplay">
+                <hbox align="center">
+                  <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
+                  <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
+                  <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
+                </hbox>
+              </radiogroup>
+            </vbox>
           </groupbox>          
         </vbox>
       </tabpanel>

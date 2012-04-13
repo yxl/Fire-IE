@@ -87,8 +87,8 @@ Options.apply = function(quiet)
     requiresRestart = true;
     Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   }
-  Prefs.showUrlBarLabel = E("showUrlBarLabel").checked;
-  Prefs.hideUrlBarButton = E("hideUrlBarButton").checked;
+  Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
+  Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
 
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -194,8 +194,7 @@ Options.initDialog = function()
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
   E("shortcutEnabled").checked = Prefs.shortcutEnabled;
-  E("showUrlBarLabel").checked = Prefs.showUrlBarLabel;
-  E("hideUrlBarButton").checked = Prefs.hideUrlBarButton;
+  E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
 
   // updateStatus
   Options.updateApplyButton(false);
