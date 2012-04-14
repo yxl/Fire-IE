@@ -437,7 +437,8 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	m_pNavigateParams->strHeaders = strHeaders;
 	m_csNavigateParams.Unlock();
 
-	PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
+	//PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
+	OnNavigate();
 }
 
 void CIEHostWindow::Refresh()
