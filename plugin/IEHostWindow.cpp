@@ -421,18 +421,21 @@ CString GetURLRelative(const CString& baseURL, const CString relativeURL)
 
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
+	m_csNavigateParams.Lock();
 	if (m_pNavigateParams == NULL)
 	{
 		m_pNavigateParams = new NavigateParams();
 	}
 	if (m_pNavigateParams == NULL)
 	{
+		m_csNavigateParams.Unlock();
 		return;
 	}
 
 	m_pNavigateParams->strURL = strURL;
 	m_pNavigateParams->strPost = strPost;
 	m_pNavigateParams->strHeaders = strHeaders;
+	m_csNavigateParams.Unlock();
 
 	PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
 }
@@ -773,8 +776,10 @@ void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& str
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
 void CIEHostWindow::OnNavigate()
 {
+	m_csNavigateParams.Lock();
 	if (m_pNavigateParams == NULL)
 	{
+		m_csNavigateParams.Unlock();
 		return;
 	}
 
@@ -782,6 +787,7 @@ void CIEHostWindow::OnNavigate()
 	CString strHeaders = m_pNavigateParams->strHeaders;
 	CString strPost = m_pNavigateParams->strPost;
 	SAFE_DELETE(m_pNavigateParams);
+	m_csNavigateParams.Unlock();
 
 	if (m_ie.GetSafeHwnd())
 	{

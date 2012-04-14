@@ -296,4 +296,6 @@ protected:
 	Plugin::CPlugin* m_pPlugin;
 
 	UserMessage::NavigateParams* m_pNavigateParams;
+	/** Ensure the operations on m_pNavigateParams are thread safe. */
+	CCriticalSection m_csNavigateParams;
 };
