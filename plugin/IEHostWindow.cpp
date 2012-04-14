@@ -559,6 +559,22 @@ void CIEHostWindow::HandOverFocus()
 		hwndMessageTarget = GetTopMozillaWindowClassWindow(m_hWnd);
 	}
 
+	// Change the focus to the parent window of html document to kill its focus. 
+	CComQIPtr<IDispatch> pDisp;
+	pDisp.Attach(m_ie.get_Document());
+	if(pDisp) 
+	{
+		CComQIPtr<IHTMLDocument2> htmlDoc = pDisp;
+		if(htmlDoc) 
+		{
+			CComPtr<IHTMLWindow2> window;
+			if(SUCCEEDED(htmlDoc->get_parentWindow(&window))) 
+			{
+				window->focus();
+			}
+		}
+	}
+
 	if ( hwndMessageTarget != NULL )
 	{
 		::SetFocus(hwndMessageTarget);
@@ -850,7 +866,7 @@ void CIEHostWindow::OnStop()
 
 void CIEHostWindow::OnBack()
 {
-  	if (m_ie.GetSafeHwnd() && m_bCanBack)
+	if (m_ie.GetSafeHwnd() && m_bCanBack)
 	{
 		try
 		{
@@ -865,7 +881,7 @@ void CIEHostWindow::OnBack()
 
 void CIEHostWindow::OnForward()
 {
-  	if (m_ie.GetSafeHwnd() && m_bCanForward)
+	if (m_ie.GetSafeHwnd() && m_bCanForward)
 	{
 		try
 		{

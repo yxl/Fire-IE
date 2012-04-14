@@ -560,8 +560,8 @@ WindowWrapper.prototype = {
           pluginObject.style.visibility = "hidden";
           this.goDoCommand("Stop");
         }
-		
-		// Switch to Firefox engine by loading blank page
+
+        // Switch to Firefox engine by loading blank page
         const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
         if (aTab.linkedBrowser) aTab.linkedBrowser.loadURIWithFlags("about:blank", flags);
       }
@@ -1333,20 +1333,14 @@ WindowWrapper.prototype = {
 
   _onMouseDown: function(event)
   {
-    let target = event.target;
-    Utils.LOG("type:" + event.type + " target: " + target.id);
-    return;
     // 通过模拟mousedown事件，支持FireGuestures手势
-    if (target.id == Utils.containerPluginId)
+    if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
     {
+      Utils.ERROR(event.type);
       let evt = this.window.document.createEvent("MouseEvents");
-      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY + 80, event.clientX, event.clientY + 80, false, false, false, false, 2, null);
+      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
       let container = this.getContainerPlugin().parentNode;
-      this.window.setTimeout(function()
-      {
-        container.dispatchEvent(evt);
-        Utils.LOG("container event fired!");
-      }, 200);
+      container.dispatchEvent(evt);
     }
   },
 

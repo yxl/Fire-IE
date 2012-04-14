@@ -64,7 +64,7 @@ namespace BrowserHook
 		}
 		return TRUE;
 	}
-
+ 
 	// The message loop of Mozilla does not handle accelertor keys.
 	// IOleInplaceActivateObject requires MSG be filtered by its TranslateAccellerator() method.
 	// So we install a hook to do the dirty hack.
@@ -81,8 +81,8 @@ namespace BrowserHook
 			MSG * pMsg = reinterpret_cast<MSG *>(lParam);
 			HWND hwnd = pMsg->hwnd;
 
-			// here we only handle keyboard messages
-			if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST || hwnd == NULL)
+			// here we only handle keyboard messages and right button messages
+			if (!(WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)  && !(WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST) || hwnd == NULL)
 			{
 				goto Exit;
 			}
@@ -109,6 +109,7 @@ namespace BrowserHook
 				goto Exit;
 			}
 
+			// Forward the key press messages to firefox
 			if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
 			{
 				BOOL bAltPressed = HIBYTE(GetKeyState(VK_MENU)) != 0;
@@ -138,6 +139,68 @@ namespace BrowserHook
 					}
 				}
 			}
+
+			// Check if we should enable mouse guestures.
+			if (WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST)
+			{
+				// Guesture start position
+				static CPoint s_ptStart(-1, -1);
+				// Whether we start a guesture
+				static BOOL s_bGuesturesEnabled = FALSE;
+				
+				// Current mouse position
+				CPoint ptCurrent(pMsg->lParam);
+
+				if (pMsg->message == WM_RBUTTONDOWN)
+				{
+					// Prepare to start a guesture when the right mouse button is down.
+					s_ptStart = ptCurrent;
+				}
+				else if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON) && s_ptStart.x != - 1)
+				{
+					// Check if we can start a gesture when we move the mouse with right button down.
+					if (!s_bGuesturesEnabled)
+					{
+						CSize dist = ptCurrent - s_ptStart;
+						if (abs(dist.cx) > 10 || abs(dist.cx) > 10)
+						{
+							// Forward the right button down message to firefox to enable guestures.
+							s_bGuesturesEnabled = TRUE;
+							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+							if (hwndMessageTarget)
+							{
+								CPoint pt(s_ptStart);
+								ClientToScreen(pMsg->hwnd, &pt);
+								ScreenToClient(hwndMessageTarget, &pt);
+								::PostMessage(hwndMessageTarget, WM_RBUTTONDOWN, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+							}
+						}
+					}
+				}
+				else
+				{
+					// Stop the guesture by releasing the right button or other actions.
+					s_bGuesturesEnabled = FALSE;
+					s_ptStart.x = s_ptStart.y = - 1;
+				}
+
+				if (!s_bGuesturesEnabled)
+				{
+					goto Exit;
+				}
+
+				// Forward the mousemove message to let firefox track the guesture.
+				HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+				if (hwndMessageTarget)
+				{
+					CPoint pt(ptCurrent);
+					ClientToScreen(pMsg->hwnd, &pt);
+					ScreenToClient(hwndMessageTarget, &pt);
+					::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+					goto Exit;
+				}
+			}
+
 
 			if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
 			{
