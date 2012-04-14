@@ -1,0 +1,45 @@
+<!ENTITY fireie.switchButton.label "解雇IE">
+
+<!ENTITY fireie.urlbar.switch.tooltip1 "切換瀏覽模式">
+<!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊設定 解雇IE 選項">
+<!ENTITY urlbar.switchRules.label "切換規則">
+<!ENTITY internetProperties.lable "IE的Internet 選項">
+<!ENTITY skin.label "面板">
+<!ENTITY default.lable "預設">
+<!ENTITY skin.more.lable "更多...">
+
+<!ENTITY fireie.options.title "解雇IE 選項">
+
+<!ENTITY fireie.options.general.label "一般">
+<!ENTITY fireie.options.switch.caption "瀏覽引擎切換時:">
+<!ENTITY fireie.options.switch.handleurl "總是以目前瀏覽引擎開啟網址列的新網址">
+<!ENTITY fireie.options.shorcut.title "快捷鍵">
+<!ENTITY fireie.options.shorcut.enable "啟用">
+<!ENTITY fireie.options.ui.caption "用戶界面">
+<!ENTITY fireie.options.showUrlBarLabel "顯示網址列按鈕文字">
+<!ENTITY fireie.options.hideUrlBarButton "隱藏網址列按鈕">
+<!ENTITY fireie.options.ui.iconDisplay "網址列按鈕顯示：">
+<!ENTITY fireie.options.ui.iconHidden "隱藏">
+<!ENTITY fireie.options.ui.iconOnly "顯示圖示">
+<!ENTITY fireie.options.ui.iconAndText "顯示圖示和文字">
+
+<!ENTITY fireie.options.rule.label "網址過濾">
+<!ENTITY fireie.options.rule.enabled "總是使用 IE Tab 瀏覽以下網址">
+<!ENTITY fireie.options.rule.column.rule "規則">
+<!ENTITY fireie.options.rule.column.enabled "啟動">
+<!ENTITY fireie.options.rule.url.label "加入網址:">
+<!ENTITY fireie.options.rule.button.add "新增">
+<!ENTITY fireie.options.rule.button.delete "刪除">
+
+<!ENTITY fireie.options.iecompat.label "IE兼容模式">
+<!ENTITY fireie.options.iecompat.ie7 "IE7標準模式">
+<!ENTITY fireie.options.iecompat.ie8 "IE8標準模式">
+<!ENTITY fireie.options.iecompat.ie9 "IE9標準模式">
+
+<!ENTITY fireie.options.apply "應用">
+<!ENTITY fireie.options.manager "選項管理">
+<!ENTITY fireie.options.default "還原預設值">
+<!ENTITY fireie.options.import "匯入選項檔案">
+<!ENTITY fireie.options.export "匯出選項檔案">
+<!ENTITY fireie.options.restart.descr "重啟火狐生效。">
+

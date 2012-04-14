@@ -1,0 +1,7 @@
+<!ENTITY dialog.title "解雇IE安裝完成">
+<!ENTITY confirmation "感謝您安裝 解雇IE。今後您可以捨棄IE, 盡情享用強大的火狐。">
+<!ENTITY advancedSection "進階選項">
+<!ENTITY listSelection1 "已組態以下規則清單，用於智能切換內核:">
+<!ENTITY noList "無規則清單">
+<!ENTITY visitHomepage.label "訪問清單主頁">
+<!ENTITY listSelection2 "您可以在任何時候在 [link]切換規則[/link] 中更改選擇.">

@@ -16,3 +16,5 @@ category profile-after-change @fireie.org/fireie/startup;1 @fireie.org/fireie/st
 
 locale  fireie  en  chrome/locale/en/
 locale  fireie  zh-CN  chrome/locale/zh-CN/
+locale  fireie  zh-TW  chrome/locale/zh-TW/
+
