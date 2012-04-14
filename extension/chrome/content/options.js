@@ -137,7 +137,7 @@ Options.applyIECompatMode = function()
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
   try
   {
-	wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
+	wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
 	wrk.writeIntValue("firefox.exe", value);
 	wrk.close();
   }
@@ -154,7 +154,7 @@ Options.getIEMainVersion = function()
   let versionString = "0";
   try
   {
-	wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\" + (Utils.is64bit ? "Wow6432Node\\" : "") + "Internet Explorer", wrk.ACCESS_READ);
+	wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
     versionString = wrk.readStringValue("version");
     wrk.close();
   }
