@@ -72,10 +72,13 @@ namespace Plugin
 	// global shutdown
 	void NS_PluginShutdown()
 	{
+
+#ifndef _M_X64
 		if (OS::GetVersion() == OS::WIN7 || OS::GetVersion() == OS::VISTA)
 		{
 			BrowserHook::AtlDepHook::s_instance.Uninstall();
 		}
+#endif
 
 		// 取消监视http和https请求
 		CComPtr<IInternetSession> spSession;
