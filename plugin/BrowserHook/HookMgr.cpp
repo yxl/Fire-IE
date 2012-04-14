@@ -24,6 +24,7 @@ namespace BrowserHook
 		pItem = new HookItem(hModule, szImportModule, szFunc, pHookFunc);
 		if (pItem == NULL)
 		{
+			LeaveCriticalSection(&m_cs);
 			return;
 		}
 		if (!HookImportFunction(hModule, szImportModule, szFunc, pHookFunc, &pItem->pOrigFunc))
@@ -65,6 +66,7 @@ namespace BrowserHook
 
 	void HookMgr::ClearAllHooks()
 	{
+		EnterCriticalSection(&m_cs);
 		//
 		// Uninstall the existing modules' hooks
 		//
@@ -108,8 +110,6 @@ namespace BrowserHook
 
 	void HookMgr::UnInstallAllHooksForOneModule(HMODULE hModule)
 	{
-		EnterCriticalSection(&m_cs);
-
 		ModuleMap::iterator moduleIter = m_modulesByOriginalFunc.find(hModule);
 		if (moduleIter == m_modulesByOriginalFunc.end())
 			return;
@@ -176,8 +176,11 @@ namespace BrowserHook
 
 	BOOL HookMgr::IsModuleHooked(HMODULE hModule)
 	{
+		EnterCriticalSection(&m_cs);
 		ModuleMap::iterator iter = m_modulesByOriginalFunc.find(hModule);
-		return iter != m_modulesByOriginalFunc.end();
+		BOOL isHooked = iter != m_modulesByOriginalFunc.end();
+		LeaveCriticalSection(&m_cs);
+		return isHooked;
 	}
 
 }

@@ -64,7 +64,6 @@ namespace Plugin
 		{
 
 			BrowserHook::AtlDepHook::s_instance.Install();
-
 		}
 #endif
 		return NPERR_NO_ERROR;
