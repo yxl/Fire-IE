@@ -210,15 +210,6 @@ WindowWrapper.prototype = {
   {
     this._installCookiePlugin();
 
-    // Work around the bug #35: Cannot input in the address bar when starting
-    // Firefox with blank page.
-    this.window.setTimeout(function()
-    {
-      this.window.gURLBar.blur();
-      this.window.gURLBar.focus();
-
-    }, 200);
-
     this._registerEventListeners();
 
     this.updateState();
@@ -309,15 +300,6 @@ WindowWrapper.prototype = {
         {
           if (url == "about:blank") url = "";
           if (this.window.gURLBar.value != url) this.window.gURLBar.value = url;
-        }
-        else
-        {
-          let self = this;
-          if (this.window.gURLBar.selectionEnd != this.window.gURLBar.selectionStart) this.window.setTimeout(function()
-          {
-            self.window.gURLBar.blur();
-            self.window.gURLBar.focus();
-          }, 0);
         }
       }
 
@@ -734,12 +716,6 @@ WindowWrapper.prototype = {
     let id = data.id;
     let newTab = this.window.gBrowser.addTab(Utils.toContainerUrl(url));
     this.window.gBrowser.selectedTab = newTab;
-    let self = this;
-    if (this.window.gURLBar && (url == 'about:blank')) window.setTimeout(function()
-    {
-      self.window.gURLBar.blur();
-      self.window.gURLBar.focus();
-    }, 0);
 
     let param = {
       id: id
@@ -1300,16 +1276,9 @@ WindowWrapper.prototype = {
     e.preventDefault();
   },
 
-  /** 将焦点设置到IE窗口上*/
-  _focusIE: function()
-  {
-    this.goDoCommand("Focus");
-  },
-
   _onTabSelected: function(e)
   {
     this._updateInterface();
-    this._focusIE();
   },
 
 
