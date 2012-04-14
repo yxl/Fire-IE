@@ -93,8 +93,6 @@ namespace Plugin
 			}
 			Sleep(100);
 		}
-#ifndef _M_X64
 		BrowserHook::WindowMessageHook::s_instance.Uninstall();
-#endif
 	}
 }
