@@ -162,7 +162,7 @@ namespace BrowserHook
 					if (!s_bGuesturesEnabled)
 					{
 						CSize dist = ptCurrent - s_ptStart;
-						if (abs(dist.cx) > 10 || abs(dist.cx) > 10)
+						if (abs(dist.cx) > 10 || abs(dist.cy) > 10)
 						{
 							// Forward the right button down message to firefox to enable guestures.
 							s_bGuesturesEnabled = TRUE;
