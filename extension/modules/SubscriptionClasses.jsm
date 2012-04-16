@@ -467,6 +467,15 @@ DownloadableSubscription.prototype = {
   upgradeRequired: false,
 
   /**
+   * Dynamic version of upgradeRequired, in case addon version is not ready yet
+   */
+  isUpgradeRequired: function()
+  {
+    if (this.requiredVersion == null) return false;
+    return Services.vc.compare(this.requiredVersion, Utils.addonVersion) > 0;
+  },
+  
+  /**
    * See Subscription.serialize()
    */
   serialize: function(buffer)

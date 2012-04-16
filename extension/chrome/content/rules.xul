@@ -100,6 +100,7 @@
       </menupopup>
     </menu>
   </menupopup>
+
   <tooltip id="rulesTooltip" onpopupshowing="RuleActions.fillTooltip(event);">
     <grid>
       <columns>
@@ -240,7 +241,7 @@
                 </menupopup>
               </button>
             </hbox>
-            <description class="warning" hidden="{!subscription.upgradeRequired}">&subscription.minVersion.warning;</description>
+            <description class="warning" hidden="{!subscription.isUpgradeRequired()}">&subscription.minVersion.warning;</description>
             <description class="warning" hidden="{!disabledRules}">
               &subscription.disabledRules.warning;
               <description class="text-link" value="&subscription.disabledRules.enable;" onclick="SubscriptionActions.enableRules(this);"/>
