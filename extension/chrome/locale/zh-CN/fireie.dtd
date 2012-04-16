@@ -4,6 +4,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击设置 解雇IE 选项">
 <!ENTITY urlbar.switchRules.label "切换规则">
 <!ENTITY internetProperties.lable "IE的Internet 选项">
+<!ENTITY fireie.autoswitch.disable "禁用自动切换">
 <!ENTITY skin.label "皮肤">
 <!ENTITY default.lable "默认">
 <!ENTITY skin.more.lable "更多...">

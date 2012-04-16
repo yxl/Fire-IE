@@ -1258,6 +1258,15 @@ WindowWrapper.prototype = {
       return null;
     }
   },
+  toggleAutoSwitch: function()
+  {
+    Prefs.autoswitch_enabled = !Prefs.autoswitch_enabled;
+    this.setAutoSwitchMenuItem();
+  },
+  setAutoSwitchMenuItem: function()
+  {
+    this.E("fireie-menu-item-autoswitch-disabled").setAttribute("checked", !Prefs.autoswitch_enabled);
+  },
   // 响应内核切换按钮点击事件
   clickSwitchButton: function(e)
   {

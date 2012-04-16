@@ -467,7 +467,7 @@ DownloadableSubscription.prototype = {
   upgradeRequired: false,
 
   /**
-   * Dynamic version of upgradeRequired, in case addon version is not ready yet
+   * Dynamic version of upgradeRequired, in case addon version is not ready at load time
    */
   isUpgradeRequired: function()
   {

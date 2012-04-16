@@ -48,7 +48,7 @@ xmlns:html="http://www.w3.org/1999/xhtml">
   <!-- Popup menus -->
   <popupset>
     <!-- Switch button context menu -->
-    <menupopup id="fireie-switch-button-context-menu">
+    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="gFireIE.setAutoSwitchMenuItem();">
       <menuitem label="&fireie.options.title;"
       oncommand="gFireIE.openOptionsDialog();" />
       <menuitem label="&urlbar.switchRules.label;"
@@ -66,6 +66,7 @@ xmlns:html="http://www.w3.org/1999/xhtml">
           oncommand="gFireIE.openMoreThemesPage();" />
         </menupopup>
       </menu>
+      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();" type="checkbox" autocheck="false" closemenu="none"/>
     </menupopup>
   </popupset>
 </overlay>
