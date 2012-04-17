@@ -140,6 +140,8 @@ namespace BrowserHook
 				}
 			}
 
+			bool bShouldSwallow = false;
+
 			// Check if we should enable mouse guestures.
 			if (WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST)
 			{
@@ -155,15 +157,18 @@ namespace BrowserHook
 				{
 					// Prepare to start a guesture when the right mouse button is down.
 					s_ptStart = ptCurrent;
+					TRACE(_T("Down\n"));
 				}
 				else if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON) && s_ptStart.x != - 1)
 				{
+					TRACE(_T("Valid Mouse Move\n"));
 					// Check if we can start a gesture when we move the mouse with right button down.
 					if (!s_bGuesturesEnabled)
 					{
 						CSize dist = ptCurrent - s_ptStart;
 						if (abs(dist.cx) > 10 || abs(dist.cy) > 10)
 						{
+							TRACE(_T("Trigger\n"));
 							// Forward the right button down message to firefox to enable guestures.
 							s_bGuesturesEnabled = TRUE;
 							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
@@ -179,13 +184,33 @@ namespace BrowserHook
 				}
 				else
 				{
+					if (s_ptStart.x != -1) TRACE(_T("Up\n"));
+					if (s_ptStart.x != -1)
+					{
+						bShouldSwallow = true;
+						if (!s_bGuesturesEnabled)
+						{
+
+							HWND hwnd = pIEHostWindow->GetSafeHwnd();
+							if (hwnd)
+							{
+								// must be send message in order to prevent recursion
+								::SendMessage(pMsg->hwnd, WM_RBUTTONDOWN, pMsg->wParam, MAKELPARAM(s_ptStart.x, s_ptStart.y));
+								::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+							}
+						}
+					}
 					// Stop the guesture by releasing the right button or other actions.
 					s_bGuesturesEnabled = FALSE;
 					s_ptStart.x = s_ptStart.y = - 1;
 				}
 
+				bShouldSwallow = bShouldSwallow || (s_ptStart.x != -1);
+
 				if (!s_bGuesturesEnabled)
 				{
+					if (bShouldSwallow)
+						pMsg->message = WM_NULL;
 					goto Exit;
 				}
 
@@ -197,6 +222,9 @@ namespace BrowserHook
 					ClientToScreen(pMsg->hwnd, &pt);
 					ScreenToClient(hwndMessageTarget, &pt);
 					::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+
+					if (bShouldSwallow)
+						pMsg->message = WM_NULL;
 					goto Exit;
 				}
 			}
@@ -206,8 +234,15 @@ namespace BrowserHook
 			{
 				pMsg->message = WM_NULL;
 			}
+
+			if (bShouldSwallow)
+				pMsg->message = WM_NULL;
 		}
 Exit:
+		if (((MSG*)lParam)->message == WM_NULL)
+		{
+			TRACE (_T("SWALLOWED.\n"));
+		}
 		return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
 	}
 
