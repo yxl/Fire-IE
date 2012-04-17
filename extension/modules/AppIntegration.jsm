@@ -1052,6 +1052,47 @@ WindowWrapper.prototype = {
     this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
     return true;
   },
+
+  /* FireGestures commands */
+  goDoFGCommand: function(cmd)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      switch (cmd)
+      {
+      case "FireGestures:ScrollTop":
+        pluginObject.ScrollTop();
+        pluginObject.Focus();
+        break;
+      case "FireGestures:ScrollBottom":
+        pluginObject.ScrollBottom();
+        pluginObject.Focus();
+        break;
+      case "FireGestures:ScrollPageUp":
+        pluginObject.PageUp();
+        pluginObject.Focus();
+        break;
+      case "FireGestures:ScrollPageDown":
+        pluginObject.PageDown();
+        pluginObject.Focus();
+        break;
+      default:
+        return false;
+      }
+    }
+    catch (ex)
+    {
+      Utils.ERROR("goDoFGCommand(" + cmd + "): " + ex);
+      return false;
+    }
+    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    return true;
+  },
   /* called when original findbar issues a find */
   findText: function(text)
   {

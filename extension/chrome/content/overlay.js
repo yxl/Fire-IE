@@ -71,6 +71,7 @@ var gFireIE = null;
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
 
     initializeFindBarHooks();
+    initializeFGHooks();
   }
 
   function initializeFindBarHooks()
@@ -119,6 +120,19 @@ var gFireIE = null;
     //hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
     //hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
     //hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
+  }
+
+  // Fire Gestures support
+  function initializeFGHooks()
+  {
+    if (typeof(FireGestures)!="undefined" && typeof(FireGestures._performAction)=="function")
+    {
+      hookCode("FireGestures._performAction", /{/, "$& if (gFireIE.goDoFGCommand(arguments[1])) return;");
+    }
+    else
+    {
+      Utils.ERROR("FireGestures not detected.");
+    }
   }
 
   function hookCode(orgFunc, orgCode, myCode)

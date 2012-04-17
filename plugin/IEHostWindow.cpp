@@ -646,15 +646,6 @@ void CIEHostWindow::ViewPageSource()
 
 void CIEHostWindow::SendKey(WORD key)
 {
-	//this->Focus();
-	//INPUT inputs[2];
-	//inputs[1].type = INPUT_KEYBOARD;
-	//inputs[1].ki.wVk = key;
-	//inputs[1].ki.dwFlags = 0;
-	//inputs[2].type = INPUT_KEYBOARD;
-	//inputs[2].ki.wVk = key;
-	//inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
-	//SendInput(2, inputs, sizeof(INPUT));
 	SendMessageToDescendants(WM_KEYDOWN, (WPARAM)key, 0x00000001);
 	SendMessageToDescendants(WM_KEYUP, (WPARAM)key, 0xC0000001);
 }
@@ -667,6 +658,27 @@ void CIEHostWindow::ScrollPage(bool up)
 void CIEHostWindow::ScrollLine(bool up)
 {
 	SendKey(up ? VK_UP : VK_DOWN);
+}
+
+void CIEHostWindow::ScrollWhole(bool up)
+{
+	WORD key = up ? VK_HOME : VK_END;
+
+	this->Focus();
+	INPUT inputs[4];
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki.wVk = VK_CONTROL;
+	inputs[0].ki.dwFlags = 0;
+	inputs[1].type = INPUT_KEYBOARD;
+	inputs[1].ki.wVk = key;
+	inputs[1].ki.dwFlags = 0;
+	inputs[2].type = INPUT_KEYBOARD;
+	inputs[2].ki.wVk = key;
+	inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+	inputs[3].type = INPUT_KEYBOARD;
+	inputs[3].ki.wVk = VK_CONTROL;
+	inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+	SendInput(4, inputs, sizeof(INPUT));
 }
 
 CString CIEHostWindow::GetURL()

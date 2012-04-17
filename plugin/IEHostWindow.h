@@ -214,6 +214,7 @@ public:
 	void ViewPageSource();
 	void ScrollPage(bool up);
 	void ScrollLine(bool up);
+	void ScrollWhole(bool up);
 
 	// FindBar methods
 	void FBFindText(const CString& text);

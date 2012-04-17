@@ -370,6 +370,18 @@ namespace Plugin
 			pMainWindow->ScrollLine(false);
 			return true;
 		}
+		else if (name == NPI_ID(ScrollTop))
+		{
+			TRACE ("ScrollTop called!\n");
+			pMainWindow->ScrollWhole(true);
+			return true;
+		}
+		else if (name == NPI_ID(ScrollBottom))
+		{
+			TRACE ("ScrollBottom called!\n");
+			pMainWindow->ScrollWhole(false);
+			return true;
+		}
 		else if (name == NPI_ID(FBFindText))
 		{
 			TRACE ("FBFindText called!\n");
