@@ -125,7 +125,7 @@ var gFireIE = null;
   // Fire Gestures support
   function initializeFGHooks()
   {
-    if (typeof(FireGestures)!="undefined" && typeof(FireGestures._performAction)=="function")
+    if (typeof(FireGestures)!="undefined"  && FireGestures != null && typeof(FireGestures._performAction)=="function")
     {
       hookCode("FireGestures._performAction", /{/, "$& if (gFireIE.goDoFGCommand(arguments[1])) return;");
     }

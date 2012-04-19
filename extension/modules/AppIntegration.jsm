@@ -220,6 +220,22 @@ WindowWrapper.prototype = {
    */
   _installCookiePlugin: function()
   {
+    // Workaround for #35: Re-apply focus if URL is focused when cookie plugin finishes initialization
+    this.window.addEventListener("IECookiePluginInitialized", function()
+    {
+      let focused = this.window.document.commandDispatcher.focusedElement;
+      while (focused)
+      {
+        if (focused === this.window.gURLBar)
+        {
+          this.window.gURLBar.blur();
+          this.window.gURLBar.focus();
+          break;
+        }
+        focused = focused.parentNode;
+      }
+    }, false);
+  
     let doc = this.window.document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.hidden = true;
@@ -1386,7 +1402,6 @@ WindowWrapper.prototype = {
     // 通过模拟mousedown事件，支持FireGuestures手势
     if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
     {
-      Utils.ERROR(event.type);
       let evt = this.window.document.createEvent("MouseEvents");
       evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
       let container = this.getContainerPlugin().parentNode;
