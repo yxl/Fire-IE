@@ -1109,6 +1109,38 @@ WindowWrapper.prototype = {
     this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
     return true;
   },
+  /* MouseGestures commands */
+  goDoMGCommand: function(cmd)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      switch (cmd)
+      {
+      case "mgW_ScrollUp":
+        pluginObject.PageUp();
+        pluginObject.Focus();
+        break;
+      case "mgW_ScrollDown":
+        pluginObject.PageDown();
+        pluginObject.Focus();
+        break;
+      default:
+        return false;
+      }
+    }
+    catch (ex)
+    {
+      Utils.ERROR("goDoMGCommand(" + cmd + "): " + ex);
+      return false;
+    }
+    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    return true;
+  },
   /* called when original findbar issues a find */
   findText: function(text)
   {

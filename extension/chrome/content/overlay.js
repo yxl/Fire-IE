@@ -72,6 +72,7 @@ var gFireIE = null;
 
     initializeFindBarHooks();
     initializeFGHooks();
+    initializeMGHooks();
   }
 
   function initializeFindBarHooks()
@@ -135,6 +136,28 @@ var gFireIE = null;
     }
   }
 
+  // Mouse Gestures support
+  function initializeMGHooks()
+  {
+    if (typeof(mgGestureFunctions)!="undefined"  && mgGestureFunctions != null)
+    {
+      function hookMGFunction(name)
+      {
+        if (mgGestureFunctions[name])
+          hookCode("mgGestureFunctions." + name, /{/, "$& if (gFireIE.goDoMGCommand('" + name + "')) return;");
+      }
+      let functionList = ['mgW_ScrollDown', 'mgW_ScrollUp'];
+      for (let i = 0; i < functionList.length; i++)
+      {
+        hookMGFunction(functionList[i]);
+      }
+    }
+    else
+    {
+      Utils.ERROR("MouseGestures not detected.");
+    }
+  }
+
   function hookCode(orgFunc, orgCode, myCode)
   {
     try
@@ -146,6 +169,7 @@ var gFireIE = null;
       Utils.ERROR("Failed to hook function: " + orgFunc);
     }
   }
+
 
   /** 将attribute值V替换为myFunc+V*/
 
