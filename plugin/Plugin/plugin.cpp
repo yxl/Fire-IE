@@ -147,10 +147,11 @@ namespace Plugin
 		SetWindowLong(m_hWnd, GWL_STYLE, GetWindowLong(m_hWnd, GWL_STYLE)|WS_CLIPCHILDREN);
 		SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE)|WS_EX_CONTROLPARENT);
 
+		m_bInitialized = TRUE;
+
 		if (m_strId == _T("fireie-cookie-object"))
 			FireEvent(_T("IECookiePluginInitialized"), _T(""));
 
-		m_bInitialized = TRUE;
 		return TRUE;
 	}
 

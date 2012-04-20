@@ -18,6 +18,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "WindowMessageHook.h"
 #include "PluginApp.h"
 #include "IEHostWindow.h"
+#include "GestureHandler.h"
 
 namespace BrowserHook
 {
@@ -142,93 +143,84 @@ namespace BrowserHook
 
 			bool bShouldSwallow = false;
 
-			// Check if we should enable mouse guestures.
+			// Check if we should enable mouse gestures
 			if (WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST)
 			{
-				// Guesture start position
-				static CPoint s_ptStart(-1, -1);
-				// Whether we start a guesture
-				static BOOL s_bGuesturesEnabled = FALSE;
-				
-				// Current mouse position
-				CPoint ptCurrent(pMsg->lParam);
-
-				if (pMsg->message == WM_RBUTTONDOWN)
+				bool bShouldForward = false;
+				GestureHandler* triggeredHandler = NULL;
+				const std::vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
+				for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
+					iter != handlers.end(); ++iter)
 				{
-					// Prepare to start a guesture when the right mouse button is down.
-					s_ptStart = ptCurrent;
-					TRACE(_T("Down\n"));
-				}
-				else if (pMsg->message == WM_MOUSEMOVE && (pMsg->wParam & MK_RBUTTON) && s_ptStart.x != - 1)
-				{
-					TRACE(_T("Valid Mouse Move\n"));
-					// Check if we can start a gesture when we move the mouse with right button down.
-					if (!s_bGuesturesEnabled)
+					if ((*iter)->getState() == GS_Triggered)
 					{
-						CSize dist = ptCurrent - s_ptStart;
-						if (abs(dist.cx) > 10 || abs(dist.cy) > 10)
+						bShouldSwallow = true;
+						bShouldForward = true;
+						triggeredHandler = *iter;
+						break;
+					}
+				}
+
+				if (!triggeredHandler)
+				{
+					for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
+						iter != handlers.end(); ++iter)
+					{
+						MessageHandleResult res = (*iter)->handleMessage(pMsg);
+						bShouldSwallow = bShouldSwallow || (*iter)->shouldSwallow(res);
+						if (res == MHR_Triggered)
 						{
-							TRACE(_T("Trigger\n"));
-							// Forward the right button down message to firefox to enable guestures.
-							s_bGuesturesEnabled = TRUE;
+							triggeredHandler = *iter;
 							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 							if (hwndMessageTarget)
+								triggeredHandler->forwardAllTarget(pMsg->hwnd, hwndMessageTarget);
+							break;
+						}
+						else if (res == MHR_Canceled)
+						{
+							bool bShouldForwardBack = true;
+							for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
+								iter2 != handlers.end(); ++iter2)
 							{
-								CPoint pt(s_ptStart);
-								ClientToScreen(pMsg->hwnd, &pt);
-								ScreenToClient(hwndMessageTarget, &pt);
-								::PostMessage(hwndMessageTarget, WM_RBUTTONDOWN, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+								if ((*iter2)->getState() != GS_None)
+								{
+									bShouldForwardBack = false;
+									break;
+								}
+							}
+							if (bShouldForwardBack)
+							{
+								(*iter)->forwardAllOrigin(pMsg->hwnd);
+								for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
+									iter2 != handlers.end(); ++iter2)
+								{
+									(*iter2)->reset();
+								}
 							}
 						}
 					}
 				}
 				else
 				{
-					if (s_ptStart.x != -1) TRACE(_T("Up\n"));
-					if (s_ptStart.x != -1)
+					MessageHandleResult res = triggeredHandler->handleMessage(pMsg);
+					if (res == MHR_GestureEnd)
 					{
-						bShouldSwallow = true;
-						if (!s_bGuesturesEnabled)
+						for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
+							iter != handlers.end(); ++iter)
 						{
-
-							HWND hwnd = pIEHostWindow->GetSafeHwnd();
-							if (hwnd)
-							{
-								// must be send message in order to prevent recursion
-								::SendMessage(pMsg->hwnd, WM_RBUTTONDOWN, pMsg->wParam, MAKELPARAM(s_ptStart.x, s_ptStart.y));
-								::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
-							}
+							(*iter)->reset();
 						}
 					}
-					// Stop the guesture by releasing the right button or other actions.
-					s_bGuesturesEnabled = FALSE;
-					s_ptStart.x = s_ptStart.y = - 1;
 				}
 
-				bShouldSwallow = bShouldSwallow || (s_ptStart.x != -1);
-
-				if (!s_bGuesturesEnabled)
+				if (bShouldForward)
 				{
-					if (bShouldSwallow)
-						pMsg->message = WM_NULL;
-					goto Exit;
-				}
-
-				// Forward the mousemove message to let firefox track the guesture.
-				HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
-				if (hwndMessageTarget)
-				{
-					CPoint pt(ptCurrent);
-					ClientToScreen(pMsg->hwnd, &pt);
-					ScreenToClient(hwndMessageTarget, &pt);
-					::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
-
-					if (bShouldSwallow)
-						pMsg->message = WM_NULL;
-					goto Exit;
+					// Forward the mousemove message to let firefox track the guesture.
+					HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+					if (hwndMessageTarget)
+						GestureHandler::forwardTarget(pMsg, hwndMessageTarget);
 				}
 			}
-
 
 			if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
 			{

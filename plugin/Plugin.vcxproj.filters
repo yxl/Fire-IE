@@ -48,6 +48,12 @@
     <ClCompile Include="BrowserHook\HookMgr.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
+    <ClCompile Include="BrowserHook\GestureHandler.cpp">
+      <Filter>BrowserHook</Filter>
+    </ClCompile>
+    <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp">
+      <Filter>BrowserHook</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -118,6 +124,9 @@
       <Filter>BrowserHook</Filter>
     </ClInclude>
     <ClInclude Include="BrowserHook\HookMgr.h">
+      <Filter>BrowserHook</Filter>
+    </ClInclude>
+    <ClInclude Include="BrowserHook\GestureHandler.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
   </ItemGroup>

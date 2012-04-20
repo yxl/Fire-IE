@@ -19,7 +19,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 #include "IECtrl.h"
 #include <vector>
-#include <tuple>
 
 namespace Plugin
 {
