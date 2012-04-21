@@ -174,7 +174,7 @@ namespace BrowserHook
 							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 							if (hwndMessageTarget)
 							{
-								::SetFocus(hwndMessageTarget);
+								//::SetFocus(hwndMessageTarget);
 								triggeredHandler->forwardAllTarget(pMsg->hwnd, hwndMessageTarget);
 							}
 							break;
@@ -222,7 +222,7 @@ namespace BrowserHook
 					HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 					if (hwndMessageTarget)
 					{
-						::SetFocus(hwndMessageTarget);
+						//::SetFocus(hwndMessageTarget);
 						GestureHandler::forwardTarget(pMsg, hwndMessageTarget);
 					}
 				}
