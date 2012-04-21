@@ -53,9 +53,9 @@ namespace BrowserHook
 	public:
 		MessageHandleResult handleMessage(MSG*);
 		GestureState getState() const;
-		void forwardAllOrigin(HWND origin);
-		void forwardAllTarget(HWND origin, HWND target);
-		bool shouldSwallow(MessageHandleResult res) const;
+		virtual void forwardAllOrigin(HWND origin);
+		virtual void forwardAllTarget(HWND origin, HWND target);
+		virtual bool shouldSwallow(MessageHandleResult res) const;
 		void reset();
 
 		static const std::vector<GestureHandler*>& getHandlers();

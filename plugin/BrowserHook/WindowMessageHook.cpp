@@ -173,7 +173,10 @@ namespace BrowserHook
 							triggeredHandler = *iter;
 							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 							if (hwndMessageTarget)
+							{
+								::SetFocus(hwndMessageTarget);
 								triggeredHandler->forwardAllTarget(pMsg->hwnd, hwndMessageTarget);
+							}
 							break;
 						}
 						else if (res == MHR_Canceled)
@@ -218,7 +221,10 @@ namespace BrowserHook
 					// Forward the mousemove message to let firefox track the guesture.
 					HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
 					if (hwndMessageTarget)
+					{
+						::SetFocus(hwndMessageTarget);
 						GestureHandler::forwardTarget(pMsg, hwndMessageTarget);
+					}
 				}
 			}
 

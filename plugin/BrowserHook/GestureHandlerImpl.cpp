@@ -41,6 +41,8 @@ namespace BrowserHook
 		MessageHandleResult handleMessageInternal(MSG* msg);
 	public:
 		RockerHandler();
+		bool shouldSwallow(MessageHandleResult) const;
+		void forwardAllOrigin(HWND origin);
 	};
 
 	class WheelHandler: public GestureHandler
@@ -177,6 +179,21 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg)
 		break;
 	}
 	return MHR_NotHandled;
+}
+
+bool RockerHandler::shouldSwallow(MessageHandleResult res) const
+{
+	bool bRet = GestureHandler::shouldSwallow(res);
+	// don't swallow anything related to left->right gesture
+	if (m_bLeft) bRet = false;
+	return bRet;
+}
+
+void RockerHandler::forwardAllOrigin(HWND hOrigin)
+{
+	// also don't forward anything to origin if gesture is left->right
+	if (m_bLeft) return;
+	GestureHandler::forwardAllOrigin(hOrigin);
 }
 
 WheelHandler::WheelHandler() :
