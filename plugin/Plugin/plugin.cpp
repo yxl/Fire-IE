@@ -47,6 +47,7 @@
 #include "npfunctions.h"
 #include "ScriptablePluginObject.h"
 #include "json/json.h"
+#include "OS.h"
 
 namespace Plugin
 {
@@ -213,6 +214,11 @@ namespace Plugin
 
 	void CPlugin::SetStatus(const CString& text)
 	{
+		// Temporarily disable status text display in Windows XP
+		// to solve flashes of various web pages
+		if (Utils::OS::GetVersion() == Utils::OS::WINXP)
+			return;
+
 		if (m_pNPInstance)
 		{
 			char* message = CStringToNPStringCharacters(text);
