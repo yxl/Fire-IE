@@ -265,23 +265,28 @@ namespace BrowserHook
 	{
 		USES_CONVERSION_EX;
 
-		HANDLE hSnapshot;
+		HANDLE hSnapshot = INVALID_HANDLE_VALUE;
 		MODULEENTRY32 me = {sizeof(MODULEENTRY32)};
 
 		hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE,0);
-
-		BOOL bOk = Module32First(hSnapshot,&me);
-		while (bOk) 
+		if (INVALID_HANDLE_VALUE != hSnapshot)
 		{
-			if (ShouldHookModule(T2CA_EX(me.szModule, sizeof(me.szModule)/(TCHAR))))
+
+			BOOL bOk = Module32First(hSnapshot,&me);
+			while (bOk) 
 			{
-				if (!m_hookMgr.IsModuleHooked(me.hModule))
+				if (ShouldHookModule(T2CA_EX(me.szModule, sizeof(me.szModule)/(TCHAR))))
 				{
-					TRACE(_T("[AtlDepHook] New module is hooked! %s\n"), me.szModule);
+					if (!m_hookMgr.IsModuleHooked(me.hModule))
+					{
+						TRACE(_T("[AtlDepHook] New module is hooked! %s\n"), me.szModule);
+					}
+					InstallHooksForNewModule(me.hModule);
 				}
-				InstallHooksForNewModule(me.hModule);
+				bOk = Module32Next(hSnapshot,&me);
 			}
-			bOk = Module32Next(hSnapshot,&me);
+
+			CloseHandle(hSnapshot);
 		}
 	}
 
