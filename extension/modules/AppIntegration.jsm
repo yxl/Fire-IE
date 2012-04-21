@@ -1229,6 +1229,8 @@ WindowWrapper.prototype = {
       {
         return false;
       }
+      if (findbar._findMode != findbar.FIND_NORMAL)
+        findbar._setFindCloseTimeout();
       let text = findbar.getElement('findbar-textbox').value;
       findbar._enableFindButtons(text.length != 0);
       if (text.length == 0)
@@ -1238,9 +1240,10 @@ WindowWrapper.prototype = {
       }
       let status = pluginObject.FBLastFindStatus;
       switch (status)
-
       {
       case "notfound":
+        if (findbar.hidden) // should bring up findbar if not found
+          findbar.startFind();
         findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_NOTFOUND);
         break;
       case "found":
@@ -1258,6 +1261,26 @@ WindowWrapper.prototype = {
     catch (ex)
     {
       Utils.ERROR("updateFindBarUI(): " + ex);
+      return false;
+    }
+  },
+  resetFindBarUI: function(findbar)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      let text = findbar.getElement('findbar-textbox').value;
+      findbar._enableFindButtons(text.length != 0);
+      findbar._updateStatusUI(findbar.nsITypeAheadFind.FIND_FOUND);
+      return true;
+    }
+    catch (ex)
+    {
+      Utils.ERROR("resetFindBarUI(): " + ex);
       return false;
     }
   },

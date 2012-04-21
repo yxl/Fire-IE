@@ -89,7 +89,7 @@ var gFireIE = null;
     // disabled, in order to support F3 findNext/Prev
     //hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
-    hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.updateFindBarUI(gFindBar);", true);
+    hookAttr("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);", true);
 
     hookCode("gFindBar._getInitialSelection", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(this._selectionMaxLen); if (gFireIE_value != null) return gFireIE_value; }");
 
