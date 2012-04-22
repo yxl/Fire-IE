@@ -65,7 +65,7 @@ namespace BrowserHook
 		}
 		return TRUE;
 	}
- 
+
 	// The message loop of Mozilla does not handle accelertor keys.
 	// IOleInplaceActivateObject requires MSG be filtered by its TranslateAccellerator() method.
 	// So we install a hook to do the dirty hack.
@@ -82,7 +82,7 @@ namespace BrowserHook
 			MSG * pMsg = reinterpret_cast<MSG *>(lParam);
 			HWND hwnd = pMsg->hwnd;
 
-			// here we only handle keyboard messages and right button messages
+			// here we only handle keyboard messages and mouse button messages
 			if (!(WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)  && !(WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST) || hwnd == NULL)
 			{
 				goto Exit;
@@ -110,138 +110,138 @@ namespace BrowserHook
 				goto Exit;
 			}
 
-			// Forward the key press messages to firefox
-			if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
+			HWND hwndFirefox = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
+			if (hwndFirefox == NULL)
 			{
-				BOOL bAltPressed = HIBYTE(GetKeyState(VK_MENU)) != 0;
-				BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
-				BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
-
-				// Send Alt key up message to Firefox, so that use could select the main window menu by press alt key.
-				if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
-				{
-					bAltPressed = TRUE;
-				}
-
-				TRACE(_T("WindowMessageHook::GetMsgProc MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
-				if (bCtrlPressed || bAltPressed || (pMsg->wParam >= VK_F1 && pMsg->wParam <= VK_F24))
-				{
-					int nKeyCode = static_cast<int>(pMsg->wParam);
-					if (FilterFirefoxKey(nKeyCode, bAltPressed, bCtrlPressed, bShiftPressed))
-					{
-						HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
-						if (hwndMessageTarget)
-						{
-							::SetFocus(hwndMessageTarget);
-							::PostMessage(hwndMessageTarget, pMsg->message, pMsg->wParam, pMsg->lParam);
-							pMsg->message = WM_NULL;
-							goto Exit;
-						}
-					}
-				}
+				goto Exit;
 			}
 
 			bool bShouldSwallow = false;
 
+			if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
+			{
+				// Forward the key press messages to firefox
+				if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
+				{
+					if (ForwardFirefoxKeyMessage(hwndFirefox, pMsg))
+					{
+						bShouldSwallow = true;
+					}
+				}
+				if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
+				{
+					bShouldSwallow = true;
+				}
+			}
+
 			// Check if we should enable mouse gestures
 			if (WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST)
 			{
-				bool bShouldForward = false;
-				GestureHandler* triggeredHandler = NULL;
-				const std::vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
-				for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
-					iter != handlers.end(); ++iter)
+				if (ForwardFirefoxMouseMessage(hwndFirefox, pMsg))
 				{
-					if ((*iter)->getState() == GS_Triggered)
-					{
-						bShouldSwallow = true;
-						bShouldForward = true;
-						triggeredHandler = *iter;
-						break;
-					}
+					bShouldSwallow = true;
 				}
+			}
 
-				if (!triggeredHandler)
+
+			if (bShouldSwallow)
+			{
+				TRACE (_T("WindowMessageHook::GetMsgProc SWALLOWED.\n"));
+				pMsg->message = WM_NULL;
+			}
+		}
+Exit:
+		return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
+	}
+
+	BOOL WindowMessageHook::ForwardFirefoxKeyMessage(HWND hwndFirefox, MSG* pMsg)
+	{
+		BOOL bAltPressed = HIBYTE(GetKeyState(VK_MENU)) != 0;
+		BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
+		BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
+
+		// Send Alt key up message to Firefox, so that use could select the main window menu by press alt key.
+		if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
+		{
+			bAltPressed = TRUE;
+		}
+
+		TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
+		if (bCtrlPressed || bAltPressed || (pMsg->wParam >= VK_F1 && pMsg->wParam <= VK_F24))
+		{
+			int nKeyCode = static_cast<int>(pMsg->wParam);
+			if (FilterFirefoxKey(nKeyCode, bAltPressed, bCtrlPressed, bShiftPressed))
+			{
+				::SetFocus(hwndFirefox);
+				::PostMessage(hwndFirefox, pMsg->message, pMsg->wParam, pMsg->lParam);
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
+	BOOL WindowMessageHook::ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg)
+	{
+		const std::vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
+
+		// Forward the mouse message if any guesture handler is triggered.
+		for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
+			iter != handlers.end(); ++iter)
+		{
+			if ((*iter)->getState() == GS_Triggered)
+			{
+				GestureHandler* triggeredHandler = *iter;
+				MessageHandleResult res = triggeredHandler->handleMessage(pMsg);
+				if (res == MHR_GestureEnd)
 				{
 					for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
 						iter != handlers.end(); ++iter)
 					{
-						MessageHandleResult res = (*iter)->handleMessage(pMsg);
-						bShouldSwallow = bShouldSwallow || (*iter)->shouldSwallow(res);
-						if (res == MHR_Triggered)
-						{
-							triggeredHandler = *iter;
-							HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
-							if (hwndMessageTarget)
-							{
-								//::SetFocus(hwndMessageTarget);
-								triggeredHandler->forwardAllTarget(pMsg->hwnd, hwndMessageTarget);
-							}
-							break;
-						}
-						else if (res == MHR_Canceled)
-						{
-							bool bShouldForwardBack = true;
-							for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
-								iter2 != handlers.end(); ++iter2)
-							{
-								if ((*iter2)->getState() != GS_None)
-								{
-									bShouldForwardBack = false;
-									break;
-								}
-							}
-							if (bShouldForwardBack)
-							{
-								(*iter)->forwardAllOrigin(pMsg->hwnd);
-								for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
-									iter2 != handlers.end(); ++iter2)
-								{
-									(*iter2)->reset();
-								}
-							}
-						}
+						(*iter)->reset();
 					}
 				}
-				else
-				{
-					MessageHandleResult res = triggeredHandler->handleMessage(pMsg);
-					if (res == MHR_GestureEnd)
-					{
-						for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
-							iter != handlers.end(); ++iter)
-						{
-							(*iter)->reset();
-						}
-					}
-				}
-
-				if (bShouldForward)
-				{
-					// Forward the mousemove message to let firefox track the guesture.
-					HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(pIEHostWindow->GetSafeHwnd());
-					if (hwndMessageTarget)
-					{
-						//::SetFocus(hwndMessageTarget);
-						GestureHandler::forwardTarget(pMsg, hwndMessageTarget);
-					}
-				}
+				// Forward the mousemove message to let firefox track the guesture.
+				GestureHandler::forwardTarget(pMsg, hwndFirefox);
+				return TRUE;
 			}
-
-			if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
-			{
-				pMsg->message = WM_NULL;
-			}
-
-			if (bShouldSwallow)
-				pMsg->message = WM_NULL;
 		}
-Exit:
-		if (((MSG*)lParam)->message == WM_NULL)
+
+		// Check if we could trigger a mouse guesture.
+		bool bShouldSwallow = false;
+		for (std::vector<GestureHandler*>::const_iterator iter = handlers.begin();
+			iter != handlers.end(); ++iter)
 		{
-			TRACE (_T("SWALLOWED.\n"));
+			MessageHandleResult res = (*iter)->handleMessage(pMsg);
+			bShouldSwallow = bShouldSwallow || (*iter)->shouldSwallow(res);
+			if (res == MHR_Triggered)
+			{
+				(*iter)->forwardAllTarget(pMsg->hwnd, hwndFirefox);
+				break;
+			}
+			else if (res == MHR_Canceled)
+			{
+				bool bShouldForwardBack = true;
+				for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
+					iter2 != handlers.end(); ++iter2)
+				{
+					if ((*iter2)->getState() != GS_None)
+					{
+						bShouldForwardBack = false;
+						break;
+					}
+				}
+				if (bShouldForwardBack)
+				{
+					(*iter)->forwardAllOrigin(pMsg->hwnd);
+					for (std::vector<GestureHandler*>::const_iterator iter2 = handlers.begin();
+						iter2 != handlers.end(); ++iter2)
+					{
+						(*iter2)->reset();
+					}
+				}
+			}
 		}
-		return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
+		return bShouldSwallow;
 	}
 
 	BOOL WindowMessageHook::FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed)
@@ -265,9 +265,9 @@ Exit:
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
 				return FALSE;
-				// The above shortcut keys will be handle by IE control only and won't be sent to Firefox
+
+				// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
-			//case 'F': // Ctrl+F, Find
 			case 'C': // Ctrl+C, Copy
 			case 'V': // Ctrl+V, Paste
 			case 'X': // Ctrl+X, Cut

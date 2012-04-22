@@ -39,6 +39,8 @@ namespace BrowserHook
 		static LRESULT CALLBACK GetMsgProc(int code, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK CallWndRetProc(int nCode, WPARAM wParam, LPARAM lParam);
 		static BOOL FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed);
+		static BOOL ForwardFirefoxKeyMessage(HWND hwndFirefox, MSG* pMsg);
+		static BOOL ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg);
 	private:
 		// WH_GETMESSAGE hook.
 		static HHOOK s_hhookGetMessage;
