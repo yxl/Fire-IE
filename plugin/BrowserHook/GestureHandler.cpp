@@ -60,21 +60,12 @@ void GestureHandler::forwardAllTarget(HWND hOrigin, HWND hTarget)
 {
 	_ASSERT(hOrigin != NULL && hTarget != NULL);
 	for (std::vector<MSG>::iterator iter = m_vMessages.begin();
-		iter != m_vMessages.end() && (iter + 1) != m_vMessages.end(); ++iter)
+		iter != m_vMessages.end(); ++iter)
 	{
 		CPoint pt(iter->lParam);
 		ClientToScreen(hOrigin, &pt);
 		ScreenToClient(hTarget, &pt);
 		::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
-	}
-	size_t size;
-	if (size = m_vMessages.size())
-	{
-		MSG* msg = &m_vMessages[size - 1];
-		CPoint pt(msg->lParam);
-		ClientToScreen(hOrigin, &pt);
-		ScreenToClient(hTarget, &pt);
-		::PostMessage(hTarget, msg->message, msg->wParam, MAKELPARAM(pt.x, pt.y));
 	}
 	m_vMessages.clear();
 }

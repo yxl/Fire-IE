@@ -183,10 +183,9 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg)
 
 bool RockerHandler::shouldSwallow(MessageHandleResult res) const
 {
-	bool bRet = GestureHandler::shouldSwallow(res);
 	// don't swallow anything related to left->right gesture
-	if (m_bLeft) bRet = false;
-	return bRet;
+	if (m_bLeft) return false;
+	return GestureHandler::shouldSwallow(res);
 }
 
 void RockerHandler::forwardAllOrigin(HWND hOrigin)
