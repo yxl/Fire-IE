@@ -943,7 +943,19 @@ WindowWrapper.prototype = {
     let data = null;
     Services.obs.notifyObservers(subject, topic, data);
   },
-
+  
+  // whether we should handle textbox commands, e.g. cmd_paste
+  _shouldHandleTextboxCommand: function()
+  {
+    let focused = this.window.document.commandDispatcher.focusedElement;
+    if (focused == null) return true;
+    let plainTagName = focused.tagName;
+    let index = plainTagName.lastIndexOf(':');
+    if (index != -1)
+      plainTagName = plainTagName.substring(index + 1);
+    plainTagName = plainTagName.toLowerCase();
+    return plainTagName != "input" && plainTagName != "textarea";
+  },
   /** plugin方法的调用*/
   goDoCommand: function(cmd)
   {
@@ -992,21 +1004,33 @@ WindowWrapper.prototype = {
         pluginObject.Find();
         break;
       case "cmd_cut":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.Cut();
         break;
       case "cmd_copy":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.Copy();
         break;
       case "cmd_paste":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.Paste();
         break;
       case "cmd_selectAll":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.SelectAll();
         break;
       case "cmd_undo":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.Undo();
         break;
       case "cmd_redo":
+        if (!this._shouldHandleTextboxCommand())
+          return false;
         pluginObject.Redo();
         break;
       case "Focus":

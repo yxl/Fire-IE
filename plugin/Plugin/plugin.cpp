@@ -214,9 +214,10 @@ namespace Plugin
 
 	void CPlugin::SetStatus(const CString& text)
 	{
-		// Temporarily disable status text display in Windows XP
+		// Temporarily disable status text display in Windows XP/2003
 		// to solve flashes of various web pages
-		if (Utils::OS::GetVersion() == Utils::OS::WINXP)
+		if (Utils::OS::GetVersion() == Utils::OS::WINXP
+			|| Utils::OS::GetVersion() == Utils::OS::WIN2003)
 			return;
 
 		if (m_pNPInstance)
