@@ -953,7 +953,8 @@ WindowWrapper.prototype = {
     let index = plainTagName.lastIndexOf(':');
     if (index != -1)
       plainTagName = plainTagName.substring(index + 1);
-    return plainTagName.toLowerCase() != "input";
+    plainTagName = plainTagName.toLowerCase();
+    return plainTagName != "input" && plainTagName != "textarea";
   },
   /** plugin方法的调用*/
   goDoCommand: function(cmd)
