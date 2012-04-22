@@ -182,6 +182,9 @@ Exit:
 
 	BOOL WindowMessageHook::ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg)
 	{
+		// Forward plain move messages to let firefox handle full screen auto-hide or tabbar auto-arrange
+		bool bShouldForward = pMsg->message == WM_MOUSEMOVE && pMsg->wParam == 0;
+
 		const std::vector<GestureHandler*>& handlers = GestureHandler::getHandlers();
 
 		// Forward the mouse message if any guesture handler is triggered.
@@ -216,6 +219,7 @@ Exit:
 			if (res == MHR_Triggered)
 			{
 				(*iter)->forwardAllTarget(pMsg->hwnd, hwndFirefox);
+				bShouldForward = false;
 				break;
 			}
 			else if (res == MHR_Canceled)
@@ -240,6 +244,10 @@ Exit:
 					}
 				}
 			}
+		}
+		if (bShouldForward)
+		{
+			GestureHandler::forwardTarget(pMsg, hwndFirefox);
 		}
 		return bShouldSwallow;
 	}
@@ -285,12 +293,14 @@ Exit:
 		{
 			return TRUE;
 		}
-		else // shift-F3 works in FF...
+		else
 		{
 			switch (keyCode)
 			{
-			case VK_F3:
+			case VK_F3: // find next, with shift: find prev
 				return TRUE;
+			case VK_F11: // full screen
+				return !bShiftPressed;
 			default:
 				return FALSE;
 			}
