@@ -76,7 +76,16 @@ namespace BrowserHook
 	// to DispatchMessage.
 	// Just before PeekMessage returns, our hook procedure is called.
 	LRESULT CALLBACK WindowMessageHook::GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam) 
-	{ 
+	{
+		static bool s_bReentranceGuard = false;
+
+		if (s_bReentranceGuard) // Prevent reentrance problems caused by SendMessage
+		{
+			TRACE(_T("WindowMessageHook::GetMsgProc WARNING: reentered.\n"));
+			return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam);
+		}
+		s_bReentranceGuard = true;
+
 		if (nCode >= 0 && wParam == PM_REMOVE && lParam)
 		{
 			MSG * pMsg = reinterpret_cast<MSG *>(lParam);
@@ -151,6 +160,7 @@ namespace BrowserHook
 			}
 		}
 Exit:
+		s_bReentranceGuard = false;
 		return CallNextHookEx(s_hhookGetMessage, nCode, wParam, lParam); 
 	}
 
