@@ -23,7 +23,7 @@ using namespace BrowserHook;
 std::vector<GestureHandler*> GestureHandler::s_vHandlers;
 
 GestureHandler::GestureHandler() :
-	m_state(GS_None)
+	m_state(GS_None), m_bEnabled(true)
 { }
 
 GestureHandler::~GestureHandler()
@@ -88,6 +88,9 @@ bool GestureHandler::shouldSwallow(MessageHandleResult res) const
 
 MessageHandleResult GestureHandler::handleMessage(MSG* msg)
 {
+	if (!m_bEnabled)
+		return MHR_NotHandled;
+
 	MessageHandleResult res = this->handleMessageInternal(msg);
 	if (shouldKeepTrack(res))
 	{
@@ -107,4 +110,54 @@ void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
 	ClientToScreen(pMsg->hwnd, &pt);
 	ScreenToClient(hTarget, &pt);
 	::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+}
+
+void GestureHandler::setEnabled(bool bEnabled)
+{
+	if (!bEnabled && m_bEnabled)
+	{
+		reset();
+	}
+	if (bEnabled != m_bEnabled)
+	{
+		TRACE((bEnabled ? _T("Enabled ") : _T("Disabled ")) + this->getName() + _T(" gesture handler.\n"));
+	}
+	m_bEnabled = bEnabled;
+}
+
+bool GestureHandler::getEnabled() const
+{
+	return m_bEnabled;
+}
+
+void GestureHandler::setEnabledGestures(const CString aStrGestureNames[], int iCount)
+{
+	const std::vector<GestureHandler*>& vHandlers = getHandlers();
+
+	// initialize states to false
+	std::vector<bool> vStates;
+	vStates.reserve(vHandlers.size());
+	for (size_t iState = 0; iState < vHandlers.size(); iState++)
+	{
+		vStates.push_back(false);
+	}
+
+	// enable those handlers specified in the array
+	for (int iName = 0; iName < iCount; iName++)
+	{
+		CString strName = aStrGestureNames[iName];
+		for (size_t iHandler = 0; iHandler < vHandlers.size(); iHandler++)
+		{
+			if (vHandlers[iHandler]->getName() == strName)
+			{
+				vStates[iHandler] = true;
+				break;
+			}
+		}
+	}
+
+	for (size_t iState = 0; iState < vHandlers.size(); iState++)
+	{
+		vHandlers[iState]->setEnabled(vStates[iState]);
+	}
 }

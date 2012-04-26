@@ -62,7 +62,10 @@ namespace Plugin
 		NPI_DEF(LineDown);
 		NPI_DEF(ScrollTop);
 		NPI_DEF(ScrollBottom);
+		NPI_DEF(ScrollLeft);
+		NPI_DEF(ScrollRight);
 
+		// findbar methods
 		NPI_DEF(FBFindText); // FB stands for firefox FindBar
 		NPI_DEF(FBEndFindText);
 		NPI_DEF(FBFindAgain);
@@ -70,6 +73,9 @@ namespace Plugin
 		NPI_DEF(FBToggleHighlight);
 		NPI_DEF(FBToggleCase);
 		NPI_DEF(FBSetFindText);
+
+		// util methods
+		NPI_DEF(SetEnabledGestures);
 
 		// properties
 		NPI_DEF(URL);
@@ -122,6 +128,8 @@ namespace Plugin
 			NPN_GSI_M(LineDown);
 			NPN_GSI_M(ScrollTop);
 			NPN_GSI_M(ScrollBottom);
+			NPN_GSI_M(ScrollLeft);
+			NPN_GSI_M(ScrollRight);
 			NPN_GSI_M(FBFindText);
 			NPN_GSI_M(FBEndFindText);
 			NPN_GSI_M(FBFindAgain);
@@ -129,6 +137,7 @@ namespace Plugin
 			NPN_GSI_M(FBToggleHighlight);
 			NPN_GSI_M(FBToggleCase);
 			NPN_GSI_M(FBSetFindText);
+			NPN_GSI_M(SetEnabledGestures);
 
 			// properties
 			NPN_GSI_P(URL);

@@ -140,6 +140,9 @@ namespace Plugin
 
 		/** Set the security info icon */
 		void OnSetSecureLockIcon(const CString& description);
+
+		/** Utility plugin intialized */
+		void OnUtilsPluginInit();
 	protected:
 
 		NPP m_pNPInstance;

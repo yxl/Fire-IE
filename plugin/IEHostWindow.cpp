@@ -35,8 +35,8 @@ CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
 CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
-CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_CookieIEWindowMap;
-CCriticalSection CIEHostWindow::s_csCookieIEWindowMap;
+CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
+CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
 
 // CIEHostWindow dialog
@@ -124,22 +124,22 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 	return pIEHostWindow;
 }
 
-void CIEHostWindow::AddCookieIEWindow(CIEHostWindow *pWnd)
+void CIEHostWindow::AddUtilsIEWindow(CIEHostWindow *pWnd)
 {
-	s_csCookieIEWindowMap.Lock();
-	s_CookieIEWindowMap.Add(pWnd->GetSafeHwnd(), pWnd);
-	s_csCookieIEWindowMap.Unlock();
+	s_csUtilsIEWindowMap.Lock();
+	s_UtilsIEWindowMap.Add(pWnd->GetSafeHwnd(), pWnd);
+	s_csUtilsIEWindowMap.Unlock();
 }
 
 void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 {
 	HWND hwnd = NULL;
-	s_csCookieIEWindowMap.Lock();
-	if (s_CookieIEWindowMap.GetSize() > 0)
+	s_csUtilsIEWindowMap.Lock();
+	if (s_UtilsIEWindowMap.GetSize() > 0)
 	{
-		hwnd = s_CookieIEWindowMap.GetValueAt(0)->GetSafeHwnd();
+		hwnd = s_UtilsIEWindowMap.GetValueAt(0)->GetSafeHwnd();
 	}
-	s_csCookieIEWindowMap.Unlock();
+	s_csUtilsIEWindowMap.Unlock();
 	if (hwnd)
 	{
 		SetFirefoxCookieParams params = {strURL, strCookie};
@@ -215,9 +215,9 @@ void CIEHostWindow::UninitIE()
 	s_IEWindowMap.Remove(GetSafeHwnd());
 	s_csIEWindowMap.Unlock();
 
-	s_csCookieIEWindowMap.Lock();
-	s_CookieIEWindowMap.Remove(GetSafeHwnd());
-	s_csCookieIEWindowMap.Unlock();
+	s_csUtilsIEWindowMap.Lock();
+	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
+	s_csUtilsIEWindowMap.Unlock();
 }
 
 
@@ -239,6 +239,11 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 		{
 			SetFirefoxCookieParams* pData = reinterpret_cast<SetFirefoxCookieParams*>(lParam);
 			OnSetFirefoxCookie(pData->strURL, pData->strCookie);
+		}
+		break;
+	case WPARAM_UTILS_PLUGIN_INIT:
+		{
+			OnUtilsPluginInit();
 		}
 		break;
 	case WPARAM_NAVIGATE:
@@ -662,24 +667,12 @@ void CIEHostWindow::ScrollLine(bool up)
 
 void CIEHostWindow::ScrollWhole(bool up)
 {
-	WORD key = up ? VK_HOME : VK_END;
+	SendKey(up ? VK_HOME : VK_END);
+}
 
-	//this->Focus();
-	//INPUT inputs[4];
-	//inputs[0].type = INPUT_KEYBOARD;
-	//inputs[0].ki.wVk = VK_CONTROL;
-	//inputs[0].ki.dwFlags = 0;
-	//inputs[1].type = INPUT_KEYBOARD;
-	//inputs[1].ki.wVk = key;
-	//inputs[1].ki.dwFlags = 0;
-	//inputs[2].type = INPUT_KEYBOARD;
-	//inputs[2].ki.wVk = key;
-	//inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
-	//inputs[3].type = INPUT_KEYBOARD;
-	//inputs[3].ki.wVk = VK_CONTROL;
-	//inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
-	//SendInput(4, inputs, sizeof(INPUT));
-	SendKey(key);
+void CIEHostWindow::ScrollHorizontal(bool left)
+{
+	SendKey(left ? VK_LEFT : VK_RIGHT);
 }
 
 CString CIEHostWindow::GetURL()
@@ -931,6 +924,14 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 	varinput.vt = VT_EMPTY;
 	CComVariant varoutput;
 	pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
+}
+
+void CIEHostWindow::OnUtilsPluginInit()
+{
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnUtilsPluginInit();
+	}
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)

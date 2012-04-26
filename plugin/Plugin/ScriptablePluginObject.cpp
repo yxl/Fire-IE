@@ -18,6 +18,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "ScriptablePluginObject.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
+#include "GestureHandler.h"
 
 namespace Plugin
 {
@@ -382,6 +383,18 @@ namespace Plugin
 			pMainWindow->ScrollWhole(false);
 			return true;
 		}
+		else if (name == NPI_ID(ScrollLeft))
+		{
+			TRACE ("ScrollLeft called!\n");
+			pMainWindow->ScrollHorizontal(true);
+			return true;
+		}
+		else if (name == NPI_ID(ScrollRight))
+		{
+			TRACE ("ScrollRight called!\n");
+			pMainWindow->ScrollHorizontal(false);
+			return true;
+		}
 		else if (name == NPI_ID(FBFindText))
 		{
 			TRACE ("FBFindText called!\n");
@@ -460,6 +473,42 @@ namespace Plugin
 
 			pMainWindow->FBSetFindText(text);
 			return true;
+		}
+		else if (name == NPI_ID(SetEnabledGestures))
+		{
+			TRACE ("SetEnabledGestures called!\n");
+			if (argCount < 1) return false;
+
+			if (NPVARIANT_IS_OBJECT(args[0]))
+			{
+				NPObject* npvNameArray = NPVARIANT_TO_OBJECT(args[0]);
+				NPVariant npvLength;
+				if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetStringIdentifier("length"), &npvLength))
+				{
+					if (NPVARIANT_IS_INT32(npvLength))
+					{
+						int length = NPVARIANT_TO_INT32(npvLength);
+						if (length >= 0 && length <= 10)
+						{
+							CString* strGestures = new CString[length ? length : 1];
+
+							for (int i = 0; i < length; i++)
+							{
+								NPVariant npvName;
+								if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetIntIdentifier(i), &npvName) && NPVARIANT_IS_STRING(npvName))
+								{
+									strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
+								}
+							}
+
+							BrowserHook::GestureHandler::setEnabledGestures(strGestures, length);
+			
+							delete[] strGestures;
+							return true;
+						}
+					}
+				}
+			}
 		}
 		return false;
 	}

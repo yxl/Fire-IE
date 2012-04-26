@@ -60,10 +60,10 @@ namespace Plugin
 		m_pIEHostWindow(NULL)
 	{
 		USES_CONVERSION_EX;
-		// <html:embed id='fireie-cookie-object' type='application/fireie' hidden='true' width='0' height='0'/>
+		// <html:embed id='fireie-utils-object' type='application/fireie' hidden='true' width='0' height='0'/>
 		// argc == 5
 		// argn[0] = "id",                   argn[1] = "type",               argn[2] = "hidden", argn[3] = "width", argn[4] = "height"
-		// argn[0] = "fireie-cookie-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
+		// argn[0] = "fireie-utils-object", argn[1] = "application/fireie", argn[2] = "true",   argn[3]="0",       argn[4]="0"
 
 		// Get Plugin ID
 		int i = 0;
@@ -133,9 +133,9 @@ namespace Plugin
 			return FALSE;
 		}
 
-		if (m_strId == _T("fireie-cookie-object"))
+		if (m_strId == _T("fireie-utils-object"))
 		{
-			CIEHostWindow::AddCookieIEWindow(m_pIEHostWindow);
+			CIEHostWindow::AddUtilsIEWindow(m_pIEHostWindow);
 		}
 
 		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
@@ -150,8 +150,14 @@ namespace Plugin
 
 		m_bInitialized = TRUE;
 
-		if (m_strId == _T("fireie-cookie-object"))
-			FireEvent(_T("IECookiePluginInitialized"), _T(""));
+		if (m_strId == _T("fireie-utils-object"))
+		{
+			// cannot directly fire the event since the plugin is not fully constructed 
+			// - we are still in the initializer
+			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
+			if (hwnd)
+				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_UTILS_PLUGIN_INIT, 0);
+		}
 
 		return TRUE;
 	}
@@ -631,5 +637,12 @@ namespace Plugin
 	{
 		CString strEventType = _T("IESetSecureLockIcon");
 		FireEvent(strEventType, description);
+	}
+
+	void CPlugin::OnUtilsPluginInit()
+	{
+		CString strEventType = _T("IEUtilsPluginInitialized");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
 	}
 }

@@ -28,9 +28,10 @@ var gFireIE = null;
   let jsm = {};
   Cu.import(baseURL.spec + "AppIntegration.jsm", jsm);
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
+  Cu.import(baseURL.spec + "GesturePrefObserver.jsm", jsm);
   let
   {
-    AppIntegration, Utils
+    AppIntegration, Utils, GesturePrefObserver
   } = jsm;
   AppIntegration.addWindow(window);
   gFireIE = AppIntegration.getWrapperForWindow(window);
@@ -71,8 +72,13 @@ var gFireIE = null;
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
 
     initializeFindBarHooks();
-    initializeFGHooks();
-    initializeMGHooks();
+    gFireIE.fireAfterInit(function()
+    {
+      initializeFGHooks();
+      initializeMGRHooks();
+      initializeAiOGHooks();
+      GesturePrefObserver.setEnabledGestures();
+    }, this, []);
   }
 
   function initializeFindBarHooks()
@@ -123,38 +129,54 @@ var gFireIE = null;
     //hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
   }
 
-  // Fire Gestures support
+  // FireGestures support
   function initializeFGHooks()
   {
-    if (typeof(FireGestures)!="undefined"  && FireGestures != null && typeof(FireGestures._performAction)=="function")
+    if (typeof(FireGestures) == "object"  && FireGestures != null && typeof(FireGestures._performAction)=="function")
     {
+      Utils.LOG("Fire Gestures detected.");
+      GesturePrefObserver.setGestureExtension("FireGestures");
       hookCode("FireGestures._performAction", /{/, "$& if (gFireIE.goDoFGCommand(arguments[1])) return;");
-    }
-    else
-    {
-      Utils.ERROR("FireGestures not detected.");
     }
   }
 
-  // Mouse Gestures support
-  function initializeMGHooks()
+  // MouseGesturesRedox support
+  function initializeMGRHooks()
   {
-    if (typeof(mgGestureFunctions)!="undefined"  && mgGestureFunctions != null)
+    if (typeof(mgGestureFunctions) == "object"  && mgGestureFunctions != null)
     {
-      function hookMGFunction(name)
+      Utils.LOG("Mouse Gestures Redox detected.");
+      GesturePrefObserver.setGestureExtension("MouseGesturesRedox");
+      function hookMGRFunction(name)
       {
         if (mgGestureFunctions[name])
-          hookCode("mgGestureFunctions." + name, /{/, "$& if (gFireIE.goDoMGCommand('" + name + "')) return;");
+          hookCode("mgGestureFunctions." + name, /{/, "$& if (gFireIE.goDoMGRCommand('" + name + "')) return;");
       }
-      let functionList = ['mgW_ScrollDown', 'mgW_ScrollUp'];
+      let functionList = ['mgW_ScrollDown', 'mgW_ScrollUp', 'mgW_ScrollLeft', 'mgW_ScrollRight'];
       for (let i = 0; i < functionList.length; i++)
       {
-        hookMGFunction(functionList[i]);
+        hookMGRFunction(functionList[i]);
       }
     }
-    else
+  }
+
+  // All-in-One Gestures support
+  function initializeAiOGHooks()
+  {
+    if (typeof(aioActionTable) == "object" && aioActionTable != null)
     {
-      Utils.ERROR("MouseGestures not detected.");
+      Utils.LOG("All-in-One Gestures detected.");
+      GesturePrefObserver.setGestureExtension("All-in-One Gestures");
+      function hookAiOGFunction(name, action)
+      {
+        if (typeof(eval(name)) == "function")
+          hookCode(name, /{/, "$& if (gFireIE.goDoAiOGCommand('" + action + "', arguments)) return;");
+      }
+      let functionList = [["aioVScrollDocument", "vscroll"]];
+      for (let i = 0; i < functionList.length; i++)
+      {
+        hookAiOGFunction(functionList[i][0], functionList[i][1]);
+      }
     }
   }
 

@@ -55,6 +55,7 @@ namespace UserMessage
 	static const WPARAM WPARAM_FORWARD = 5;
 	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
 	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
+	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
 
 }
 
@@ -80,7 +81,7 @@ public:
 	/** Get CIEHostWindow object by its embeded Internet Explorer_Server window handle*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 
-	static void AddCookieIEWindow(CIEHostWindow *pWnd);
+	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
 
@@ -123,11 +124,11 @@ protected:
 	/** Ensure the operations on s_NewIEWindowMap are thread safe. */
 	static CCriticalSection s_csNewIEWindowMap;
 
-	/** Plugins used to transfer cookies to the Firfox */
-	static CSimpleMap<HWND, CIEHostWindow *> s_CookieIEWindowMap;
+	/** Plugins used to do utilities like transferring cookies to Firfox */
+	static CSimpleMap<HWND, CIEHostWindow *> s_UtilsIEWindowMap;
 
-	/** Ensure the operations on s_CookieIEWindowMap are thread safe. */
-	static CCriticalSection s_csCookieIEWindowMap;
+	/** Ensure the operations on s_UtilsIEWindowMap are thread safe. */
+	static CCriticalSection s_csUtilsIEWindowMap;
 
 	/** IE controls' UserAgent */
 	static CString s_strIEUserAgent;
@@ -214,6 +215,7 @@ public:
 	void ScrollPage(bool up);
 	void ScrollLine(bool up);
 	void ScrollWhole(bool up);
+	void ScrollHorizontal(bool left);
 
 	// FindBar methods
 	void FBFindText(const CString& text);
@@ -250,6 +252,7 @@ public:
 	void OnStatusChanged(const CString& message);
 	void OnCloseIETab();
 	void OnSetSecureLockIcon(int state);
+	void OnUtilsPluginInit();
 
 protected:
 	BOOL m_bCanBack;

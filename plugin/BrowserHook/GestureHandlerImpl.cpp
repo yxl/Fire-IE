@@ -29,6 +29,7 @@ namespace BrowserHook
 	protected:
 		MessageHandleResult handleMessageInternal(MSG* msg);
 	public:
+		CString getName() const { return _T("trace"); }
 		TraceHandler();
 	};
 
@@ -40,6 +41,7 @@ namespace BrowserHook
 	protected:
 		MessageHandleResult handleMessageInternal(MSG* msg);
 	public:
+		CString getName() const { return _T("rocker"); }
 		RockerHandler();
 		bool shouldSwallow(MessageHandleResult) const;
 		void forwardAllOrigin(HWND origin);
@@ -52,6 +54,7 @@ namespace BrowserHook
 	protected:
 		MessageHandleResult handleMessageInternal(MSG* msg);
 	public:
+		CString getName() const { return _T("wheel"); }
 		WheelHandler();
 	};
 }

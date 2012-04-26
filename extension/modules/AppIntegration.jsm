@@ -131,6 +131,17 @@ let AppIntegration = {
     if (wrapper.window == wnd) return wrapper;
 
     return null;
+  },
+
+  /**
+   * Retrieves any available utils plugin object
+   */
+  getAnyUtilsPlugin: function()
+  {
+    if (wrappers.length == 0)
+      return null;
+
+    return wrappers[0].getUtilsPlugin();
   }
 };
 
@@ -187,6 +198,12 @@ WindowWrapper.prototype = {
   isUpdating: false,
 
   /**
+   * Whether the utils plugin is initialized
+   *
+   */
+  isPluginInitialized: false,
+  
+  /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
    */
@@ -208,7 +225,7 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    this._installCookiePlugin();
+    this._installUtilsPlugin();
 
     this._registerEventListeners();
 
@@ -216,12 +233,12 @@ WindowWrapper.prototype = {
   },
 
   /**
-   * Install the plugin used to sync cookie
+   * Install the plugin used to do utility things like sync cookie
    */
-  _installCookiePlugin: function()
+  _installUtilsPlugin: function()
   {
-    // Workaround for #35: Re-apply focus if URL is focused when cookie plugin finishes initialization
-    this.window.addEventListener("IECookiePluginInitialized", function()
+    // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
+    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function()
     {
       let focused = this.window.document.commandDispatcher.focusedElement;
       while (focused)
@@ -234,12 +251,13 @@ WindowWrapper.prototype = {
         }
         focused = focused.parentNode;
       }
-    }, false);
-  
+      this.isPluginInitialized = true;
+    }), false);
+
     let doc = this.window.document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.hidden = true;
-    embed.setAttribute("id", Utils.cookiePluginId);
+    embed.setAttribute("id", Utils.utilsPluginId);
     embed.setAttribute("type", "application/fireie");
     let mainWindow = this.E("main-window");
     mainWindow.appendChild(embed);
@@ -468,6 +486,17 @@ WindowWrapper.prototype = {
           return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
         }
       }
+    }
+    return null;
+  },
+
+  /** Get the IE utility plugin object */
+  getUtilsPlugin: function()
+  {
+    let obj = this.E(Utils.utilsPluginId);
+    if (obj)
+    {
+      return (obj.wrappedJSObject ? obj.wrappedJSObject : obj);
     }
     return null;
   },
@@ -1051,6 +1080,7 @@ WindowWrapper.prototype = {
         break;
       case "FindAgain":
         pluginObject.FBFindAgain();
+
         break;
       case "FindPrevious":
         pluginObject.FBFindPrevious();
@@ -1133,8 +1163,8 @@ WindowWrapper.prototype = {
     this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
     return true;
   },
-  /* MouseGestures commands */
-  goDoMGCommand: function(cmd)
+  /* MouseGesturesRedox commands */
+  goDoMGRCommand: function(cmd)
   {
     try
     {
@@ -1153,13 +1183,62 @@ WindowWrapper.prototype = {
         pluginObject.PageDown();
         pluginObject.Focus();
         break;
+      case "mgW_ScrollLeft":
+        pluginObject.ScrollLeft();
+        pluginObject.Focus();
+        break;
+      case "mgW_ScrollRight":
+        pluginObject.ScrollRight();
+        pluginObject.Focus();
+        break;
       default:
         return false;
       }
     }
     catch (ex)
     {
-      Utils.ERROR("goDoMGCommand(" + cmd + "): " + ex);
+      Utils.ERROR("goDoMGRCommand(" + cmd + "): " + ex);
+      return false;
+    }
+    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    return true;
+  },
+  /* All-in-One Gestrues commands */
+  goDoAiOGCommand: function(cmd, args)
+  {
+    try
+    {
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject == null)
+      {
+        return false;
+      }
+      switch (cmd)
+      {
+      case "vscroll":
+        if (args[0])
+        {
+          if (args[1] > 0)
+            pluginObject.PageDown();
+          else if (args[1] < 0)
+            pluginObject.PageUp();
+        }
+        else
+        {
+          if (args[1] > 0)
+            pluginObject.ScrollBottom();
+          else
+            pluginObject.ScrollTop();
+        }
+        pluginObject.Focus();
+        break;
+      default:
+        return false;
+      }
+    }
+    catch (ex)
+    {
+      Utils.ERROR("goDoAiOGCommand(" + cmd + "): " + ex);
       return false;
     }
     this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
@@ -1402,6 +1481,20 @@ WindowWrapper.prototype = {
   setAutoSwitchMenuItem: function()
   {
     this.E("fireie-menu-item-autoswitch-disabled").setAttribute("checked", !Prefs.autoswitch_enabled);
+  },
+  fireAfterInit: function(callback, self, arguments)
+  {
+    if (this.isPluginInitialized)
+    {
+      callback.apply(self, arguments);
+    }
+    else
+    {
+      this.window.addEventListener("IEUtilsPluginInitialized", function()
+      {
+        callback.apply(self, arguments);
+      }, false);
+    }
   },
   // 响应内核切换按钮点击事件
   clickSwitchButton: function(e)

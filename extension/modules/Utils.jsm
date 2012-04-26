@@ -234,9 +234,9 @@ var Utils = {
     return "fireie-object";
   },
 
-  get cookiePluginId()
+  get utilsPluginId()
   {
-    return "fireie-cookie-object";
+    return "fireie-utils-object";
   },
 
   convertToUTF8: function(data)

@@ -40,6 +40,7 @@ namespace BrowserHook
 		static std::vector<GestureHandler*> s_vHandlers;
 	protected:
 		GestureState m_state;
+		bool m_bEnabled;
 
 		/* keep track of swallowed messages */
 		std::vector<MSG> m_vMessages;
@@ -48,17 +49,21 @@ namespace BrowserHook
 		void setState(GestureState);
 
 		virtual MessageHandleResult handleMessageInternal(MSG*) = 0;
-		
 		virtual ~GestureHandler();
 	public:
+		virtual CString getName() const = 0;
 		MessageHandleResult handleMessage(MSG*);
 		GestureState getState() const;
+		void setEnabled(bool);
+		bool getEnabled() const;
 		virtual void forwardAllOrigin(HWND origin);
 		virtual void forwardAllTarget(HWND origin, HWND target);
 		virtual bool shouldSwallow(MessageHandleResult res) const;
 		void reset();
 
 		static const std::vector<GestureHandler*>& getHandlers();
+		static void setEnabledGestures(const CString aStrGestureNames[], int iCount);
+
 		static void forwardOrigin(MSG* msg);
 		static void forwardTarget(MSG* msg, HWND target);
 	};
