@@ -169,13 +169,21 @@ function WindowWrapper(window)
   if (!isPluginListRefreshed)
   {
     /**
-     * navigator.plugins方法将使得最新安装的插件可用，更新相关数组，如 plugins 数组，并可选重新装入包含插件的已打开文档。
-     * 你可以使用下列语句调用该方法：
-     * navigator.plugins.refresh(true)
-     * navigator.plugins.refresh(false)
-     * 如果你给定 true 的话，refresh 将在使得新安装的插件可用的同时，重新装入所有包含有嵌入对象(EMBED 标签)的文档。
-     * 如果你给定 false 的话，该方法则只会刷新 plugins 数组，而不会重新载入任何文档。
-     * 当用户安装插件后，该插件将不会可用，除非调用了 refresh，或者用户关闭并重新启动了 Navigator。 
+     * The plugins array has its own method, refresh. This method makes newly
+     * installed plug-ins available, updates related arrays such as the plugins
+     * array, and optionally reloads open documents that contain plug-ins. You
+     * call this method with one of the following statements:
+     *
+     *   navigator.plugins.refresh(true)
+     *   navigator.plugins.refresh(false)
+     *
+     * If you supply true, refresh refreshes the plugins array to make newly
+     * installed plug-ins available and reloads all open documents that contain
+     * embedded objects (EMBED tag). If you supply false, it refreshes the
+     * plugins array, but does not reload open documents.
+     *
+     * When the user installs a plug-in, that plug-in is not available until
+     * refresh is called or the user closes and restarts Navigator.
      */
     window.navigator.plugins.refresh(false);
     isPluginListRefreshed = true;
@@ -360,7 +368,7 @@ WindowWrapper.prototype = {
 
       // Update the engine button on the URL bar
       urlbarButton = this.E("fireie-urlbar-switch");
-      urlbarButton.disabled = Utils.isFirefoxOnly(url); // Firefox特有页面禁止内核切换
+      urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
       urlbarButton.style.visibility = "visible";
       let fxURL = urlbarButton.getAttribute("fx-icon-url");
       let ieURL = urlbarButton.getAttribute("ie-icon-url");
@@ -568,7 +576,7 @@ WindowWrapper.prototype = {
     if (aTab && aTab.localName == "tab")
     {
 
-      // 实际浏览的URL
+      // getURL retrieves the actual URL from, maybe, container url
       let url = this.getURL(aTab);
 
       let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
@@ -611,7 +619,7 @@ WindowWrapper.prototype = {
         if (aTab.linkedBrowser) aTab.linkedBrowser.loadURIWithFlags("about:blank", flags);
       }
 
-      // firefox特有地址只允许使用Firefox内核
+      // firefox-only urls can only be handled by firefox(gecko) engine
       if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
       {
         url = Utils.toContainerUrl(url);
@@ -694,7 +702,7 @@ WindowWrapper.prototype = {
   {
     url = url.trim();
 
-    // 访问firefox特有地址时, 只允许使用firefox内核
+    // When accessing firefox-only urls, only allow firefox(gecko) engine
     if (Utils.isFirefoxOnly(url))
     {
       return url;
@@ -744,7 +752,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** 响应页面正在加载的消息*/
+  /** Handler for IE progress change event */
   _onIEProgressChange: function(event)
   {
     let progress = parseInt(event.detail);
@@ -753,7 +761,7 @@ WindowWrapper.prototype = {
     this._updateInterface();
   },
 
-  /** 响应新开IE标签的消息*/
+  /** Handler for IE new tab event*/
   _onIENewTab: function(event)
   {
     let data = JSON.parse(event.detail);
@@ -768,7 +776,7 @@ WindowWrapper.prototype = {
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
   },
 
-  /** 响应获取到IE UserAgent的消息 */
+  /** Handler for receiving IE UserAgent from the plugin object */
   _onIEUserAgentReceived: function(event)
   {
     let userAgent = event.detail;
@@ -985,223 +993,295 @@ WindowWrapper.prototype = {
     plainTagName = plainTagName.toLowerCase();
     return plainTagName != "input" && plainTagName != "textarea";
   },
-  /** plugin方法的调用*/
-  goDoCommand: function(cmd)
+  /** Generate a method that calls plugin functions according to the given command */
+  _genDoPluginCommandFunc: function(funcName, commands, successCallback)
   {
-    try
+    this[funcName] = function(cmd)
     {
-      let pluginObject = this.getContainerPlugin();
-      if (pluginObject == null)
+      try
       {
+        let pluginObject = this.getContainerPlugin();
+        if (pluginObject == null)
+        {
+          return false;
+        }
+        let func = commands[cmd];
+        if (func)
+        {
+          let ret = func.call(this, pluginObject);
+          if (successCallback && ret)
+          {
+            successCallback.call(this);
+          }
+          return ret;
+        }
+        else throw cmd;
+      }
+      catch (ex)
+      {
+        Utils.ERROR(funcName + "(" + cmd + "): " + ex);
         return false;
       }
-      switch (cmd)
+    };
+  },
+  /** calls plugin methods */
+  goDoCommand: function(cmd)
+  {
+    let funcName = "goDoCommand";
+    this._genDoPluginCommandFunc(funcName,
+    {
+      "Back": function(pluginObject)
       {
-      case "Back":
         if (!pluginObject.CanBack)
         {
           return false;
         }
         pluginObject.Back();
-        break;
-      case "Forward":
+        return true;
+      },
+      "Forward": function(pluginObject)
+      {
         if (!pluginObject.CanForward)
         {
           return false;
         }
         pluginObject.Forward();
-        break;
-      case "Stop":
+        return true;
+      },
+      "Stop": function(pluginObject)
+      {
         pluginObject.Stop();
-        break;
-      case "Refresh":
+        return true;
+      },
+      "Refresh": function(pluginObject)
+      {
         pluginObject.Refresh();
-        break;
-      case "SaveAs":
+        return true;
+      },
+      "SaveAs": function(pluginObject)
+      {
         pluginObject.SaveAs();
-        break;
-      case "Print":
+        return true;
+      },
+      "Print": function(pluginObject)
+      {
         pluginObject.Print();
-        break;
-      case "PrintSetup":
+        return true;
+      },
+      "PrintSetup": function(pluginObject)
+      {
         pluginObject.PrintSetup();
-        break;
-      case "PrintPreview":
+        return true;
+      },
+      "PrintPreview": function(pluginObject)
+      {
         pluginObject.PrintPreview();
-        break;
-      case "Find":
+        return true;
+      },
+      "Find": function(pluginObject)
+      {
         pluginObject.Find();
-        break;
-      case "cmd_cut":
+        return true;
+      },
+      "cmd_cut": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Cut();
-        break;
-      case "cmd_copy":
+        return true;
+      },
+      "cmd_copy": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Copy();
-        break;
-      case "cmd_paste":
+        return true;
+      },
+      "cmd_paste": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Paste();
-        break;
-      case "cmd_selectAll":
+        return true;
+      },
+      "cmd_selectAll": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.SelectAll();
-        break;
-      case "cmd_undo":
+        return true;
+      },
+      "cmd_undo": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Undo();
-        break;
-      case "cmd_redo":
+        return true;
+      },
+      "cmd_redo": function(pluginObject)
+      {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Redo();
-        break;
-      case "Focus":
+        return true;
+      },
+      "Focus": function(pluginObject)
+      {
         pluginObject.Focus();
-        break;
-      case "HandOverFocus":
+        return true;
+      },
+      "HandOverFocus": function(pluginObject)
+      {
         pluginObject.HandOverFocus();
-        break;
-      case "Zoom":
+        return true;
+      },
+      "Zoom": function(pluginObject)
+      {
         let zoomLevel = this.getZoomLevel();
         pluginObject.Zoom(zoomLevel);
-        break;
-      case "DisplaySecurityInfo":
+        return true;
+      },
+      "DisplaySecurityInfo": function(pluginObject)
+      {
         pluginObject.DisplaySecurityInfo();
-        break;
-      case "ViewPageSource":
+        return true;
+      },
+      "ViewPageSource": function(pluginObject)
+      {
         pluginObject.ViewPageSource();
-        break;
-      case "FindAgain":
+        return true;
+      },
+      "FindAgain": function(pluginObject)
+      {
         pluginObject.FBFindAgain();
-
-        break;
-      case "FindPrevious":
+        return true;
+      },
+      "FindPrevious": function(pluginObject)
+      {
         pluginObject.FBFindPrevious();
-        break;
-      case "ToggleHighlightOn":
+        return true;
+      },
+      "ToggleHighlightOn": function(pluginObject)
+      {
         pluginObject.FBToggleHighlight(true);
-        break;
-      case "ToggleHighlightOff":
+        return true;
+      },
+      "ToggleHighlightOff": function(pluginObject)
+      {
         pluginObject.FBToggleHighlight(false);
-        break;
-      case "ToggleCaseOn":
+        return true;
+      },
+      "ToggleCaseOn": function(pluginObject)
+      {
         pluginObject.FBToggleCase(true);
-        break;
-      case "ToggleCaseOff":
+        return true;
+      },
+      "ToggleCaseOff": function(pluginObject)
+      {
         pluginObject.FBToggleCase(false);
-        break;
-      case "PageUp":
+        return true;
+      },
+      "PageUp": function(pluginObject)
+      {
         pluginObject.PageUp();
-        break;
-      case "PageDown":
+        return true;
+      },
+      "PageDown": function(pluginObject)
+      {
         pluginObject.PageDown();
-        break;
-      case "LineUp":
+        return true;
+      },
+      "LineUp": function(pluginObject)
+      {
         pluginObject.LineUp();
-        break;
-      case "LineDown":
+        return true;
+      },
+      "LineDown": function(pluginObject)
+      {
         pluginObject.LineDown();
-        break;
-      default:
-        throw cmd;
-        break;
+        return true;
       }
-    }
-    catch (ex)
+    },
+    function()
     {
-      Utils.ERROR("goDoCommand(" + cmd + "): " + ex);
-      return false;
-    }
-    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    return true;
+      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    });
+    return this[funcName](cmd);
   },
 
   /* FireGestures commands */
   goDoFGCommand: function(cmd)
   {
-    try
+    let funcName = "goDoFGCommand";
+    this._genDoPluginCommandFunc(funcName,
     {
-      let pluginObject = this.getContainerPlugin();
-      if (pluginObject == null)
+      "FireGestures:ScrollTop": function(pluginObject)
       {
-        return false;
-      }
-      switch (cmd)
-      {
-      case "FireGestures:ScrollTop":
         pluginObject.ScrollTop();
         pluginObject.Focus();
-        break;
-      case "FireGestures:ScrollBottom":
+        return true;
+      },
+      "FireGestures:ScrollBottom": function(pluginObject)
+      {
         pluginObject.ScrollBottom();
         pluginObject.Focus();
-        break;
-      case "FireGestures:ScrollPageUp":
+        return true;
+      },
+      "FireGestures:ScrollPageUp": function(pluginObject)
+      {
         pluginObject.PageUp();
         pluginObject.Focus();
-        break;
-      case "FireGestures:ScrollPageDown":
+        return true;
+      },
+      "FireGestures:ScrollPageDown": function(pluginObject)
+      {
         pluginObject.PageDown();
         pluginObject.Focus();
-        break;
-      default:
-        return false;
+        return true;
       }
-    }
-    catch (ex)
+    },
+    function()
     {
-      Utils.ERROR("goDoFGCommand(" + cmd + "): " + ex);
-      return false;
-    }
-    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    return true;
+      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    });
+    return this[funcName](cmd);
   },
   /* MouseGesturesRedox commands */
   goDoMGRCommand: function(cmd)
   {
-    try
+    let funcName = "goDoMGRCommand";
+    this._genDoPluginCommandFunc(funcName,
     {
-      let pluginObject = this.getContainerPlugin();
-      if (pluginObject == null)
+      "mgW_ScrollUp": function(pluginObject)
       {
-        return false;
-      }
-      switch (cmd)
-      {
-      case "mgW_ScrollUp":
         pluginObject.PageUp();
         pluginObject.Focus();
-        break;
-      case "mgW_ScrollDown":
+        return true;
+      },
+      "mgW_ScrollDown": function(pluginObject)
+      {
         pluginObject.PageDown();
         pluginObject.Focus();
-        break;
-      case "mgW_ScrollLeft":
+        return true;
+      },
+      "mgW_ScrollLeft": function(pluginObject)
+      {
         pluginObject.ScrollLeft();
         pluginObject.Focus();
-        break;
-      case "mgW_ScrollRight":
+        return true;
+      },
+      "mgW_ScrollRight": function(pluginObject)
+      {
         pluginObject.ScrollRight();
         pluginObject.Focus();
-        break;
-      default:
-        return false;
+        return true;
       }
-    }
-    catch (ex)
+    },
+    function()
     {
-      Utils.ERROR("goDoMGRCommand(" + cmd + "): " + ex);
-      return false;
-    }
-    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    return true;
+      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    });
+    return this[funcName](cmd);
   },
   /* All-in-One Gestrues commands */
   goDoAiOGCommand: function(cmd, args)
@@ -1496,16 +1576,16 @@ WindowWrapper.prototype = {
       }, false);
     }
   },
-  // 响应内核切换按钮点击事件
+  // Handler for click event on engine switch button
   clickSwitchButton: function(e)
   {
-    // 左键或中键点击切换内核
+    // Right/Middle click switches the engine
     if (e.button <= 1 && !e.target.disabled)
     {
       this.switchEngine();
     }
 
-    // 右键点击显示选项菜单
+    // Right click pops up the context menu
     else if (e.button == 2)
     {
       this.E("fireie-switch-button-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
@@ -1521,7 +1601,7 @@ WindowWrapper.prototype = {
 
 
   /**
-   * 由于IE不支持Text Zoom, 只考虑Full Zoom
+   * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
   getZoomLevel: function()
   {
@@ -1531,7 +1611,7 @@ WindowWrapper.prototype = {
   },
 
   /**
-   * 由于IE不支持Text Zoom, 只考虑Full Zoom
+   * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
   _setZoomLevel: function(value)
   {
@@ -1539,7 +1619,7 @@ WindowWrapper.prototype = {
     docViewer.fullZoom = value;
   },
 
-  /** 加载或显示页面时更新界面*/
+  /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
     this._updateInterface();
@@ -1550,7 +1630,7 @@ WindowWrapper.prototype = {
     if (!tab) return;
 
     //
-    // 检查是否需要设置ZoomLevel
+    // Check if we have to set ZoomLevel
     //  
     let zoomLevelParams = Utils.getTabAttributeJSON(tab, 'zoom');
     if (zoomLevelParams)
@@ -1561,17 +1641,17 @@ WindowWrapper.prototype = {
   },
 
   /**
-   * 响应界面大小变化事件
+   * Handler for the resize event of the window
    */
   _onResize: function(e)
   {
-    // Resize可能是由Zoom引起的，所以这里需要调用Zoom方法
+    // Resize may be caused by Zoom
     this.goDoCommand("Zoom");
   },
 
   _onMouseDown: function(event)
   {
-    // 通过模拟mousedown事件，支持FireGuestures手势
+    // Simulate mousedown events to support gesture extensions like FireGuestures
     if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
     {
       let evt = this.window.document.createEvent("MouseEvents");
