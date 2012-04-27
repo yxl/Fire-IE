@@ -52,12 +52,28 @@ let GesturePrefObserver = {
   gestureBranchObserver: null,
 
   /**
+   * Set of individual prefs to observe
+   */
+  prefObserveSet: {},
+
+  /**
    * Retrieve the (any) utils plugin object
    */
   _getUtilsPlugin: function()
   {
     // since we don't have any window handles, we'll ask for one
     return AppIntegration.getAnyUtilsPlugin();
+  },
+
+  /**
+   * build prefObserveSet from an array
+   */
+  _buildPrefObserveSet: function(list)
+  {
+    for (let i = 0; i < list.length; i++)
+    {
+      this.prefObserveSet[list[i]] = true;
+    }
   },
   
   /**
@@ -69,12 +85,15 @@ let GesturePrefObserver = {
     {
     case "FireGestures":
       this.gestureBranch = Services.prefs.getBranch("extensions.firegestures.");
+      this._buildPrefObserveSet(["mousegesture", "trigger_button", "rockergesture", "wheelgesture"]);
       break;
     case "MouseGesturesRedox":
       this.gestureBranch = Services.prefs.getBranch("mozgest.");
+      this._buildPrefObserveSet(["enableStrokes", "mousebutton", "lefthanded", "enableRockers", "enableWheelRockers"]);
       break;
     case "All-in-One Gestures":
       this.gestureBranch = Services.prefs.getBranch("allinonegest.");    
+      this._buildPrefObserveSet(["mouse", "mousebuttonpref", "rocking", "wheelscrolling"]);
       break;
     default:
       break;
@@ -91,7 +110,7 @@ let GesturePrefObserver = {
          */
         observe: function(subject, topic, data)
         {
-          if (topic == "nsPref:changed")
+          if (topic == "nsPref:changed" && self.prefObserveSet[data])
             self.setEnabledGestures();
         },
         
