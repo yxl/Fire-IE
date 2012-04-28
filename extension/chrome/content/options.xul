@@ -27,10 +27,11 @@ windowtype="fireie:options">
         <vbox flex="1">
           <groupbox>
             <caption label="&fireie.options.switch.caption;" />
-            <hbox align="center">
+            <vbox>
               <checkbox label="&fireie.options.switch.handleurl;"
               id="handleurl" />
-            </hbox>
+              <checkbox label="&fireie.options.switch.disableAutoSwitch;" id="disableAutoSwitch" />
+            </vbox>
           </groupbox>
           <!-- Sets Shortcut key -->
           <groupbox id="shortcut">
@@ -103,8 +104,10 @@ windowtype="fireie:options">
                   <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
                 </hbox>
               </radiogroup>
+              <label id="statusBarLabel">&fireie.options.ui.statusBarLabel;</label>
+              <checkbox label="&fireie.options.ui.showStatusText;" id="showStatusText" />
             </vbox>
-          </groupbox>          
+          </groupbox>
         </vbox>
       </tabpanel>
       <!-- IE Compatibility Mode -->

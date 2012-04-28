@@ -109,6 +109,13 @@ namespace Plugin
 		double GetZoomLevel();
 
 		/**
+		 * Whether we should show status ourselves, i.e. not through NPN_Status
+		 * This is mainly due to the rendering bug in XP/2003 that makes pages flash
+		 * when rapidly rendering the status text
+		 */
+		bool ShouldShowStatusOurselves();
+
+		/**
 		 * Sets Firefox Cookie by firing a JavaScript event.
 		 */
 		void SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader);

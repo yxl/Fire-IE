@@ -66,7 +66,18 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme") reloadPrefs();
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" 
+     || name == "shortcut_modifiers" || name == "currentTheme")
+    {
+      reloadPrefs();
+    }
+    if (name == "showStatusText")
+    {
+      wrappers.forEach(function(wrapper)
+      {
+        wrapper.updateIEStatusText();
+      });
+    }
   });
   RuleNotifier.addListener(function(action)
   {
@@ -142,6 +153,24 @@ let AppIntegration = {
       return null;
 
     return wrappers[0].getUtilsPlugin();
+  },
+
+  /**
+   * Determines whether we should handle status messages ourselves
+   */
+  shouldShowStatusOurselves: function()
+  {
+    let plugin = this.getAnyUtilsPlugin();
+    if (plugin)
+    {
+      let ret = plugin.ShouldShowStatusOurselves;
+      if (typeof(ret) != "undefined") // in case utility plugin not fully loaded yet
+      {
+        this.shouldShowStatusOurselves = function() ret;
+        return ret;
+      }
+    }
+    return false;
   }
 };
 
@@ -301,6 +330,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this._onIEUserAgentReceived), false);
     this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
+    this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -345,18 +375,19 @@ WindowWrapper.prototype = {
         }
       }
 
-      // udpate current tab's favicon
       if (pluginObject)
       {
+        // udpate current tab's favicon
         let faviconURL = pluginObject.FaviconURL;
         if (faviconURL && faviconURL != "")
         {
           Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
         }
+        // update current tab's secure lock info
+        this.checkIdentity();
+        // update status text
+        this.updateIEStatusText();
       }
-
-      // update current tab's secure lock info
-      if (pluginObject) this.checkIdentity();
 
       // Update the star button indicating whether current page is bookmarked.
       this.window.PlacesStarButton.updateState();
@@ -505,6 +536,24 @@ WindowWrapper.prototype = {
     if (obj)
     {
       return (obj.wrappedJSObject ? obj.wrappedJSObject : obj);
+    }
+    return null;
+  },
+
+  /** Get the status bar element */
+  getStatusBar: function(aTab)
+  {
+    let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
+    if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
+    {
+      if (aBrowser.contentDocument)
+      {
+        let obj = aBrowser.contentDocument.getElementById(Utils.statusBarId);
+        if (obj)
+        {
+          return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
+        }
+      }
     }
     return null;
   },
@@ -804,7 +853,6 @@ WindowWrapper.prototype = {
    * Sets the secure info icon
    */
   _setSecureLockIcon: function(info)
-
   {
     let self = this.gIdentityHandler;
     if (!self._identityBox) return;
@@ -860,6 +908,49 @@ WindowWrapper.prototype = {
     identityIconLabel.parentNode.collapsed = icon_label ? false : true;
 
     self._mode = classname;
+  },
+
+  /**
+   * Sets the status text (for XP/2003 only)
+   */
+  _onIEStatusChanged: function(event)
+  {
+    this.updateIEStatusText();
+  },
+
+  updateIEStatusText: function()
+  {
+    try
+    {
+      if (!AppIntegration.shouldShowStatusOurselves()) return;
+      
+      let pluginObject = this.getContainerPlugin();
+      if (!pluginObject) return;
+      
+      let statusBar = this.getStatusBar();
+      if (!statusBar) return;
+      
+      if (Prefs.showStatusText)
+      {
+        let event = this.window.gBrowser.contentDocument.createEvent("Event");
+        event.initEvent("SetStatusText", false, false);
+        event.statusText = pluginObject.StatusText;
+        statusBar.dispatchEvent(event);
+      }
+      else if (!statusBar.hidden && !Prefs.showStatusText)
+      {
+        // event to notify content doc to hide status text
+        Utils.ERROR("should hide");
+        let event = this.window.gBrowser.contentDocument.createEvent("Event");
+        event.initEvent("SetStatusText", false, false);
+        event.statusText = "";
+        statusBar.dispatchEvent(event);
+      }
+    }
+    catch (ex)
+    {
+      Utils.ERROR("updateIEStatusText: " + ex);
+    }
   },
 
   /**
@@ -1015,7 +1106,7 @@ WindowWrapper.prototype = {
           }
           return ret;
         }
-        else throw cmd;
+        else return false;
       }
       catch (ex)
       {

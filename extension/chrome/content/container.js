@@ -46,6 +46,8 @@ let FireIEContainer = {};
   {
     window.removeEventListener("load", init, false);
 
+    E(Utils.statusBarId).hidden = true;
+
     let container = E('container');
     if (!container)
     {
@@ -148,6 +150,8 @@ let FireIEContainer = {};
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
+    E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
+    E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
   }
 
   function unregisterEventHandler()
@@ -156,6 +160,8 @@ let FireIEContainer = {};
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
+    E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
+    E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
   }
 
 
@@ -192,10 +198,77 @@ let FireIEContainer = {};
     }
   }
 
+  /** Sets the status text */
+  function onSetStatusText(event)
+  {
+    let statusbar = E(Utils.statusBarId);
+    let statustext = event.statusText;
+    let pretext = "";
+    if (statusbar.firstChild)
+    {
+      pretext = statusbar.firstChild.textContent;
+      if (statustext != pretext)
+        statusbar.removeChild(statusbar.firstChild);
+    }
+    if (statustext == pretext) return;
+    
+    if (statustext.length > 0)
+    {
+      statusbar.appendChild(document.createTextNode(statustext));
+      statusbar.hidden = false;
+    }
+    
+    if (statusbar.dataset.hideTimeout)
+      window.clearTimeout(statusbar.dataset.hideTimeout);
+    if (statusbar.hidden == false && !isLinkStatus(statustext))
+    {
+      statusbar.dataset.hideTimeout = window.setTimeout(function()
+      {
+        hideStatusBar();
+      }, statustext.length > 0 ? 5000 : 1000);
+    }
+  }
+
+  function onStatusMouseMove(event)
+  {
+    let statusbar = E(Utils.statusBarId);
+    statusbar.setAttribute("mirrored", statusbar.getAttribute("mirrored") == "true" ? "false" : "true");
+    if (!statusbar.firstChild || statusbar.firstChild.textContent == "")
+      hideStatusBar();
+  }
+
+  function hideStatusBar()
+  {
+    let statusbar = E(Utils.statusBarId);
+    statusbar.hidden = true;
+    statusbar.setAttribute("mirrored", "false");
+    if (statusbar.dataset.hideTimeout)
+      window.clearTimeout(statusbar.dataset.hideTimeout);
+    statusbar.dataset.hideTimeout = 0;    
+  }
+
+  let validProtocolSet = (function(list)
+  {
+    let ret = {};
+    list.forEach(function(value) {
+      ret[value] = true;
+    })
+    return ret;
+  })(["http", "https", "ftp", "javscript", "file", "about", "mailto", "data", "rtsp", "telnet", "thunder", "ed2k", "magnet"]);
+
+  function isLinkStatus(status)
+  {
+    let index = status.indexOf(":");
+    if (index == -1) return false;
+    let protocol = status.substring(0, index);
+    if (validProtocolSet[protocol]) return true;
+    return false;
+  }
+
   /**
    * 当焦点在plugin对象上时，在plugin中按Alt+XXX组合键时，
    * 菜单栏无法正常弹出，因此当plugin对象得到焦点时，需要
-   * 调用其blus方法去除焦点。
+   * 调用其blur方法去除焦点。
    */
   function onPluginFocus(event)
   {

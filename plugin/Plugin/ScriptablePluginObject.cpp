@@ -156,6 +156,20 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(status), *result);
 			return true;
 		}
+		// readonly property {string} StatusText
+		else if (name == NPI_ID(StatusText))
+		{
+			CString status = pMainWindow->GetStatusText();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(status), *result);
+			return true;
+		}
+		// readonly property {bool} ShouldShowStatusOurselves
+		else if (name == NPI_ID(ShouldShowStatusOurselves))
+		{
+			BOOL value = pMainWindow->ShouldShowStatusOurselves();
+			BOOLEAN_TO_NPVARIANT(value, *result);
+			return true;
+		}
 
 		VOID_TO_NPVARIANT(*result);
 		return true;

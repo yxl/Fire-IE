@@ -14,6 +14,7 @@
 <!ENTITY fireie.options.general.label "General Options">
 <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
 <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Disable engine auto-switch">
 <!ENTITY fireie.options.shorcut.title "Shortcut Key">
 <!ENTITY fireie.options.shorcut.enable "Enable">
 <!ENTITY fireie.options.ui.caption "User Interface">
@@ -21,6 +22,8 @@
 <!ENTITY fireie.options.ui.iconHidden "Hidden">
 <!ENTITY fireie.options.ui.iconOnly "Show Icon">
 <!ENTITY fireie.options.ui.iconAndText "Show Icon and Text">
+<!ENTITY fireie.options.ui.statusBarLabel "Floating Status Bar:">
+<!ENTITY fireie.options.ui.showStatusText "Show IE engine's status in the floating status bar">
 
 <!ENTITY fireie.options.rule.label "Sites Rule">
 <!ENTITY fireie.options.rule.enabled "Enable Sites Rule">

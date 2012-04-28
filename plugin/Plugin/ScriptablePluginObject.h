@@ -95,6 +95,8 @@ namespace Plugin
 		NPI_DEF(SelectionText);
 		NPI_DEF(SecureLockInfo);
 		NPI_DEF(FBLastFindStatus);
+		NPI_DEF(StatusText);
+		NPI_DEF(ShouldShowStatusOurselves);
 
 	public:
 		ScriptablePluginObject(NPP npp)
@@ -157,6 +159,8 @@ namespace Plugin
 			NPN_GSI_P(SelectionText);
 			NPN_GSI_P(SecureLockInfo);
 			NPN_GSI_P(FBLastFindStatus);
+			NPN_GSI_P(StatusText);
+			NPN_GSI_P(ShouldShowStatusOurselves);
 		}
 
 		virtual bool HasMethod(NPIdentifier name);

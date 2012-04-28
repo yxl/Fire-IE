@@ -245,6 +245,8 @@ public:
 	INT32 GetProgress() {return m_iProgress;}
 	CString GetSelectionText();
 	CString GetSecureLockInfo();
+	CString GetStatusText();
+	BOOL ShouldShowStatusOurselves();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
@@ -261,6 +263,9 @@ protected:
 
 	/** »º´æ×î½üµÄ Favicon URL */
 	CString m_strFaviconURL;
+
+	// Cache recent status text
+	CString m_strStatusText;
 
 	// Find Bar states
 	bool m_bFBInProgress;

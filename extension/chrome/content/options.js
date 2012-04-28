@@ -18,6 +18,9 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * @namespace
  */
+
+Cu.import(baseURL.spec + "AppIntegration.jsm");
+
 if (typeof(Options) == "undefined")
 {
   var Options = {};
@@ -69,6 +72,7 @@ Options.apply = function(quiet)
 
   //general
   Prefs.handleUrlBar = E("handleurl").checked;
+  Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
   let newKey = E("shortcut-key").value;
   if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
   {
@@ -89,7 +93,8 @@ Options.apply = function(quiet)
   }
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
-
+  Prefs.showStatusText = E("showStatusText").checked;
+  
   // IE compatibility mode
   let newMode = "ie7mode";
   let iemode = E("iemode");
@@ -191,10 +196,17 @@ Options.initDialog = function()
 {
   // general 功能设置
   E("handleurl").checked = Prefs.handleUrlBar;
+  E("disableAutoSwitch").checked = !Prefs.autoswitch_enabled;
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
   E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
+  E("showStatusText").checked = Prefs.showStatusText;
+
+  // hide "showStatusText" if we don't handle status messages ourselves
+  let ifHide = !AppIntegration.shouldShowStatusOurselves();
+  E("statusBarLabel").hidden = ifHide;
+  E("showStatusText").hidden = ifHide;
 
   // updateStatus
   Options.updateApplyButton(false);

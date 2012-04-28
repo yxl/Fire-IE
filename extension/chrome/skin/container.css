@@ -7,3 +7,38 @@ body {
   overflow: hidden;
   height: 100%;
 }
+
+#xp-status-bar {
+  font: status-bar;
+  font-size: 12px;
+  background: InfoBackground;
+  color: InfoText;
+  border-top: 1px solid ActiveBorder;
+  border-right: 1px solid ActiveBorder;
+
+  position: absolute;
+  -moz-box-sizing: border-box;
+  left: 0;
+  bottom: 0;
+  width: 50%;
+  height: 23px;
+  padding: 0 5px;
+  overflow: hidden;
+  
+  line-height: 22px;
+  white-space: pre;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+
+  -moz-user-select: none;
+  cursor: default;
+  z-index: 10000;
+}
+
+#xp-status-bar[mirrored=true] {
+  border-right: none;
+  border-left: 1px solid ActiveBorder;
+  left: auto;
+  right: 0;
+}
+

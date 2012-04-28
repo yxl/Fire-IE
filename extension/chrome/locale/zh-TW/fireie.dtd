@@ -14,15 +14,16 @@
 <!ENTITY fireie.options.general.label "一般">
 <!ENTITY fireie.options.switch.caption "瀏覽引擎切換時:">
 <!ENTITY fireie.options.switch.handleurl "總是以目前瀏覽引擎開啟網址列的新網址">
+<!ENTITY fireie.options.switch.disableAutoSwitch "禁用瀏覽引擎的自動切換">
 <!ENTITY fireie.options.shorcut.title "快捷鍵">
 <!ENTITY fireie.options.shorcut.enable "啟用">
 <!ENTITY fireie.options.ui.caption "用戶界面">
-<!ENTITY fireie.options.showUrlBarLabel "顯示網址列按鈕文字">
-<!ENTITY fireie.options.hideUrlBarButton "隱藏網址列按鈕">
 <!ENTITY fireie.options.ui.iconDisplay "網址列按鈕顯示：">
 <!ENTITY fireie.options.ui.iconHidden "隱藏">
 <!ENTITY fireie.options.ui.iconOnly "顯示圖示">
 <!ENTITY fireie.options.ui.iconAndText "顯示圖示和文字">
+<!ENTITY fireie.options.ui.statusBarLabel "浮動狀態列：">
+<!ENTITY fireie.options.ui.showStatusText "在浮動狀態列中顯示IE引擎的狀態訊息">
 
 <!ENTITY fireie.options.rule.label "網址過濾">
 <!ENTITY fireie.options.rule.enabled "總是使用 IE Tab 瀏覽以下網址">

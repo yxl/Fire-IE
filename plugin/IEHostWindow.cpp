@@ -57,6 +57,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_lFBCurrentDoc(0)
 	, m_strSecureLockInfo(_T("Unsecure"))
 	, m_pNavigateParams(NULL)
+	, m_strStatusText(_T(""))
 {
 	FBResetFindStatus();
 }
@@ -954,6 +955,8 @@ void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
+	m_strStatusText = message;
+
 	if (m_pPlugin)
 	{
 		m_pPlugin->SetStatus(message);
@@ -1260,6 +1263,18 @@ CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pD
 CString CIEHostWindow::GetSecureLockInfo()
 {
 	return m_strSecureLockInfo;
+}
+
+CString CIEHostWindow::GetStatusText()
+{
+	return m_strStatusText;
+}
+
+BOOL CIEHostWindow::ShouldShowStatusOurselves()
+{
+	if (m_pPlugin)
+		return (BOOL)(m_pPlugin->ShouldShowStatusOurselves());
+	return false;
 }
 
 BOOL CIEHostWindow::DestroyWindow()

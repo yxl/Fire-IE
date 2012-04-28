@@ -14,6 +14,7 @@
 <!ENTITY fireie.options.general.label "常规">
 <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
+<!ENTITY fireie.options.switch.disableAutoSwitch "禁用浏览引擎的自动切换">
 <!ENTITY fireie.options.shorcut.title "快捷键">
 <!ENTITY fireie.options.shorcut.enable "启用">
 <!ENTITY fireie.options.ui.caption "用户界面">
@@ -21,6 +22,8 @@
 <!ENTITY fireie.options.ui.iconHidden "隐藏">
 <!ENTITY fireie.options.ui.iconOnly "显示图标">
 <!ENTITY fireie.options.ui.iconAndText "显示图标和文字">
+<!ENTITY fireie.options.ui.statusBarLabel "浮动状态栏：">
+<!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示IE引擎的状态消息">
 
 <!ENTITY fireie.options.rule.label "网址过滤">
 <!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">

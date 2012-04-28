@@ -218,13 +218,20 @@ namespace Plugin
 		m_bInitialized = FALSE;
 	}
 
+	bool CPlugin::ShouldShowStatusOurselves()
+	{
+		// return true; // for debugging under win7
+		return Utils::OS::GetVersion() == Utils::OS::WINXP
+			|| Utils::OS::GetVersion() == Utils::OS::WIN2003;
+	}
+
 	void CPlugin::SetStatus(const CString& text)
 	{
-		// Temporarily disable status text display in Windows XP/2003
-		// to solve flashes of various web pages
-		if (Utils::OS::GetVersion() == Utils::OS::WINXP
-			|| Utils::OS::GetVersion() == Utils::OS::WIN2003)
+		if (ShouldShowStatusOurselves())
+		{
+			FireEvent(_T("IEStatusChanged"), text);
 			return;
+		}
 
 		if (m_pNPInstance)
 		{
