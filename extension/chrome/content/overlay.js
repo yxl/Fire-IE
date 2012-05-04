@@ -73,6 +73,7 @@ var gFireIE = null;
     hookCode("gIdentityHandler.onDragStart", "content.location.href", "gFireIE.getURL()");
     gFireIE.gIdentityHandler = gIdentityHandler;
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
+    hookCode("getBrowserSelection", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(arguments[0]); if (gFireIE_value != null) return gFireIE_value; }"); // make firegestures' and others' selection based functions work
 
     initializeFindBarHooks();
     gFireIE.fireAfterInit(function()
