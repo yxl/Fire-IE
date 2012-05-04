@@ -45,7 +45,9 @@ var gFireIE = null;
     //hook functions
     hookCode("gFindBar._onBrowserKeypress", "this._useTypeAheadFind &&", "$& !gFireIE.isIEEngine() &&"); // IE内核时不使用Firefox的查找条, $&指代被替换的代码
     hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
+    hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
     hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
+    hookCode("StarUI._doShowEditBookmarkPanel", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在书签编辑面板中正确显示收藏的书签数量
     hookCode("gBrowser.addTab", "return t;", "gFireIE.hookBrowserGetter(t.linkedBrowser); $&");
     hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
     hookCode("getShortcutOrURI", /return (\S+);/g, "return gFireIE.getHandledURL($1);"); // 访问新的URL
@@ -68,6 +70,7 @@ var gFireIE = null;
     hookAttr("identity-box", "onclick", displaySecurityInfoCode);
     hookAttr("identity-box", "onkeypress", displaySecurityInfoCode);
     hookCode("gIdentityHandler.checkIdentity", /{/, "$& if (gFireIE.checkIdentity()) return; ");
+    hookCode("gIdentityHandler.onDragStart", "content.location.href", "gFireIE.getURL()");
     gFireIE.gIdentityHandler = gIdentityHandler;
     hookCode("BrowserViewSourceOfDocument", /{/, "$& if(gFireIE.goDoCommand('ViewPageSource')) return;");
 
