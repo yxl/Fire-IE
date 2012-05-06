@@ -140,6 +140,7 @@ var gFireIE = null;
       Utils.LOG("Fire Gestures detected.");
       GesturePrefObserver.setGestureExtension("FireGestures");
       hookCode("FireGestures._performAction", /{/, "$& if (gFireIE.goDoFGCommand(arguments[1])) return;");
+      hookCode("FireGestures.getSelectedText", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(1000, true); if (gFireIE_value != null) return gFireIE_value; }"); // make firegestures' selection based functions work
     }
   }
 

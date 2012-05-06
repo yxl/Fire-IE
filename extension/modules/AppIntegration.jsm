@@ -1559,7 +1559,7 @@ WindowWrapper.prototype = {
     }
   },
   // extract selection text from plugin object
-  getSelectionText: function(selectionMaxLen)
+  getSelectionText: function(selectionMaxLen, rawWhitespace)
   {
     try
     {
@@ -1572,8 +1572,8 @@ WindowWrapper.prototype = {
       var selText = pluginObject.SelectionText;
       if (selText && selText.length > 0)
       {
-        // selections of more than 150 characters aren't useful
-        const kMaxSelectionLen = 150;
+        // selections of more than 1000 characters aren't useful
+        const kMaxSelectionLen = 1000;
         const charLen = Math.min(selectionMaxLen || kMaxSelectionLen, kMaxSelectionLen);
 
         // Process our text to get rid of unwanted characters
@@ -1583,8 +1583,10 @@ WindowWrapper.prototype = {
           pattern.test(selText);
           selText = RegExp.lastMatch;
         }
-
-        return selText.replace(/^\s+/, "").replace(/\s+$/, "").replace(/\s+/g, " ").substr(0, charLen);
+        if (rawWhitespace)
+          return selText.substr(0, charLen);
+        else
+          return selText.replace(/^\s+/, "").replace(/\s+$/, "").replace(/\s+/g, " ").substr(0, charLen);
       }
       else
       {
