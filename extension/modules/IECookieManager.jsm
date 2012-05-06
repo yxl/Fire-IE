@@ -166,14 +166,14 @@ let IECookieManager = {
     }
     
     let hostname = cookie2.host.trim();
-    // 去除hostname开头的“.”
+    // Strip off beginning dot in hostname
     if (hostname.substring(0, 1) == ".")
     {
       hostname = hostname.substring(1);
     }
-    /* URL格式必须正确, 否则无法成功设置Cookie。
-     * http://.baidu.com必须转换为
-     * http://baidu.com才能识别
+    /* The URL format must be correct or set cookie will fail
+     * http://.baidu.com must be transformed into
+     * http://baidu.com before it can be recognized
      */
     let url = 'http://' + hostname + cookie2.path;
     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;

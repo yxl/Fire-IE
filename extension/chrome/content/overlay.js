@@ -43,14 +43,13 @@ var gFireIE = null;
     hookURLBarSetter(gURLBar);
 
     //hook functions
-    hookCode("gFindBar._onBrowserKeypress", "this._useTypeAheadFind &&", "$& !gFireIE.isIEEngine() &&"); // IE内核时不使用Firefox的查找条, $&指代被替换的代码
-    hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
-    hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 添加到收藏夹时获取实际URL
-    hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在地址栏中正确显示收藏状态(星星按钮黄色时表示该页面已收藏)
-    hookCode("StarUI._doShowEditBookmarkPanel", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // 用IE内核浏览网站时，在书签编辑面板中正确显示收藏的书签数量
+    hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Obtain real URL when bookmarking
+    hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Obtain real URL when bookmarking
+    hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Show bookmark state (the star icon in URL bar) when using IE engine
+    hookCode("StarUI._doShowEditBookmarkPanel", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Show number of bookmarks in the overlay editing panel when using IE engine
     hookCode("gBrowser.addTab", "return t;", "gFireIE.hookBrowserGetter(t.linkedBrowser); $&");
-    hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0) return;"); // 取消原有的Tab标题文字设置
-    hookCode("getShortcutOrURI", /return (\S+);/g, "return gFireIE.getHandledURL($1);"); // 访问新的URL
+    hookCode("gBrowser.setTabTitle", "if (browser.currentURI.spec) {", "$& if (browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0) return;"); // Cancel setTabTitle when using IE engine
+    hookCode("getShortcutOrURI", /return (\S+);/g, "return gFireIE.getHandledURL($1);"); // Visit the new URL
     //hook Interface Commands
     hookCode("BrowserBack", /{/, "$& if(gFireIE.goDoCommand('Back')) return;");
     hookCode("BrowserForward", /{/, "$& if(gFireIE.goDoCommand('Forward')) return;");
@@ -59,7 +58,7 @@ var gFireIE = null;
     hookCode("BrowserReloadSkipCache", /{/, "$& if(gFireIE.goDoCommand('Refresh')) return;");
 
     hookCode("saveDocument", /{/, "$& if(gFireIE.goDoCommand('SaveAs')) return;");
-    hookCode("MailIntegration.sendMessage", /{/, "$& let pluginObject = gFireIE.getContainerPlugin(); if(pluginObject){ arguments[0]=pluginObject.URL; arguments[1]=pluginObject.Title; }"); // @todo 发送邮件？
+    hookCode("MailIntegration.sendMessage", /{/, "$& let pluginObject = gFireIE.getContainerPlugin(); if(pluginObject){ arguments[0]=pluginObject.URL; arguments[1]=pluginObject.Title; }"); // @todo Send mail?
     hookCode("PrintUtils.print", /{/, "$& if(gFireIE.goDoCommand('Print')) return;");
     hookCode("PrintUtils.showPageSetup", /{/, "$& if(gFireIE.goDoCommand('PrintSetup')) return;");
     hookCode("PrintUtils.printPreview", /{/, "$& if(gFireIE.goDoCommand('PrintPreview')) return;");
@@ -197,7 +196,7 @@ var gFireIE = null;
   }
 
 
-  /** 将attribute值V替换为myFunc+V*/
+  /** Replace attribute's value V with (myFunc + V) (or (V + myFunc) if insertAtEnd is set to true) */
 
   function hookAttr(parentNode, attrName, myFunc, insertAtEnd)
   {
@@ -214,7 +213,7 @@ var gFireIE = null;
     }
   }
 
-  /** 在Property的getter和setter代码头部增加一段代码*/
+  /** Add some code at the beginning of Property's getter and setter */
 
   function hookProp(parentNode, propName, myGetter, mySetter)
   {
@@ -251,7 +250,7 @@ var gFireIE = null;
   gFireIE.hookBrowserGetter = function(aBrowser)
   {
     if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
-    // hook aBrowser.currentURI, 在IE引擎内部打开URL时, Firefox也能获取改变后的URL
+    // hook aBrowser.currentURI, Let firefox know the new URL after navigating inside the IE engine
     hookProp(aBrowser, "currentURI", function()
     {
       let uri = gFireIE.getURI(this);

@@ -165,7 +165,7 @@ let FireIEContainer = {};
   }
 
 
-  /** 响应Plugin标题变化事件 */
+  /** Handler for the IE title change event */
 
   function onIETitleChanged(event)
   {
@@ -173,7 +173,7 @@ let FireIEContainer = {};
     document.title = title;
   }
 
-  /** 响应关闭IE标签窗口事件 */
+  /** Handler for the IE close tab event */
 
   function onCloseIETab(event)
   {
@@ -183,10 +183,10 @@ let FireIEContainer = {};
     }, 100);
   }
 
-  /** 响应页面加载完成事件 */
+  /** Handler for the IE document complete event */
 
   function onIEDocumentComplete(event)
-  { /** 设置页面Favicon */
+  { /** Sets the page favicon */
     let po = E(Utils.containerPluginId);
     if (po)
     {
@@ -266,9 +266,9 @@ let FireIEContainer = {};
   }
 
   /**
-   * 当焦点在plugin对象上时，在plugin中按Alt+XXX组合键时，
-   * 菜单栏无法正常弹出，因此当plugin对象得到焦点时，需要
-   * 调用其blur方法去除焦点。
+   * When the plugin object has focus, pressing Alt+X combination keys
+   * won't show firefox's menu bar. So we have to call blur once the plugin
+   * object gains focus.
    */
   function onPluginFocus(event)
   {

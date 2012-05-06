@@ -65,7 +65,7 @@ Options.restoreDefaultSettings = function()
   Options.updateApplyButton(true);
 }
 
-// 应用设置
+// Apply options
 Options.apply = function(quiet)
 {
   let requiresRestart = false;
@@ -152,7 +152,7 @@ Options.applyIECompatMode = function()
   }
 }
 
-// 获取IE主版本号
+// Get IE's main version number
 Options.getIEMainVersion = function()
 {
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
@@ -173,7 +173,8 @@ Options.getIEMainVersion = function()
 Options.updateIEModeTab = function()
 {
   let mainIEVersion = Options.getIEMainVersion();
-  // IE 8之前不显示这个设置页面
+  // Do not show this tab if IE8 or higher is not detected,
+  // since IE7 or lower does not support compatible modes
   if (mainIEVersion < 8)
   {
     return;
@@ -194,7 +195,7 @@ Options.updateIEModeTab = function()
 
 Options.initDialog = function()
 {
-  // general 功能设置
+  // options for general features
   E("handleurl").checked = Prefs.handleUrlBar;
   E("disableAutoSwitch").checked = !Prefs.autoswitch_enabled;
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;

@@ -101,6 +101,7 @@
     </menu>
   </menupopup>
 
+
   <tooltip id="rulesTooltip" onpopupshowing="RuleActions.fillTooltip(event);">
     <grid>
       <columns>
@@ -134,7 +135,7 @@
       <tab label="&rules.tab.label;"/>
     </tabs>
     <tabpanels flex="1">
-      <!-- 订阅的切换规则 -->  
+      <!-- subscripted switching rules -->  
       <tabpanel id="subscriptionsTab" orient="vertical" flex="1">
         <hbox pack="end">
           <button id="selectSubscriptionButton" label="&addSubscription.label;" accesskey="&addSubscription.accesskey;" command="subscription-add-command"/>

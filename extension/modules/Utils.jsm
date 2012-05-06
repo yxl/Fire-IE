@@ -189,7 +189,7 @@ var Utils = {
     return "chrome://fireie/content/container.xhtml?url=";
   },
 
-  /** 将URL转换为IE Engine URL */
+  /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
   {
     url = url.trim();
@@ -206,7 +206,7 @@ var Utils = {
     return Utils.containerUrl + encodeURI(url);
   },
 
-  /** 从Plugin URL中提取实际访问的URL */
+  /** Get real URL from Plugin URL */
   fromContainerUrl: function(url)
   {
     if (url && url.length > 0)
@@ -364,8 +364,8 @@ var Utils = {
     return Utils.getTabFromDocument(aWindow.document);
   },
 
-  /** 检查URL地址是否是火狐浏览器特有
-   *  例如 about:config chrome://xxx
+  /** Check whether URL is firefox-only
+   *  e.g. about:config chrome://xxx
    */
   isFirefoxOnly: function(url)
   {
