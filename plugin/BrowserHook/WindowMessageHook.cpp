@@ -132,24 +132,15 @@ namespace BrowserHook
 				// Forward the key press messages to firefox
 				if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_SYSKEYDOWN || pMsg->message == WM_SYSKEYUP)
 				{
-					if (ForwardFirefoxKeyMessage(hwndFirefox, pMsg))
-					{
-						bShouldSwallow = true;
-					}
+					bShouldSwallow = bShouldSwallow || ForwardFirefoxKeyMessage(hwndFirefox, pMsg);
 				}
-				if (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK)
-				{
-					bShouldSwallow = true;
-				}
+				bShouldSwallow = bShouldSwallow || (pIEHostWindow->m_ie.TranslateAccelerator(pMsg) == S_OK);
 			}
 
 			// Check if we should enable mouse gestures
 			if (WM_MOUSEFIRST <= pMsg->message && pMsg->message <= WM_MOUSELAST)
 			{
-				if (ForwardFirefoxMouseMessage(hwndFirefox, pMsg))
-				{
-					bShouldSwallow = true;
-				}
+				bShouldSwallow = bShouldSwallow || ForwardFirefoxMouseMessage(hwndFirefox, pMsg);
 			}
 
 
