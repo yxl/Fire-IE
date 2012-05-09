@@ -80,6 +80,8 @@ var gFireIE = null;
       initializeFGHooks();
       initializeMGRHooks();
       initializeAiOGHooks();
+      initializeUCMGHooks();
+      GesturePrefObserver.onGestureDetectionEnd();
       GesturePrefObserver.setEnabledGestures();
     }, this, []);
   }
@@ -181,6 +183,15 @@ var gFireIE = null;
       {
         hookAiOGFunction(functionList[i][0], functionList[i][1]);
       }
+    }
+  }
+
+  function initializeUCMGHooks()
+  {
+    if (typeof(ucjsMouseGestures) == "object")
+    {
+      Utils.LOG("ucjsMouseGestures detected.");
+      GesturePrefObserver.setGestureExtension("GeneralAll");
     }
   }
 

@@ -33,6 +33,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import(baseURL.spec + "AppIntegration.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
 
 let GesturePrefObserver = {
   
@@ -95,6 +96,11 @@ let GesturePrefObserver = {
       this.gestureBranch = Services.prefs.getBranch("allinonegest.");    
       this._buildPrefObserveSet(["mouse", "mousebuttonpref", "rocking", "wheelscrolling"]);
       break;
+    case "NotDetected":
+      // we listen for the pref "forceMGSupport" when no pre-defined gesture extension detected
+      this.gestureBranch = Services.prefs.getBranch("extensions.fireie.");
+      this._buildPrefObserveSet(["forceMGSupport"]);
+      break;
     default:
       break;
     }
@@ -133,6 +139,16 @@ let GesturePrefObserver = {
       return;
     this.mainGestureExtension = extensionName;
     this._registerGestureExtensionObserver(extensionName);
+  },
+  /**
+   * Called when gesture extension/script detection is nearly complete
+   */
+  onGestureDetectionEnd: function()
+  {
+    if (this.mainGestureExtension)
+      return;
+    // if still no extension detected, do the default behavior
+    this.setGestureExtension("NotDetected");
   },
   /**
    * Notify underlying plugin to set gesture handler states
@@ -186,11 +202,18 @@ let GesturePrefObserver = {
             gestures.push("wheel");
         }
         break;
+      case "GeneralAll":
+        gestures = ["trace", "rocker", "wheel"];
+        break;
       default:
+        // Prefs.forceMGSupport not ready yet, have to use getBoolPref
+        if (branch.getBoolPref("forceMGSupport"))
+          gestures = ["trace", "rocker", "wheel"];
         break;
       }
 
       plugin.SetEnabledGestures(gestures);
+      Utils.LOG("Gesture state: [" + this.mainGestureExtension + "][" + gestures.toString() + "]");
       return true;
     }
     catch (ex)

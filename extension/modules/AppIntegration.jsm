@@ -940,7 +940,6 @@ WindowWrapper.prototype = {
       else if (!statusBar.hidden && !Prefs.showStatusText)
       {
         // event to notify content doc to hide status text
-        Utils.ERROR("should hide");
         let event = this.window.gBrowser.contentDocument.createEvent("Event");
         event.initEvent("SetStatusText", false, false);
         event.statusText = "";
@@ -1077,12 +1076,7 @@ WindowWrapper.prototype = {
   {
     let focused = this.window.document.commandDispatcher.focusedElement;
     if (focused == null) return true;
-    let plainTagName = focused.tagName;
-    let index = plainTagName.lastIndexOf(':');
-    if (index != -1)
-      plainTagName = plainTagName.substring(index + 1);
-    plainTagName = plainTagName.toLowerCase();
-    return plainTagName != "input" && plainTagName != "textarea";
+    return !(focused instanceof HTMLInputElement) && !(focused instanceof HTMLTextAreaElement);
   },
   /** Generate a method that calls plugin functions according to the given command */
   _genDoPluginCommandFunc: function(funcName, commands, successCallback)
@@ -1214,6 +1208,36 @@ WindowWrapper.prototype = {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Redo();
+        return true;
+      },
+      "cmd_scrollTop": function(pluginObject)
+      {
+        pluginObject.ScrollTop();
+        return true;
+      },
+      "cmd_scrollBottom": function(pluginObject)
+      {
+        pluginObject.ScrollBottom();
+        return true;
+      },
+      "cmd_scrollPageUp" : function(pluginObject)
+      {
+        pluginObject.PageUp();
+        return true;
+      },
+      "cmd_scrollPageDown" : function(pluginObject)
+      {
+        pluginObject.PageDown();
+        return true;
+      },
+      "cmd_scrollLineUp" : function(pluginObject)
+      {
+        pluginObject.LineUp();
+        return true;
+      },
+      "cmd_scrollLineDown" : function(pluginObject)
+      {
+        pluginObject.LineDown();
         return true;
       },
       "Focus": function(pluginObject)
