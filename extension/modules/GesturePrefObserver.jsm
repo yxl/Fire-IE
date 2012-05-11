@@ -205,9 +205,9 @@ let GesturePrefObserver = {
         {
           if (branch.getBoolPref("mouse") && branch.getIntPref("mousebuttonpref") == 2)
             gestures.push("trace");
-          if (branch.getBoolPref("rocking") && branch.getIntPref("mousebuttonpref") == 2)
+          if (branch.getBoolPref("rocking"))
             gestures.push("rocker");
-          if (branch.getBoolPref("wheelscrolling"))
+          if (branch.getBoolPref("wheelscrolling") && branch.getIntPref("mousebuttonpref") == 2)
             gestures.push("wheel");
         }
         break;
