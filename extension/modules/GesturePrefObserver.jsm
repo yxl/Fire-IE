@@ -141,6 +141,15 @@ let GesturePrefObserver = {
     this._registerGestureExtensionObserver(extensionName);
   },
   /**
+   * Whether we already have a valid gesture extension
+   */
+  hasGestureExtension: function()
+  {
+    if (this.mainGestureExtension)
+      return this.mainGestureExtension != "NotDetected";
+    return false;
+  },
+  /**
    * Called when gesture extension/script detection is nearly complete
    */
   onGestureDetectionEnd: function()
@@ -196,9 +205,9 @@ let GesturePrefObserver = {
         {
           if (branch.getBoolPref("mouse") && branch.getIntPref("mousebuttonpref") == 2)
             gestures.push("trace");
-          if (branch.getBoolPref("rocking") && branch.getIntPref("mousebuttonpref") == 2)
+          if (branch.getBoolPref("rocking"))
             gestures.push("rocker");
-          if (branch.getBoolPref("wheelscrolling"))
+          if (branch.getBoolPref("wheelscrolling") && branch.getIntPref("mousebuttonpref") == 2)
             gestures.push("wheel");
         }
         break;

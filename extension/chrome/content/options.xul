@@ -2,9 +2,9 @@
 <!--
 -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://fireie/skin/fireie.css" type="text/css"?>
+<?xml-stylesheet href="chrome://fireie/skin/options.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://fireie/locale/fireie.dtd">
-<dialog id="fireie-dialog"
+<dialog id="fireie-options"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 autosize="true" resizable="no" persist="screenX screenY"
 buttons="accept,cancel,extra1,extra2" onload="Options.init();"
@@ -17,8 +17,10 @@ windowtype="fireie:options">
   <script type="application/x-javascript" src="options.js" />
   <tabbox>
     <tabs>
-      <tab label="&fireie.options.general.label;" />
-      <tab id="iemode-tab" label="&fireie.options.iecompat.label;"
+      <tab label="&fireie.options.general.tab;" />
+      <tab label="&fireie.options.ui.tab;" />
+      <tab id="integration-tab" label="&fireie.options.integration.tab;" />
+      <tab id="iemode-tab" label="&fireie.options.iecompat.tab;"
       hidden="true" />
     </tabs>    
     <tabpanels>
@@ -35,7 +37,7 @@ windowtype="fireie:options">
           </groupbox>
           <!-- Sets Shortcut key -->
           <groupbox id="shortcut">
-            <caption label="&fireie.options.shorcut.title;" />
+            <caption label="&fireie.options.shorcut.caption;" />
             <hbox>
               <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
               <menulist id="shortcut-modifiers">
@@ -90,44 +92,80 @@ windowtype="fireie:options">
               </menulist>
             </hbox>
             <hbox>
-              <label value="&fireie.options.restart.descr;" />
+              <label class="descr" value="&fireie.options.restart.descr;" />
             </hbox>
           </groupbox>
           <groupbox>
-            <caption label="&fireie.options.ui.caption;" />
+            <caption label="&fireie.options.private.caption;"/>
+            <label class="descr">&fireie.options.private.descr;</label>
+            <checkbox id="privatebrowsingwarning" label="&fireie.options.private.privatebrowsingwarning;" class="indent" />
+          </groupbox>
+        </vbox>
+      </tabpanel>
+      <!-- User Interface -->
+      <tabpanel>
+        <vbox flex="1">
+          <groupbox>
+            <caption label="&fireie.options.ui.urlBarButtonCaption;" />
             <vbox>
-              <label>&fireie.options.ui.iconDisplay;</label>
-              <radiogroup id="iconDisplay">
-                <hbox align="center">
-                  <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
-                  <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
-                  <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
-                </hbox>
-              </radiogroup>
-              <label id="statusBarLabel">&fireie.options.ui.statusBarLabel;</label>
+              <vbox>
+                <label>&fireie.options.ui.iconDisplayLabel;</label>
+                <radiogroup id="iconDisplay" class="indent">
+                  <hbox align="center">
+                    <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
+                    <spacer flex="1"/>
+                    <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" />
+                  </hbox>
+                  <hbox align="center">
+                    <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
+                    <spacer flex="1"/>
+                    <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" />
+                  </hbox>
+                  <hbox align="center">
+                    <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
+                    <spacer flex="1"/>
+                    <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" />
+                  </hbox>
+                </radiogroup>
+              </vbox>
+              <vbox>
+                <label id="tooltipLabel" style="margin-top:10px;">&fireie.options.ui.tooltipLabel;</label>
+                <checkbox label="&fireie.options.ui.showTooltipText;" id="showTooltipText" class="indent" />
+              </vbox>
+            </vbox>
+          </groupbox>
+          <groupbox id="statusBarGroup">
+            <caption label="&fireie.options.ui.statusBarCaption;" />
+            <vbox>
               <checkbox label="&fireie.options.ui.showStatusText;" id="showStatusText" />
             </vbox>
           </groupbox>
         </vbox>
       </tabpanel>
-      <!-- IE Compatibility Mode -->
+      <!-- Integration -->
       <tabpanel>
         <vbox flex="1">
           <groupbox>
-            <caption label="&fireie.options.iecompat.label;" />
-            <vbox>
-              <radiogroup id="iemode">
-                <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
-                hidden="true" value="ie7mode" />
-                <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
-                hidden="true" value="ie8mode" />
-                <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
-                hidden="true" value="ie9mode" />
-              </radiogroup>
-              <label style="margin-top:20px">
-              &fireie.options.restart.descr;</label>
-            </vbox>
+            <caption label="&fireie.options.integration.mgCaption;" />
+            <label class="descr">&fireie.options.integration.mgDescr;</label>
+            <checkbox id="forceMGSupport" label="&fireie.options.integration.forceMGSupport;" class="indent" />
+            <label id="alreadyEnabledMGSupportLabel" style="color: green;">&fireie.options.integration.alreadyEnabledMGSupport;</label>
           </groupbox>
+        </vbox>  
+      </tabpanel>
+      <!-- IE Compatibility Mode -->
+      <tabpanel>
+        <vbox flex="1">
+          <radiogroup id="iemode">
+            <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
+            hidden="true" value="ie7mode" />
+            <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
+            hidden="true" value="ie8mode" />
+            <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
+            hidden="true" value="ie9mode" />
+          </radiogroup>
+          <label class="descr" style="margin-top:20px;">
+          &fireie.options.restart.descr;</label>
         </vbox>
       </tabpanel>
     </tabpanels>

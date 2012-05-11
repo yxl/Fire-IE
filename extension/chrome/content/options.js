@@ -20,6 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 Cu.import(baseURL.spec + "AppIntegration.jsm");
+Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -91,9 +92,12 @@ Options.apply = function(quiet)
     requiresRestart = true;
     Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   }
+  Prefs.privatebrowsingwarning = E("privatebrowsingwarning").checked;
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
+  Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
+  Prefs.forceMGSupport = E("forceMGSupport").checked;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -201,13 +205,26 @@ Options.initDialog = function()
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
   E("shortcutEnabled").checked = Prefs.shortcutEnabled;
+  E("privatebrowsingwarning").checked = Prefs.privatebrowsingwarning;
   E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
+  E("showTooltipText").checked = Prefs.showTooltipText;
   E("showStatusText").checked = Prefs.showStatusText;
+  E("forceMGSupport").checked = Prefs.forceMGSupport;
 
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
-  E("statusBarLabel").hidden = ifHide;
-  E("showStatusText").hidden = ifHide;
+  E("statusBarGroup").hidden = ifHide;
+
+  // disable MGS checkbox if we already detected some gesture extension
+  //E("integration-tab").hidden = GesturePrefObserver.hasGestureExtension();
+  if (GesturePrefObserver.hasGestureExtension())
+  {
+    E("forceMGSupport").disabled = true;
+  }
+  else
+  {
+    E("alreadyEnabledMGSupportLabel").hidden = true;
+  }
 
   // updateStatus
   Options.updateApplyButton(false);
@@ -215,6 +232,12 @@ Options.initDialog = function()
 
   // IE Compatibility Mode
   Options.updateIEModeTab();
+}
+
+Options.setIconDisplayValue = function(value)
+{
+  E("iconDisplay").value = value;
+  this.updateApplyButton(true);
 }
 
 Options.updateApplyButton = function(e)

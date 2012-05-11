@@ -11,19 +11,30 @@
 
 <!ENTITY fireie.options.title "解雇IE 選項">
 
-<!ENTITY fireie.options.general.label "一般">
+<!ENTITY fireie.options.general.tab "一般">
 <!ENTITY fireie.options.switch.caption "瀏覽引擎切換時:">
 <!ENTITY fireie.options.switch.handleurl "總是以目前瀏覽引擎開啟網址列的新網址">
 <!ENTITY fireie.options.switch.disableAutoSwitch "禁用瀏覽引擎的自動切換">
-<!ENTITY fireie.options.shorcut.title "快捷鍵">
+<!ENTITY fireie.options.shorcut.caption "快捷鍵">
 <!ENTITY fireie.options.shorcut.enable "啟用">
-<!ENTITY fireie.options.ui.caption "用戶界面">
-<!ENTITY fireie.options.ui.iconDisplay "網址列按鈕顯示：">
+<!ENTITY fireie.options.private.caption "隱私瀏覽模式">
+<!ENTITY fireie.options.private.privatebrowsingwarning "顯示隱私瀏覽模式警告頁面">
+<!ENTITY fireie.options.private.descr "IE引擎不支援隱私瀏覽模式，您可以選擇是否在這種情況下顯示警告頁面。">
+<!ENTITY fireie.options.ui.tab "用戶界面">
+<!ENTITY fireie.options.ui.urlBarButtonCaption "網址列按鈕">
+<!ENTITY fireie.options.ui.iconDisplayLabel "顯示方式：">
 <!ENTITY fireie.options.ui.iconHidden "隱藏">
 <!ENTITY fireie.options.ui.iconOnly "顯示圖示">
 <!ENTITY fireie.options.ui.iconAndText "顯示圖示和文字">
-<!ENTITY fireie.options.ui.statusBarLabel "浮動狀態列：">
+<!ENTITY fireie.options.ui.tooltipLabel "懸停提示：">
+<!ENTITY fireie.options.ui.showTooltipText "滑鼠懸停時顯示引擎狀態資訊">
+<!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
 <!ENTITY fireie.options.ui.showStatusText "在浮動狀態列中顯示IE引擎的狀態訊息">
+<!ENTITY fireie.options.integration.tab "集成">
+<!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">
+<!ENTITY fireie.options.integration.mgDescr "通常，解雇IE會檢測您的滑鼠手勢擴展和腳本，並且自動開啟相應的支持。如果您的滑鼠手勢擴展或腳本無法在IE引擎下使用，請嘗試打開這個選項。">
+<!ENTITY fireie.options.integration.forceMGSupport "強制開啟IE引擎滑鼠手勢支援">
+<!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已啟用滑鼠手勢支援。">
 
 <!ENTITY fireie.options.rule.label "網址過濾">
 <!ENTITY fireie.options.rule.enabled "總是使用 IE Tab 瀏覽以下網址">
@@ -33,7 +44,7 @@
 <!ENTITY fireie.options.rule.button.add "新增">
 <!ENTITY fireie.options.rule.button.delete "刪除">
 
-<!ENTITY fireie.options.iecompat.label "IE兼容模式">
+<!ENTITY fireie.options.iecompat.tab "IE兼容模式">
 <!ENTITY fireie.options.iecompat.ie7 "IE7標準模式">
 <!ENTITY fireie.options.iecompat.ie8 "IE8標準模式">
 <!ENTITY fireie.options.iecompat.ie9 "IE9標準模式">
