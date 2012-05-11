@@ -42,12 +42,6 @@
     <ClCompile Include="Plugin\PluginGlobal.cpp">
       <Filter>Plugin</Filter>
     </ClCompile>
-    <ClCompile Include="BrowserHook\HookImportFunction.cpp">
-      <Filter>BrowserHook</Filter>
-    </ClCompile>
-    <ClCompile Include="BrowserHook\HookMgr.cpp">
-      <Filter>BrowserHook</Filter>
-    </ClCompile>
     <ClCompile Include="BrowserHook\GestureHandler.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
@@ -119,12 +113,6 @@
     </ClInclude>
     <ClInclude Include="Plugin\PluginGlobal.h">
       <Filter>Plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="BrowserHook\HookImportFunction.h">
-      <Filter>BrowserHook</Filter>
-    </ClInclude>
-    <ClInclude Include="BrowserHook\HookMgr.h">
-      <Filter>BrowserHook</Filter>
     </ClInclude>
     <ClInclude Include="BrowserHook\GestureHandler.h">
       <Filter>BrowserHook</Filter>
