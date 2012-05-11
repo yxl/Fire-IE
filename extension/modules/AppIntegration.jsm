@@ -66,7 +66,7 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "shortcut_key" 
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText" || name == "shortcut_key" 
      || name == "shortcut_modifiers" || name == "currentTheme")
     {
       reloadPrefs();
@@ -308,6 +308,7 @@ WindowWrapper.prototype = {
   {
     this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;
     this.E("fireie-urlbar-switch").hidden = Prefs.hideUrlBarButton;
+    this.E("fireie-urlbar-switch-tooltip").hidden = !Prefs.showTooltipText;
   },
 
   /**

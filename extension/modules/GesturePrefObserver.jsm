@@ -141,6 +141,15 @@ let GesturePrefObserver = {
     this._registerGestureExtensionObserver(extensionName);
   },
   /**
+   * Whether we already have a valid gesture extension
+   */
+  hasGestureExtension: function()
+  {
+    if (this.mainGestureExtension)
+      return this.mainGestureExtension != "NotDetected";
+    return false;
+  },
+  /**
    * Called when gesture extension/script detection is nearly complete
    */
   onGestureDetectionEnd: function()

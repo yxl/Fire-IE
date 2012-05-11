@@ -1,0 +1,25 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+label.descr {
+  width: 300px;
+}
+
+image.icon-and-text {
+  list-style-image: url("chrome://fireie/skin/url-button-styles.png");
+  -moz-image-region: rect(0px, 150px, 24px, 0px);
+}
+
+image.icon-only {
+  list-style-image: url("chrome://fireie/skin/url-button-styles.png");
+  -moz-image-region: rect(48px, 150px, 72px, 0px);
+}
+
+image.icon-hidden {
+  list-style-image: url("chrome://fireie/skin/url-button-styles.png");
+  -moz-image-region: rect(96px, 150px, 120px, 0px);
+}
+
+.indent {
+  margin-right: 20px;
+}
+
