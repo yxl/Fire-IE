@@ -16,20 +16,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "StdAfx.h"
+#include "resource.h"
 #include "AtlDepHook.h"
 #include <tlhelp32.h>
 
 #define DEFINE_FUNCTION_INFO(module, func) {module, #func, (PROC)func##_hook}
 
-#if defined _M_X64
-// Should be capitilized!
-#define DLL_NAME "NPFIREIE64.DLL"
-#define DLL_NAME_WIDE L"NPFIREIE64.DLL"
-#elif defined _M_IX86
-// Should be capitilized!
-#define DLL_NAME "NPFIREIE32.DLL"
-#define DLL_NAME_WIDE L"NPFIREIE32.DLL"
-#endif
+
 
 // WindowProc thunks 
 #pragma pack(push,1)
