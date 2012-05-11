@@ -23,8 +23,13 @@ namespace Utils
 		 */
 		static Version GetVersion();
 
+		/**
+		 * 获取IE主版本号
+		 */
+		static int GetIEVersion();
 	private:
 		static Version s_version;
+		static int s_ieversion;
 	};
 
 }

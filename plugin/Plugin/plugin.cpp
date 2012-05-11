@@ -220,9 +220,13 @@ namespace Plugin
 
 	bool CPlugin::ShouldShowStatusOurselves()
 	{
-		// return true; // for debugging under win7
-		return Utils::OS::GetVersion() == Utils::OS::WINXP
-			|| Utils::OS::GetVersion() == Utils::OS::WIN2003;
+		//// return true; // for debugging under win7
+		//return Utils::OS::GetVersion() == Utils::OS::WINXP
+		//	|| Utils::OS::GetVersion() == Utils::OS::WIN2003;
+
+		// Above all nonsense = =||
+		// Flashing is related to IE version, IE9 or higher won't flash
+		return Utils::OS::GetIEVersion() < 9;
 	}
 
 	void CPlugin::SetStatus(const CString& text)

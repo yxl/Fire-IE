@@ -14,6 +14,7 @@ namespace Utils
 	}
 
 	OS::Version OS::s_version = OS::UNKNOWN;
+	int OS::s_ieversion = 0;
 
 	OS::Version OS::GetVersion() 
 	{
@@ -58,6 +59,38 @@ namespace Utils
 			s_version = WIN7;
 		}
 		return s_version;
+	}
+
+	int OS::GetIEVersion()
+	{
+		if (s_ieversion)
+			return s_ieversion;
+
+		HKEY hkey;
+		if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Internet Explorer"), 0,
+			KEY_QUERY_VALUE, &hkey))
+		{
+			const int BUFFER_LEN = 50;
+			TCHAR cstrVersion[BUFFER_LEN] = {0};
+			DWORD dwSize = sizeof(cstrVersion);
+
+			if (ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Version"), NULL, NULL, (LPBYTE)cstrVersion, &dwSize))
+			{
+				cstrVersion[BUFFER_LEN - 1] = _T('\0');
+				for (int i = 0; i < BUFFER_LEN; i++)
+				{
+					if (cstrVersion[i] < _T('0') || cstrVersion[i] > _T('9'))
+					{
+						cstrVersion[i] = _T('\0');
+						break;
+					}
+				}
+				s_ieversion = _tstoi(cstrVersion);
+			}
+
+			RegCloseKey(hkey);
+		}
+		return s_ieversion;
 	}
 
 }
