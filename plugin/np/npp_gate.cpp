@@ -44,9 +44,9 @@
 #include "plugin.h"
 #include "PluginGlobal.h"
 
-#define NPMIMEDESCRIPTION			"application/fireie"
-#define NPPVPLUGINNAMESTRING		"npfireie"
-#define NPPVPLUGINDESCRIPTIONSTRING	"Fire IE Plugin"
+#define NPMIMEDESCRIPTION			RES_NPMIMEDESCRIPTION
+#define NPPVPLUGINNAMESTRING		RES_NPPVPLUGINNAMESTRING
+#define NPPVPLUGINDESCRIPTIONSTRING	RES_NPPVPLUGINDESCRIPTIONSTRING
 using namespace Plugin;
 
 char* NPP_GetMIMEDescription(void)

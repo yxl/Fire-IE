@@ -106,12 +106,12 @@ namespace Plugin
 		CString post;
 		CString headers;
 
-		if (m_strId == _T("fireie-object"))
+		if (m_strId == RES_OBJECTNAME_T)
 		{
 			// 获取Plugin所在页面的URL, URL的格式是chrome://fireie/content/container.xhtml?url=XXX，
 			// 其中XXX是实际要访问的URL
 			CString strHostUrl = GetHostURL();
-			static const CString PREFIX(_T("chrome://fireie/content/container.xhtml?url="));
+			static const CString PREFIX(RES_CHROME_PREFIX_T);
 
 			// Secrity check. Do not allow other pages to load this plugin.
 			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
@@ -133,7 +133,7 @@ namespace Plugin
 			return FALSE;
 		}
 
-		if (m_strId == _T("fireie-utils-object"))
+		if (m_strId == RES_UTILS_OBJECT_T)
 		{
 			CIEHostWindow::AddUtilsIEWindow(m_pIEHostWindow);
 		}
@@ -150,7 +150,7 @@ namespace Plugin
 
 		m_bInitialized = TRUE;
 
-		if (m_strId == _T("fireie-utils-object"))
+		if (m_strId == RES_UTILS_OBJECT_T)
 		{
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
@@ -330,8 +330,8 @@ namespace Plugin
 		CString strParam;
 
 		NPObject* pWindow = NULL;
-		NPVariant vFireIEContainer;
-		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vContainer;
+		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vParam;
 		VOID_TO_NPVARIANT(vParam);
 
@@ -342,14 +342,14 @@ namespace Plugin
 				throw(CString(_T("Cannot get window")));
 			}
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
 			{
-				throw(CString(_T("Cannot get window.FireIEContainer")));
+				throw(CString(_T("Cannot get window.Container")));
 			}
 
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier(name), NULL, 0, &vParam))
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier(name), NULL, 0, &vParam))
 			{
-				throw(CString(_T("Cannot execute window.FireIEContainer.getXXX()")));
+				throw(CString(_T("Cannot execute window.Container.getXXX()")));
 			}
 			if (!NPVARIANT_IS_STRING(vParam)) 
 			{
@@ -363,7 +363,7 @@ namespace Plugin
 		}
 
 		if (!NPVARIANT_IS_VOID(vParam))	NPN_ReleaseVariantValue(&vParam);
-		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return strParam;
@@ -392,8 +392,8 @@ namespace Plugin
 	void CPlugin::RemoveNavigateParams()
 	{
 		NPObject* pWindow = NULL;
-		NPVariant vFireIEContainer;
-		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vContainer;
+		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vResult;
 		VOID_TO_NPVARIANT(vResult);
 
@@ -404,14 +404,14 @@ namespace Plugin
 				throw(CString(_T("Cannot get window")));
 			}
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
 			{
-				throw(CString(_T("Cannot get window.FireIEContainer")));
+				throw(CString(_T("Cannot get window.Container")));
 			}
 
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("removeNavigateParams"), NULL, 0, &vResult))
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier("removeNavigateParams"), NULL, 0, &vResult))
 			{
-				throw(CString(_T("Cannot execute window.FireIEContainer.removeNavigateParams()")));
+				throw(CString(_T("Cannot execute window.Container.removeNavigateParams()")));
 			}
 		}
 		catch (CString strMessage)
@@ -420,7 +420,7 @@ namespace Plugin
 		}
 
 		if (!NPVARIANT_IS_VOID(vResult))	NPN_ReleaseVariantValue(&vResult);
-		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 	}
 
@@ -543,8 +543,8 @@ namespace Plugin
 		double level = 1;
 
 		NPObject* pWindow = NULL;
-		NPVariant vFireIEContainer;
-		VOID_TO_NPVARIANT(vFireIEContainer);
+		NPVariant vContainer;
+		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vLevel;
 		VOID_TO_NPVARIANT(vLevel);
 
@@ -555,14 +555,14 @@ namespace Plugin
 				throw(CString(_T("Cannot get window")));
 			}
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("FireIEContainer"), &vFireIEContainer)) || !NPVARIANT_IS_OBJECT (vFireIEContainer))
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
 			{
-				throw(CString(_T("Cannot get window.FireIEContainer")));
+				throw(CString(_T("Cannot get window.Container")));
 			}
 
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vFireIEContainer), NPN_GetStringIdentifier("getZoomLevel"), NULL, 0, &vLevel))
+			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier("getZoomLevel"), NULL, 0, &vLevel))
 			{
-				throw(CString(_T("Cannot execute window.FireIEContainer.getZoomLevel()")));
+				throw(CString(_T("Cannot execute window.Container.getZoomLevel()")));
 			}
 			if (NPVARIANT_IS_DOUBLE(vLevel)) 
 				level = NPVARIANT_TO_DOUBLE(vLevel);
@@ -576,7 +576,7 @@ namespace Plugin
 		}
 
 		if (!NPVARIANT_IS_VOID(vLevel))	NPN_ReleaseVariantValue(&vLevel);
-		if (!NPVARIANT_IS_VOID(vFireIEContainer))	NPN_ReleaseVariantValue(&vFireIEContainer);
+		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
 		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return level;

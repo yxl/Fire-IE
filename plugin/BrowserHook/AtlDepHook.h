@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-
-#include "HookMgr.h"
-
 namespace BrowserHook
 {
 	/**
@@ -33,12 +30,9 @@ namespace BrowserHook
 		static AtlDepHook s_instance;
 		void Install(void);
 		void Uninstall(void);
-		void InstallHooksForNewModule(HMODULE hModule);
 	private:
 		AtlDepHook(void){}
 		~AtlDepHook(void){}
-
-		HookMgr m_hookMgr;
 	};
 }
 

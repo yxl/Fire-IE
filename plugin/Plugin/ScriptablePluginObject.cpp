@@ -530,7 +530,7 @@ namespace Plugin
 	bool ScriptablePluginObject::InvokeDefault(const NPVariant *args, uint32_t argCount,
 		NPVariant *result)
 	{
-		CString strMessage(_T("Welcome to use the FireIE Plugin for firefox!"));
+		CString strMessage(RES_WELCOME_T);
 		STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strMessage), *result);
 		return true;
 	}

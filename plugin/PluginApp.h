@@ -26,7 +26,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"		// main symbols
 
-#define STR_WINDOW_CLASS_NAME	_T("FireIE")	// CIEHostWindow窗口类名
+#define STR_WINDOW_CLASS_NAME	RES_PROJNAME_T	// CIEHostWindow窗口类名
 
 #define SAFE_DELETE(X) if(X){delete X; X = NULL;}
 
