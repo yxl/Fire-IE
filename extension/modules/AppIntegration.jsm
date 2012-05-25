@@ -659,7 +659,7 @@ WindowWrapper.prototype = {
       if (!isIEEngineAfterSwitch)
       {
         // Stop loading and hide the IE plugin if we switch to Firefox engine
-        let pluginObject = this.getContainerPlugin();
+        let pluginObject = this.getContainerPlugin(aTab);
         if (pluginObject)
         {
           pluginObject.style.visibility = "hidden";
@@ -686,6 +686,52 @@ WindowWrapper.prototype = {
           self._updateInterface();
           self.window.gURLBar.value = url;
         }, 100);
+      }
+    }
+  },
+
+  /**
+   *  Get the url after engine switch
+   */
+  _getURLAfterSwitch: function(aTab)
+  {
+    // getURL retrieves the actual URL from, maybe, container url
+    let url = this.getURL(aTab);
+
+    let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
+    
+    // firefox-only urls can only be handled by firefox(gecko) engine
+    if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
+    {
+      url = Utils.toContainerUrl(url);
+    }
+
+    return url;
+  },
+
+  /**
+   *  Indicate that the tab is manually switched
+   *  (i.e. do not do auto switch on this tab)
+   *  or not :)
+   */
+  _setManuallySwitchFlag: function(aTab, url)
+  {
+    if (aTab.linkedBrowser)
+    {
+      let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
+      if (browserNode)
+      {
+        let isIEEngineAfterSwitch = this.isIEEngine(aTab);
+        if (!isIEEngineAfterSwitch)
+        {
+          // User manually switches to Firefox engine.
+          // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
+          browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
+        }
+        else
+        {
+          browserNode.removeAttribute('manuallySwitchToFirefox');
+        }
       }
     }
   },
@@ -858,7 +904,7 @@ WindowWrapper.prototype = {
   _setSecureLockIcon: function(info)
   {
     let self = this.gIdentityHandler;
-    if (!self._identityBox) return;
+    if (!self || !self._identityBox) return;
 
     let classname = null;
     let tooltip = "";
@@ -1705,18 +1751,45 @@ WindowWrapper.prototype = {
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)
   {
-    // Right/Middle click switches the engine
-    if (e.button <= 1 && !e.target.disabled)
-    {
-      this.switchEngine();
-    }
-
-    // Right click pops up the context menu
-    else if (e.button == 2)
+    if (e.button == 2)
     {
       this.E("fireie-switch-button-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
     }
+    else
+    {
+      // switch behavior similar to the reload button
+      let where = this.window.whereToOpenLink(e, false, true);
 
+      if (where == "current")
+        this.switchEngine();
+      else
+      {
+        let gBrowser = this.window.gBrowser;
+        let url = this._getURLAfterSwitch(gBrowser.selectedTab);
+        // should load actual url after setting the manuallyswitched flag
+        let newTab = gBrowser.addTab("about:blank");
+        // first set manual switch flags
+        this._setManuallySwitchFlag(newTab, url);
+        // and then load the actual url
+        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+        newTab.linkedBrowser.loadURIWithFlags(url, flags);
+        
+        switch (where)
+        {
+        case "window":
+          gBrowser.hideTab(newTab);
+          gBrowser.replaceTabWithWindow(newTab);
+          break;
+        case "tabshifted":
+          // A background tab has been opened, nothing else to do here.
+          break;
+        case "tab":
+          gBrowser.selectedTab = newTab;
+          break;
+        }
+      }
+    }
+    
     e.preventDefault();
     e.stopPropagation();
   },
