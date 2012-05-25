@@ -64,7 +64,7 @@ var gFireIE = null;
     hookCode("PrintUtils.printPreview", /{/, "$& if(gFireIE.goDoCommand('PrintPreview')) return;");
 
     hookCode("goDoCommand", /{/, "$& if(gFireIE.goDoCommand(arguments[0])) return;"); // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
-    let displaySecurityInfoCode = "if((typeof(event)=='undefined'||(event.type=='click'&&event.button == 0)||(event.type=='keypress'&&(event.charCode==KeyEvent.DOM_VK_SPACE||event.keyCode==KeyEvent.DOM_VK_RETURN)))&&gFireIE.goDoCommand('DisplaySecurityInfo')) return;";
+    let displaySecurityInfoCode = "if((typeof(event)=='undefined'||(event.type=='click'&&event.button == 0)||(event.type=='keypress'&&(event.charCode==KeyEvent.DOM_VK_SPACE||event.keyCode==KeyEvent.DOM_VK_RETURN)))&&gFireIE.goDoCommand('DisplaySecurityInfo')){event.stopPropagation();return;};";
     hookCode("displaySecurityInfo", /{/, "$& " + displaySecurityInfoCode);
     hookAttr("identity-box", "onclick", displaySecurityInfoCode);
     hookAttr("identity-box", "onkeypress", displaySecurityInfoCode);
@@ -105,31 +105,37 @@ var gFireIE = null;
 
     hookCode("gFindBar._getInitialSelection", /{/, "$& { let gFireIE_value = gFireIE.getSelectionText(this._selectionMaxLen); if (gFireIE_value != null) return gFireIE_value; }");
 
-    gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
+    try
     {
-        var shouldHandle = !event.altKey && !event.ctrlKey &&
-                           !event.metaKey && !event.shiftKey;
+      gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
+      {
+          var shouldHandle = !event.altKey && !event.ctrlKey &&
+                             !event.metaKey && !event.shiftKey;
 
-        switch (event.keyCode) {
-          case KeyEvent.DOM_VK_PAGE_UP:
-            if (shouldHandle) {
-              gFireIE.goDoCommand("PageUp");
-            }
-            break;
-          case KeyEvent.DOM_VK_PAGE_DOWN:
-            if (shouldHandle) {
-              gFireIE.goDoCommand("PageDown");
-            }
-            break;
-          case KeyEvent.DOM_VK_UP:
-            gFireIE.goDoCommand("LineUp");
-            break;
-          case KeyEvent.DOM_VK_DOWN:
-            gFireIE.goDoCommand("LineDown");
-            break;
-        }
-    });
-    
+          switch (event.keyCode) {
+            case KeyEvent.DOM_VK_PAGE_UP:
+              if (shouldHandle) {
+                gFireIE.goDoCommand("PageUp");
+              }
+              break;
+            case KeyEvent.DOM_VK_PAGE_DOWN:
+              if (shouldHandle) {
+                gFireIE.goDoCommand("PageDown");
+              }
+              break;
+            case KeyEvent.DOM_VK_UP:
+              gFireIE.goDoCommand("LineUp");
+              break;
+            case KeyEvent.DOM_VK_DOWN:
+              gFireIE.goDoCommand("LineDown");
+              break;
+          }
+      });
+    }
+    catch (ex)
+    {
+      Utils.ERROR("findbar-textbox addEventListener('keypress') failed. " + ex);
+    }    
     //hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
     //hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
     //hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");

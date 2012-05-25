@@ -324,7 +324,9 @@ WindowWrapper.prototype = {
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this._onTabSelected), false);
     this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this._updateEditMenuItems), false);
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), false);
-
+    this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    
     // Listen to plugin events
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
@@ -1716,6 +1718,20 @@ WindowWrapper.prototype = {
     }
 
     e.preventDefault();
+    e.stopPropagation();
+  },
+
+  // process click events inside the URL bar (mainly to stop propagation
+  // in order to resolve multiple-caret problems)
+  _onClickInsideURLBar: function(e)
+  {
+    let pluginObject = this.getContainerPlugin();
+    if (pluginObject != null)
+    {
+      e.stopPropagation();
+      // the focus handler does window focus transfer for us (do not call Focus!!)
+      pluginObject.focus();
+    }
   },
 
   _onTabSelected: function(e)
