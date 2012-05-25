@@ -152,6 +152,8 @@ let FireIEContainer = {};
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
+    // support focus on plain DOMMouseScroll
+    E("container").addEventListener("DOMMouseScroll", onDOMMouseScroll, false);
   }
 
   function unregisterEventHandler()
@@ -162,6 +164,7 @@ let FireIEContainer = {};
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
+    E("container").removeEventListener("DOMMouseScroll", onDOMMouseScroll, false);
   }
 
 
@@ -235,6 +238,41 @@ let FireIEContainer = {};
     statusbar.setAttribute("mirrored", statusbar.getAttribute("mirrored") == "true" ? "false" : "true");
     if (!statusbar.firstChild || statusbar.firstChild.textContent == "")
       hideStatusBar();
+  }
+
+  function onDOMMouseScroll(event)
+  {
+    // constants from Win API
+    const SCROLL_PAGE_DOWN = 32768;
+    const SCROLL_PAGE_UP = -32768;
+    
+    // If it's a plain mouse wheel scroll, set focus on the IE control
+    // in order to let user scroll the content
+    if (event.axis == event.VERTICAL_AXIS
+        && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+    {
+      // Gecko 15+ supports "buttons" attribute
+      if (typeof(event.buttons) == "undefined" || event.buttons == 0)
+      {
+        // it's a plain wheel scroll, transfer focus to the control
+        let pluginObject = E(Utils.containerPluginId);
+        if (pluginObject)
+        {
+          // note we're focusing the plugin object, not the plugin control
+          // the object's focus handler will help us transfer the window focus
+          pluginObject.focus();
+          // forward this scroll result (UP or DOWN) as it's not sent to the control
+          if (event.detail > 0)
+          {
+            event.detail == SCROLL_PAGE_DOWN ? pluginObject.PageDown() : pluginObject.LineDown();
+          }
+          else if (event.detail < 0)
+          {
+            event.detail == SCROLL_PAGE_UP ? pluginObject.PageUp() : pluginObject.LineUp();
+          }
+        }
+      }
+    }
   }
 
   function hideStatusBar()
