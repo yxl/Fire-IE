@@ -1125,7 +1125,8 @@ WindowWrapper.prototype = {
   {
     let focused = this.window.document.commandDispatcher.focusedElement;
     if (focused == null) return true;
-    return !(focused instanceof HTMLInputElement) && !(focused instanceof HTMLTextAreaElement);
+    let localName = focused.localName.toLowerCase();
+    return localName != "input" && localName != "textarea";
   },
   /** Generate a method that calls plugin functions according to the given command */
   _genDoPluginCommandFunc: function(funcName, commands, successCallback)
