@@ -566,17 +566,20 @@ void CIEHostWindow::HandOverFocus()
 	}
 
 	// Change the focus to the parent window of html document to kill its focus. 
-	CComQIPtr<IDispatch> pDisp;
-	pDisp.Attach(m_ie.get_Document());
-	if(pDisp) 
+	if (m_ie.GetSafeHwnd())
 	{
-		CComQIPtr<IHTMLDocument2> htmlDoc = pDisp;
-		if(htmlDoc) 
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		if(pDisp) 
 		{
-			CComPtr<IHTMLWindow2> window;
-			if(SUCCEEDED(htmlDoc->get_parentWindow(&window))) 
+			CComQIPtr<IHTMLDocument2> htmlDoc = pDisp;
+			if(htmlDoc) 
 			{
-				window->focus();
+				CComPtr<IHTMLWindow2> window;
+				if(SUCCEEDED(htmlDoc->get_parentWindow(&window))) 
+				{
+					window->focus();
+				}
 			}
 		}
 	}
@@ -599,7 +602,11 @@ void CIEHostWindow::Zoom(double level)
 	// >= IE7
 	try
 	{
-		m_ie.ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vZoomLevel, NULL);
+		if (m_ie.GetSafeHwnd() && 
+			(m_ie.QueryStatusWB(OLECMDID_OPTICAL_ZOOM) & OLECMDF_ENABLED))
+		{
+			m_ie.ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vZoomLevel, NULL);
+		}
 		return;
 	}
 	catch (...)
@@ -635,18 +642,21 @@ void CIEHostWindow::PrintSetup()
 
 void CIEHostWindow::ViewPageSource()
 {
-	CComQIPtr<IDispatch> pDisp;
-	pDisp.Attach(m_ie.get_Document());
-	if (!pDisp)
+	if (m_ie.GetSafeHwnd())
 	{
-		return;
-	}
-	CComQIPtr<IOleCommandTarget> pCmd = pDisp;
-	if(pCmd)
-	{
-		CComVariant varinput = _T("");
-		CComVariant varoutput;
-		pCmd->Exec(&CGID_MSHTML, IDM_VIEWSOURCE, OLECMDEXECOPT_DODEFAULT, &varinput, &varoutput);
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		if (!pDisp)
+		{
+			return;
+		}
+		CComQIPtr<IOleCommandTarget> pCmd = pDisp;
+		if(pCmd)
+		{
+			CComVariant varinput = _T("");
+			CComVariant varoutput;
+			pCmd->Exec(&CGID_MSHTML, IDM_VIEWSOURCE, OLECMDEXECOPT_DODEFAULT, &varinput, &varoutput);
+		}
 	}
 }
 
@@ -745,7 +755,7 @@ CString CIEHostWindow::GetFaviconURL()
 	}
 	catch(...)
 	{
-		TRACE(_T("CIEHostWindow::GetURL failed!\n"));
+		TRACE(_T("CIEHostWindow::GetFaviconURL failed!\n"));
 	}
 
 	return favurl;
@@ -905,26 +915,29 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 {
 	const DWORD SHDVID_SSLSTATUS = 33;
 
-	CComQIPtr<IDispatch> pDisp;
-	pDisp.Attach(m_ie.get_Document());
-	if (!pDisp)
+	if (m_ie.GetSafeHwnd())
 	{
-		return;
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		if (!pDisp)
+		{
+			return;
+		}
+		CComQIPtr<IServiceProvider> pSP = pDisp;
+		if (!pSP) return;
+
+		CComQIPtr<IWebBrowser2> pWB2;
+		if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
+			return;
+
+		CComQIPtr<IOleCommandTarget> pCmd = pWB2;
+		if(!pCmd) return;
+
+		CComVariant varinput;
+		varinput.vt = VT_EMPTY;
+		CComVariant varoutput;
+		pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
 	}
-	CComQIPtr<IServiceProvider> pSP = pDisp;
-	if (!pSP) return;
-
-	CComQIPtr<IWebBrowser2> pWB2;
-	if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
-		return;
-
-	CComQIPtr<IOleCommandTarget> pCmd = pWB2;
-	if(!pCmd) return;
-
-	CComVariant varinput;
-	varinput.vt = VT_EMPTY;
-	CComVariant varoutput;
-	pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
 }
 
 void CIEHostWindow::OnUtilsPluginInit()
@@ -1089,7 +1102,11 @@ void CIEHostWindow::OnSetSecureLockIcon(int state)
 
 CString CIEHostWindow::GetFaviconURLFromContent()
 {
+
 	CString favurl = _T("");
+	if (!m_ie.GetSafeHwnd())
+		return favurl;
+
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
 	if (!pDisp)
@@ -1174,6 +1191,9 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 CString CIEHostWindow::GetDocumentUserAgent()
 {
 	CString strUserAgent(_T(""));
+	if (!m_ie.GetSafeHwnd())
+		return strUserAgent;
+
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
 	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
@@ -1203,6 +1223,8 @@ CString CIEHostWindow::GetDocumentUserAgent()
 CString CIEHostWindow::GetSelectionText()
 {
 	CString strFail = _T("");
+	if (!m_ie.GetSafeHwnd())
+		return strFail;
 
 	CComQIPtr<IDispatch> pDisp;
 	pDisp.Attach(m_ie.get_Document());
@@ -1406,12 +1428,15 @@ bool CIEHostWindow::FBObtainFindRange()
 	m_vFBDocs.clear();
 	m_lFBCurrentDoc = 0;
 
-	CComQIPtr<IDispatch> pDisp;
-	pDisp.Attach(m_ie.get_Document());
-	CComQIPtr<IHTMLDocument2> pDoc = pDisp;
-	if (!pDoc) return false;
+	if (m_ie.GetSafeHwnd())
+	{
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+		if (!pDoc) return false;
 
-	FBObtainFindRangeRecursive(pDoc);
+		FBObtainFindRangeRecursive(pDoc);
+	}
 	return m_vFBDocs.size() != 0;
 }
 
