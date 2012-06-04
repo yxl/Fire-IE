@@ -48,7 +48,7 @@ namespace BrowserHook
 
 	LONG WINAPI SetWindowLongW_hook(HWND hWnd, int nIndex, LONG dwNewLong) 
 	{
-		TRACE("[fireie] SetWindowLongA_hook\n");
+		TRACE("[fireie] SetWindowLongW_hook\n");
 
 		if (!FixThunk(dwNewLong))
 		{
