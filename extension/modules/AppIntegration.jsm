@@ -950,11 +950,18 @@ WindowWrapper.prototype = {
 
     identityBox.className = classname;
     identityBox.tooltipText = tooltip;
-    identityIconLabel.value = icon_label;
-    identityIconCountryLabel.value = "";
-    identityIconLabel.crop = "center";
-    identityIconLabel.parentNode.style.direction = "ltr";
-    identityIconLabel.parentNode.collapsed = icon_label ? false : true;
+    // Firefox 14+ uses a new site identity UI,
+    // we should not attempt to set the identity label
+    // as it's only for Extended Validation
+    if (Utils.firefoxMajorVersion < 14) {
+      identityIconLabel.value = icon_label;
+      identityIconCountryLabel.value = "";
+      identityIconLabel.crop = "center";
+      identityIconLabel.parentNode.style.direction = "ltr";
+      identityIconLabel.parentNode.collapsed = icon_label ? false : true;
+    } else {
+      identityIconLabel.parentNode.collapsed = true;
+    }
 
     self._mode = classname;
   },

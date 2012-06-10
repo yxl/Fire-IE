@@ -28,6 +28,8 @@ let _addonVersion = null;
 var Utils = {
   _ieUserAgent: null,
 
+  _ffMajorVersion: 4,
+
   /**
    * Returns the add-on ID used by Adblock Plus
    */
@@ -42,6 +44,14 @@ var Utils = {
   get addonVersion()
   {
     return _addonVersion;
+  },
+
+  /**
+   * Returns Firefox's major version
+   */
+  get firefoxMajorVersion()
+  {
+    return this._ffMajorVersion;
   },
 
   /**
@@ -761,6 +771,18 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
 {
   _addonVersion = addon.version;
 });
+
+(function() {
+  let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
+    .getService(Components.interfaces.nsIXULAppInfo);
+
+  let version = versionInfo.version;
+  Utils.LOG("Host app version: " + version);
+  let major = version.substring(0, version.indexOf('.'));
+  Utils.LOG("Host app major version: " + major);
+
+  Utils._ffMajorVersion = major;
+})();
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
