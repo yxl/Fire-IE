@@ -602,8 +602,7 @@ void CIEHostWindow::Zoom(double level)
 	// >= IE7
 	try
 	{
-		if (m_ie.GetSafeHwnd() && 
-			(m_ie.QueryStatusWB(OLECMDID_OPTICAL_ZOOM) & OLECMDF_ENABLED))
+		if (m_ie.GetSafeHwnd())
 		{
 			m_ie.ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vZoomLevel, NULL);
 		}
