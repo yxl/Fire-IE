@@ -91,6 +91,9 @@ public:
 	 * @return The IE control's UserAgent. It will be ready when the page completes loading for the first time. Before that, empty string will be returned.
 	 */
 	static CString GetIEUserAgentString() {return s_strIEUserAgent;}
+
+	/* Get the embedded Internet Explorer_server window */
+	HWND GetInternetExplorerServer() const;
 		
 public:
 	
@@ -187,6 +190,8 @@ protected:
 	static bool FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange);
 	static bool FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2);
 	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
+
+	static BOOL CALLBACK GetInternetExplorerServerCallback(HWND hWnd, LPARAM lParam);
 public:
 	CIECtrl m_ie;
 
@@ -216,6 +221,7 @@ public:
 	void ScrollLine(bool up);
 	void ScrollWhole(bool up);
 	void ScrollHorizontal(bool left);
+	void ScrollWheelLine(bool up);
 
 	// FindBar methods
 	void FBFindText(const CString& text);

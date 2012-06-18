@@ -240,38 +240,42 @@ let FireIEContainer = {};
       hideStatusBar();
   }
 
+  let mouseScrollBubbleProtect = false;
   function onDOMMouseScroll(event)
   {
-    // constants from Win API
-    const SCROLL_PAGE_DOWN = 32768;
-    const SCROLL_PAGE_UP = -32768;
-    
-    // If it's a plain mouse wheel scroll, set focus on the IE control
-    // in order to let user scroll the content
-    if (event.axis == event.VERTICAL_AXIS
-        && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
-    {
-      // Gecko 15+ supports "buttons" attribute
-      if (typeof(event.buttons) == "undefined" || event.buttons == 0)
+    if (mouseScrollBubbleProtect) return;
+    mouseScrollBubbleProtect = true;
+
+    try {
+      // constants from Win API
+      const SCROLL_PAGE_DOWN = 32768;
+      const SCROLL_PAGE_UP = -32768;
+      
+      // If it's a plain mouse wheel scroll, set focus on the IE control
+      // in order to let user scroll the content
+      if (event.axis == event.VERTICAL_AXIS
+          && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
       {
-        // it's a plain wheel scroll, transfer focus to the control
-        let pluginObject = E(Utils.containerPluginId);
-        if (pluginObject)
+        // Gecko 15+ supports "buttons" attribute
+        if (typeof(event.buttons) == "undefined" || event.buttons == 0)
         {
-          // note we're focusing the plugin object, not the plugin control
-          // the object's focus handler will help us transfer the window focus
-          pluginObject.focus();
-          // forward this scroll result (UP or DOWN) as it's not sent to the control
-          if (event.detail > 0)
+          // it's a plain wheel scroll, transfer focus to the control
+          let pluginObject = E(Utils.containerPluginId);
+          if (pluginObject)
           {
-            event.detail == SCROLL_PAGE_DOWN ? pluginObject.PageDown() : pluginObject.LineDown();
-          }
-          else if (event.detail < 0)
-          {
-            event.detail == SCROLL_PAGE_UP ? pluginObject.PageUp() : pluginObject.LineUp();
+            // note we're focusing the plugin object, not the plugin control
+            // the object's focus handler will help us transfer the window focus
+            pluginObject.focus();
+            // forward this scroll result (UP or DOWN) as it's not sent to the control
+            event.detail > 0 ? pluginObject.ScrollWheelDown() : pluginObject.ScrollWheelUp();
           }
         }
       }
+    } finally {
+      setTimeout(function()
+      {
+        mouseScrollBubbleProtect = false;
+      }, 500);
     }
   }
 

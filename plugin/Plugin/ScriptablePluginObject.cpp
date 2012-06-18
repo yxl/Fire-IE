@@ -409,6 +409,18 @@ namespace Plugin
 			pMainWindow->ScrollHorizontal(false);
 			return true;
 		}
+		else if (name == NPI_ID(ScrollWheelUp))
+		{
+			TRACE ("ScrollWheelUp called!\n");
+			pMainWindow->ScrollWheelLine(true);
+			return true;
+		}
+		else if (name == NPI_ID(ScrollWheelDown))
+		{
+			TRACE ("ScrollWheelDown called!\n");
+			pMainWindow->ScrollWheelLine(false);
+			return true;
+		}
 		else if (name == NPI_ID(FBFindText))
 		{
 			TRACE ("FBFindText called!\n");

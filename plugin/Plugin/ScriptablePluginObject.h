@@ -64,6 +64,8 @@ namespace Plugin
 		NPI_DEF(ScrollBottom);
 		NPI_DEF(ScrollLeft);
 		NPI_DEF(ScrollRight);
+		NPI_DEF(ScrollWheelUp);
+		NPI_DEF(ScrollWheelDown);
 
 		// findbar methods
 		NPI_DEF(FBFindText); // FB stands for firefox FindBar
@@ -132,6 +134,8 @@ namespace Plugin
 			NPN_GSI_M(ScrollBottom);
 			NPN_GSI_M(ScrollLeft);
 			NPN_GSI_M(ScrollRight);
+			NPN_GSI_M(ScrollWheelUp);
+			NPN_GSI_M(ScrollWheelDown);
 			NPN_GSI_M(FBFindText);
 			NPN_GSI_M(FBEndFindText);
 			NPN_GSI_M(FBFindAgain);

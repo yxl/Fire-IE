@@ -685,6 +685,45 @@ void CIEHostWindow::ScrollHorizontal(bool left)
 	SendKey(left ? VK_LEFT : VK_RIGHT);
 }
 
+BOOL CALLBACK CIEHostWindow::GetInternetExplorerServerCallback(HWND hWnd, LPARAM lParam)
+{
+	CString strClassName;
+	GetClassName(hWnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	strClassName.ReleaseBuffer(); 
+	if (strClassName == _T("Internet Explorer_Server"))
+	{
+		*(HWND*)lParam = hWnd;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+HWND CIEHostWindow::GetInternetExplorerServer() const
+{
+	HWND parent = this->m_hWnd;
+	HWND hWnd = NULL;
+	EnumChildWindows(parent, GetInternetExplorerServerCallback, (LPARAM)&hWnd);
+	return hWnd;
+}
+
+void CIEHostWindow::ScrollWheelLine(bool up)
+{
+	POINT ptCursorPos;
+	GetCursorPos(&ptCursorPos);
+
+	HWND hWnd = GetInternetExplorerServer();
+	if (hWnd)
+	{
+		TRACE(_T("Found Internet Explorer_Server, scrolling...\n"));
+		::SendMessage(hWnd, WM_MOUSEWHEEL,
+			MAKEWPARAM(0, up ? WHEEL_DELTA : -WHEEL_DELTA), MAKELPARAM(ptCursorPos.x, ptCursorPos.y));
+	}
+	else
+	{
+		TRACE(_T("Internet Explorer_Server not found, scroll canceled.\n"));
+	}
+}
+
 CString CIEHostWindow::GetURL()
 {
 	CString url;
