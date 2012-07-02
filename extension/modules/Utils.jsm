@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 let _addonVersion = null;
+let _addonVersionCallbacks = [];
 
 /**
  * Provides a bunch of utility functions.
@@ -748,6 +749,14 @@ var Utils = {
       }
     }
     return selectedItem;
+  },
+  // runs the callback function after the addon version is obtained
+  fireWithAddonVersion: function(callback)
+  {
+    if (_addonVersion != null)
+      callback(_addonVersion);
+    else
+      _addonVersionCallbacks.push(callback);
   }
 };
 
@@ -770,6 +779,11 @@ var Utils = {
 AddonManager.getAddonByID(Utils.addonID, function(addon)
 {
   _addonVersion = addon.version;
+  _addonVersionCallbacks.forEach(function(callback)
+  {
+    callback(_addonVersion);
+  });
+  _addonVersionCallbacks = null;
 });
 
 (function() {

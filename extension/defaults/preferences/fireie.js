@@ -3,6 +3,7 @@ pref("dom.ipc.plugins.enabled.npfireie64.dll", false);
 pref("extensions.fireie.privatebrowsingwarning", true);
 
 pref("extensions.fireie.currentVersion", "0.0.9");
+pref("extensions.fireie.subscriptions_defaultAdded", false);
 pref("extensions.fireie.subscriptions_autoupdate", true);
 pref("extensions.fireie.subscriptions_listurl", "http://fireie.org/sites/rules/subscriptions.xml");
 pref("extensions.fireie.subscriptions_fallbackurl", "https://fireie.org/getSubscription?version=%VERSION%&url=%SUBSCRIPTION%&downloadURL=%URL%&error=%ERROR%&channelStatus=%CHANNELSTATUS%&responseStatus=%RESPONSESTATUS%");

@@ -23,9 +23,6 @@ function init()
       break;
     }
   }
-
-  if (RuleStorage.subscriptions.some(function(s) s.url == Prefs.subscriptions_exceptionsurl))
-    E("acceptableAds").hidden = false;
 }
 
 function generateLinkText(element)

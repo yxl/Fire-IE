@@ -76,7 +76,7 @@ var RuleStorage = {
       {}
     }
 
-    if (!file) Cu.reportError("Fire-IE: Failed to resolve rule file location from extensions.adblockplus.patternsfile preference");
+    if (!file) Cu.reportError("Fire-IE: Failed to resolve rule file location.");
 
     this.__defineGetter__("sourceFile", function() file);
     return this.sourceFile;

@@ -97,36 +97,39 @@ let AppIntegration = {
   {
     // Execute first-run actions
     // Show subscriptions dialog if the user doesn't have any subscriptions yet
-    if (Prefs.currentVersion != Utils.addonVersion)
+    Utils.fireWithAddonVersion(function(addonVersion)
     {
-      Prefs.currentVersion = Utils.addonVersion;
-
-      if ("nsISessionStore" in Ci)
+      if (Prefs.currentVersion != addonVersion)
       {
-        // Have to wait for session to be restored
-        let observer = {
-          QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-          observe: function(subject, topic, data)
-          {
-            observerService.removeObserver(observer, "sessionstore-windows-restored");
-            timer.cancel();
-            timer = null;
-            addSubscription();
-          }
-        };
+        Prefs.currentVersion = addonVersion;
 
-        let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-        observerService.addObserver(observer, "sessionstore-windows-restored", false);
+        if ("nsISessionStore" in Ci)
+        {
+          // Have to wait for session to be restored
+          let observer = {
+            QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+            observe: function(subject, topic, data)
+            {
+              observerService.removeObserver(observer, "sessionstore-windows-restored");
+              timer.cancel();
+              timer = null;
+              addSubscription();
+            }
+          };
 
-        // Just in case, don't wait more than two seconds
-        let timer = Cc['@mozilla.org/timer;1'].createInstance(Ci.nsITimer);
-        timer.init(observer, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
+          let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+          observerService.addObserver(observer, "sessionstore-windows-restored", false);
+
+          // Just in case, don't wait more than two seconds
+          let timer = Cc['@mozilla.org/timer;1'].createInstance(Ci.nsITimer);
+          timer.init(observer, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
+        }
+        else
+        {
+          addSubscription();
+        }
       }
-      else
-      {
-        addSubscription();
-      }
-    }
+    });
 
     let wrapper = new WindowWrapper(window);
     wrappers.push(wrapper);
@@ -1926,18 +1929,10 @@ function reloadPrefs()
  */
 function addSubscription()
 {
-  // Don't add subscription if the user has a subscription already
-  let needAdd = true;
-  if (RuleStorage.subscriptions.some(function(subscription) subscription instanceof DownloadableSubscription)) needAdd = false;
-
-  // Only add subscription if user has no rules
-  if (needAdd)
-  {
-    let hasRules = RuleStorage.subscriptions.some(function(subscription) subscription.rules.length);
-    if (hasRules) needAdd = false;
-  }
-
+  // Use a one-time pref to determine whether we should add default subscription
+  let needAdd = Prefs.subscriptions_defaultAdded ? false : true;
   if (!needAdd) return;
+  Prefs.subscriptions_defaultAdded = true;
 
   function notifyUser()
   {
