@@ -285,6 +285,10 @@ Exit:
 			case 'Y': // Ctrl+Y, redo 
 			case VK_HOME: // Ctrl+HOME, Scroll to Top
 			case VK_END:  // Ctrl+END, Scroll to end
+			case VK_LEFT: // Ctrl+L/R, Jump to prev/next word
+			case VK_RIGHT:
+			case VK_UP: // Ctrl+U/D, identical to Up/Down
+			case VK_DOWN:
 				return FALSE;
 			default:
 				return TRUE;
