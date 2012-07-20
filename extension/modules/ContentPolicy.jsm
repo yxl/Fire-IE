@@ -190,23 +190,23 @@ var PolicyPrivate = {
       {
         if (!(subject instanceof Ci.nsIHttpChannel)) return;
 
+        let url = subject.URI.spec;
+        let domain = null;
+        let wnd = Utils.getRequestWindow(subject);
+        if (wnd)
+        {
+          domain = Utils.getHostname(wnd.location.href);
+        }
+
+        // Changes the UserAgent to that of IE if necessary.
+        if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
+        {
+          // Change user agent
+          subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
+        }
+
         if (Prefs.autoswitch_enabled)
         {
-          let url = subject.URI.spec;
-          let domain = null;
-          let wnd = Utils.getRequestWindow(subject);
-          if (wnd)
-          {
-            domain = Utils.getHostname(wnd.location.href);
-          }
-
-          // Changes the UserAgent to that of IE if necessary.
-          if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
-          {
-            // Change user agent
-            subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
-          }
-
           // Checks whether we need switch to IE 
           let isWindowURI = subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
           if (isWindowURI)
