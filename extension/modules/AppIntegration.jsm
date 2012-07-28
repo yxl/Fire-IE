@@ -133,7 +133,8 @@ let AppIntegration = {
 
     let wrapper = new WindowWrapper(window);
     wrappers.push(wrapper);
-
+    
+    return wrapper;
   },
 
   /**
