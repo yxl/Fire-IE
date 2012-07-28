@@ -93,7 +93,7 @@ let AppIntegration = {
   /**
    * Adds an application window to the tracked list.
    */
-  addWindow: function( /**Window*/ window)
+  addWindow: function( /**Window*/ window) /**WindowWrapper*/
   {
     // Execute first-run actions
     // Show subscriptions dialog if the user doesn't have any subscriptions yet
@@ -583,7 +583,7 @@ WindowWrapper.prototype = {
 
   /**
    *  Get current navigation URI with current engine.
-   *  It's of the same function with 与WindowWrapper#getURL.
+   *  It's of the same function with WindowWrapper#getURL.
    */
   getURI: function(aBrowser)
   {

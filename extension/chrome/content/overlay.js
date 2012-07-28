@@ -42,11 +42,49 @@ var gFireIE = null;
     hookURLBarSetter(gURLBar);
 
     //hook functions
-    hookCode("PlacesCommandHook.bookmarkPage", "aBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Obtain real URL when bookmarking
-    hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Obtain real URL when bookmarking
-    hookCode("PlacesStarButton.updateState", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Show bookmark state (the star icon in URL bar) when using IE engine
-    hookCode("StarUI._doShowEditBookmarkPanel", /(gBrowser|getBrowser\(\))\.currentURI/g, "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))"); // Show number of bookmarks in the overlay editing panel when using IE engine
+    // Obtain real URL when bookmarking
+    hookCodeHeadTail("PlacesCommandHook.bookmarkPage",
+                     function(aBrowser) { aBrowser.FireIE_bUseRealURI = true; },
+                     function(ret, aBrowser) { aBrowser.FireIE_bUseRealURI = false; });
+    {
+      let browsers = [];
+      hookCodeHeadTail("PlacesControllerDragHelper.onDrop",
+        function(ip, dt)
+        {
+          browsers = [];
+          let dropCount = dt.mozItemCount;
+          for (let i = 0; i < dropCount; ++i) {
+            let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
+            if (!flavor) return;
+            let data = dt.mozGetDataAt(flavor, i);
+            if (data instanceof XULElement && data.localName == "tab" && data.linkedBrowser)
+            {
+              data.linkedBrowser.FireIE_bUseRealURI = true;
+              browsers.push(data.linkedBrowser);
+            }
+          }
+        },
+        function(ret, ip, dt)
+        {
+          browsers.forEach(function(browser)
+          {
+            browser.FireIE_bUseRealURI = false;
+          });
+        });
+    }
+    // hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))");
+
+    // Show bookmark state (the star icon in URL bar) when using IE engine
+    hookCodeHeadTail("PlacesStarButton.updateState",
+                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+
+                     // Show number of bookmarks in the overlay editing panel when using IE engine
+    hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
+                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
     hookCodeTail("gBrowser.addTab", function(t) { gFireIE.hookBrowserGetter(t.linkedBrowser); });
+
     // Cancel setTabTitle when using IE engine
     hookCodeHead("gBrowser.setTabTitle", function(aTab)
     {
@@ -55,15 +93,16 @@ var gFireIE = null;
       if (browser.currentURI.spec && browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0)
         return shouldReturn();
     });
+
     // Visit the new URL
     hookCodeTail("getShortcutOrURI", function(ret) modifyValue(gFireIE.getHandledURL(ret)));
+
     //hook Interface Commands
     hookCodeHead("BrowserBack", function() { if (gFireIE.goDoCommand('Back')) return shouldReturn(); });
     hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return shouldReturn(); });
     hookCodeHead("BrowserStop", function() { if (gFireIE.goDoCommand('Stop')) return shouldReturn(); });
     hookCodeHead("BrowserReload", function() { if (gFireIE.goDoCommand('Refresh')) return shouldReturn(); });
     hookCodeHead("BrowserReloadSkipCache", function() { if (gFireIE.goDoCommand('Refresh')) return shouldReturn(); });
-
     hookCodeHead("saveDocument", function() { if (gFireIE.goDoCommand('SaveAs')) return shouldReturn(); });
     hookCodeHead("MailIntegration.sendMessage", function()
     {
@@ -75,27 +114,63 @@ var gFireIE = null;
         return modifyArguments(arguments);
       }
     }); // @todo Send mail?
+    
     hookCodeHead("PrintUtils.print", function() { if(gFireIE.goDoCommand('Print')) return shouldReturn(); });
     hookCodeHead("PrintUtils.showPageSetup", function() { if (gFireIE.goDoCommand('PrintSetup')) return shouldReturn(); });
     hookCodeHead("PrintUtils.printPreview", function() { if (gFireIE.goDoCommand('PrintPreview')) return shouldReturn(); });
     // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
     hookCodeHead("goDoCommand", function() { if (gFireIE.goDoCommand(arguments[0])) return shouldReturn(); }); 
-    let displaySecurityInfoCode = "if((typeof(event)=='undefined'||(event.type=='click'&&event.button == 0)||(event.type=='keypress'&&(event.charCode==KeyEvent.DOM_VK_SPACE||event.keyCode==KeyEvent.DOM_VK_RETURN)))&&gFireIE.goDoCommand('DisplaySecurityInfo')){event.stopPropagation();return;};";
+    
+    let displaySecurityInfoHandler = function(event)
+    {
+      if ((typeof(event) == 'undefined'
+          || (event.type == 'click' && event.button == 0)
+          || (event.type == 'keypress'
+              && (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)))
+        && gFireIE.goDoCommand('DisplaySecurityInfo'))
+      {
+        event.stopPropagation();
+      };
+    };
     let displaySecurityInfoFunc = function(e)
     {
-      (function(event)
-      {
-        eval(displaySecurityInfoCode);
-      })(e);
+      displaySecurityInfoHandler(e);
       return shouldReturn();
     }
     hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
-    hookAttr("identity-box", "onclick", displaySecurityInfoCode);
-    hookAttr("identity-box", "onkeypress", displaySecurityInfoCode);
-    hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return shouldReturn(); });
-    hookCode("gIdentityHandler.onDragStart", "content.location.href", "gFireIE.getURL()");
+    
+    try
+    {
+      let identityBox = document.getElementById("identity-box");
+      identityBox.addEventListener("click", displaySecurityInfoHandler, true);
+      identityBox.addEventListener("keypress", displaySecurityInfoHandler, true);
+      identityBox.addEventListener("dragstart", function(event)
+      {
+        if (gFireIE.isIEEngine())
+        {
+          if (gURLBar.getAttribute("pageproxystate") != "valid") {
+            return;
+          }
+          var value = gFireIE.getURL();
+          var urlString = value + "\n" + content.document.title;
+          var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
+          var dt = event.dataTransfer;
+          dt.setData("text/x-moz-url", urlString);
+          dt.setData("text/uri-list", value);
+          dt.setData("text/plain", value);
+          dt.setData("text/html", htmlString);
+        }
+      });
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to add event listener on #identity-box");
+    }
+
     gFireIE.gIdentityHandler = gIdentityHandler;
+    hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return shouldReturn(); });    
     hookCodeHead("BrowserViewSourceOfDocument", function() { if(gFireIE.goDoCommand('ViewPageSource')) return shouldReturn(); });
+    
     // make firegestures' and others' selection based functions work
     hookCodeHead("getBrowserSelection", function()
     {
@@ -314,6 +389,21 @@ var gFireIE = null;
     };
   }
   
+  function wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail)
+  {
+    return function()
+    {
+      let ret = myFuncHead.apply(this, arguments);
+      if (ret && ret.shouldReturn)
+        return ret.value;
+      let newArguments = (ret && ret.arguments) || arguments;
+      let orgRet = orgFunc.apply(this, newArguments);
+      Array.prototype.splice.call(newArguments, 0, 0, orgRet)
+      let myRet = myFuncTail.apply(this, newArguments);
+      return (myRet && myRet.shouldModify) ? myRet.value : orgRet;
+    };
+  }
+  
   function modifyValue(value)
   {
     return { shouldModify: true, value: value };
@@ -359,6 +449,26 @@ var gFireIE = null;
       Utils.ERROR("Failed to hooktail function: " + orgFuncName);
     }
   }
+  
+  function hookCodeHeadTail(orgFuncName/* String */, myFuncHead/* Function */, myFuncTail/* Function */)
+  {
+    try
+    {
+      let orgFunc = eval(orgFuncName);
+      if (typeof(orgFunc) == "function")
+      {
+        let wrappedFunc = wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail);
+        // execute the assignment
+        if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
+          throw orgFuncName;
+      }
+      else throw orgFuncName;
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to hookheadtail function: " + orgFuncName);
+    }
+  }
 
   /** Replace attribute's value V with (myFunc + V) (or (V + myFunc) if insertAtEnd is set to true) */
   function hookAttr(parentNode, attrName, myFunc, insertAtEnd)
@@ -384,6 +494,7 @@ var gFireIE = null;
 
   function hookProp(parentNode, propName, myGetter, mySetter)
   {
+    // must set both getter and setter or the other will be missing
     let oGetter = parentNode.__lookupGetter__(propName);
     let oSetter = parentNode.__lookupSetter__(propName);
     if (oGetter && myGetter)
@@ -418,6 +529,7 @@ var gFireIE = null;
     {
       parentNode.__defineSetter__(propName, oSetter);
     }
+    return { getter: oGetter, setter: oSetter };
   }
 
   gFireIE.hookBrowserGetter = function(aBrowser)
@@ -427,7 +539,12 @@ var gFireIE = null;
     hookProp(aBrowser, "currentURI", function()
     {
       let uri = gFireIE.getURI(this);
-      if (uri) return shouldReturn(uri);
+      if (uri)
+      {
+        if (this.FireIE_bUseRealURI)
+          uri = makeURI(Utils.fromContainerUrl(uri.spec));
+        return shouldReturn(uri);
+      }
     });
     // hook aBrowser.sessionHistory
     hookProp(aBrowser, "sessionHistory", function()
