@@ -205,7 +205,9 @@ let FireIEContainer = {};
   function onSetStatusText(event)
   {
     let statusbar = E(Utils.statusBarId);
-    let statustext = event.statusText;
+    let statustext = event.getData("statusText");
+    if (typeof(statustext) == "undefined")
+      statustext = "";
     let pretext = "";
     if (statusbar.firstChild)
     {

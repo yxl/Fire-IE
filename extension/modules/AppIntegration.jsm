@@ -992,17 +992,17 @@ WindowWrapper.prototype = {
       
       if (Prefs.showStatusText)
       {
-        let event = this.window.gBrowser.contentDocument.createEvent("Event");
+        let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
         event.initEvent("SetStatusText", false, false);
-        event.statusText = pluginObject.StatusText;
+        event.setData("statusText", pluginObject.StatusText);
         statusBar.dispatchEvent(event);
       }
       else if (!statusBar.hidden && !Prefs.showStatusText)
       {
         // event to notify content doc to hide status text
-        let event = this.window.gBrowser.contentDocument.createEvent("Event");
+        let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
         event.initEvent("SetStatusText", false, false);
-        event.statusText = "";
+        event.setData("statusText", "");
         statusBar.dispatchEvent(event);
       }
     }
