@@ -86,30 +86,32 @@ let EasyRuleCreator = {
     let lastItem = curItem;
     
     makeSelfCheckbox("", Utils.getString("fireie.erc.enableOnPage"), url);
+    let siteRuleTexts = makeSiteCheckbox("||", Utils.getString("fireie.erc.enableOnSite"), host, effHost);
    
     let rule = EngineMatcher.matchesAny(url);
-    if (rule && !isExceptionalRule(rule) && rule.text.indexOf("||") != 0 
-      && selfRuleTexts("", url).every(function(t) t != rule.text))
+    let inequalFunc = function(t) t != rule.text;
+    if (rule && !isExceptionalRule(rule)
+      && siteRuleTexts.every(inequalFunc)
+      && selfRuleTexts("", url).every(inequalFunc))
     {
       addCheckbox([rule],
         Utils.getString("fireie.erc.enableOnUrl").replace(/--/, saturate(rule.text)),
         true);
     }
     
-    makeSiteCheckbox("||", Utils.getString("fireie.erc.enableOnSite"), host, effHost);
     
     makeSelfCheckbox("@@", Utils.getString("fireie.erc.disableOnPage"), url);
+    siteRuleTexts = makeSiteCheckbox("@@||", Utils.getString("fireie.erc.disableOnSite"), host, effHost);
 
-    if (rule && isExceptionalRule(rule) && rule.text.indexOf("@@||") != 0
-      && selfRuleTexts("@@", url).every(function(t) t != rule.text))
+    if (rule && isExceptionalRule(rule)
+      && siteRuleTexts.every(inequalFunc)
+      && selfRuleTexts("@@", url).every(inequalFunc))
     {
       addCheckbox([rule],
         Utils.getString("fireie.erc.disableOnUrl").replace(/--/, saturate(rule.text)),
         true);
     }
-    
-    makeSiteCheckbox("@@||", Utils.getString("fireie.erc.disableOnSite"), host, effHost);
-    
+
     function saturate(str)
     {
       return str.length > 30 ? str.substring(0, 27) + "..." : str;
@@ -148,11 +150,13 @@ let EasyRuleCreator = {
         addCheckbox(rules, label, active);
       }
     }
-    
+      
     function makeSiteCheckbox(prefix, description, host, effHost)
     {
       // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com^' is active.
       if (!isActive(hostRule())) host = host.replace(/^www\./, '');
+      
+      let hostRuleTexts = [];
       
       while (true)
       {
@@ -163,6 +167,7 @@ let EasyRuleCreator = {
         {
           let label = description.replace(/--/, host);
           addCheckbox(rules, label, active);
+          Array.prototype.splice.apply(hostRuleTexts, [hostRuleTexts.length, 0].concat(rules.map(function(r) r.text)));
         }
         if (host == effHost) break;
 
@@ -173,6 +178,8 @@ let EasyRuleCreator = {
         // com.cn
         if (/^(?:com|net|org|edu|gov)\.[a-z]{2}$/i.test(host) && !isActive(hostRule())) break;
       }
+      
+      return hostRuleTexts;
 
       function hostRule()
       {
