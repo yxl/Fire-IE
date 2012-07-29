@@ -88,14 +88,14 @@ var Policy = {
    */
   checkEngineRule: function(url)
   {
-	if (Utils.isFirefoxOnly(url)) return false;
-	let docDomain = Utils.getHostname(url);
-	let match = EngineMatcher.matchesAny(url, docDomain);
-	if (match)
-	{
-	  RuleStorage.increaseHitCount(match);
-	}
-	return match && match instanceof EngineRule;
+    if (Utils.isFirefoxOnly(url)) return false;
+    let docDomain = Utils.getHostname(url);
+    let match = EngineMatcher.matchesAny(url, docDomain);
+    if (match)
+    {
+      RuleStorage.increaseHitCount(match);
+    }
+    return match && match instanceof EngineRule;
   },
 
   /**

@@ -42,6 +42,7 @@ Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
+Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -198,6 +199,8 @@ function WindowWrapper(window)
 
   this.window = window;
   this.Utils = Utils;
+  
+  this._genCE();
 
   if (!isPluginListRefreshed)
   {
@@ -262,6 +265,17 @@ WindowWrapper.prototype = {
     let doc = this.window.document;
     this.E = function(id) doc.getElementById(id);
     return this.E(id);
+  },
+  
+  /**
+   * Shorthand for document.createElementNS
+   */
+  _genCE: function()
+  {
+    let doc = this.window.document;
+    this.CE = function(tag) doc.createElementNS(
+      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", tag);
+    return this.CE;
   },
 
   init: function()
@@ -1910,6 +1924,19 @@ WindowWrapper.prototype = {
   openContributePage: function()
   {
     Utils.loadDocLink("contribute");
+  },
+  
+  /**
+   * Update menu items of URL bar icon
+   */
+  setMenuItems: function()
+  {
+    this.setAutoSwitchMenuItem();
+    EasyRuleCreator.setPopupMenuItems(
+      this.CE,
+      this.E("fireie-switch-button-context-menu"),
+      this.getURL()
+    );
   }
 
 };

@@ -252,7 +252,9 @@ SpecialSubscription.prototype = {
 SpecialSubscription.defaultsMap = {
   __proto__: null,
   "exceptional": EngineExceptionalRule,
-  "custom": EngineRule
+  "custom": EngineRule,
+  "ua": UserAgentRule,
+  "uaExceptional": UserAgentExceptionalRule
 };
 
 /**

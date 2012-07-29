@@ -4,7 +4,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
 <!ENTITY urlbar.switchRules.label "Switch Rules">
 <!ENTITY internetProperties.lable "IE's Internet Properties">
-<!ENTITY fireie.autoswitch.disable "Disable Auto-switch">
+<!ENTITY fireie.autoswitch.disable "Disable Auto-switch Everywhere">
 <!ENTITY skin.label "Skins">
 <!ENTITY default.lable "Default">
 <!ENTITY skin.more.lable "More...">
