@@ -34,7 +34,7 @@ var gFireIE = null;
     AppIntegration, Utils, GesturePrefObserver
   } = jsm;
   
-  //hook click_to_play, should take place before WindowWrapper installs the utils plugin
+  // hook click_to_play, should take place before WindowWrapper installs the utils plugin
   let clickToPlayHandler = function(event)
   {
     let plugin = event.target;
@@ -90,6 +90,37 @@ var gFireIE = null;
 
   function initializeHooks()
   {
+    // work around with TU's extensive use of source-patching code
+    if (typeof(TU_hookFunc) == "function")
+    {
+      let orgFunc = null, parentFunc = null;
+      hookCodeHeadTail("TU_hookFunc", function(func)
+      {
+        orgFunc = func;
+        let bModify = false;
+        // use "while" in case we wrapped several hook levels ourselves
+        while (typeof(func) == "function" && typeof(func.FireIE_orgFunc) == "function")
+        {
+          bModify = true;
+          parentFunc = func;
+          // redirects modification to the original function
+          func = func.FireIE_orgFunc;
+        }
+        if (bModify)
+        {
+          return modifyArguments(arguments);
+        }
+      },
+      function(ret, func)
+      {
+        if (orgFunc != func)
+        {
+          parentFunc.FireIE_orgFunc = ret;
+          return modifyValue(orgFunc);
+        }
+      });
+    }
+  
     //hook properties
     gFireIE.hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
     hookURLBarSetter(gURLBar);
@@ -399,7 +430,7 @@ var gFireIE = null;
 
   function wrapFunctionHead(orgFunc, myFunc, funcName)
   {
-    return function()
+    let func = function()
     {
       let ret = null;
       try
@@ -413,8 +444,10 @@ var gFireIE = null;
         Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
       }
       let newArguments = (ret && ret.arguments) || arguments;
-      return orgFunc.apply(this, newArguments);
+      return func.FireIE_orgFunc.apply(this, newArguments);
     };
+    func.FireIE_orgFunc = orgFunc;
+    return func;
   }
   
   function shouldReturn(value)
@@ -429,9 +462,9 @@ var gFireIE = null;
   
   function wrapFunctionTail(orgFunc, myFunc, funcName)
   {
-    return function()
+    let func = function()
     {
-      let ret = orgFunc.apply(this, arguments);
+      let ret = func.FireIE_orgFunc.apply(this, arguments);
       Array.prototype.splice.call(arguments, 0, 0, ret)
       let myRet = null;
       try
@@ -444,11 +477,13 @@ var gFireIE = null;
       }
       return (myRet && myRet.shouldModify) ? myRet.value : ret;
     };
+    func.FireIE_orgFunc = orgFunc;
+    return func;
   }
   
   function wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, funcName)
   {
-    return function()
+    let func = function()
     {
       let ret = null;
       try
@@ -462,7 +497,7 @@ var gFireIE = null;
         Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
       }
       let newArguments = (ret && ret.arguments) || arguments;
-      let orgRet = orgFunc.apply(this, newArguments);
+      let orgRet = func.FireIE_orgFunc.apply(this, newArguments);
       Array.prototype.splice.call(newArguments, 0, 0, orgRet)
       let myRet = null;
       try
@@ -475,6 +510,8 @@ var gFireIE = null;
       }
       return (myRet && myRet.shouldModify) ? myRet.value : orgRet;
     };
+    func.FireIE_orgFunc = orgFunc;
+    return func;
   }
   
   function modifyValue(value)
