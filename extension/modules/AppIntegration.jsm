@@ -394,6 +394,10 @@ WindowWrapper.prototype = {
         this.checkIdentity();
         // update status text
         this.updateIEStatusText();
+        // update current tab's title
+        let title = pluginObject.Title;
+        if (title && title != "")
+          this.window.gBrowser.contentDocument.title = title;
       }
 
       // Update the star button indicating whether current page is bookmarked.
