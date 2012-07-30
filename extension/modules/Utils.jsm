@@ -757,6 +757,13 @@ var Utils = {
       callback(_addonVersion);
     else
       _addonVersionCallbacks.push(callback);
+  },
+  // truncate string if it's too long
+  saturateString: function(str, length)
+  {
+    if (str.length > length)
+      str = str.substring(0, length - 3) + "...";
+    return str;
   }
 };
 

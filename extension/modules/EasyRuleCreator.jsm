@@ -114,7 +114,7 @@ let EasyRuleCreator = {
 
     function saturate(str)
     {
-      return str.length > 30 ? str.substring(0, 27) + "..." : str;
+      return Utils.saturateString(str, 30);
     }
     
     function addCheckbox(rules, label, active)
