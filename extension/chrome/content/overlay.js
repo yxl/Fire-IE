@@ -129,12 +129,12 @@ var gFireIE = null;
               && (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)))
         && gFireIE.goDoCommand('DisplaySecurityInfo'))
       {
-        event.stopPropagation();
+        if (event) event.stopPropagation();
       };
     };
-    let displaySecurityInfoFunc = function(e)
+    let displaySecurityInfoFunc = function()
     {
-      displaySecurityInfoHandler(e);
+      displaySecurityInfoHandler();
       return shouldReturn();
     }
     hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
@@ -356,13 +356,21 @@ var gFireIE = null;
     }
   }
   
-  function wrapFunctionHead(orgFunc, myFunc)
+  function wrapFunctionHead(orgFunc, myFunc, funcName)
   {
     return function()
     {
-      let ret = myFunc.apply(this, arguments);
-      if (ret && ret.shouldReturn)
-        return ret.value;
+      let ret = null;
+      try
+      {
+        ret = myFunc.apply(this, arguments);
+        if (ret && ret.shouldReturn)
+          return ret.value;
+      }
+      catch (ex)
+      {
+        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
+      }
       let newArguments = (ret && ret.arguments) || arguments;
       return orgFunc.apply(this, newArguments);
     };
@@ -378,28 +386,52 @@ var gFireIE = null;
     return { shouldReturn: false, arguments: arguments };
   }
   
-  function wrapFunctionTail(orgFunc, myFunc)
+  function wrapFunctionTail(orgFunc, myFunc, funcName)
   {
     return function()
     {
       let ret = orgFunc.apply(this, arguments);
       Array.prototype.splice.call(arguments, 0, 0, ret)
-      let myRet = myFunc.apply(this, arguments);
+      let myRet = null;
+      try
+      {
+        myRet = myFunc.apply(this, arguments);
+      }
+      catch (ex)
+      {
+        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@tail: " + ex);
+      }
       return (myRet && myRet.shouldModify) ? myRet.value : ret;
     };
   }
   
-  function wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail)
+  function wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, funcName)
   {
     return function()
     {
-      let ret = myFuncHead.apply(this, arguments);
-      if (ret && ret.shouldReturn)
-        return ret.value;
+      let ret = null;
+      try
+      {
+        ret = myFuncHead.apply(this, arguments);
+        if (ret && ret.shouldReturn)
+          return ret.value;
+      }
+      catch (ex)
+      {
+        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
+      }
       let newArguments = (ret && ret.arguments) || arguments;
       let orgRet = orgFunc.apply(this, newArguments);
       Array.prototype.splice.call(newArguments, 0, 0, orgRet)
-      let myRet = myFuncTail.apply(this, newArguments);
+      let myRet = null;
+      try
+      {
+        myRet = myFuncTail.apply(this, newArguments);
+      }
+      catch (ex)
+      {
+        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@tail: " + ex);
+      }
       return (myRet && myRet.shouldModify) ? myRet.value : orgRet;
     };
   }
@@ -417,7 +449,7 @@ var gFireIE = null;
       let orgFunc = eval(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
-        let wrappedFunc = wrapFunctionHead(orgFunc, myFunc);
+        let wrappedFunc = wrapFunctionHead(orgFunc, myFunc, orgFuncName);
         // execute the assignment
         if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
           throw orgFuncName;
@@ -437,7 +469,7 @@ var gFireIE = null;
       let orgFunc = eval(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
-        let wrappedFunc = wrapFunctionTail(orgFunc, myFunc);
+        let wrappedFunc = wrapFunctionTail(orgFunc, myFunc, orgFuncName);
         // execute the assignment
         if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
           throw orgFuncName;
@@ -457,7 +489,7 @@ var gFireIE = null;
       let orgFunc = eval(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
-        let wrappedFunc = wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail);
+        let wrappedFunc = wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, orgFuncName);
         // execute the assignment
         if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
           throw orgFuncName;
@@ -499,7 +531,7 @@ var gFireIE = null;
     let oSetter = parentNode.__lookupSetter__(propName);
     if (oGetter && myGetter)
     {
-      let newGetter = wrapFunctionHead(oGetter, myGetter);
+      let newGetter = wrapFunctionHead(oGetter, myGetter, parentNode.toString() + ".get " + propName);
       try
       {
         parentNode.__defineGetter__(propName, newGetter);
@@ -515,7 +547,7 @@ var gFireIE = null;
     }
     if (oSetter && mySetter)
     {
-      let newSetter = wrapFunctionHead(oSetter, mySetter);
+      let newSetter = wrapFunctionHead(oSetter, mySetter, parentNode.toString() + ".set " + propName);
       try
       {
         parentNode.__defineSetter__(propName, newSetter);
