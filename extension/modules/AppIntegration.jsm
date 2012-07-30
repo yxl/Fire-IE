@@ -349,6 +349,7 @@ WindowWrapper.prototype = {
   /**
    * Updates the UI for an application window.
    */
+  updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
     if (this.isUpdating)

@@ -57,8 +57,8 @@ var gFireIE = null;
         // ok, play the plugin and let go
         if (!objLoadingContent.activated)
         {
-          Utils.ERROR("activated content plugin");
           plugin.playPlugin();
+          gFireIE.updateInterface();
         }
         event.stopPropagation();
         return shouldReturn();
@@ -69,8 +69,8 @@ var gFireIE = null;
         // ok, play the utils plugin
         if (!objLoadingContent.activated)
         {
-          Utils.ERROR("activated utils plugin");
           plugin.playPlugin();
+          gFireIE.updateInterface();
         }
         event.stopPropagation();
         return shouldReturn();
