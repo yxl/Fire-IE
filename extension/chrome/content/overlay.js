@@ -33,6 +33,59 @@ var gFireIE = null;
   {
     AppIntegration, Utils, GesturePrefObserver
   } = jsm;
+  
+  //hook click_to_play, should take place before WindowWrapper installs the utils plugin
+  let clickToPlayHandler = function(event)
+  {
+    let plugin = event.target;
+
+    // We're expecting the target to be a plugin.
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+      return;
+      
+    // used to check whether the plugin is already activated
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    
+    let mimetype = plugin.getAttribute("type");
+    if (mimetype == "application/fireie")
+    {
+      // check the container page
+      let doc = plugin.ownerDocument;
+      let url = doc.location.href;
+      if (Utils.startsWith(url, Utils.containerUrl))
+      {
+        // ok, play the plugin and let go
+        if (!objLoadingContent.activated)
+        {
+          Utils.ERROR("activated content plugin");
+          plugin.playPlugin();
+        }
+        event.stopPropagation();
+        return shouldReturn();
+      }
+      // maybe it's a utils plugin
+      if (doc.location.href == "chrome://browser/content/browser.xul")
+      {
+        // ok, play the utils plugin
+        if (!objLoadingContent.activated)
+        {
+          Utils.ERROR("activated utils plugin");
+          plugin.playPlugin();
+        }
+        event.stopPropagation();
+        return shouldReturn();
+      }
+      // let gPluginHandler do the rest of the work
+    }
+  };
+  this.window.addEventListener("PluginClickToPlay", clickToPlayHandler, true);
+  // still we have to hook gPluginHandler.handleEvent
+  // in case they start listening on the window object
+  if (typeof(gPluginHandler) == "object" && typeof(gPluginHandler.handleEvent) == "function")
+  {
+    hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
+  }
+
   gFireIE = AppIntegration.addWindow(window);
 
   function initializeHooks()
@@ -304,7 +357,7 @@ var gFireIE = null;
       GesturePrefObserver.setGestureExtension("MouseGesturesRedox");
       function hookMGRFunction(name)
       {
-        if (mgGestureFunctions[name])
+        if (typeof(mgGestureFunctions[name]) == "function")
           hookCodeHead("mgGestureFunctions." + name, function() { if (gFireIE.goDoMGRCommand(name)) return shouldReturn(); });
       }
       let functionList = ['mgW_ScrollDown', 'mgW_ScrollUp', 'mgW_ScrollLeft', 'mgW_ScrollRight'];

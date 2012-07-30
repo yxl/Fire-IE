@@ -300,6 +300,7 @@ WindowWrapper.prototype = {
     embed.hidden = true;
     embed.setAttribute("id", Utils.utilsPluginId);
     embed.setAttribute("type", "application/fireie");
+    embed.style.visibility = "collapse";
     let mainWindow = this.E("main-window");
     mainWindow.appendChild(embed);
   },
