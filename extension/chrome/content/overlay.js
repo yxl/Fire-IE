@@ -344,18 +344,6 @@ var gFireIE = null;
     }
   }
 
-  function hookCode(orgFunc, orgCode, myCode)
-  {
-    try
-    {
-      if (eval(orgFunc).toString() == eval(orgFunc + "=" + eval(orgFunc).toString().replace(orgCode, myCode))) throw orgFunc;
-    }
-    catch (e)
-    {
-      Utils.ERROR("Failed to hook function: " + orgFunc);
-    }
-  }
-  
   function wrapFunctionHead(orgFunc, myFunc, funcName)
   {
     return function()
