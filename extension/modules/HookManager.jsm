@@ -496,6 +496,12 @@ HookManager.prototype = {
     });
   },
   
+  /**
+   * Redirects dangerous source-patching hook functions to the original one
+   * @param funcName - the globally referencable name of the function used to do source-patching hook
+   * @param nameIdx - the index of function name parameter in the above function
+   * @param funcIdx - the index of function parameter in the above function
+   */
   redirectSPHNameFunc: function(funcName, nameIdx, funcIdx)
   {
     let HM = this;
