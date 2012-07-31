@@ -29,10 +29,15 @@ var gFireIE = null;
   Cu.import(baseURL.spec + "AppIntegration.jsm", jsm);
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "GesturePrefObserver.jsm", jsm);
+  Cu.import(baseURL.spec + "HookManager.jsm", jsm);
+  
   let
   {
-    AppIntegration, Utils, GesturePrefObserver
+    AppIntegration, Utils, GesturePrefObserver, HookManager
   } = jsm;
+  
+  let HM = new HookManager(window, "gFireIE._hookManager");
+  let RET = HM.RET;
   
   // hook click_to_play, should take place before WindowWrapper installs the utils plugin
   let clickToPlayHandler = function(event)
@@ -61,7 +66,7 @@ var gFireIE = null;
           gFireIE.updateInterface();
         }
         event.stopPropagation();
-        return shouldReturn();
+        return RET.shouldReturn();
       }
       // maybe it's a utils plugin
       if (doc.location.href == "chrome://browser/content/browser.xul")
@@ -73,7 +78,7 @@ var gFireIE = null;
           gFireIE.updateInterface();
         }
         event.stopPropagation();
-        return shouldReturn();
+        return RET.shouldReturn();
       }
       // let gPluginHandler do the rest of the work
     }
@@ -83,42 +88,18 @@ var gFireIE = null;
   // in case they start listening on the window object
   if (typeof(gPluginHandler) == "object" && typeof(gPluginHandler.handleEvent) == "function")
   {
-    hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
+    HM.hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
   }
 
   gFireIE = AppIntegration.addWindow(window);
+  gFireIE._hookManager = HM;
 
   function initializeHooks()
   {
-    // work around with TU's extensive use of source-patching code
+    // work around with TU's excessive use of source-patching code
     if (typeof(TU_hookFunc) == "function")
     {
-      let orgFunc = null, parentFunc = null;
-      hookCodeHeadTail("TU_hookFunc", function(func)
-      {
-        orgFunc = func;
-        let bModify = false;
-        // use "while" in case we wrapped several hook levels ourselves
-        while (typeof(func) == "function" && typeof(func.FireIE_orgFunc) == "function")
-        {
-          bModify = true;
-          parentFunc = func;
-          // redirects modification to the original function
-          func = func.FireIE_orgFunc;
-        }
-        if (bModify)
-        {
-          return modifyArguments(arguments);
-        }
-      },
-      function(ret, func)
-      {
-        if (orgFunc != func)
-        {
-          parentFunc.FireIE_orgFunc = ret;
-          return modifyValue(orgFunc);
-        }
-      });
+      HM.redirectSourcePatchingHook("TU_hookFunc", 0);
     }
   
     //hook properties
@@ -127,12 +108,12 @@ var gFireIE = null;
 
     //hook functions
     // Obtain real URL when bookmarking
-    hookCodeHeadTail("PlacesCommandHook.bookmarkPage",
-                     function(aBrowser) { aBrowser.FireIE_bUseRealURI = true; },
-                     function(ret, aBrowser) { aBrowser.FireIE_bUseRealURI = false; });
+    HM.hookCodeHeadTail("PlacesCommandHook.bookmarkPage",
+                        function(aBrowser) { aBrowser.FireIE_bUseRealURI = true; },
+                        function(ret, aBrowser) { aBrowser.FireIE_bUseRealURI = false; });
     {
       let browsers = [];
-      hookCodeHeadTail("PlacesControllerDragHelper.onDrop",
+      HM.hookCodeHeadTail("PlacesControllerDragHelper.onDrop",
         function(ip, dt)
         {
           browsers = [];
@@ -156,54 +137,63 @@ var gFireIE = null;
           });
         });
     }
-    // hookCode("PlacesControllerDragHelper.onDrop", "data.linkedBrowser.currentURI", "makeURI(gFireIE.Utils.fromContainerUrl($&.spec))");
 
     // Show bookmark state (the star icon in URL bar) when using IE engine
-    hookCodeHeadTail("PlacesStarButton.updateState",
-                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+    HM.hookCodeHeadTail("PlacesStarButton.updateState",
+                        function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                        function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
 
-                     // Show number of bookmarks in the overlay editing panel when using IE engine
-    hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
-                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                     function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
-    hookCodeTail("gBrowser.addTab", function(t) { gFireIE.hookBrowserGetter(t.linkedBrowser); });
+    // Show number of bookmarks in the overlay editing panel when using IE engine
+    HM.hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
+                        function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                        function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+    
+    try
+    {
+      var container = gBrowser.tabContainer;
+      container.addEventListener("TabOpen", function(e) { gFireIE.hookBrowserGetter(e.target.linkedBrowser); }, true);
+      container.addEventListener("TabClose", function(e) { gFireIE.unhookBrowserGetter(e.target.linkedBrowser); }, false);
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to add tab open/close listeners: " + ex);
+    }
 
     // Cancel setTabTitle when using IE engine
-    hookCodeHead("gBrowser.setTabTitle", function(aTab)
+    HM.hookCodeHead("gBrowser.setTabTitle", function(aTab)
     {
       let browser = this.getBrowserForTab(aTab);
       if (browser.contentTitle) return;
       if (browser.currentURI.spec && browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0)
-        return shouldReturn();
+        return RET.shouldReturn();
     });
 
     // Visit the new URL
-    hookCodeTail("getShortcutOrURI", function(ret) modifyValue(gFireIE.getHandledURL(ret)));
+    HM.hookCodeTail("getShortcutOrURI", function(ret) RET.modifyValue(gFireIE.getHandledURL(ret)));
 
     //hook Interface Commands
-    hookCodeHead("BrowserBack", function() { if (gFireIE.goDoCommand('Back')) return shouldReturn(); });
-    hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return shouldReturn(); });
-    hookCodeHead("BrowserStop", function() { if (gFireIE.goDoCommand('Stop')) return shouldReturn(); });
-    hookCodeHead("BrowserReload", function() { if (gFireIE.goDoCommand('Refresh')) return shouldReturn(); });
-    hookCodeHead("BrowserReloadSkipCache", function() { if (gFireIE.goDoCommand('Refresh')) return shouldReturn(); });
-    hookCodeHead("saveDocument", function() { if (gFireIE.goDoCommand('SaveAs')) return shouldReturn(); });
-    hookCodeHead("MailIntegration.sendMessage", function()
+    HM.hookCodeHead("BrowserBack", function() { if (gFireIE.goDoCommand('Back')) return RET.shouldReturn(); });
+    HM.hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return RET.shouldReturn(); });
+    HM.hookCodeHead("BrowserStop", function() { if (gFireIE.goDoCommand('Stop')) return RET.shouldReturn(); });
+    HM.hookCodeHead("BrowserReload", function() { if (gFireIE.goDoCommand('Refresh')) return RET.shouldReturn(); });
+    HM.hookCodeHead("BrowserReloadSkipCache", function() { if (gFireIE.goDoCommand('Refresh')) return RET.shouldReturn(); });
+    HM.hookCodeHead("saveDocument", function() { if (gFireIE.goDoCommand('SaveAs')) return RET.shouldReturn(); });
+    HM.hookCodeHead("MailIntegration.sendMessage", function()
     {
       let pluginObject = gFireIE.getContainerPlugin();
       if(pluginObject)
       {
         arguments[0] = pluginObject.URL;
         arguments[1] = pluginObject.Title;
-        return modifyArguments(arguments);
+        return RET.modifyArguments(arguments);
       }
     }); // @todo Send mail?
     
-    hookCodeHead("PrintUtils.print", function() { if(gFireIE.goDoCommand('Print')) return shouldReturn(); });
-    hookCodeHead("PrintUtils.showPageSetup", function() { if (gFireIE.goDoCommand('PrintSetup')) return shouldReturn(); });
-    hookCodeHead("PrintUtils.printPreview", function() { if (gFireIE.goDoCommand('PrintPreview')) return shouldReturn(); });
+    HM.hookCodeHead("PrintUtils.print", function() { if(gFireIE.goDoCommand('Print')) return RET.shouldReturn(); });
+    HM.hookCodeHead("PrintUtils.showPageSetup", function() { if (gFireIE.goDoCommand('PrintSetup')) return RET.shouldReturn(); });
+    HM.hookCodeHead("PrintUtils.printPreview", function() { if (gFireIE.goDoCommand('PrintPreview')) return RET.shouldReturn(); });
     // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
-    hookCodeHead("goDoCommand", function() { if (gFireIE.goDoCommand(arguments[0])) return shouldReturn(); }); 
+    HM.hookCodeHead("goDoCommand", function() { if (gFireIE.goDoCommand(arguments[0])) return RET.shouldReturn(); }); 
     
     let displaySecurityInfoHandler = function(event)
     {
@@ -218,10 +208,10 @@ var gFireIE = null;
     };
     let displaySecurityInfoFunc = function()
     {
-      displaySecurityInfoHandler();
-      return shouldReturn();
+      if (gFireIE.goDoCommand('DisplaySecurityInfo'))
+        return RET.shouldReturn();
     }
-    hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
+    HM.hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
     
     try
     {
@@ -252,14 +242,14 @@ var gFireIE = null;
     }
 
     gFireIE.gIdentityHandler = gIdentityHandler;
-    hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return shouldReturn(); });    
-    hookCodeHead("BrowserViewSourceOfDocument", function() { if(gFireIE.goDoCommand('ViewPageSource')) return shouldReturn(); });
+    HM.hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return RET.shouldReturn(); });    
+    HM.hookCodeHead("BrowserViewSourceOfDocument", function() { if(gFireIE.goDoCommand('ViewPageSource')) return RET.shouldReturn(); });
     
     // make firegestures' and others' selection based functions work
-    hookCodeHead("getBrowserSelection", function()
+    HM.hookCodeHead("getBrowserSelection", function()
     {
       let value = gFireIE.getSelectionText(arguments[0]);
-      if (value != null) return shouldReturn(value);
+      if (value != null) return RET.shouldReturn(value);
     });
 
     initializeFindBarHooks();
@@ -277,7 +267,7 @@ var gFireIE = null;
   function initializeFindBarHooks()
   {
     // find_next, find_prev, arguments[0] denotes whether find_prev
-    hookCodeHead("gFindBar.onFindAgainCommand", function()
+    HM.hookCodeHead("gFindBar.onFindAgainCommand", function()
     {
       if (gFindBar.getElement('findbar-textbox').value.length != 0
         && gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value,
@@ -286,25 +276,25 @@ var gFireIE = null;
         && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain'))
       {
         gFireIE.updateFindBarUI(gFindBar);
-        return shouldReturn();
+        return RET.shouldReturn();
       }
     });
 
-    hookCodeHead("gFindBar.toggleHighlight", function()
+    HM.hookCodeHead("gFindBar.toggleHighlight", function()
     {
       if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value,
                                 gFindBar.getElement('highlight').checked,
                                 gFindBar.getElement('find-case-sensitive').checked))
       {
         gFireIE.updateFindBarUI(gFindBar);
-        return shouldReturn();
+        return RET.shouldReturn();
       }
     });
 
     // do not return in order to let findbar set the case sensitivity pref
-    hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); }");
+    HM.hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); }");
 
-    hookCodeHead("gFindBar._find", function()
+    HM.hookCodeHead("gFindBar._find", function()
     {
       let value = arguments[0] || gFindBar.getElement('findbar-textbox').value;
       if (gFireIE.setFindParams(value, gFindBar.getElement('highlight').checked,
@@ -312,19 +302,19 @@ var gFireIE = null;
         && gFireIE.findText(value))
       {
         gFireIE.updateFindBarUI(gFindBar);
-        return shouldReturn();
+        return RET.shouldReturn();
       }
     });
 
     // disabled, in order to support F3 findNext/Prev
     //hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
 
-    hookAttrTail("cmd_find", "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);");
+    HM.hookAttrTail(document.getElementById("cmd_find"), "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);");
 
-    hookCodeHead("gFindBar._getInitialSelection", function()
+    HM.hookCodeHead("gFindBar._getInitialSelection", function()
     {
       let value = gFireIE.getSelectionText(this._selectionMaxLen);
-      if (value != null) return shouldReturn(value);
+      if (value != null) return RET.shouldReturn(value);
     });
 
     try
@@ -357,9 +347,6 @@ var gFireIE = null;
     {
       Utils.ERROR("findbar-textbox addEventListener('keypress') failed. " + ex);
     }    
-    //hookAttr("cmd_find", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
-    //hookAttr("cmd_findAgain", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
-    //hookAttr("cmd_findPrevious", "oncommand", "if(gFireIE.goDoCommand('Find')) return;");
   }
 
   // FireGestures support
@@ -369,12 +356,12 @@ var gFireIE = null;
     {
       Utils.LOG("Fire Gestures detected.");
       GesturePrefObserver.setGestureExtension("FireGestures");
-      hookCodeHead("FireGestures._performAction", function() { if (gFireIE.goDoFGCommand(arguments[1])) return shouldReturn(); });
+      HM.hookCodeHead("FireGestures._performAction", function() { if (gFireIE.goDoFGCommand(arguments[1])) return RET.shouldReturn(); });
       // make firegestures' selection based functions work
-      hookCodeHead("FireGestures.getSelectedText", function()
+      HM.hookCodeHead("FireGestures.getSelectedText", function()
       {
         let value = gFireIE.getSelectionText(1000, true);
-        if (value != null) return shouldReturn(value);
+        if (value != null) return RET.shouldReturn(value);
       });
     }
   }
@@ -389,7 +376,7 @@ var gFireIE = null;
       function hookMGRFunction(name)
       {
         if (typeof(mgGestureFunctions[name]) == "function")
-          hookCodeHead("mgGestureFunctions." + name, function() { if (gFireIE.goDoMGRCommand(name)) return shouldReturn(); });
+          HM.hookCodeHead("mgGestureFunctions." + name, function() { if (gFireIE.goDoMGRCommand(name)) return RET.shouldReturn(); });
       }
       let functionList = ['mgW_ScrollDown', 'mgW_ScrollUp', 'mgW_ScrollLeft', 'mgW_ScrollRight'];
       for (let i = 0; i < functionList.length; i++)
@@ -409,7 +396,7 @@ var gFireIE = null;
       function hookAiOGFunction(name, action)
       {
         if (typeof(eval(name)) == "function")
-          hookCodeHead(name, function() { if (gFireIE.goDoAiOGCommand(action, arguments)) return shouldReturn(); });
+          HM.hookCodeHead(name, function() { if (gFireIE.goDoAiOGCommand(action, arguments)) return RET.shouldReturn(); });
       }
       let functionList = [["aioVScrollDocument", "vscroll"]];
       for (let i = 0; i < functionList.length; i++)
@@ -427,251 +414,53 @@ var gFireIE = null;
       GesturePrefObserver.setGestureExtension("GeneralAll");
     }
   }
-
-  function wrapFunctionHead(orgFunc, myFunc, funcName)
-  {
-    let func = function()
-    {
-      let ret = null;
-      try
-      {
-        ret = myFunc.apply(this, arguments);
-        if (ret && ret.shouldReturn)
-          return ret.value;
-      }
-      catch (ex)
-      {
-        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
-      }
-      let newArguments = (ret && ret.arguments) || arguments;
-      return func.FireIE_orgFunc.apply(this, newArguments);
-    };
-    func.FireIE_orgFunc = orgFunc;
-    return func;
-  }
   
-  function shouldReturn(value)
+  // save space by reusing function handles
+  let currentURIGetter = function()
   {
-    return { shouldReturn: true, value: value };
-  }
-  
-  function modifyArguments(arguments)
+    let uri = gFireIE.getURI(this);
+    if (uri)
+    {
+      if (this.FireIE_bUseRealURI)
+        uri = makeURI(Utils.fromContainerUrl(uri.spec));
+      return RET.shouldReturn(uri);
+    }
+  };
+  let sessionHistoryGetter = function()
   {
-    return { shouldReturn: false, arguments: arguments };
-  }
-  
-  function wrapFunctionTail(orgFunc, myFunc, funcName)
-  {
-    let func = function()
+    let history = this.webNavigation.sessionHistory;
+    let uri = gFireIE.getURI(this);
+    if (uri)
     {
-      let ret = func.FireIE_orgFunc.apply(this, arguments);
-      Array.prototype.splice.call(arguments, 0, 0, ret)
-      let myRet = null;
-      try
+      let entry = history.getEntryAtIndex(history.index, false);
+      if (entry.URI.spec != uri.spec)
       {
-        myRet = myFunc.apply(this, arguments);
-      }
-      catch (ex)
-      {
-        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@tail: " + ex);
-      }
-      return (myRet && myRet.shouldModify) ? myRet.value : ret;
-    };
-    func.FireIE_orgFunc = orgFunc;
-    return func;
-  }
-  
-  function wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, funcName)
-  {
-    let func = function()
-    {
-      let ret = null;
-      try
-      {
-        ret = myFuncHead.apply(this, arguments);
-        if (ret && ret.shouldReturn)
-          return ret.value;
-      }
-      catch (ex)
-      {
-        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@head: " + ex);
-      }
-      let newArguments = (ret && ret.arguments) || arguments;
-      let orgRet = func.FireIE_orgFunc.apply(this, newArguments);
-      Array.prototype.splice.call(newArguments, 0, 0, orgRet)
-      let myRet = null;
-      try
-      {
-        myRet = myFuncTail.apply(this, newArguments);
-      }
-      catch (ex)
-      {
-        Utils.ERROR("Failed executing hooked function: \"" + funcName + "\"@tail: " + ex);
-      }
-      return (myRet && myRet.shouldModify) ? myRet.value : orgRet;
-    };
-    func.FireIE_orgFunc = orgFunc;
-    return func;
-  }
-  
-  function modifyValue(value)
-  {
-    return { shouldModify: true, value: value };
-  }
-  
-  // The safer way: hook code while preserving original function's closures
-  function hookCodeHead(orgFuncName/* String */, myFunc/* Function */)
-  {
-    try
-    {
-      let orgFunc = eval(orgFuncName);
-      if (typeof(orgFunc) == "function")
-      {
-        let wrappedFunc = wrapFunctionHead(orgFunc, myFunc, orgFuncName);
-        // execute the assignment
-        if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
-          throw orgFuncName;
-      }
-      else throw orgFuncName;
-    }
-    catch (e)
-    {
-      Utils.ERROR("Failed to hookhead function: " + orgFuncName);
-    }
-  }
-
-  function hookCodeTail(orgFuncName/* String */, myFunc/* Function */)
-  {
-    try
-    {
-      let orgFunc = eval(orgFuncName);
-      if (typeof(orgFunc) == "function")
-      {
-        let wrappedFunc = wrapFunctionTail(orgFunc, myFunc, orgFuncName);
-        // execute the assignment
-        if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
-          throw orgFuncName;
-      }
-      else throw orgFuncName;
-    }
-    catch (e)
-    {
-      Utils.ERROR("Failed to hooktail function: " + orgFuncName);
-    }
-  }
-  
-  function hookCodeHeadTail(orgFuncName/* String */, myFuncHead/* Function */, myFuncTail/* Function */)
-  {
-    try
-    {
-      let orgFunc = eval(orgFuncName);
-      if (typeof(orgFunc) == "function")
-      {
-        let wrappedFunc = wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, orgFuncName);
-        // execute the assignment
-        if (wrappedFunc !== eval(orgFuncName + "=wrappedFunc"))
-          throw orgFuncName;
-      }
-      else throw orgFuncName;
-    }
-    catch (e)
-    {
-      Utils.ERROR("Failed to hookheadtail function: " + orgFuncName);
-    }
-  }
-
-  /** Replace attribute's value V with (myFunc + V) (or (V + myFunc) if insertAtEnd is set to true) */
-  function hookAttr(parentNode, attrName, myFunc, insertAtEnd)
-  {
-    if (typeof(parentNode) == "string") parentNode = document.getElementById(parentNode);
-    try
-    {
-      parentNode.setAttribute(attrName,
-        insertAtEnd ? parentNode.getAttribute(attrName) + myFunc
-                    : myFunc + parentNode.getAttribute(attrName));
-    }
-    catch (e)
-    {
-      Utils.ERROR("Failed to hook attribute: " + attrName);
-    }
-  }
-  function hookAttrTail(parentNode, attrName, myFunc)
-  {
-    hookAttr(parentNode, attrName, myFunc, true);
-  }
-
-  /** Add some code at the beginning of Property's getter and setter */
-
-  function hookProp(parentNode, propName, myGetter, mySetter)
-  {
-    // must set both getter and setter or the other will be missing
-    let oGetter = parentNode.__lookupGetter__(propName);
-    let oSetter = parentNode.__lookupSetter__(propName);
-    if (oGetter && myGetter)
-    {
-      let newGetter = wrapFunctionHead(oGetter, myGetter, parentNode.toString() + ".get " + propName);
-      try
-      {
-        parentNode.__defineGetter__(propName, newGetter);
-      }
-      catch (e)
-      {
-        Utils.ERROR("Failed to hook property Getter: " + propName);
+        entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
+        if (this.parentNode.__SS_data) delete this.parentNode.__SS_data;
       }
     }
-    else if (oGetter)
-    {
-      parentNode.__defineGetter__(propName, oGetter);
-    }
-    if (oSetter && mySetter)
-    {
-      let newSetter = wrapFunctionHead(oSetter, mySetter, parentNode.toString() + ".set " + propName);
-      try
-      {
-        parentNode.__defineSetter__(propName, newSetter);
-      }
-      catch (e)
-      {
-        Utils.ERROR("Failed to hook property Setter: " + propName);
-      }
-    }
-    else if (oSetter)
-    {
-      parentNode.__defineSetter__(propName, oSetter);
-    }
-    return { getter: oGetter, setter: oSetter };
-  }
+  };
 
   gFireIE.hookBrowserGetter = function(aBrowser)
   {
     if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
+    if (aBrowser.FireIE_hooked) return;
     // hook aBrowser.currentURI, Let firefox know the new URL after navigating inside the IE engine
-    hookProp(aBrowser, "currentURI", function()
-    {
-      let uri = gFireIE.getURI(this);
-      if (uri)
-      {
-        if (this.FireIE_bUseRealURI)
-          uri = makeURI(Utils.fromContainerUrl(uri.spec));
-        return shouldReturn(uri);
-      }
-    });
+    HM.hookProp(aBrowser, "currentURI", currentURIGetter);
     // hook aBrowser.sessionHistory
-    hookProp(aBrowser, "sessionHistory", function()
-    {
-      let history = this.webNavigation.sessionHistory;
-      let uri = gFireIE.getURI(this);
-      if (uri)
-      {
-        let entry = history.getEntryAtIndex(history.index, false);
-        if (entry.URI.spec != uri.spec)
-        {
-          entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
-          if (this.parentNode.__SS_data) delete this.parentNode.__SS_data;
-        }
-      }
-    });
-  }
+    HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
+    aBrowser.FireIE_hooked = true;
+    Utils.LOG("Browser Getter hooked.");
+  };
+  
+  gFireIE.unhookBrowserGetter = function(aBrowser)
+  {
+    if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
+    HM.unhookProp(aBrowser, "currentURI");
+    HM.unhookProp(aBrowser, "sessionHistory");
+    aBrowser.FireIE_hooked = false;
+    Utils.LOG("Browser Getter unhooked.");
+  };
 
   function hookURLBarSetter(aURLBar)
   {
@@ -686,13 +475,13 @@ var gFireIE = null;
         aURLBar.focus();
       }
     }
-    hookProp(aURLBar, "value", null, function()
+    HM.hookProp(aURLBar, "value", null, function()
     {
       let isIEEngine = arguments[0] && (arguments[0].substr(0, Utils.containerUrl.length) == Utils.containerUrl);
       if (isIEEngine)
       {
         arguments[0] = Utils.fromContainerUrl(arguments[0]);
-        return modifyArguments(arguments);
+        return RET.modifyArguments(arguments);
       }
     });
   }
@@ -702,6 +491,6 @@ var gFireIE = null;
     window.removeEventListener("load", loadListener, false);
     gFireIE.init();
     initializeHooks();
-  }
+  };
   window.addEventListener("load", loadListener, false);
 })();
