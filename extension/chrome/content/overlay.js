@@ -101,6 +101,10 @@ var gFireIE = null;
     {
       HM.redirectSourcePatchingHook("TU_hookFunc", 0);
     }
+    if (typeof(Tabmix) != "undefined" && typeof(Tabmix.newCode) == "function")
+    {
+      HM.redirectSPHNameFunc("Tabmix.newCode", 0, 1);
+    }
   
     //hook properties
     gFireIE.hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);

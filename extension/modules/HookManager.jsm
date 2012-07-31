@@ -494,5 +494,30 @@ HookManager.prototype = {
         return HM.RET.modifyValue(orgFunc);
       }
     });
+  },
+  
+  redirectSPHNameFunc: function(funcName, nameIdx, funcIdx)
+  {
+    let HM = this;
+    return this.hookCodeHead(funcName, function()
+    {
+      let func = arguments[funcIdx];
+      let bModify = false;
+      let orgHookFunctionIdx = null;
+      // use "while" in case we wrapped several hook levels ourselves
+      while (typeof(func) == "function" && typeof(func.FireIE_orgFuncIdx) == "number")
+      {
+        bModify = true;
+        orgHookFunctionIdx = func.FireIE_orgFuncIdx;
+        func = HM._hookFunctions[orgHookFunctionIdx].orgFunc;
+      }
+      if (bModify)
+      {
+        arguments[nameIdx] = HM._refName + "._hookFunctions[" + orgHookFunctionIdx + "].orgFunc";
+        arguments[funcIdx] = func;
+        Utils.LOG("Redirected name-func SPH from " + HM._hookFunctions[orgHookFunctionIdx].name + " to " + arguments[nameIdx]);
+        return HM.RET.modifyArguments(arguments);
+      }
+    });
   }
 };
