@@ -251,7 +251,7 @@ HookManager.prototype = {
           this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
         }
-        Utils.ERROR("Hooked: " + orgFuncName);
+
         return orgFunc;
       }
       else throw "not a function";
@@ -286,7 +286,7 @@ HookManager.prototype = {
           this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
         }
-        Utils.ERROR("Hooked: " + orgFuncName);
+
         return orgFunc;
       }
       else throw "not a function";
@@ -322,7 +322,7 @@ HookManager.prototype = {
           this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
         }
-        Utils.ERROR("Hooked: " + orgFuncName);
+
         return orgFunc;
       }
       else throw "not a function";

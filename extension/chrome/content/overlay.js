@@ -93,8 +93,8 @@ var gFireIE = null;
 
   gFireIE = AppIntegration.addWindow(window);
   gFireIE._hookManager = HM;
-
-  function initializeHooks()
+  
+  function initBasicHooks()
   {
     // work around with TU's excessive use of source-patching code
     if (typeof(TU_hookFunc) == "function")
@@ -108,11 +108,14 @@ var gFireIE = null;
   
     //hook properties
     hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
-    
+  }
+  
+  function initListeners()
+  {
     //event listeners
     try
     {
-      var container = gBrowser.tabContainer;
+      let container = gBrowser.tabContainer;
       container.addEventListener("TabOpen", function(e) { hookBrowserGetter(e.target.linkedBrowser); }, true);
       container.addEventListener("TabClose", function(e) { unhookBrowserGetter(e.target.linkedBrowser); }, false);
     }
@@ -161,29 +164,51 @@ var gFireIE = null;
     }
 
     gFireIE.gIdentityHandler = gIdentityHandler;
-    
+  }
+  
+  function initLazyHooks()
+  {
     // lazy function hooking, may solve most of the addon incompatibilities
     // caused by the new hook mechanism
-    let lazyHookHandler = function()
+    let delayedCheckTab = function(tab)
     {
-      Utils.ERROR("Doing lazy function hooks...");
-      doLazyHooks();
-      window.removeEventListener("IEContentPluginInitialized", lazyHookHandler, true);
+      setTimeout(function() { if (gFireIE.isIEEngine(tab)) doLazyHooks(); }, 0);
     };
-    window.addEventListener("IEContentPluginInitialized", lazyHookHandler, true);
-    
-    gFireIE.fireAfterInit(function()
+    let lazyHookTabOpenHandler = function(e)
     {
-      initializeFGHooks();
-      initializeMGRHooks();
-      initializeAiOGHooks();
-      initializeUCMGHooks();
-      GesturePrefObserver.onGestureDetectionEnd();
-      GesturePrefObserver.setEnabledGestures();
-    }, this, []);
-
+      delayedCheckTab(e.target);
+    };
+    let lazyHookDocumentCompleteHandler = function(e)
+    {
+      // make sure it is not from the utils plugin
+      if (document.getElementById(Utils.utilsPluginId) !== e.target)
+        doLazyHooks();
+    };
+    // add listeners
+    window.addEventListener("IEContentPluginInitialized", doLazyHooks, true);
+    window.addEventListener("IEDocumentComplete", lazyHookDocumentCompleteHandler, true);
+    let container = gBrowser.tabContainer;
+    container.addEventListener("TabOpen", lazyHookTabOpenHandler, true);
+    // listener removal
+    let removeLazyHookHandlers = function()
+    {
+      window.removeEventListener("IEContentPluginInitialized", doLazyHooks, true);
+      window.removeEventListener("IEDocumentComplete", lazyHookDocumentCompleteHandler, true);
+      container.removeEventListener("TabOpen", lazyHookTabOpenHandler, true);
+    };
+    // last thing: check whether the first tab is using IE engine
+    delayedCheckTab(gBrowser.mTabContainer.firstChild);
+    
+    let bLazyHooked = false;
     function doLazyHooks()
     {
+      // guard
+      if (bLazyHooked) return;
+      bLazyHooked = true;
+      removeLazyHookHandlers();
+      
+      Utils.LOG("Doing lazy function hooks...");
+      
       //hook properties
       hookURLBarSetter(gURLBar);
 
@@ -284,6 +309,24 @@ var gFireIE = null;
 
       initializeFindBarHooks();
     }
+  }
+
+  function initializeHooks()
+  {
+    initBasicHooks();
+    initListeners();
+    initLazyHooks();
+
+    gFireIE.fireAfterInit(function()
+    {
+      initializeFGHooks();
+      initializeMGRHooks();
+      initializeAiOGHooks();
+      initializeUCMGHooks();
+      GesturePrefObserver.onGestureDetectionEnd();
+      GesturePrefObserver.setEnabledGestures();
+    }, this, []);
+
   }
 
   function initializeFindBarHooks()

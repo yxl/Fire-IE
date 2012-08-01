@@ -42,6 +42,7 @@ Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
+Cu.import(baseURL.spec + "IECookieManager.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -278,6 +279,10 @@ WindowWrapper.prototype = {
    */
   _installUtilsPlugin: function()
   {
+    // Change the default cookie and cache directories of the IE, which will
+    // be restored when the utils plugin is loaded.
+    IECookieManager.changeIETempDirectorySetting();
+
     // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
     this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function()
     {
@@ -1131,10 +1136,7 @@ WindowWrapper.prototype = {
 
   _restoreIETempDirectorySetting: function()
   {
-    let subject = null;
-    let topic = "fireie-restoreIETempDirectorySetting";
-    let data = null;
-    Services.obs.notifyObservers(subject, topic, data);
+    IECookieManager.retoreIETempDirectorySetting();
   },
   
   // whether we should handle textbox commands, e.g. cmd_paste
