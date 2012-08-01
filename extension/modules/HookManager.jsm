@@ -247,7 +247,10 @@ HookManager.prototype = {
         // check whether we are successful
         with (this._scope) { orgFuncNew = eval(orgFuncName); }
         if (wrappedFunc !== orgFuncNew)
+        {
+          this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
+        }
         
         return orgFunc;
       }
@@ -279,7 +282,10 @@ HookManager.prototype = {
         // check whether we are successful
         with (this._scope) { orgFuncNew = eval(orgFuncName); }
         if (wrappedFunc !== orgFuncNew)
+        {
+          this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
+        }
         
         return orgFunc;
       }
@@ -307,12 +313,15 @@ HookManager.prototype = {
       {
         let wrappedFunc = this._wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, orgFuncName);
         // execute the assignment
-        eval("with (this._scope) { " + orgFuncName + " = wrappedFunc; }");
+        eval("with (this._scope) { " + orgFuncName + "=wrappedFunc; }");
         let orgFuncNew;
         // check whether we are successful
         with (this._scope) { orgFuncNew = eval(orgFuncName); }
         if (wrappedFunc !== orgFuncNew)
+        {
+          this._recycleFunc(wrappedFunc);
           throw "eval assignment failure";
+        }
         
         return orgFunc;
       }
@@ -320,7 +329,7 @@ HookManager.prototype = {
     }
     catch (ex)
     {
-      Utils.ERROR("Failed to hook function " + orgFuncName + "@head: " + ex);
+      Utils.ERROR("Failed to hook function " + orgFuncName + "@head&tail: " + ex);
     }
   },
   
