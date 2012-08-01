@@ -68,7 +68,7 @@ let EasyRuleCreator = {
     this._removeMenuItemsByClass(menu, this._enableOnClassName);
     
     // check whether current url is auto-switchable
-    if (!Prefs.autoswitch_enabled || Utils.isFirefoxOnly(url))
+    if (Utils.isFirefoxOnly(url))
       return;
     
     let schemeIdx = url.indexOf(":");
@@ -85,9 +85,51 @@ let EasyRuleCreator = {
     let curItem = menu.querySelector("#fireie-erc-start");
     let lastItem = curItem;
     
+    let uaSiteRuleTexts =
+      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaOnSite"), host, host, "", "$SPECIAL-UA=ESR")
+      .concat(
+      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaESROnSite"), host, host, "$SPECIAL-UA=ESR", "", true));
+    
+    curItem.setAttribute("tooltiptext", Utils.esrUserAgent);
+    curItem.nextSibling.setAttribute("tooltiptext", Utils.ieUserAgent);
+    
+    let uaRule = UserAgentMatcher.matchesAny(url);
+    if (uaRule && !isExceptionalRule(uaRule)
+      && uaSiteRuleTexts.every(function(t) t != uaRule.text))
+    {
+      addCheckbox([uaRule],
+        Utils.getString(isESRRule(uaRule) ? "fireie.erc.uaESROnPage" : "fireie.erc.uaOnPage")
+          .replace(/--/, saturate(pureRuleText(uaRule))),
+        true).setAttribute("tooltiptext", isESRRule(uaRule) ? Utils.esrUserAgent : Utils.ieUserAgent);
+    }
+    
+    let tmpItem = curItem;
+    uaSiteRuleTexts = makeSiteCheckbox("@@##||", Utils.getString("fireie.erc.uaDefaultOnSite"), host, host);
+    if (curItem !== tmpItem)
+    {
+      curItem.setAttribute("tooltiptext", Utils.userAgent);
+      if (curItem.nextSibling !== tmpItem)
+        curItem.nextSibling.setAttribute("tooltiptext", Utils.userAgent);
+    }
+    
+    uaRule = UserAgentMatcher.matchesAny(url);
+    if (uaRule && isExceptionalRule(uaRule)
+      && uaSiteRuleTexts.every(function(t) t != uaRule.text))
+    {
+      addCheckbox([uaRule],
+        Utils.getString("fireie.erc.uaDefaultOnPage").replace(/--/, saturate(pureRuleText(uaRule))),
+        true).setAttribute("tooltiptext", Utils.userAgent);
+    }
+    
+    if (curItem !== lastItem) addSeparator();
+    lastItem = curItem;
+    
+    // auto-switch does not affect ua rules, so we check it here
+    if (!Prefs.autoswitch_enabled) return;
+    
     makeSelfCheckbox("", Utils.getString("fireie.erc.enableOnPage"), url);
     let siteRuleTexts = makeSiteCheckbox("||", Utils.getString("fireie.erc.enableOnSite"), host, effHost);
-   
+
     let rule = EngineMatcher.matchesAny(url);
     let inequalFunc = function(t) t != rule.text;
     if (rule && !isExceptionalRule(rule)
@@ -95,10 +137,9 @@ let EasyRuleCreator = {
       && selfRuleTexts("", url).every(inequalFunc))
     {
       addCheckbox([rule],
-        Utils.getString("fireie.erc.enableOnUrl").replace(/--/, saturate(rule.text)),
+        Utils.getString("fireie.erc.enableOnUrl").replace(/--/, saturate(pureRuleText(rule))),
         true);
     }
-    
     
     makeSelfCheckbox("@@", Utils.getString("fireie.erc.disableOnPage"), url);
     siteRuleTexts = makeSiteCheckbox("@@||", Utils.getString("fireie.erc.disableOnSite"), host, effHost);
@@ -108,21 +149,23 @@ let EasyRuleCreator = {
       && selfRuleTexts("@@", url).every(inequalFunc))
     {
       addCheckbox([rule],
-        Utils.getString("fireie.erc.disableOnUrl").replace(/--/, saturate(rule.text)),
+        Utils.getString("fireie.erc.disableOnUrl").replace(/--/, saturate(pureRuleText(rule))),
         true);
     }
-
+    
+    if (curItem !== lastItem) addSeparator();
+    
     function saturate(str)
     {
       return Utils.saturateString(str, 30);
     }
     
-    function addCheckbox(rules, label, active)
+    function addCheckbox(rules, label, active, nodisable, opRules)
     {
-      let checkbox = makeNewCheckbox(rules, label, active);
+      let checkbox = makeNewCheckbox(rules, label, active, opRules);
       menu.insertBefore(checkbox, curItem);
       curItem = checkbox;
-      if (active)
+      if (active && !nodisable)
       {
         let item = curItem.nextSibling;
         while (item != lastItem)
@@ -133,6 +176,15 @@ let EasyRuleCreator = {
         }
       }
       return checkbox;
+    }
+    
+    function addSeparator()
+    {
+      let separator = CE("menuseparator");
+      separator.className = self._enableOnClassName;
+      menu.insertBefore(separator, curItem);
+      curItem = separator;
+      return separator;
     }
     
     function selfRuleTexts(prefix, url)
@@ -151,7 +203,7 @@ let EasyRuleCreator = {
       }
     }
       
-    function makeSiteCheckbox(prefix, description, host, effHost)
+    function makeSiteCheckbox(prefix, description, host, effHost, suffix, opSuffix, nodisable)
     {
       // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com^' is active.
       if (!isActive(hostRule())) host = host.replace(/^www\./, '');
@@ -162,14 +214,15 @@ let EasyRuleCreator = {
       {
         let rule = hostRule();
         let rules = [rule].concat(relatedHostRules());
+        let opRules = typeof(opSuffix) == "string" ? [hostOpRule()].concat(relatedHostOpRules()) : null;
         let active = rules.some(isActive);
         if (active || !isExceptionalRule(rule))
         {
           let label = description.replace(/--/, host);
-          addCheckbox(rules, label, active);
+          addCheckbox(rules, label, active, nodisable, opRules);
           Array.prototype.splice.apply(hostRuleTexts, [hostRuleTexts.length, 0].concat(rules.map(function(r) r.text)));
         }
-        if (host == effHost) break;
+        if (host == effHost || host.length < effHost.length) break;
 
         // strip sub domain
         host = host.replace(/^[^\.]+\./, '');
@@ -183,25 +236,37 @@ let EasyRuleCreator = {
 
       function hostRule()
       {
-        return Rule.fromText(prefix + host + "^");
+        return Rule.fromText(prefix + host + "^" + (suffix || ""));
       }
       
       function relatedHostRules()
       {
-        return [prefix + host + "/", prefix + host].map(Rule.fromText);
+        return [prefix + host + "/" + (suffix || ""), prefix + host + (suffix || "")].map(Rule.fromText);
       }
+      
+      function hostOpRule()
+      {
+        return Rule.fromText(prefix + host + "^" + (opSuffix || ""));
+      }
+      
+      function relatedHostOpRules()
+      {
+        return [prefix + host + "/" + (opSuffix || ""), prefix + host + (opSuffix || "")].map(Rule.fromText);
+      }
+
     }
     
-    function makeNewCheckbox(rules, label, active)
+    function makeNewCheckbox(rules, label, active, opRules)
     {
       var checkbox = CE("menuitem");
       checkbox.className = self._enableOnClassName;
       checkbox.setAttribute("type", "checkbox");
       checkbox.setAttribute("label", label);
       checkbox.setAttribute("closemenu", "none");
+      checkbox.setAttribute("tooltiptext", rules[0].text);
       checkbox.addEventListener('command', function()
       {
-        toggleRule(rules);
+        toggleRule(rules, opRules);
         self.setPopupMenuItems(CE, menu, url);
       }, false);
 
@@ -212,6 +277,7 @@ let EasyRuleCreator = {
       }
       return checkbox;
     }
+
     /**
      * @return true  if rule exist & not disabled
      */
@@ -231,9 +297,35 @@ let EasyRuleCreator = {
     }
     
     /**
+     * @return true  if rule is for switching to ESR UA
+     */
+    function isESRRule(/**Rule*/ rule)
+    {
+      return rule.specialUA && rule.specialUA.toUpperCase() == "ESR";
+    }
+    
+    /**
+     * @return rule text with options part striped off
+     */
+    function pureRuleText(/**Rule*/ rule)
+    {
+      let text = rule.text;
+      if (text.substring(0, 2) == "@@")
+        text = text.substring(2);
+      if (text.substring(0, 2) == "##")
+        text = text.substring(2);
+
+      if (Rule.optionsRegExp.test(text))
+      {
+        return RegExp.leftContext;
+      }
+      return text;
+    }
+    
+    /**
      * If the given rule is active, remove/disable it, Otherwise add/enable it.
      */
-    function toggleRule(rules)
+    function toggleRule(rules, opRules)
     {
       if (rules.some(isActive)) {
         rules.forEach(function(rule) {
@@ -241,6 +333,12 @@ let EasyRuleCreator = {
         });
       }
       else {
+        if (opRules && opRules.some(isActive))
+        {
+          opRules.forEach(function(rule) {
+            rule.disabled = true;
+          });
+        }
         for (let i = 0, l = rules.length; i < l; i++)
         {
           let rule = rules[i];

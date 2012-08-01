@@ -199,6 +199,7 @@ function WindowWrapper(window)
 
   this.window = window;
   this.Utils = Utils;
+  Utils.userAgent = window.navigator.userAgent;
   
   this._genCE();
 

@@ -28,6 +28,7 @@ let _addonVersionCallbacks = [];
  */
 var Utils = {
   _ieUserAgent: null,
+  _userAgent: null,
 
   _ffMajorVersion: 4,
 
@@ -120,9 +121,23 @@ var Utils = {
     Utils._ieUserAgent = value;
   },
   
+  get userAgent()
+  {
+    return Utils._userAgent;
+  },
+  
+  set userAgent(value)
+  {
+    Utils._userAgent = value;
+  },
+  
   get esrUserAgent()
   {
-    return "Mozilla/5.0 (Windows NT 6.1; rv:10.0) Gecko/20100101 Firefox/10.0";
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "Prefs.jsm");
+    
+    Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
+    return this.esrUserAgent;
   },
 
   /**
@@ -644,9 +659,10 @@ var Utils = {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
 
-    let availableLanguages = { "zh-CN": "zh-CN", "zh-TW": "zh-CN", "en-US": "en" };
+    let availableLanguages = JSON.parse(Prefs.doc_link_languages);
     let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g,
-      Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale] : "en");
+      Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale]
+                                            : availableLanguages["default"]);
     Utils.loadInBrowser(link);
   },
 

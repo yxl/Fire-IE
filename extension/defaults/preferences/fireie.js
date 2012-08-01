@@ -12,6 +12,8 @@ pref("extensions.fireie.data_directory", "fireie");
 pref("extensions.fireie.contentPolicy_ignoredSchemes", "http https about irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
 pref("extensions.fireie.autoswitch_enabled", true);
 pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
+pref("extensions.fireie.doc_link_languages", "{ \"default\": \"en\", \"zh-CN\": \"zh-CN\", \"zh-TW\": \"zh-CN\", \"en-US\": \"en\" }");
+pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) Gecko/20100101 Firefox/10.0");
 pref("extensions.fireie.savestats", true);
 
 pref("extensions.fireie.handleUrlBar", false);
