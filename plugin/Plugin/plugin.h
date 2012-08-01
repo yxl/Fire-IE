@@ -150,6 +150,9 @@ namespace Plugin
 
 		/** Utility plugin intialized */
 		void OnUtilsPluginInit();
+
+		/** Content plugin intialized */
+		void OnContentPluginInit();
 	protected:
 
 		NPP m_pNPInstance;

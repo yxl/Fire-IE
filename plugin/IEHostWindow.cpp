@@ -247,6 +247,11 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 			OnUtilsPluginInit();
 		}
 		break;
+	case WPARAM_CONTENT_PLUGIN_INIT:
+		{
+			OnContentPluginInit();
+		}
+		break;
 	case WPARAM_NAVIGATE:
 		{
 			OnNavigate();
@@ -983,6 +988,14 @@ void CIEHostWindow::OnUtilsPluginInit()
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnUtilsPluginInit();
+	}
+}
+
+void CIEHostWindow::OnContentPluginInit()
+{
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnContentPluginInit();
 	}
 }
 

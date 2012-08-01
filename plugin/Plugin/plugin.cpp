@@ -158,6 +158,16 @@ namespace Plugin
 			if (hwnd)
 				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_UTILS_PLUGIN_INIT, 0);
 		}
+		else
+		{
+			// content IE window, should fire IEContentPluginIntialized event
+
+			// cannot directly fire the event since the plugin is not fully constructed 
+			// - we are still in the initializer
+			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
+			if (hwnd)
+				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_CONTENT_PLUGIN_INIT, 0);
+		}
 
 		return TRUE;
 	}
@@ -653,6 +663,13 @@ namespace Plugin
 	void CPlugin::OnUtilsPluginInit()
 	{
 		CString strEventType = _T("IEUtilsPluginInitialized");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnContentPluginInit()
+	{
+		CString strEventType = _T("IEContentPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}

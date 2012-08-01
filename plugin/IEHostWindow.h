@@ -56,6 +56,7 @@ namespace UserMessage
 	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
 	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
 	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
+	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
 
 }
 
@@ -262,6 +263,7 @@ public:
 	void OnCloseIETab();
 	void OnSetSecureLockIcon(int state);
 	void OnUtilsPluginInit();
+	void OnContentPluginInit();
 
 protected:
 	BOOL m_bCanBack;
