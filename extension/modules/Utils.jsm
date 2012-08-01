@@ -75,7 +75,7 @@ var Utils = {
   },
 
   /**
-   * Returns the user interface locale selected for adblockplus chrome package.
+   * Returns the user interface locale selected for fireie chrome package.
    */
   get appLocale()
   {
@@ -631,7 +631,7 @@ var Utils = {
 
   /**
    * Opens a pre-defined documentation link in the browser window. This will
-   * send the UI language to adblockplus.org so that the correct language
+   * send the UI language to fireie.org so that the correct language
    * version of the page can be selected.
    */
   loadDocLink: function( /**String*/ linkID)
@@ -639,7 +639,9 @@ var Utils = {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
 
-    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g, Utils.appLocale);
+    let availableLanguages = { "zh-CN": "zh-CN", "zh-TW": "zh-CN", "en-US": "en" };
+    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g,
+      Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale] : "en");
     Utils.loadInBrowser(link);
   },
 
