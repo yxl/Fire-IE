@@ -101,7 +101,7 @@ var Policy = {
   /**
    * Checks whether IE user agent should be used. 
    * @param {String} url
-   * @return {Boolean} true if IE user agent should be used. 
+   * @return {UserAgentRule} the rule if there's any match
    */
   checkUserAgentRule: function(url, domain)
   {
@@ -110,7 +110,7 @@ var Policy = {
     {
       RuleStorage.increaseHitCount(match);
     }
-    return match && match instanceof UserAgentRule;
+    return match instanceof UserAgentRule ? match : null;
   },
 
   /**
@@ -199,10 +199,15 @@ var PolicyPrivate = {
         }
 
         // Changes the UserAgent to that of IE if necessary.
-        if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
+        let match;
+        if (match = Policy.checkUserAgentRule(url, domain))
         {
           // Change user agent
-          subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
+          let specialUA = (match.specialUA && match.specialUA.toUpperCase() == "ESR")
+            ? Utils.esrUserAgent : null;
+          let userAgent = specialUA || Utils.ieUserAgent;
+          if (userAgent)
+            subject.setRequestHeader("user-agent", userAgent, false);
         }
 
         if (Prefs.autoswitch_enabled)

@@ -519,6 +519,7 @@ RegExpRule.fromText = function(text)
 
   let matchCase = null;
   let domains = null;
+  let specialUA = null;
   let options;
   if (Rule.optionsRegExp.test(text))
   {
@@ -536,6 +537,7 @@ RegExpRule.fromText = function(text)
       option = option.replace(/-/, "_");
       if (option == "MATCH_CASE") matchCase = true;
       else if (option == "DOMAIN" && typeof value != "undefined") domains = value;
+      else if (option == "SPECIAL_UA" && typeof value != "undefined") specialUA = value;
     }
   }
 
@@ -545,7 +547,7 @@ RegExpRule.fromText = function(text)
     {
       if (userAgent)
       {
-        return new UserAgentRule(origText, text, matchCase, domains);
+        return new UserAgentRule(origText, text, matchCase, domains, specialUA);
       }
       else
       {
@@ -593,12 +595,15 @@ EngineRule.prototype = {
  * @param {String} regexpSource see RegExpRule()
  * @param {Boolean} matchCase see RegExpRule()
  * @param {String} domains see RegExpRule()
+ * @param {String} special UA, overrides default IE engine UA
  * @constructor
  * @augments RegExpRule
  */
-function UserAgentRule(text, regexpSource, matchCase, domains)
+function UserAgentRule(text, regexpSource, matchCase, domains, specialUA)
 {
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
+  if (specialUA)
+    this.specialUA = specialUA;
 }
 UserAgentRule.prototype = {
   __proto__: RegExpRule.prototype
