@@ -302,9 +302,17 @@ Exit:
 		{
 			switch (keyCode)
 			{
+			case VK_F2: // Developer toolbar, although not very useful
+				return bShiftPressed;
 			case VK_F3: // find next, with shift: find prev
 				return TRUE;
+			case VK_F4: // Shift-F4 opens Scratchpad which is very handy
+				return bShiftPressed;
+			case VK_F7: // Style Editor, although not very useful
+				return bShiftPressed;
 			case VK_F11: // full screen
+				return !bShiftPressed;
+			case VK_F12: // Firebug, although not really useful
 				return !bShiftPressed;
 			default:
 				return FALSE;
