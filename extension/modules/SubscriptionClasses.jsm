@@ -230,6 +230,7 @@ SpecialSubscription.prototype = {
     {
       for each(let type in this.defaults)
       {
+        if (!(type in SpecialSubscription.defaultsMap)) continue;
         if (rule instanceof SpecialSubscription.defaultsMap[type]) return true;
         if (!(rule instanceof ActiveRule) && type == "blacklist") return true;
       }

@@ -86,9 +86,9 @@ let EasyRuleCreator = {
     let lastItem = curItem;
     
     let uaSiteRuleTexts =
-      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaOnSite"), host, host, "", "$SPECIAL-UA=ESR")
+      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaOnSite"), effHost, effHost, "", "$SPECIAL-UA=ESR")
       .concat(
-      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaESROnSite"), host, host, "$SPECIAL-UA=ESR", "", true));
+      makeSiteCheckbox("##||", Utils.getString("fireie.erc.uaESROnSite"), effHost, effHost, "$SPECIAL-UA=ESR", "", true));
     
     curItem.setAttribute("tooltiptext", Utils.esrUserAgent);
     curItem.nextSibling.setAttribute("tooltiptext", Utils.ieUserAgent);
@@ -104,13 +104,9 @@ let EasyRuleCreator = {
     }
     
     let tmpItem = curItem;
-    uaSiteRuleTexts = makeSiteCheckbox("@@##||", Utils.getString("fireie.erc.uaDefaultOnSite"), host, host);
+    uaSiteRuleTexts = makeSiteCheckbox("@@##||", Utils.getString("fireie.erc.uaDefaultOnSite"), effHost, effHost);
     if (curItem !== tmpItem)
-    {
       curItem.setAttribute("tooltiptext", Utils.userAgent);
-      if (curItem.nextSibling !== tmpItem)
-        curItem.nextSibling.setAttribute("tooltiptext", Utils.userAgent);
-    }
     
     uaRule = UserAgentMatcher.matchesAny(url);
     if (uaRule && isExceptionalRule(uaRule)
