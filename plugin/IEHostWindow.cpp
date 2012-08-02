@@ -1560,7 +1560,7 @@ bool CIEHostWindow::FBCheckDocument()
 	{
 		FBDocFindStatus& dfs = m_vFBDocs[lCurrentDoc];
 		CComPtr<IHTMLTxtRange> pTmpTxtRange;
-		if (FAILED(dfs.txtRange->duplicate(&pTmpTxtRange)) || pTmpTxtRange == NULL)
+		if (dfs.txtRange == NULL || FAILED(dfs.txtRange->duplicate(&pTmpTxtRange)) || pTmpTxtRange == NULL)
 		{
 			return FBResetFindRange();
 		}
@@ -1712,6 +1712,11 @@ void CIEHostWindow::FBFindPrevious()
 	{
 		lOriginalIndex = m_lFBCurrentDoc;
 		FBGetCurrentDocStatus().txtRange->duplicate(&pOriginalRange);
+		if (!pOriginalRange)
+		{
+			FBResetFindRange();
+			return;
+		}
 
 		// since backwards find always finds a correct match (although it might not be the closest one)
 		// we start from there, and it might be potentially faster, avoiding many visibility tests
@@ -1732,6 +1737,11 @@ void CIEHostWindow::FBFindPrevious()
 			m_lFBCurrentDoc = lOriginalIndex;
 			FBGetCurrentDocStatus().txtRange = NULL;
 			pOriginalRange->duplicate(&FBGetCurrentDocStatus().txtRange);
+			if (!FBGetCurrentDocStatus().txtRange)
+			{
+				FBResetFindRange();
+				return;
+			}
 			m_lFBLastFindLength = lLastFindLength;
 		}
 		do
@@ -1739,6 +1749,11 @@ void CIEHostWindow::FBFindPrevious()
 			lLastIndex = m_lFBCurrentDoc;
 			pLastRange = NULL;
 			FBGetCurrentDocStatus().txtRange->duplicate(&pLastRange);
+			if (!pLastRange)
+			{
+				FBResetFindRange();
+				return;
+			}
 			bLastCrossTail = m_bFBCrossTail;
 			m_bFBFound = false;
 			FBFindAgainInternal(false, false, true);
