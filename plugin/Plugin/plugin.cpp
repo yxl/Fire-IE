@@ -136,7 +136,7 @@ namespace Plugin
 		}
 		else return FALSE;
 
-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId);
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId, m_strId == RES_UTILS_OBJECT_T);
 		if (m_pIEHostWindow == NULL)
 		{
 			return FALSE;
@@ -181,7 +181,7 @@ namespace Plugin
 		return TRUE;
 	}
 
-	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId)
+	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils)
 	{
 		CIEHostWindow *pIEHostWindow = NULL;
 		CWnd parent;
@@ -191,7 +191,7 @@ namespace Plugin
 		}
 		try
 		{
-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId);
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId, isUtils);
 			if (pIEHostWindow == NULL)
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));

@@ -64,7 +64,7 @@ namespace Plugin
 
 		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
 	private: 
-		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId);
+		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils);
 		
 		// Get the URL of the page where the plugin is hosted
 		CString GetHostURL() const;

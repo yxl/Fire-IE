@@ -74,7 +74,7 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
+	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId, bool isUtils);
 
 	/** Get CIEHostWindow object by its window handle */
 	static CIEHostWindow* GetInstance(HWND hwnd);
@@ -265,6 +265,9 @@ public:
 	void OnUtilsPluginInit();
 	void OnContentPluginInit();
 
+	// miscellaneous
+	bool IsUtils() const { return m_bUtils; }
+
 protected:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
@@ -315,4 +318,7 @@ protected:
 	UserMessage::NavigateParams* m_pNavigateParams;
 	/** Ensure the operations on m_pNavigateParams are thread safe. */
 	CCriticalSection m_csNavigateParams;
+
+	/** Indicates whether the associated plugin is a utils plugin */
+	bool m_bUtils;
 };

@@ -58,6 +58,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_strSecureLockInfo(_T("Unsecure"))
 	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
+	, m_bUtils(false)
 {
 	FBResetFindStatus();
 }
@@ -93,7 +94,7 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
 
@@ -104,6 +105,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
 		if (pIEHostWindow)
 		{
+			pIEHostWindow->m_bUtils = isUtils;
 			CIEHostWindow::s_NewIEWindowMap.Remove(dwId);
 		}
 		s_csNewIEWindowMap.Unlock();
@@ -120,6 +122,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 			}
 			pIEHostWindow = NULL;
 		}
+		pIEHostWindow->m_bUtils = isUtils;
 		s_csNewIEWindowMap.Unlock();
 	}
 	return pIEHostWindow;
@@ -1100,7 +1103,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
 	* 文档中获取UserAgent。
 	*/
-	if (s_strIEUserAgent.IsEmpty())
+	if (s_strIEUserAgent.IsEmpty() && m_bUtils)
 	{
 		s_strIEUserAgent = GetDocumentUserAgent();
 		if (!s_strIEUserAgent.IsEmpty() && m_pPlugin)

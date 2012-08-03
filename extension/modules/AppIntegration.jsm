@@ -360,7 +360,9 @@ WindowWrapper.prototype = {
     if (!target) return false;
     let doc = target.ownerDocument;
     if (!doc) return false;
-    return Utils.startsWith(doc.location.href, Utils.containerUrl);
+    let allow = Utils.startsWith(doc.location.href, Utils.containerUrl);
+    if (!allow) Utils.LOG("Blocked content event: " + event.type);
+    return allow;
   },
 
   _checkUtilsEventOrigin: function(event)
@@ -369,7 +371,9 @@ WindowWrapper.prototype = {
     if (!target) return false;
     let doc = target.ownerDocument;
     if (!doc) return false;
-    return doc.location.href == Utils.browserUrl;
+    let allow = doc.location.href == Utils.browserUrl;
+    if (!allow) Utils.LOG("Blocked utils event: " + event.type);
+    return allow;
   },
 
   /**
@@ -930,7 +934,7 @@ WindowWrapper.prototype = {
    */
   _onIESetCookie: function(event)
   {
-    if (!this._checkEventOrigin(event)) return;
+    if (!this._checkUtilsEventOrigin(event)) return;
     
     let subject = null;
     let topic = "fireie-set-cookie";
@@ -1052,7 +1056,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  // do not allow sites other than fireie.org
+  // do not allow intalling themes on sites other than fireie.org
   _checkThemeSite: function(node)
   {
     if (!node) return false;
@@ -1060,7 +1064,9 @@ WindowWrapper.prototype = {
     if (!doc) return false;
     let url = doc.location.href;
     let host = Utils.getEffectiveHost(url);
-    return JSON.parse(Prefs.allowedThemeHosts).some(function(h) h == host);
+    let allow = JSON.parse(Prefs.allowedThemeHosts).some(function(h) h == host);
+    if (!allow) Utils.LOG("Blocked theme request: untrusted site (" + host + ")");
+    return allow;
   },
 
   /**
@@ -1903,8 +1909,6 @@ WindowWrapper.prototype = {
   /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
-    if (!this._checkEventOrigin(e)) return;
-    
     this._updateInterface();
 
     let doc = e.originalTarget;
@@ -1934,11 +1938,11 @@ WindowWrapper.prototype = {
 
   _onMouseDown: function(event)
   {
-    if (!this._checkEventOrigin(event)) return;
-    
     // Simulate mousedown events to support gesture extensions like FireGuestures
     if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
     {
+      if (!this._checkEventOrigin(event)) return;
+      
       let evt = this.window.document.createEvent("MouseEvents");
       evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
       let pluginObject = this.getContainerPlugin();
