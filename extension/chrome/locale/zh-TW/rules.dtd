@@ -1,6 +1,7 @@
 <!ENTITY dialog.title "解雇IE切換規則參數">
 <!ENTITY subscriptions.tab.label "已訂閱的規則">
 <!ENTITY rules.tab.label "自定義規則">
+<!ENTITY subscription.autoupdate "自動更新">
 <!ENTITY addSubscription.label "訂閱新規則">
 <!ENTITY addSubscription.accesskey "f">
 <!ENTITY addSubscriptionAdd.label "訂閱">

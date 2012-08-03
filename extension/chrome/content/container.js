@@ -57,6 +57,9 @@ let FireIEContainer = {};
     if (needPrivateBrowsingWarning())
     {
       container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
+      // Set tab icon to pbw icon
+      Favicon.setIcon(document, "chrome://global/skin/icons/warning-16.png");
+      document.title = Utils.getString("fireie.pbw.title");
     }
     else
     {

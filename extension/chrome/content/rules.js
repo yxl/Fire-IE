@@ -15,6 +15,7 @@ function init()
     if (rule instanceof Rule)
       Utils.runAsync(SubscriptionActions.selectRule, SubscriptionActions, rule);
   }
+  document.getElementById("subscriptionsAutoUpdate").checked = Prefs.subscriptions_autoupdate;
 }
 
 /**

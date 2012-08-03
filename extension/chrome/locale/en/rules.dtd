@@ -3,6 +3,7 @@
 <!ENTITY subscriptions.tab.label              "Rule subscriptions">
 <!ENTITY rules.tab.label                    "Custom rules">
 
+<!ENTITY subscription.autoupdate              "Update automatically">
 <!ENTITY addSubscription.label                "Add rule subscription">
 <!ENTITY addSubscription.accesskey            "f">
 

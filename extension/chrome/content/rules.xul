@@ -137,10 +137,11 @@
     <tabpanels flex="1">
       <!-- subscripted switching rules -->  
       <tabpanel id="subscriptionsTab" orient="vertical" flex="1">
-        <hbox pack="end">
+        <hbox>
+          <checkbox id="subscriptionsAutoUpdate" label="&subscription.autoupdate;" accesskey="A" oncommand="Prefs.subscriptions_autoupdate=this.checked;" />
+          <spacer flex="1"/>
           <button id="selectSubscriptionButton" label="&addSubscription.label;" accesskey="&addSubscription.accesskey;" command="subscription-add-command"/>
         </hbox>
-
         <panel id="selectSubscriptionPanel" type="arrow" position="bottomcenter topleft"
                orient="vertical" onkeypress="SelectSubscription.keyPress(event);">
           <menuitem id="selectSubscriptionTemplate" hidden="true"
