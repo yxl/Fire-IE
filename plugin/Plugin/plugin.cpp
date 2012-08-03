@@ -114,7 +114,7 @@ namespace Plugin
 			static const CString PREFIX(RES_CHROME_PREFIX_T);
 
 			// Secrity check. Do not allow other pages to load this plugin.
-			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
+			if (strHostUrl.Mid(0, PREFIX.GetLength()) != PREFIX)
 				return FALSE;
 
 			// 从URL参数中获取实际要访问的URL地址
@@ -126,6 +126,15 @@ namespace Plugin
 			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
 		}
+		else if (m_strId == RES_UTILS_OBJECT_T)
+		{
+			CString strHostUrl = GetHostURL();
+
+			// Secrity check. Do not allow pages other than the browser window to load the utils plugin.
+			if (strHostUrl != RES_UTILS_URL_T)
+				return FALSE;
+		}
+		else return FALSE;
 
 		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId);
 		if (m_pIEHostWindow == NULL)

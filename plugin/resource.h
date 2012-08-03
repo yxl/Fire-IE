@@ -12,6 +12,7 @@
 #define RES_OBJECTNAME_T _T("fireie-object")
 #define RES_CHROME_PREFIX_T _T("chrome://fireie/content/container.xhtml?url=")
 #define RES_UTILS_OBJECT_T _T("fireie-utils-object")
+#define RES_UTILS_URL_T _T("chrome://browser/content/browser.xul")
 #define RES_CONTAINER "FireIEContainer"
 
 #if defined _M_X64

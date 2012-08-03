@@ -200,6 +200,11 @@ var Utils = {
     return "chrome://fireie/content/container.xhtml?url=";
   },
 
+  get browserUrl()
+  {
+    return "chrome://browser/content/browser.xul";
+  },
+
   /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
   {

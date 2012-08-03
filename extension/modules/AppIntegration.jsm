@@ -284,8 +284,10 @@ WindowWrapper.prototype = {
     IECookieManager.changeIETempDirectorySetting();
 
     // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
-    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function()
+    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
     {
+      if (!this._checkUtilsEventOrigin(e)) return;
+      
       let focused = this.window.document.commandDispatcher.focusedElement;
       while (focused)
       {
@@ -349,6 +351,25 @@ WindowWrapper.prototype = {
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
+  },
+  
+  // security check, do not let malicious sites send fake events
+  _checkEventOrigin: function(event)
+  {
+    let target = event.target;
+    if (!target) return false;
+    let doc = target.ownerDocument;
+    if (!doc) return false;
+    return Utils.startsWith(doc.location.href, Utils.containerUrl);
+  },
+
+  _checkUtilsEventOrigin: function(event)
+  {
+    let target = event.target;
+    if (!target) return false;
+    let doc = target.ownerDocument;
+    if (!doc) return false;
+    return doc.location.href == Utils.browserUrl;
   },
 
   /**
@@ -868,6 +889,8 @@ WindowWrapper.prototype = {
   /** Handler for IE progress change event */
   _onIEProgressChange: function(event)
   {
+    if (!this._checkEventOrigin(event)) return;
+    
     let progress = parseInt(event.detail);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this._updateProgressStatus();
@@ -877,6 +900,8 @@ WindowWrapper.prototype = {
   /** Handler for IE new tab event*/
   _onIENewTab: function(event)
   {
+    if (!this._checkEventOrigin(event)) return;
+    
     let data = JSON.parse(event.detail);
     let url = data.url;
     let id = data.id;
@@ -892,6 +917,8 @@ WindowWrapper.prototype = {
   /** Handler for receiving IE UserAgent from the plugin object */
   _onIEUserAgentReceived: function(event)
   {
+    if (!this._checkUtilsEventOrigin(event)) return;
+    
     let userAgent = event.detail;
     Utils.ieUserAgent = userAgent;
     Utils.LOG("_onIEUserAgentReceived: " + userAgent);
@@ -903,6 +930,8 @@ WindowWrapper.prototype = {
    */
   _onIESetCookie: function(event)
   {
+    if (!this._checkEventOrigin(event)) return;
+    
     let subject = null;
     let topic = "fireie-set-cookie";
     let data = event.detail;
@@ -1023,6 +1052,17 @@ WindowWrapper.prototype = {
     }
   },
 
+  // do not allow sites other than fireie.org
+  _checkThemeSite: function(node)
+  {
+    if (!node) return false;
+    let doc = node.ownerDocument;
+    if (!doc) return false;
+    let url = doc.location.href;
+    let host = Utils.getEffectiveHost(url);
+    return JSON.parse(Prefs.allowedThemeHosts).some(function(h) h == host);
+  },
+
   /**
    * Install the theme specified by a web page via a InstallBrowserTheme event.
    *
@@ -1033,6 +1073,9 @@ WindowWrapper.prototype = {
   {
     // Get the theme data from the DOM node target of the event.
     let node = event.target;
+    
+    if (!this._checkThemeSite(node)) return;
+    
     let themeData = this._getThemeDataFromNode(node);
 
     if (themeData != null)
@@ -1072,6 +1115,9 @@ WindowWrapper.prototype = {
   {
     // Get the theme data from the DOM node target of the event.
     let node = event.target;
+
+    if (!this._checkThemeSite(node)) return;
+    
     let themeData = this._getThemeDataFromNode(node);
     if (themeData != null)
     {
@@ -1087,6 +1133,7 @@ WindowWrapper.prototype = {
    */
   _onResetThemePreview: function(event)
   {
+    if (!this._checkThemeSite(event.target)) return;
     this._applyTheme(LightweightTheme.currentTheme);
   },
 
@@ -1762,10 +1809,11 @@ WindowWrapper.prototype = {
     }
     else
     {
-      this.window.addEventListener("IEUtilsPluginInitialized", function()
+      this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
       {
+        if (!this._checkUtilsEventOrigin(e)) return;
         callback.apply(self, arguments);
-      }, false);
+      }), false);
     }
   },
   // Handler for click event on engine switch button
@@ -1855,6 +1903,8 @@ WindowWrapper.prototype = {
   /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
+    if (!this._checkEventOrigin(e)) return;
+    
     this._updateInterface();
 
     let doc = e.originalTarget;
@@ -1884,13 +1934,19 @@ WindowWrapper.prototype = {
 
   _onMouseDown: function(event)
   {
+    if (!this._checkEventOrigin(event)) return;
+    
     // Simulate mousedown events to support gesture extensions like FireGuestures
     if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
     {
       let evt = this.window.document.createEvent("MouseEvents");
       evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
-      let container = this.getContainerPlugin().parentNode;
-      container.dispatchEvent(evt);
+      let pluginObject = this.getContainerPlugin();
+      if (pluginObject)
+      {
+        let container = pluginObject.parentNode;
+        container.dispatchEvent(evt);
+      }
     }
   },
 
