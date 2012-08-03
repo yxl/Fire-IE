@@ -2000,6 +2000,7 @@ function addSubscription()
 {
   // Use a one-time pref to determine whether we should add default subscription
   let needAdd = Prefs.subscriptions_defaultAdded ? false : true;
+  needAdd = needAdd && RuleStorage.subscriptions.length == 0;
   if (!needAdd) return;
   Prefs.subscriptions_defaultAdded = true;
 
