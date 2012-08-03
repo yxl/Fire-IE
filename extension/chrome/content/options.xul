@@ -114,17 +114,17 @@ windowtype="fireie:options">
                   <hbox align="center">
                     <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
                     <spacer flex="1"/>
-                    <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" />
+                    <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
                   </hbox>
                   <hbox align="center">
                     <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
                     <spacer flex="1"/>
-                    <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" />
+                    <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
                   </hbox>
                   <hbox align="center">
                     <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
                     <spacer flex="1"/>
-                    <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" />
+                    <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
                   </hbox>
                 </radiogroup>
               </vbox>

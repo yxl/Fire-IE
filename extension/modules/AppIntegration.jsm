@@ -788,7 +788,7 @@ WindowWrapper.prototype = {
     if (!url) url = this.getURL();
     let wnd = Services.wm.getMostRecentWindow("fireie:options");
     if (wnd) wnd.focus();
-    else this.window.openDialog("chrome://fireie/content/options.xul", "fireieOptionsDialog", "chrome,centerscreen,resizable=no", Utils.getHostname(url));
+    else this.window.openDialog("chrome://fireie/content/options2.xul", "fireieOptionsDialog", "chrome,titlebar,toolbar,centerscreen,dialog=yes", Utils.getHostname(url));
   },
 
   /** Show the rules dialog */

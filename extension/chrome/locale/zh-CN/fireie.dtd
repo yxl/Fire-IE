@@ -12,6 +12,7 @@
 <!ENTITY fireie.options.title "解雇IE 选项">
 
 <!ENTITY fireie.options.general.tab "常规">
+<!ENTITY fireie.options.general.pane "常规">
 <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
 <!ENTITY fireie.options.switch.disableAutoSwitch "禁用浏览引擎的自动切换">
@@ -21,6 +22,7 @@
 <!ENTITY fireie.options.private.privatebrowsingwarning "显示隐私浏览模式警告页面">
 <!ENTITY fireie.options.private.descr "IE引擎不支持隐私浏览模式，您可以选择是否在这种情况下显示警告页面。">
 <!ENTITY fireie.options.ui.tab "用户界面">
+<!ENTITY fireie.options.ui.pane "用户界面">
 <!ENTITY fireie.options.ui.urlBarButtonCaption "地址栏按钮">
 <!ENTITY fireie.options.ui.iconDisplayLabel "显示方式：">
 <!ENTITY fireie.options.ui.iconHidden "隐藏">
@@ -30,7 +32,9 @@
 <!ENTITY fireie.options.ui.showTooltipText "鼠标悬停时显示引擎状态信息">
 <!ENTITY fireie.options.ui.statusBarCaption "浮动状态栏">
 <!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示IE引擎的状态消息">
+<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
 <!ENTITY fireie.options.integration.tab "集成">
+<!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
 <!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动开启相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试打开这个选项。">
 <!ENTITY fireie.options.integration.forceMGSupport "强制开启IE引擎鼠标手势支持">
@@ -45,9 +49,11 @@
 <!ENTITY fireie.options.rule.button.delete "删除">
 
 <!ENTITY fireie.options.iecompat.tab "IE兼容模式">
+<!ENTITY fireie.options.iecompat.pane "IE兼容模式">
 <!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">
 <!ENTITY fireie.options.iecompat.ie8 "IE8标准模式">
 <!ENTITY fireie.options.iecompat.ie9 "IE9标准模式">
+<!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式。">
 
 <!ENTITY fireie.options.apply "应用">
 <!ENTITY fireie.options.manager "选项管理">

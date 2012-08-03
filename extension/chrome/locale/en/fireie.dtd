@@ -12,6 +12,7 @@
 <!ENTITY fireie.options.title "Fire IE Options">
 
 <!ENTITY fireie.options.general.tab "General">
+<!ENTITY fireie.options.general.pane "General">
 <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
 <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
 <!ENTITY fireie.options.switch.disableAutoSwitch "Disable engine auto-switch">
@@ -21,6 +22,7 @@
 <!ENTITY fireie.options.private.privatebrowsingwarning "Show private browsing warning page">
 <!ENTITY fireie.options.private.descr "IE-mode tabs does not support private browsing. You can choose whether to show a warning page in this situation.">
 <!ENTITY fireie.options.ui.tab "UI">
+<!ENTITY fireie.options.ui.pane "UI">
 <!ENTITY fireie.options.ui.urlBarButtonCaption "URL Bar Button">
 <!ENTITY fireie.options.ui.iconDisplayLabel "Display style:">
 <!ENTITY fireie.options.ui.iconHidden "Hidden">
@@ -30,7 +32,9 @@
 <!ENTITY fireie.options.ui.showTooltipText "Show engine status when hovering URL bar button">
 <!ENTITY fireie.options.ui.statusBarCaption "Floating Status Bar">
 <!ENTITY fireie.options.ui.showStatusText "Show IE engine's status in the floating status bar">
+<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
 <!ENTITY fireie.options.integration.tab "Integration">
+<!ENTITY fireie.options.integration.pane "Integration">
 <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">
 <!ENTITY fireie.options.integration.mgDescr "Normally Fire-IE will detect your mouse gesture extensions and scripts and automatically enable the support if it found any. If you have a mouse gesture extension or script but can't use it in IE-mode tabs, you can try enable this option.">
 <!ENTITY fireie.options.integration.forceMGSupport "Force the support of mouse gestures in IE-mode tabs">
@@ -45,9 +49,11 @@
 <!ENTITY fireie.options.rule.button.delete "Delete">
 
 <!ENTITY fireie.options.iecompat.tab "IE Compatibility Mode">
+<!ENTITY fireie.options.iecompat.pane "IE Compatibility Mode">
 <!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie8 "IE8 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie9 "IE9 Standards Mode">
+<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
 
 <!ENTITY fireie.options.apply "Apply">
 <!ENTITY fireie.options.manager "Options Manager">

@@ -11,7 +11,7 @@
    <em:contributor>Wei Deng</em:contributor>
    <em:contributor>Yifan Wu</em:contributor>   
    <em:homepageURL>http://fireie.org/</em:homepageURL>
-   <em:optionsURL>chrome://fireie/content/options.xul</em:optionsURL>
+   <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
    <em:targetPlatform>WINNT</em:targetPlatform>
    <em:unpack>true</em:unpack>
