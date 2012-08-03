@@ -56,6 +56,7 @@ namespace UserMessage
 	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
 	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
 	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
+	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
 
 }
 
@@ -73,7 +74,7 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
+	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId, bool isUtils);
 
 	/** Get CIEHostWindow object by its window handle */
 	static CIEHostWindow* GetInstance(HWND hwnd);
@@ -187,6 +188,7 @@ protected:
 	void FBHighlightAll();
 	void FBCancelHighlight();
 	void FBMatchDocSelection();
+	bool FBCheckDocument();
 	static bool FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange);
 	static bool FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2);
 	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
@@ -261,6 +263,10 @@ public:
 	void OnCloseIETab();
 	void OnSetSecureLockIcon(int state);
 	void OnUtilsPluginInit();
+	void OnContentPluginInit();
+
+	// miscellaneous
+	bool IsUtils() const { return m_bUtils; }
 
 protected:
 	BOOL m_bCanBack;
@@ -312,4 +318,7 @@ protected:
 	UserMessage::NavigateParams* m_pNavigateParams;
 	/** Ensure the operations on m_pNavigateParams are thread safe. */
 	CCriticalSection m_csNavigateParams;
+
+	/** Indicates whether the associated plugin is a utils plugin */
+	bool m_bUtils;
 };

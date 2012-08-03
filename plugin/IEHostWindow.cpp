@@ -58,6 +58,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_strSecureLockInfo(_T("Unsecure"))
 	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
+	, m_bUtils(false)
 {
 	FBResetFindStatus();
 }
@@ -93,7 +94,7 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
 
@@ -104,6 +105,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
 		if (pIEHostWindow)
 		{
+			pIEHostWindow->m_bUtils = isUtils;
 			CIEHostWindow::s_NewIEWindowMap.Remove(dwId);
 		}
 		s_csNewIEWindowMap.Unlock();
@@ -120,6 +122,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
 			}
 			pIEHostWindow = NULL;
 		}
+		pIEHostWindow->m_bUtils = isUtils;
 		s_csNewIEWindowMap.Unlock();
 	}
 	return pIEHostWindow;
@@ -245,6 +248,11 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	case WPARAM_UTILS_PLUGIN_INIT:
 		{
 			OnUtilsPluginInit();
+		}
+		break;
+	case WPARAM_CONTENT_PLUGIN_INIT:
+		{
+			OnContentPluginInit();
 		}
 		break;
 	case WPARAM_NAVIGATE:
@@ -576,7 +584,7 @@ void CIEHostWindow::HandOverFocus()
 			if(htmlDoc) 
 			{
 				CComPtr<IHTMLWindow2> window;
-				if(SUCCEEDED(htmlDoc->get_parentWindow(&window))) 
+				if(SUCCEEDED(htmlDoc->get_parentWindow(&window)) && window) 
 				{
 					window->focus();
 				}
@@ -965,7 +973,7 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 		if (!pSP) return;
 
 		CComQIPtr<IWebBrowser2> pWB2;
-		if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)))
+		if (FAILED(pSP->QueryService(IID_IWebBrowserApp, &pWB2)) || pWB2 == NULL)
 			return;
 
 		CComQIPtr<IOleCommandTarget> pCmd = pWB2;
@@ -983,6 +991,14 @@ void CIEHostWindow::OnUtilsPluginInit()
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnUtilsPluginInit();
+	}
+}
+
+void CIEHostWindow::OnContentPluginInit()
+{
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnContentPluginInit();
 	}
 }
 
@@ -1087,7 +1103,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
 	* 文档中获取UserAgent。
 	*/
-	if (s_strIEUserAgent.IsEmpty())
+	if (s_strIEUserAgent.IsEmpty() && m_bUtils)
 	{
 		s_strIEUserAgent = GetDocumentUserAgent();
 		if (!s_strIEUserAgent.IsEmpty() && m_pPlugin)
@@ -1277,10 +1293,10 @@ CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pD
 	CString strFail = _T("");
 
 	CComPtr<IHTMLSelectionObject> pSO;
-	if (SUCCEEDED(pDoc->get_selection(&pSO)))
+	if (SUCCEEDED(pDoc->get_selection(&pSO)) && pSO)
 	{
 		CComPtr<IDispatch> pDisp2;
-		if (SUCCEEDED(pSO->createRange(&pDisp2)))
+		if (SUCCEEDED(pSO->createRange(&pDisp2)) && pDisp2)
 		{
 			CComQIPtr<IHTMLTxtRange> pTxtRange = pDisp2;
 			if (pTxtRange)
@@ -1297,7 +1313,7 @@ CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pD
 
 	CComPtr<IHTMLFramesCollection2> pFrames;
 	long length;
-	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && SUCCEEDED(pFrames->get_length(&length)))
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && pFrames && SUCCEEDED(pFrames->get_length(&length)))
 	{
 		for (long i = 0; i < length; i++)
 		{
@@ -1308,7 +1324,7 @@ CString CIEHostWindow::GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pD
 				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
 				CComQIPtr<IHTMLWindow2> pWindow;
 				CComPtr<IHTMLDocument2> pSubDoc;
-				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)))
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)) && pSubDoc)
 				{
 					CString text = GetSelectionTextFromDoc(pSubDoc);
 					if (text != strFail) return text;
@@ -1388,7 +1404,10 @@ void CIEHostWindow::FBFindText(const CString& text)
 {
 	FBSetFindText(text);
 	if (m_bFBInProgress)
+	{
+		if (!FBCheckDocument()) return;
 		FBRestartFind();
+	}
 }
 
 void CIEHostWindow::FBEndFindText()
@@ -1415,6 +1434,7 @@ void CIEHostWindow::FBSetFindText(const CString& text)
 			FBResetFindRange();
 		}
 	}
+	if (m_bFBInProgress && !FBCheckDocument()) return;
 	if (m_bFBInProgress && m_bFBHighlight)
 		FBHighlightAll();
 	else FBCancelHighlight();
@@ -1481,13 +1501,14 @@ bool CIEHostWindow::FBObtainFindRange()
 void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pDoc)
 {
 	CComPtr<IHTMLElement> pBodyElem;
-	if (SUCCEEDED(pDoc->get_body(&pBodyElem)))
+	if (SUCCEEDED(pDoc->get_body(&pBodyElem)) && pBodyElem)
 	{
 		CComQIPtr<IHTMLBodyElement> pBody = pBodyElem;
 		if (pBody)
 		{
 			CComPtr<IHTMLTxtRange> pTxtRange, pOrgRange;
-			if (SUCCEEDED(pBody->createTextRange(&pTxtRange)) && SUCCEEDED(pTxtRange->duplicate(&pOrgRange)))
+			if (SUCCEEDED(pBody->createTextRange(&pTxtRange)) && pTxtRange
+				&& SUCCEEDED(pTxtRange->duplicate(&pOrgRange)) && pOrgRange)
 			{
 				m_vFBDocs.push_back(FBDocFindStatus(pDoc, pTxtRange, pOrgRange));
 			}
@@ -1528,7 +1549,7 @@ void CIEHostWindow::FBMatchDocSelection()
 		pMS->CreateMarkupPointer(&pMPStart);
 		pMS->CreateMarkupPointer(&pMPEnd);
 		CComPtr<IHTMLEditServices> pES;
-		if (pMPStart && pMPEnd && SUCCEEDED(pSP->QueryService(SID_SHTMLEditServices, &pES)))
+		if (pMPStart && pMPEnd && SUCCEEDED(pSP->QueryService(SID_SHTMLEditServices, &pES)) && pES)
 		{
 			pMS->MovePointersToRange(FBGetCurrentDocStatus().txtRange, pMPStart, pMPEnd);
 			pES->SelectRange(pMPStart, pMPEnd, SELECTION_TYPE_None);
@@ -1536,9 +1557,24 @@ void CIEHostWindow::FBMatchDocSelection()
 	}
 }
 
+bool CIEHostWindow::FBCheckDocument()
+{
+	for (long lCurrentDoc = 0; lCurrentDoc < static_cast<long>(m_vFBDocs.size()); lCurrentDoc++)
+	{
+		FBDocFindStatus& dfs = m_vFBDocs[lCurrentDoc];
+		CComPtr<IHTMLTxtRange> pTmpTxtRange;
+		if (dfs.txtRange == NULL || FAILED(dfs.txtRange->duplicate(&pTmpTxtRange)) || pTmpTxtRange == NULL)
+		{
+			return FBResetFindRange();
+		}
+	}
+	return true;
+}
+
 void CIEHostWindow::FBFindAgain()
 {
 	if (!m_bFBInProgress) return;
+	if (!FBCheckDocument()) return;
 	FBResetFindStatus();
 	FBFindAgainInternal(false);
 }
@@ -1572,8 +1608,15 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur, bool nosel
 
 	CComBSTR bstr_Text = m_strFBText;
 	VARIANT_BOOL bFound = VARIANT_FALSE;
+	
 	CComPtr<IHTMLTxtRange> pTmpTxtRange;
 	dfs.txtRange->duplicate(&pTmpTxtRange);
+	if (!pTmpTxtRange)
+	{
+		FBResetFindRange();
+		return;
+	}
+
 	long length = m_strFBText.GetLength();
 
 	while (dfs.txtRange->findText(bstr_Text, backwards ? -0x7FFFFFFF : 0x7FFFFFFF, (m_bFBCase ? 4 : 0), &bFound), bFound)
@@ -1602,8 +1645,15 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur, bool nosel
 		{
 			bool findSelfAgain = m_bFBTxtRangeChanged;
 			m_bFBTxtRangeChanged = false;
+
 			CComPtr<IHTMLTxtRange> pPrevTxtRange;
 			dfs.txtRange->duplicate(&pPrevTxtRange);
+			if (!pPrevTxtRange)
+			{
+				FBResetFindRange();
+				return;
+			}
+
 			dfs.txtRange->setEndPoint(CComBSTR("StartToStart"), dfs.originalRange);
 			dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
 
@@ -1648,6 +1698,7 @@ void CIEHostWindow::FBFindAgainInternal(bool backwards, bool norecur, bool nosel
 void CIEHostWindow::FBFindPrevious()
 {
 	if (!m_bFBInProgress) return;
+	if (!FBCheckDocument()) return;
 	FBResetFindStatus();
 	//FBFindAgainInternal(true);
 
@@ -1664,6 +1715,11 @@ void CIEHostWindow::FBFindPrevious()
 	{
 		lOriginalIndex = m_lFBCurrentDoc;
 		FBGetCurrentDocStatus().txtRange->duplicate(&pOriginalRange);
+		if (!pOriginalRange)
+		{
+			FBResetFindRange();
+			return;
+		}
 
 		// since backwards find always finds a correct match (although it might not be the closest one)
 		// we start from there, and it might be potentially faster, avoiding many visibility tests
@@ -1684,6 +1740,11 @@ void CIEHostWindow::FBFindPrevious()
 			m_lFBCurrentDoc = lOriginalIndex;
 			FBGetCurrentDocStatus().txtRange = NULL;
 			pOriginalRange->duplicate(&FBGetCurrentDocStatus().txtRange);
+			if (!FBGetCurrentDocStatus().txtRange)
+			{
+				FBResetFindRange();
+				return;
+			}
 			m_lFBLastFindLength = lLastFindLength;
 		}
 		do
@@ -1691,6 +1752,11 @@ void CIEHostWindow::FBFindPrevious()
 			lLastIndex = m_lFBCurrentDoc;
 			pLastRange = NULL;
 			FBGetCurrentDocStatus().txtRange->duplicate(&pLastRange);
+			if (!pLastRange)
+			{
+				FBResetFindRange();
+				return;
+			}
 			bLastCrossTail = m_bFBCrossTail;
 			m_bFBFound = false;
 			FBFindAgainInternal(false, false, true);
@@ -1736,6 +1802,7 @@ void CIEHostWindow::FBToggleHighlight(bool bHighlight)
 
 	FBResetFindStatusGood();
 
+	if (m_bFBInProgress && !FBCheckDocument()) return;
 	if (m_bFBInProgress && bHighlight)
 	{
 		FBHighlightAll();
@@ -1755,6 +1822,7 @@ void CIEHostWindow::FBToggleCase(bool bCase)
 
 	if (m_bFBInProgress)
 	{
+		if (!FBCheckDocument()) return;
 		if (m_bFBHighlight)
 			FBHighlightAll();
 	}
@@ -1777,6 +1845,12 @@ void CIEHostWindow::FBHighlightAll()
 
 		CComPtr<IHTMLTxtRange> pPrevTxtRange;
 		dfs.txtRange->duplicate(&pPrevTxtRange);
+		if (!pPrevTxtRange)
+		{
+			FBResetFindRange();
+			return;
+		}
+
 		dfs.txtRange->setEndPoint(CComBSTR("StartToStart"), dfs.originalRange);
 		dfs.txtRange->setEndPoint(CComBSTR("EndToEnd"), dfs.originalRange);
 
@@ -1790,7 +1864,7 @@ void CIEHostWindow::FBHighlightAll()
 			VARIANT_BOOL bFound;
 			long length = m_strFBText.GetLength();
 			CComPtr<IHTMLRenderStyle> pRenderStyle;
-			if (SUCCEEDED(pDoc4->createRenderStyle(NULL, &pRenderStyle)))
+			if (SUCCEEDED(pDoc4->createRenderStyle(NULL, &pRenderStyle)) && pRenderStyle)
 			{
 				pRenderStyle->put_defaultTextSelection(CComBSTR("false"));
 				pRenderStyle->put_textBackgroundColor(CComVariant("fuchsia"));

@@ -114,7 +114,7 @@ namespace Plugin
 			static const CString PREFIX(RES_CHROME_PREFIX_T);
 
 			// Secrity check. Do not allow other pages to load this plugin.
-			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
+			if (strHostUrl.Mid(0, PREFIX.GetLength()) != PREFIX)
 				return FALSE;
 
 			// 从URL参数中获取实际要访问的URL地址
@@ -126,8 +126,17 @@ namespace Plugin
 			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
 		}
+		else if (m_strId == RES_UTILS_OBJECT_T)
+		{
+			CString strHostUrl = GetHostURL();
 
-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId);
+			// Secrity check. Do not allow pages other than the browser window to load the utils plugin.
+			if (strHostUrl != RES_UTILS_URL_T)
+				return FALSE;
+		}
+		else return FALSE;
+
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId, m_strId == RES_UTILS_OBJECT_T);
 		if (m_pIEHostWindow == NULL)
 		{
 			return FALSE;
@@ -158,11 +167,21 @@ namespace Plugin
 			if (hwnd)
 				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_UTILS_PLUGIN_INIT, 0);
 		}
+		else
+		{
+			// content IE window, should fire IEContentPluginIntialized event
+
+			// cannot directly fire the event since the plugin is not fully constructed 
+			// - we are still in the initializer
+			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
+			if (hwnd)
+				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_CONTENT_PLUGIN_INIT, 0);
+		}
 
 		return TRUE;
 	}
 
-	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId)
+	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils)
 	{
 		CIEHostWindow *pIEHostWindow = NULL;
 		CWnd parent;
@@ -172,7 +191,7 @@ namespace Plugin
 		}
 		try
 		{
-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId);
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId, isUtils);
 			if (pIEHostWindow == NULL)
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));
@@ -653,6 +672,13 @@ namespace Plugin
 	void CPlugin::OnUtilsPluginInit()
 	{
 		CString strEventType = _T("IEUtilsPluginInitialized");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnContentPluginInit()
+	{
+		CString strEventType = _T("IEContentPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}

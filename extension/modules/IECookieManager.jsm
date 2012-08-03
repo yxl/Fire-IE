@@ -104,6 +104,7 @@ function setIECtrlRegString(regName, value)
 let IECookieManager = {
   wininetDll: null,
   _ieCookieMap: {},
+  _bTmpDirRestored: false,
   
   /**
    * Called on module startup.
@@ -112,10 +113,6 @@ let IECookieManager = {
   {
     // User jsctypes to load the window api of InternetSetCookieW
     this._loadInternetSetCookieW();
-
-    // Change the default cookie and cache directories of the IE, which will
-    // be restored when the cookie plugin is loaded.
-    this.changeIETempDirectorySetting();
 
     CookieObserver.register();
   },
@@ -265,6 +262,9 @@ let IECookieManager = {
 
   changeIETempDirectorySetting: function()
   {
+    // safe guard: do not attempt to change after already restored
+    if (this._bTmpDirRestored) return;
+    
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
     let originalCookies = getIECtrlRegString("Cookies");
@@ -280,10 +280,16 @@ let IECookieManager = {
     {
       setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
     }
+    
+    Utils.LOG("IE Temp dir changed.");
   },
   
   retoreIETempDirectorySetting: function()
   {
+    if (this._bTmpDirRestored) return;
+  
+    this._bTmpDirRestored = true;
+    
     let cookies = getIECtrlRegString("Cookies_fireie");
     if (cookies)
     {
@@ -294,7 +300,8 @@ let IECookieManager = {
     {
       setIECtrlRegString("Cache", cache);
     }
-    
+
+    Utils.LOG("IE Temp dir restored.");
   },
 
   _getExpiresString: function(expiresInSeconds)
@@ -312,14 +319,12 @@ let CookieObserver = {
   {
     Services.obs.addObserver(this, "cookie-changed", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
-    Services.obs.addObserver(this, "fireie-restoreIETempDirectorySetting", false);
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
     Services.obs.removeObserver(this, "fireie-set-cookie");
-    Services.obs.removeObserver(this, "fireie-restoreIETempDirectorySetting");
   },
 
   // nsIObserver
@@ -332,9 +337,6 @@ let CookieObserver = {
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
-      break;
-    case 'fireie-restoreIETempDirectorySetting':
-      IECookieManager.retoreIETempDirectorySetting();
       break;
     }
   },
