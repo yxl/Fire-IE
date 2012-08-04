@@ -32,7 +32,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "鼠标悬停时显示引擎状态信息">
 <!ENTITY fireie.options.ui.statusBarCaption "浮动状态栏">
 <!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示IE引擎的状态消息">
-<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
+<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles-cn.png">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">

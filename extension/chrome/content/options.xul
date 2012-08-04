@@ -114,12 +114,12 @@ windowtype="fireie:options">
                   <hbox align="center">
                     <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
                     <spacer flex="1"/>
-                    <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
+                    <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" />
                   </hbox>
                   <hbox align="center">
                     <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
                     <spacer flex="1"/>
-                    <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
+                    <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" />
                   </hbox>
                   <hbox align="center">
                     <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
