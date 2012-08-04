@@ -1839,27 +1839,30 @@ WindowWrapper.prototype = {
       else
       {
         let gBrowser = this.window.gBrowser;
-        let url = this._getURLAfterSwitch(gBrowser.selectedTab);
-        // should load actual url after setting the manuallyswitched flag
-        let newTab = gBrowser.addTab("about:blank");
-        // first set manual switch flags
-        this._setManuallySwitchFlag(newTab, url);
-        // and then load the actual url
-        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-        newTab.linkedBrowser.loadURIWithFlags(url, flags);
-        
-        switch (where)
+        if (!Utils.isFirefoxOnly(this.getURL(gBrowser.currentTab)))
         {
-        case "window":
-          gBrowser.hideTab(newTab);
-          gBrowser.replaceTabWithWindow(newTab);
-          break;
-        case "tabshifted":
-          // A background tab has been opened, nothing else to do here.
-          break;
-        case "tab":
-          gBrowser.selectedTab = newTab;
-          break;
+          let url = this._getURLAfterSwitch(gBrowser.selectedTab);
+          // should load actual url after setting the manuallyswitched flag
+          let newTab = gBrowser.addTab("about:blank");
+          // first set manual switch flags
+          this._setManuallySwitchFlag(newTab, url);
+          // and then load the actual url
+          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+          newTab.linkedBrowser.loadURIWithFlags(url, flags);
+          
+          switch (where)
+          {
+          case "window":
+            gBrowser.hideTab(newTab);
+            gBrowser.replaceTabWithWindow(newTab);
+            break;
+          case "tabshifted":
+            // A background tab has been opened, nothing else to do here.
+            break;
+          case "tab":
+            gBrowser.selectedTab = newTab;
+            break;
+          }
         }
       }
     }
