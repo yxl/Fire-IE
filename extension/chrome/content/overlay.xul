@@ -46,9 +46,9 @@ xmlns:html="http://www.w3.org/1999/xhtml">
     tooltip="fireie-urlbar-switch-tooltip" />
   </toolbarpalette>
   <!-- Popup menus -->
-  <popupset>
+  <popupset id="mainPopupSet">
     <!-- Switch button context menu -->
-    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="gFireIE.setMenuItems();">
+    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="if (event.target == this) gFireIE.setMenuItems();">
       <menuitem label="&fireie.options.title;..."
       oncommand="gFireIE.openOptionsDialog();" />
       <menuseparator />
