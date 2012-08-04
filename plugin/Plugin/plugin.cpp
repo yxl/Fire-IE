@@ -191,7 +191,7 @@ namespace Plugin
 		}
 		try
 		{
-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId, isUtils);
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, dwId, isUtils);
 			if (pIEHostWindow == NULL)
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));

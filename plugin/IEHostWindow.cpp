@@ -94,7 +94,7 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	return pInstance;
 }
 
-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId, bool isUtils)
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
 
@@ -114,7 +114,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId, bool isUtils)
 	{
 		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = new CIEHostWindow();
-		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD))
+		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
 		{
 			if (pIEHostWindow)
 			{
@@ -122,7 +122,10 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId, bool isUtils)
 			}
 			pIEHostWindow = NULL;
 		}
-		pIEHostWindow->m_bUtils = isUtils;
+		else
+		{
+			pIEHostWindow->m_bUtils = isUtils;
+		}
 		s_csNewIEWindowMap.Unlock();
 	}
 	return pIEHostWindow;
