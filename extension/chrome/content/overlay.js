@@ -515,7 +515,6 @@ var gFireIE = null;
     // hook aBrowser.sessionHistory
     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
     aBrowser.FireIE_hooked = true;
-    Utils.LOG("Browser Getter hooked.");
   };
   
   function unhookBrowserGetter(aBrowser)
@@ -524,7 +523,6 @@ var gFireIE = null;
     HM.unhookProp(aBrowser, "currentURI");
     HM.unhookProp(aBrowser, "sessionHistory");
     aBrowser.FireIE_hooked = false;
-    Utils.LOG("Browser Getter unhooked.");
   };
 
   function hookURLBarSetter(aURLBar)
