@@ -369,9 +369,12 @@ let EasyRuleCreator = {
     if (text.substring(0, 2) == "##")
       text = text.substring(2);
 
-    if (Rule.optionsRegExp.test(text))
+    // Rule.optionsRegExp is in a different compartment,
+    // using RegExp.leftContext will fail
+    let mr = null;
+    if (mr = Rule.optionsRegExp.exec(text))
     {
-      return Rule.optionsRegExp.constructor.leftContext;
+      return text.substring(0, mr.index);
     }
     return text;
   },

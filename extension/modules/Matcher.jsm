@@ -126,7 +126,10 @@ Matcher.prototype = {
     if (Rule.regexpRegExp.test(text)) return defaultResult;
 
     // Remove options
-    if (Rule.optionsRegExp.test(text)) text = RegExp.leftContext;
+    // Rule.optionsRegExp is in a different compartment,
+    // using RegExp.leftContext will fail
+    let mr = null;
+    if (mr = Rule.optionsRegExp.exec(text)) text = text.substring(0, mr.index);
 
     // Remove whitelist marker
     if (text.substr(0, 2) == "@@") text = text.substr(2);
