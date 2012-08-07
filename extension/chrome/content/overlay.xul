@@ -46,14 +46,17 @@ xmlns:html="http://www.w3.org/1999/xhtml">
     tooltip="fireie-urlbar-switch-tooltip" />
   </toolbarpalette>
   <!-- Popup menus -->
-  <popupset>
+  <popupset id="mainPopupSet">
     <!-- Switch button context menu -->
-    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="gFireIE.setAutoSwitchMenuItem();">
-      <menuitem label="&fireie.options.title;"
+    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="if (event.target == this) gFireIE.setMenuItems();">
+      <menuitem label="&fireie.options.title;..."
       oncommand="gFireIE.openOptionsDialog();" />
-      <menuitem label="&urlbar.switchRules.label;"
+      <menuseparator />
+      <menuitem label="&urlbar.switchRules.label;..."
       oncommand="gFireIE.openRulesDialog();" />
-      <menuitem label="&internetProperties.lable;"
+      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
+      <menuseparator id="fireie-erc-start" />
+      <menuitem label="&internetProperties.lable;..."
       oncommand="gFireIE.openInternetPropertiesDialog();" />
       <!-- Theme sub-menu -->
       <menu id="fireie-skin-menu" label="&skin.label;">
@@ -66,7 +69,6 @@ xmlns:html="http://www.w3.org/1999/xhtml">
           oncommand="gFireIE.openMoreThemesPage();" />
         </menupopup>
       </menu>
-      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();" type="checkbox" autocheck="false" closemenu="none"/>
     </menupopup>
   </popupset>
 </overlay>

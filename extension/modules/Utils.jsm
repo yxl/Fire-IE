@@ -28,6 +28,7 @@ let _addonVersionCallbacks = [];
  */
 var Utils = {
   _ieUserAgent: null,
+  _userAgent: null,
 
   _ffMajorVersion: 4,
 
@@ -75,7 +76,7 @@ var Utils = {
   },
 
   /**
-   * Returns the user interface locale selected for adblockplus chrome package.
+   * Returns the user interface locale selected for fireie chrome package.
    */
   get appLocale()
   {
@@ -118,6 +119,25 @@ var Utils = {
   set ieUserAgent(value)
   {
     Utils._ieUserAgent = value;
+  },
+  
+  get userAgent()
+  {
+    return Utils._userAgent;
+  },
+  
+  set userAgent(value)
+  {
+    Utils._userAgent = value;
+  },
+  
+  get esrUserAgent()
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "Prefs.jsm");
+    
+    Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
+    return this.esrUserAgent;
   },
 
   /**
@@ -636,7 +656,7 @@ var Utils = {
 
   /**
    * Opens a pre-defined documentation link in the browser window. This will
-   * send the UI language to adblockplus.org so that the correct language
+   * send the UI language to fireie.org so that the correct language
    * version of the page can be selected.
    */
   loadDocLink: function( /**String*/ linkID)
@@ -644,7 +664,10 @@ var Utils = {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
 
-    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g, Utils.appLocale);
+    let availableLanguages = JSON.parse(Prefs.doc_link_languages);
+    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g,
+      Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale]
+                                            : availableLanguages["default"]);
     Utils.loadInBrowser(link);
   },
 

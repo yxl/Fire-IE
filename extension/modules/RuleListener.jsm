@@ -213,7 +213,7 @@ function addRule(rule)
 
   let hasEnabled = false;
   for (let i = 0; i < rule.subscriptions.length; i++)
-  if (!rule.subscriptions[i].disabled) hasEnabled = true;
+    if (!rule.subscriptions[i].disabled) hasEnabled = true;
   if (!hasEnabled) return;
 
   if (rule instanceof RegExpRule) AllMatchers.add(rule);
@@ -232,7 +232,7 @@ function removeRule(rule)
   {
     let hasEnabled = false;
     for (let i = 0; i < rule.subscriptions.length; i++)
-    if (!rule.subscriptions[i].disabled) hasEnabled = true;
+      if (!rule.subscriptions[i].disabled) hasEnabled = true;
     if (hasEnabled) return;
   }
 
