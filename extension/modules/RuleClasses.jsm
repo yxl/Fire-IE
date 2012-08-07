@@ -428,6 +428,12 @@ function RegExpRule(text, regexpSource, matchCase, domains)
 }
 RegExpRule.prototype = {
   __proto__: ActiveRule.prototype,
+  
+  /**
+   * Indicates whether the rule is an exceptional rule
+   * @type Boolean
+   */
+  isExceptional: false,
 
   /**
    * @see ActiveRule.domainSeparator
@@ -586,7 +592,8 @@ function EngineRule(text, regexpSource, matchCase, domains)
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
 }
 EngineRule.prototype = {
-  __proto__: RegExpRule.prototype
+  __proto__: RegExpRule.prototype,
+  isExceptional: false
 };
 
 /**
@@ -606,7 +613,8 @@ function UserAgentRule(text, regexpSource, matchCase, domains, specialUA)
     this.specialUA = specialUA;
 }
 UserAgentRule.prototype = {
-  __proto__: RegExpRule.prototype
+  __proto__: RegExpRule.prototype,
+  isExceptional: false
 };
 
 /**
@@ -623,7 +631,8 @@ function EngineExceptionalRule(text, regexpSource, matchCase, domains)
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
 }
 EngineExceptionalRule.prototype = {
-  __proto__: RegExpRule.prototype
+  __proto__: RegExpRule.prototype,
+  isExceptional: true
 }
 
 /**
@@ -641,4 +650,5 @@ function UserAgentExceptionalRule(text, regexpSource, matchCase, domains)
 }
 UserAgentExceptionalRule.prototype = {
   __proto__: RegExpRule.prototype,
+  isExceptional: true
 }

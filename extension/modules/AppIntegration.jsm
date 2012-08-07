@@ -104,6 +104,8 @@ let AppIntegration = {
       if (Prefs.currentVersion != addonVersion)
       {
         Prefs.currentVersion = addonVersion;
+        
+        refreshRuleCache();
 
         if ("nsISessionStore" in Ci)
         {
@@ -2068,6 +2070,16 @@ function addSubscription()
   }, false);
   request.send();
 
+}
+
+/**
+ * Ensures that rule cache file is refreshed after version upgrade
+ */
+function refreshRuleCache()
+{
+  Rule.fromText("!dummy"); // work against trapProperty
+  RuleStorage.loadFromDisk();
+  RuleNotifier.triggerListeners("save");
 }
 
 init();

@@ -346,8 +346,7 @@ let EasyRuleCreator = {
    */
   _isExceptional: function(/**Rule*/ rule)
   {
-    return rule instanceof EngineExceptionalRule
-      || rule instanceof UserAgentExceptionalRule;
+    return rule.isExceptional;
   },
   
   /**

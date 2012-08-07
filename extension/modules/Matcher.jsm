@@ -356,7 +356,7 @@ CombinedMatcher.prototype = {
    */
   add: function(rule)
   {
-    if (rule instanceof EngineExceptionalRule)
+    if (rule.isExceptional)
     {
       this.whitelist.add(rule);
     }
@@ -379,7 +379,7 @@ CombinedMatcher.prototype = {
    */
   remove: function(rule)
   {
-    if (rule instanceof EngineExceptionalRule)
+    if (rule.isExceptional)
     {
       this.whitelist.remove(rule);
     }
@@ -402,7 +402,8 @@ CombinedMatcher.prototype = {
    */
   findKeyword: function(rule)
   {
-    if (rule instanceof EngineExceptionalRule) return this.whitelist.findKeyword(rule);
+    if (rule.isExceptional)
+      return this.whitelist.findKeyword(rule);
     else return this.blacklist.findKeyword(rule);
   },
 
@@ -411,7 +412,8 @@ CombinedMatcher.prototype = {
    */
   hasRule: function(rule)
   {
-    if (rule instanceof EngineExceptionalRule) return this.whitelist.hasRule(rule);
+    if (rule.isExceptional)
+      return this.whitelist.hasRule(rule);
     else return this.blacklist.hasRule(rule);
   },
 
@@ -420,7 +422,8 @@ CombinedMatcher.prototype = {
    */
   getKeywordForRule: function(rule)
   {
-    if (rule instanceof EngineExceptionalRule) return this.whitelist.getKeywordForRule(rule);
+    if (rule.isExceptional)
+      return this.whitelist.getKeywordForRule(rule);
     else return this.blacklist.getKeywordForRule(rule);
   },
 
@@ -429,7 +432,7 @@ CombinedMatcher.prototype = {
    */
   isSlowRule: function( /**RegExpRule*/ rule) /**Boolean*/
   {
-    let matcher = (rule instanceof EngineExceptionalRule ? this.whitelist : this.blacklist);
+    let matcher = rule.isExceptional ? this.whitelist : this.blacklist;
     if (matcher.hasRule(rule)) return !matcher.getKeywordForRule(rule);
     else return !matcher.findKeyword(rule);
   },
