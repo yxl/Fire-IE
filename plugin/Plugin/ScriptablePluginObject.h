@@ -99,6 +99,7 @@ namespace Plugin
 		NPI_DEF(FBLastFindStatus);
 		NPI_DEF(StatusText);
 		NPI_DEF(ShouldShowStatusOurselves);
+		NPI_DEF(ShouldPreventStatusFlash);
 
 	public:
 		ScriptablePluginObject(NPP npp)
@@ -165,6 +166,7 @@ namespace Plugin
 			NPN_GSI_P(FBLastFindStatus);
 			NPN_GSI_P(StatusText);
 			NPN_GSI_P(ShouldShowStatusOurselves);
+			NPN_GSI_P(ShouldPreventStatusFlash);
 		}
 
 		virtual bool HasMethod(NPIdentifier name);

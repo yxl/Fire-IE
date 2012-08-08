@@ -203,7 +203,9 @@ let FireIEContainer = {};
       }
     }
   }
-
+  
+  let statusHideTimeout = 0;
+  
   /** Sets the status text */
   function onSetStatusText(event)
   {
@@ -211,6 +213,7 @@ let FireIEContainer = {};
     let statustext = event.getData("statusText");
     if (typeof(statustext) == "undefined")
       statustext = "";
+    let prevent = event.getData("preventFlash");
     let pretext = "";
     if (statusbar.firstChild)
     {
@@ -220,20 +223,25 @@ let FireIEContainer = {};
     }
     if (statustext == pretext) return;
     
+    if (!prevent)
+    {
+      statusbar.className = "noprevent";
+    }
+    
     if (statustext.length > 0)
     {
       statusbar.appendChild(document.createTextNode(statustext));
       statusbar.hidden = false;
     }
     
-    if (statusbar.dataset.hideTimeout)
-      window.clearTimeout(statusbar.dataset.hideTimeout);
+    if (statusHideTimeout)
+      window.clearTimeout(statusHideTimeout);
     if (statusbar.hidden == false && !isLinkStatus(statustext))
     {
-      statusbar.dataset.hideTimeout = window.setTimeout(function()
+      statusHideTimeout = window.setTimeout(function()
       {
         hideStatusBar();
-      }, statustext.length > 0 ? 5000 : 1000);
+      }, statustext.length > 0 ? 5000 : (prevent ? 1000 : 0));
     }
   }
 
@@ -289,9 +297,9 @@ let FireIEContainer = {};
     let statusbar = E(Utils.statusBarId);
     statusbar.hidden = true;
     statusbar.setAttribute("mirrored", "false");
-    if (statusbar.dataset.hideTimeout)
-      window.clearTimeout(statusbar.dataset.hideTimeout);
-    statusbar.dataset.hideTimeout = 0;    
+    if (statusHideTimeout)
+      window.clearTimeout(statusHideTimeout);
+    statusHideTimeout = 0;    
   }
 
   let validProtocolSet = (function(list)
@@ -301,7 +309,7 @@ let FireIEContainer = {};
       ret[value] = true;
     })
     return ret;
-  })(["http", "https", "ftp", "javscript", "file", "about", "mailto", "data", "rtsp", "telnet", "thunder", "ed2k", "magnet"]);
+  })(["http", "https", "ftp", "javascript", "file", "about", "mailto", "data", "rtsp", "telnet", "thunder", "ed2k", "magnet"]);
 
   function isLinkStatus(status)
   {

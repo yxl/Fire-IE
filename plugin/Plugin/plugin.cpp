@@ -239,6 +239,12 @@ namespace Plugin
 
 	bool CPlugin::ShouldShowStatusOurselves()
 	{
+		// handle all status text ourselves
+		return true;
+	}
+
+	bool CPlugin::ShouldPreventStatusFlash()
+	{
 		//// return true; // for debugging under win7
 		//return Utils::OS::GetVersion() == Utils::OS::WINXP
 		//	|| Utils::OS::GetVersion() == Utils::OS::WIN2003;

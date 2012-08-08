@@ -110,11 +110,14 @@ namespace Plugin
 
 		/**
 		 * Whether we should show status ourselves, i.e. not through NPN_Status
-		 * This is mainly due to the rendering bug in XP/2003 that makes pages flash
-		 * when rapidly rendering the status text
 		 */
 		bool ShouldShowStatusOurselves();
-
+		/**
+		 * Whether we should prevent flashing caused by setting status text
+		 * This is mainly due to the rendering bug in IE8 or lower that makes pages flash
+		 * when rapidly rendering the status text
+		 */
+		bool ShouldPreventStatusFlash();
 		/**
 		 * Sets Firefox Cookie by firing a JavaScript event.
 		 */

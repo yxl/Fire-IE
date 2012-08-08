@@ -138,7 +138,26 @@ void CIEHostWindow::AddUtilsIEWindow(CIEHostWindow *pWnd)
 	s_csUtilsIEWindowMap.Unlock();
 }
 
-void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+Plugin::CPlugin* CIEHostWindow::GetAnyUtilsPlugin()
+{
+	CIEHostWindow* pWindow = GetAnyUtilsWindow();
+	if (pWindow)
+		return pWindow->m_pPlugin;
+	return NULL;
+}
+
+CIEHostWindow* CIEHostWindow::GetAnyUtilsWindow()
+{
+	CIEHostWindow* pWindow = NULL;
+	HWND hwnd = GetAnyUtilsHWND();
+	if (hwnd)
+	{
+		pWindow = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+	}
+	return pWindow;
+}
+
+HWND CIEHostWindow::GetAnyUtilsHWND()
 {
 	HWND hwnd = NULL;
 	s_csUtilsIEWindowMap.Lock();
@@ -147,6 +166,12 @@ void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
 		hwnd = s_UtilsIEWindowMap.GetValueAt(0)->GetSafeHwnd();
 	}
 	s_csUtilsIEWindowMap.Unlock();
+	return hwnd;
+}
+
+void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+{
+	HWND hwnd = GetAnyUtilsHWND();
 	if (hwnd)
 	{
 		SetFirefoxCookieParams params = {strURL, strCookie};
@@ -1353,6 +1378,13 @@ BOOL CIEHostWindow::ShouldShowStatusOurselves()
 {
 	if (m_pPlugin)
 		return (BOOL)(m_pPlugin->ShouldShowStatusOurselves());
+	return false;
+}
+
+BOOL CIEHostWindow::ShouldPreventStatusFlash()
+{
+	if (m_pPlugin)
+		return (BOOL)(m_pPlugin->ShouldPreventStatusFlash());
 	return false;
 }
 

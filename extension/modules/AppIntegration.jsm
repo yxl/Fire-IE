@@ -179,6 +179,24 @@ let AppIntegration = {
       }
     }
     return false;
+  },
+
+  /**
+   * Determines whether we should prevent status messages from causing pages to flash
+   */
+  shouldPreventStatusFlash: function()
+  {
+    let plugin = this.getAnyUtilsPlugin();
+    if (plugin)
+    {
+      let ret = plugin.ShouldPreventStatusFlash;
+      if (typeof(ret) != "undefined") // in case utility plugin not fully loaded yet
+      {
+        this.shouldPreventStatusFlash = function() ret;
+        return ret;
+      }
+    }
+    return false;
   }
 };
 
@@ -1056,6 +1074,7 @@ WindowWrapper.prototype = {
         let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
         event.initEvent("SetStatusText", false, false);
         event.setData("statusText", pluginObject.StatusText);
+        event.setData("preventFlash", AppIntegration.shouldPreventStatusFlash());
         statusBar.dispatchEvent(event);
       }
       else if (!statusBar.hidden && !Prefs.showStatusText)
@@ -1064,6 +1083,7 @@ WindowWrapper.prototype = {
         let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
         event.initEvent("SetStatusText", false, false);
         event.setData("statusText", "");
+        event.setData("preventFlash", AppIntegration.shouldPreventStatusFlash());
         statusBar.dispatchEvent(event);
       }
     }

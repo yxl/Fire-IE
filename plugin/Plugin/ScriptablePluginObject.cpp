@@ -170,6 +170,13 @@ namespace Plugin
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
+		// readonly property {bool} ShouldPreventStatusFlash
+		else if (name == NPI_ID(ShouldPreventStatusFlash))
+		{
+			BOOL value = pMainWindow->ShouldPreventStatusFlash();
+			BOOLEAN_TO_NPVARIANT(value, *result);
+			return true;
+		}
 
 		VOID_TO_NPVARIANT(*result);
 		return true;

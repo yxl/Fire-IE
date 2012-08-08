@@ -86,6 +86,9 @@ public:
 
 	static void SetFirefoxCookie(CString strURL, CString strCookie);
 
+	static HWND GetAnyUtilsHWND();
+	static CIEHostWindow* GetAnyUtilsWindow();
+	static Plugin::CPlugin* GetAnyUtilsPlugin();
 	/** 
 	 * Get the UserAgent of the IE control.
 	 * As the IE control provides no explicit interface for querying the UserAgent, we have to parse it from the HTML document.
@@ -255,6 +258,7 @@ public:
 	CString GetSecureLockInfo();
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
+	BOOL ShouldPreventStatusFlash();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
