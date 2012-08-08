@@ -326,10 +326,21 @@ let EasyRuleCreator = {
   {
     return Utils.saturateString(str, 30);
   },
-   
+  
+  _getParamsRegExp: /\?.*$/,
+  
   _selfRuleTexts: function(prefix, url)
   {
-    return [prefix + "|" + url + "|", prefix + "|" + url, prefix + url + "|", prefix + url, prefix + "|" + url + "^", prefix + url + "^"];
+    let mr = this._getParamsRegExp.exec(url);
+    if (mr)
+    {
+      url = url.substring(0, mr.index);
+      return [prefix + "|" + url + "?", prefix + "|" + url, prefix + url + "?", prefix + url, prefix + "|" + url + "^", prefix + url + "^"];
+    }
+    else
+    {
+      return [prefix + "|" + url + "|", prefix + "|" + url, prefix + url + "|", prefix + url, prefix + "|" + url + "^", prefix + url + "^"];
+    }
   },
 
   /**
