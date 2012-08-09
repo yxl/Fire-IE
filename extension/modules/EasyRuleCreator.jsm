@@ -328,19 +328,16 @@ let EasyRuleCreator = {
   },
   
   _getParamsRegExp: /\?.*$/,
+  _anchorRegExp: /\#.*$/,
   
   _selfRuleTexts: function(prefix, url)
   {
-    let mr = this._getParamsRegExp.exec(url);
-    if (mr)
-    {
-      url = url.substring(0, mr.index);
-      return [prefix + "|" + url + "?", prefix + "|" + url, prefix + url + "?", prefix + url, prefix + "|" + url + "^", prefix + url + "^"];
-    }
-    else
-    {
-      return [prefix + "|" + url + "|", prefix + "|" + url, prefix + url + "|", prefix + url, prefix + "|" + url + "^", prefix + url + "^"];
-    }
+    let mr = this._anchorRegExp.exec(url);
+    if (mr) url = url.substring(0, mr.index);
+    mr = this._getParamsRegExp.exec(url);
+    if (mr) url = url.substring(0, mr.index);
+    
+    return [prefix + "|" + url + "^", prefix + "|" + url, prefix + url + "^", prefix + url];
   },
 
   /**
