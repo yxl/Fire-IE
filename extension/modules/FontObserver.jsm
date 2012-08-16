@@ -84,22 +84,23 @@ var PrefsPrivate = {
   notifyDataChange: function()
   {
     let fontName = this.getFirefoxDefaultFontName();
-    if (fontName) setIEDefaultFont(fontName);
+    Utils.ERROR(fontName);
+    if (fontName && fontName.length) setIEDefaultFont(fontName);
   },
 
   getFirefoxDefaultFontName: function()
   {
     try
     {
-      let locale = Services.prefs.getCharPref("general.useragent.locale");
-      let defaultFontTypeForLanguage = Services.prefs.getCharPref("font.default.%LANG%".replace(/%LANG%/, locale));
+      let group = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString);
+      let defaultFontTypeForLanguage = Services.prefs.getCharPref("font.default.%LANG%".replace(/%LANG%/, group));
       let fontNameKey = defaultFontTypeForLanguage == "serif" ? "font.name.serif.%LANG%" : "font.name.sans-serif.%LANG%";
-      return decodeURIComponent(escape(Services.prefs.getCharPref(fontNameKey.replace(/%LANG%/, locale))));
+      return decodeURIComponent(escape(Services.prefs.getCharPref(fontNameKey.replace(/%LANG%/, group))));
     }
     catch (e)
     {
       Utils.ERROR(e);
-      return "";
+      return null;
     }
   },
 
@@ -158,6 +159,6 @@ function setIEDefaultFont(fontName)
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.LOG("Failed to set IE default font: " + e);
   }
 }
