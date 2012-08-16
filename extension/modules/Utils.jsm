@@ -406,7 +406,12 @@ var Utils = {
   isFirefoxOnly: function(url)
   {
     url = url.trim();
-    return (url && (url.length > 0) && ((Utils.startsWith(url, 'about:') && url != "about:blank") || Utils.startsWith(url, 'chrome://')));
+    return (url && (url.length > 0) &&
+      (
+       Utils.startsWith(url, 'about:') ||
+       Utils.startsWith(url, 'chrome://') ||
+       Utils.startsWith(url, 'resource://')
+      ));
   },
 
   /**
