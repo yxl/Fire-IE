@@ -12,6 +12,22 @@
   padding-bottom: 1px;
 }
 
+#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-label {
+  text-decoration: line-through;
+}
+
+#fireie-urlbar-switch-tooltip1-disabled {
+  display: none;
+}
+
+#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-tooltip1 {
+  display: none;
+}
+
+#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-tooltip1-disabled {
+  display: inline;
+}
+
 /* treechildren checkbox */
 
 treechildren::-moz-tree-checkbox {

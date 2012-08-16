@@ -1,6 +1,7 @@
 <!ENTITY fireie.switchButton.label "解雇IE">
 
 <!ENTITY fireie.urlbar.switch.tooltip1 "切換瀏覽模式">
+<!ENTITY fireie.urlbar.switch.tooltip1.disabled "無法在該頁面進行切換">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊設定 解雇IE 選項">
 <!ENTITY urlbar.switchRules.label "切換規則">
 <!ENTITY internetProperties.lable "IE的Internet 選項">

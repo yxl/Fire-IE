@@ -1,7 +1,8 @@
 <!ENTITY fireie.switchButton.label "Fire IE">
 
 <!ENTITY fireie.urlbar.switch.tooltip1 "Switch rendering engine">
-<!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
+<!ENTITY fireie.urlbar.switch.tooltip1.disabled "Cannot switch on this page">
+<!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options">
 <!ENTITY urlbar.switchRules.label "Switch Rules">
 <!ENTITY internetProperties.lable "IE's Internet Properties">
 <!ENTITY fireie.autoswitch.disable "Disable Auto-switch Everywhere">
