@@ -12,6 +12,10 @@
   padding-bottom: 1px;
 }
 
+#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-image {
+  opacity: 0.4;
+}
+
 #fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-label {
   text-decoration: line-through;
 }
