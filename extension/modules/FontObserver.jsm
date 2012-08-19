@@ -84,7 +84,6 @@ var PrefsPrivate = {
   notifyDataChange: function()
   {
     let fontName = this.getFirefoxDefaultFontName();
-    Utils.ERROR(fontName);
     if (fontName && fontName.length) setIEDefaultFont(fontName);
   },
 
