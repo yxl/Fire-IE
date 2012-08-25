@@ -1,0 +1,2426 @@
+diff --git a/extension/chrome/content/options.xul b/extension/chrome/content/options.xul
+index 0ab817b..bb13cb0 100644
+--- a/extension/chrome/content/options.xul
++++ b/extension/chrome/content/options.xul
+@@ -124,7 +124,7 @@ windowtype="fireie:options">
+                   <hbox align="center">
+                     <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
+                     <spacer flex="1"/>
+-                    <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" />
++                    <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
+                   </hbox>
+                 </radiogroup>
+               </vbox>
+diff --git a/extension/chrome/content/options2.js b/extension/chrome/content/options2.js
+new file mode 100644
+index 0000000..a9539c2
+--- /dev/null
++++ b/extension/chrome/content/options2.js
+@@ -0,0 +1,439 @@
++/*
++This file is part of Fire-IE.
++
++Fire-IE is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++Fire-IE is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++/**
++ * @namespace
++ */
++
++Cu.import(baseURL.spec + "AppIntegration.jsm");
++Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
++
++if (typeof(Options) == "undefined")
++{
++  var Options = {};
++}
++
++Options.export = function()
++{
++  let aOld = Options._getAllOptions(false);
++  Options.apply(true);
++  let aCurrent = Options._getAllOptions(false);
++  if (aCurrent) Options._saveToFile(aCurrent);
++  Options._setAllOptions(aOld);
++}
++
++Options.import = function()
++{
++  let aOld = Options._getAllOptions(false);
++  let[result, aList] = Options._loadFromFile();
++  if (result)
++  {
++    if (aList)
++    {
++      Options._setAllOptions(aList);
++      Options.initDialog();
++      Options._setAllOptions(aOld);
++      Options.updateApplyButton(true);
++    }
++    else
++    {
++      alert(Utils.getString("fireie.options.import.error"));
++    }
++  }
++}
++
++Options.restoreDefaultSettings = function()
++{
++  let aOld = Options._getAllOptions(false);
++  let aDefault = Options._getAllOptions(true);
++  Options._setAllOptions(aDefault);
++  Options.initDialog();
++  Options._setAllOptions(aOld);
++  Options.updateApplyButton(true);
++}
++
++// Apply options
++Options.apply = function(quiet)
++{
++  let requiresRestart = false;
++
++  //general
++  Prefs.handleUrlBar = E("handleurl").checked;
++  Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
++  let newKey = E("shortcut-key").value;
++  if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
++  {
++    requiresRestart = true;
++  }
++  Prefs.shortcut_key = newKey;
++  let newModifiers = E("shortcut-modifiers").value;
++  if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
++  {
++    requiresRestart = true;
++  }
++  Prefs.shortcut_modifiers = newModifiers;
++  let newEnabled = E("shortcutEnabled").checked;
++  if (Prefs.shortcutEnabled != newEnabled)
++  {
++    requiresRestart = true;
++    Prefs.shortcutEnabled = E("shortcutEnabled").checked;
++  }
++  Prefs.privatebrowsingwarning = E("privatebrowsingwarning").checked;
++  Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
++  Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
++  Prefs.showTooltipText = E("showTooltipText").checked;
++  Prefs.showStatusText = E("showStatusText").checked;
++  Prefs.forceMGSupport = E("forceMGSupport").checked;
++  
++  // IE compatibility mode
++  let newMode = "ie7mode";
++  let iemode = E("iemode");
++  if (iemode)
++  {
++    newMode = iemode.value;
++  }
++  if (Prefs.compatMode != newMode)
++  {
++    requiresRestart = true;
++    Prefs.compatMode = newMode;
++    Options.applyIECompatMode();
++  }
++
++  //update UI
++  Options.updateApplyButton(false);
++
++  //notify of restart requirement
++  if (requiresRestart && !quiet)
++  {
++    alert(Utils.getString("fireie.options.alert.restart"));
++  }
++}
++
++Options.applyIECompatMode = function()
++{
++  let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
++  let value = 7000;
++  switch (mode)
++  {
++  case 'ie7mode':
++    value = 7000;
++    break;
++  case 'ie8mode':
++    value = 8000;
++    break;
++  case 'ie9mode':
++    value = 9000;
++    break;
++  default:
++    value = 7000;
++    break;
++  }
++  
++  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
++  try
++  {
++	wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
++	wrk.writeIntValue("firefox.exe", value);
++	wrk.close();
++  }
++  catch (e)
++  {
++	Utils.ERROR(e);
++  }
++}
++
++// Get IE's main version number
++Options.getIEMainVersion = function()
++{
++  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
++  let versionString = "0";
++  try
++  {
++	wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
++    versionString = wrk.readStringValue("version");
++    wrk.close();
++  }
++  catch (e)
++  {
++    Utils.ERROR(e);
++  }  
++  return parseInt(versionString);
++}
++
++Options.updateIEModeTab = function()
++{
++  let mainIEVersion = Options.getIEMainVersion();
++  // IE7 or lower does not support compatible modes
++  if (mainIEVersion < 8)
++  {
++    return;
++  }
++  switch (mainIEVersion)
++  {
++  case 9:
++    E("ie9mode-radio").hidden = false;
++  case 8:
++    E("ie8mode-radio").hidden = false;
++    E("ie7mode-radio").hidden = false;
++    break;
++  }
++  E("iemodeNotSupported").hidden = true;
++  E("iemodeDescr").hidden = false;
++  let mode = Prefs.compatMode;
++  E("iemode").value = mode;
++}
++
++Options.initDialog = function()
++{
++  // options for general features
++  E("handleurl").checked = Prefs.handleUrlBar;
++  E("disableAutoSwitch").checked = !Prefs.autoswitch_enabled;
++  E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
++  E("shortcut-key").value = Prefs.shortcut_key;
++  E("shortcutEnabled").checked = Prefs.shortcutEnabled;
++  E("privatebrowsingwarning").checked = Prefs.privatebrowsingwarning;
++  E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
++  E("showTooltipText").checked = Prefs.showTooltipText;
++  E("showStatusText").checked = Prefs.showStatusText;
++  E("forceMGSupport").checked = Prefs.forceMGSupport;
++
++  // hide "showStatusText" if we don't handle status messages ourselves
++  let ifHide = !AppIntegration.shouldShowStatusOurselves();
++  E("statusBarGroup").hidden = ifHide;
++
++  // disable MGS checkbox if we already detected some gesture extension
++  //E("integration-tab").hidden = GesturePrefObserver.hasGestureExtension();
++  if (GesturePrefObserver.hasGestureExtension())
++  {
++    E("forceMGSupport").disabled = true;
++  }
++  else
++  {
++    E("alreadyEnabledMGSupportLabel").hidden = true;
++  }
++
++  // updateStatus
++  Options.updateApplyButton(false);
++  Options.handleShortcutEnabled();
++
++  // IE Compatibility Mode
++  Options.updateIEModeTab();
++}
++
++Options.setIconDisplayValue = function(value)
++{
++  E("iconDisplay").value = value;
++  this.updateApplyButton(true);
++}
++
++Options.updateApplyButton = function(e)
++{
++  document.getElementById("myApply").disabled = !e;
++}
++
++Options.handleShortcutEnabled = function(e)
++{
++  let disable = !E("shortcutEnabled").checked;
++  E("shortcut-modifiers").disabled = disable;
++  E("shortcut-plus").disabled = disable;
++  E("shortcut-key").disabled = disable;
++}
++
++Options.init = function()
++{
++  function addEventListenerByTagName(tag, type, listener)
++  {
++    let objs = document.getElementsByTagName(tag);
++    for (let i = 0; i < objs.length; i++)
++    {
++      objs[i].addEventListener(type, listener, false);
++    }
++  }
++  
++  // for multi-line label sizing problem
++  window.sizeToContent();
++  let vboxes = document.querySelectorAll("prefpane > vbox");
++  Array.prototype.forEach.call(vboxes, function(vbox)
++  {
++    vbox.height = vbox.boxObject.height;
++  });
++  window.sizeToContent();
++  
++  Options.initDialog();
++  addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
++  addEventListenerByTagName("radio", "command", Options.updateApplyButton);
++  addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
++  E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
++}
++
++Options.close = function()
++{
++  let isModified = !document.getElementById("myApply").disabled;
++  if (isModified)
++  {
++    if (confirm(Utils.getString("fireie.options.alert.modified")))
++    {
++      Options.apply(true);
++    }
++  }
++}
++
++Options._saveToFile = function(aList)
++{
++  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
++  let stream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
++  let converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].createInstance(Components.interfaces.nsIConverterOutputStream);
++
++  fp.init(window, null, fp.modeSave);
++  fp.defaultExtension = "txt";
++  fp.defaultString = "FireIEPref";
++  fp.appendFilters(fp.ruleText);
++
++  if (fp.show() != fp.returnCancel)
++  {
++    try
++    {
++      if (fp.file.exists()) fp.file.remove(true);
++      fp.file.create(fp.file.NORMAL_FILE_TYPE, 0666);
++      stream.init(fp.file, 0x02, 0x200, null);
++      converter.init(stream, "UTF-8", 0, 0x0000);
++
++      for (var i = 0; i < aList.length; i++)
++      {
++        aList[i] = aList[i] + "\n";
++        converter.writeString(aList[i]);
++      }
++    }
++    finally
++    {
++      converter.close();
++      stream.close();
++    }
++  }
++}
++
++Options._loadFromFile = function()
++{
++  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
++  let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
++  let converter = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
++
++  fp.init(window, null, fp.modeOpen);
++  fp.defaultExtension = "txt";
++  fp.appendFilters(fp.ruleText);
++
++  if (fp.show() != fp.returnCancel)
++  {
++    try
++    {
++      let input = {};
++      stream.init(fp.file, 0x01, 0444, null);
++      converter.init(stream, "UTF-8", 0, 0x0000);
++      converter.readString(stream.available(), input);
++      let linebreak = input.value.match(/(((\n+)|(\r+))+)/m)[1];
++      return [true, input.value.split(linebreak)];
++    }
++    finally
++    {
++      converter.close();
++      stream.close();
++    }
++  }
++  return [false, null];
++}
++
++Options._getAllOptions = function(isDefault)
++{
++  let prefix = "extensions.fireie.";
++  let prefs = (isDefault ? Services.prefs.getDefaultBranch("") : Services.prefs.getBranch(""));
++  let preflist = prefs.getChildList(prefix, {});
++
++  let aList = ["FireIEPref"];
++  for (var i = 0; i < preflist.length; i++)
++  {
++    try
++    {
++      let value = null;
++      switch (prefs.getPrefType(preflist[i]))
++      {
++      case prefs.PREF_BOOL:
++        value = prefs.getBoolPref(preflist[i]);
++        break;
++      case prefs.PREF_INT:
++        value = prefs.getIntPref(preflist[i]);
++        break;
++      case prefs.PREF_STRING:
++        value = prefs.getComplexValue(preflist[i], Components.interfaces.nsISupportsString).data;
++        break;
++      }
++      aList.push(preflist[i] + "=" + value);
++    }
++    catch (e)
++    {
++      Utils.ERROR(e);
++    }
++  }
++  return aList;
++}
++
++Options._setAllOptions = function(aList)
++{
++  if (!aList) return;
++  if (aList.length == 0) return;
++  if (aList[0] != "FireIEPref") return;
++
++  let prefs = Services.prefs.getBranch("");
++
++  let aPrefs = [];
++  for (let i = 1; i < aList.length; i++)
++  {
++    let index = aList[i].indexOf("=");
++    if (index > 0)
++    {
++      var name = aList[i].substring(0, index);
++      var value = aList[i].substring(index + 1, aList[i].length);
++      aPrefs.push([name, value]);
++    }
++  }
++  for (let i = 0; i < aPrefs.length; i++)
++  {
++    try
++    {
++      let name = aPrefs[i][0];
++      let value = aPrefs[i][1];
++      switch (prefs.getPrefType(name))
++      {
++      case prefs.PREF_BOOL:
++        prefs.setBoolPref(name, /true/i.test(value));
++        break;
++      case prefs.PREF_INT:
++        prefs.setIntPref(name, value);
++        break;
++      case prefs.PREF_STRING:
++        if (value.indexOf('"') == 0) value = value.substring(1, value.length - 1);
++        let sString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
++        sString.data = value;
++        prefs.setComplexValue(name, Components.interfaces.nsISupportsString, sString);
++        break;
++      }
++    }
++    catch (e)
++    {
++      Utils.ERROR(e);
++    }
++  }
++}
+diff --git a/extension/chrome/content/options2.xul b/extension/chrome/content/options2.xul
+new file mode 100644
+index 0000000..d34de1a
+--- /dev/null
++++ b/extension/chrome/content/options2.xul
+@@ -0,0 +1,197 @@
++<?xml version="1.0"?>
++<!--
++-->
++<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
++<?xml-stylesheet href="chrome://global/skin/preferences.css" type="text/css"?>
++<?xml-stylesheet href="chrome://fireie/skin/options.css" type="text/css"?>
++
++<!DOCTYPE prefwindow SYSTEM "chrome://fireie/locale/fireie.dtd">
++
++<prefwindow id="fireie-options"
++            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
++            autosize="true" resizable="no" persist="screenX screenY"
++            buttons="accept,cancel,extra1"
++            onload="Options.init();"
++            onclose="Options.close();"
++            ondialogaccept="Options.apply(false);"
++            ondialogextra1="Options.apply(false);"
++            title="&fireie.options.title;"
++            windowtype="fireie:options">
++
++  <!-- Bug 296418 - can't put tags/elements before prefpane elements in prefwindow -->
++  <!-- Scripts are put at the end of the prefwindow element -->
++  <prefpane id="generalPane" label="&fireie.options.general.pane;" image="chrome://fireie/skin/pane-general.png" flex="1">
++    <preferences></preferences>
++    <vbox flex="1">
++      <groupbox>
++        <caption label="&fireie.options.switch.caption;" />
++        <vbox>
++          <checkbox label="&fireie.options.switch.handleurl;"
++          id="handleurl" />
++          <checkbox label="&fireie.options.switch.disableAutoSwitch;" id="disableAutoSwitch" />
++        </vbox>
++      </groupbox>
++      <!-- Sets Shortcut key -->
++      <groupbox id="shortcut">
++        <caption label="&fireie.options.shorcut.caption;" />
++        <hbox>
++          <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
++          <menulist id="shortcut-modifiers">
++            <menupopup>
++              <menuitem value="alt" label="Alt" />
++              <menuitem value="control" label="Ctrl" />
++              <menuitem value="control shift" label="Ctrl + Shift" />
++              <menuitem value="control alt" label="Ctrl + Alt" />
++              <menuitem value="alt shift" label="Alt + Shift" />
++            </menupopup>
++          </menulist>
++          <label id="shortcut-plus">+</label>
++          <menulist id="shortcut-key">
++            <menupopup>
++              <menuitem value="A" label="A" />
++              <menuitem value="B" label="B" />
++              <menuitem value="C" label="C" />
++              <menuitem value="D" label="D" />
++              <menuitem value="E" label="E" />
++              <menuitem value="F" label="F" />
++              <menuitem value="G" label="G" />
++              <menuitem value="H" label="H" />
++              <menuitem value="I" label="I" />
++              <menuitem value="J" label="J" />
++              <menuitem value="K" label="K" />
++              <menuitem value="L" label="L" />
++              <menuitem value="M" label="M" />
++              <menuitem value="N" label="N" />
++              <menuitem value="O" label="O" />
++              <menuitem value="P" label="P" />
++              <menuitem value="Q" label="Q" />
++              <menuitem value="R" label="R" />
++              <menuitem value="S" label="S" />
++              <menuitem value="T" label="T" />
++              <menuitem value="U" label="U" />
++              <menuitem value="V" label="V" />
++              <menuitem value="W" label="W" />
++              <menuitem value="X" label="X" />
++              <menuitem value="Y" label="Y" />
++              <menuitem value="Z" label="Z" />
++              <menuitem value="0" label="0" />
++              <menuitem value="1" label="1" />
++              <menuitem value="2" label="2" />
++              <menuitem value="3" label="3" />
++              <menuitem value="4" label="4" />
++              <menuitem value="5" label="5" />
++              <menuitem value="6" label="6" />
++              <menuitem value="7" label="7" />
++              <menuitem value="8" label="8" />
++              <menuitem value="9" label="9" />
++            </menupopup>
++          </menulist>
++        </hbox>
++        <hbox>
++          <label class="descr" value="&fireie.options.restart.descr;" />
++        </hbox>
++      </groupbox>
++      <groupbox>
++        <caption label="&fireie.options.private.caption;"/>
++        <description class="descr">&fireie.options.private.descr;</description>
++        <checkbox id="privatebrowsingwarning" label="&fireie.options.private.privatebrowsingwarning;" class="indent" />
++      </groupbox>
++    </vbox>
++  </prefpane>
++  
++  <prefpane id="UIPane" label="&fireie.options.ui.pane;" image="chrome://fireie/skin/pane-ui.png" flex="1">
++    <preferences></preferences>
++    <vbox flex="1">
++      <groupbox>
++        <caption label="&fireie.options.ui.urlBarButtonCaption;" />
++        <vbox>
++          <vbox>
++            <label>&fireie.options.ui.iconDisplayLabel;</label>
++            <radiogroup id="iconDisplay" class="indent">
++              <hbox align="center">
++                <radio id="iconHidden-radio" label="&fireie.options.ui.iconHidden;" value="iconHidden" />
++                <spacer flex="1"/>
++                <image class="icon-hidden" width="150" height="24" onclick="Options.setIconDisplayValue('iconHidden')" />
++              </hbox>
++              <hbox align="center">
++                <radio id="iconOnly-radio" label="&fireie.options.ui.iconOnly;" value="iconOnly" />
++                <spacer flex="1"/>
++                <image class="icon-only" width="150" height="24" onclick="Options.setIconDisplayValue('iconOnly')" />
++              </hbox>
++              <hbox align="center">
++                <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
++                <spacer flex="1"/>
++                <image class="icon-and-text" width="150" height="24" onclick="Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
++              </hbox>
++            </radiogroup>
++          </vbox>
++          <vbox>
++            <label id="tooltipLabel" style="margin-top:10px;">&fireie.options.ui.tooltipLabel;</label>
++            <checkbox label="&fireie.options.ui.showTooltipText;" id="showTooltipText" class="indent" />
++          </vbox>
++        </vbox>
++      </groupbox>
++      <groupbox id="statusBarGroup">
++        <caption label="&fireie.options.ui.statusBarCaption;" />
++        <vbox>
++          <checkbox label="&fireie.options.ui.showStatusText;" id="showStatusText" />
++        </vbox>
++      </groupbox>
++    </vbox>
++  </prefpane>
++
++  <prefpane id="integrationPane" label="&fireie.options.integration.pane;" image="chrome://fireie/skin/pane-integration.png" flex="1">
++    <preferences></preferences>
++    <vbox flex="1">
++      <groupbox>
++        <caption label="&fireie.options.integration.mgCaption;" />
++        <label class="descr">&fireie.options.integration.mgDescr;</label>
++        <checkbox id="forceMGSupport" label="&fireie.options.integration.forceMGSupport;" class="indent" />
++        <label id="alreadyEnabledMGSupportLabel" style="color: green;">&fireie.options.integration.alreadyEnabledMGSupport;</label>
++      </groupbox>
++    </vbox>  
++  </prefpane>
++
++  <prefpane id="iemodePane" label="&fireie.options.iecompat.pane;" image="chrome://fireie/skin/pane-iemode.png" flex="1">
++    <preferences></preferences>
++    <vbox flex="1">
++      <label id="iemodeNotSupported" class="descr" style="margin-top:20px;">
++        &fireie.options.iecompat.notSupported;</label>
++      <radiogroup id="iemode">
++        <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
++        hidden="true" value="ie7mode" />
++        <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
++        hidden="true" value="ie8mode" />
++        <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
++        hidden="true" value="ie9mode" />
++      </radiogroup>
++      <label id="iemodeDescr" class="descr" style="margin-top:20px;" hidden="true">
++        &fireie.options.restart.descr;</label>
++    </vbox>
++  </prefpane>
++  
++  <hbox class="prefWindow-dlgbuttons">
++    <button id="mySettingManager" type="menu"
++    label="&fireie.options.manager;">
++      <menupopup>
++        <menuitem id="import" label="&fireie.options.import;"
++        oncommand="Options.import();" />
++        <menuitem id="export" label="&fireie.options.export;"
++        oncommand="Options.export();" />
++        <menuseparator />
++        <menuitem id="default" label="&fireie.options.default;"
++        oncommand="Options.restoreDefaultSettings();" />
++      </menupopup>
++    </button>
++    <spacer flex="1" />
++    <button dlgtype="accept" id="myAccept" />
++    <button dlgtype="extra1" id="myApply" label="&fireie.options.apply;" />
++    <button dlgtype="cancel" id="myCancel" />
++  </hbox>
++  
++  <!-- Bug 296418 - can't put tags/elements before prefpane elements in prefwindow -->
++  <script type="application/x-javascript" src="utils.js"/>
++  <script type="application/x-javascript" src="options2.js" />
++
++</prefwindow>
++
+diff --git a/extension/chrome/content/overlay.js b/extension/chrome/content/overlay.js
+index a79147f..a9775f8 100644
+--- a/extension/chrome/content/overlay.js
++++ b/extension/chrome/content/overlay.js
+@@ -515,7 +515,6 @@ var gFireIE = null;
+     // hook aBrowser.sessionHistory
+     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
+     aBrowser.FireIE_hooked = true;
+-    Utils.LOG("Browser Getter hooked.");
+   };
+   
+   function unhookBrowserGetter(aBrowser)
+@@ -524,7 +523,6 @@ var gFireIE = null;
+     HM.unhookProp(aBrowser, "currentURI");
+     HM.unhookProp(aBrowser, "sessionHistory");
+     aBrowser.FireIE_hooked = false;
+-    Utils.LOG("Browser Getter unhooked.");
+   };
+ 
+   function hookURLBarSetter(aURLBar)
+diff --git a/extension/chrome/content/overlay.xul b/extension/chrome/content/overlay.xul
+index 6b54653..1a3e2be 100644
+--- a/extension/chrome/content/overlay.xul
++++ b/extension/chrome/content/overlay.xul
+@@ -46,14 +46,17 @@ xmlns:html="http://www.w3.org/1999/xhtml">
+     tooltip="fireie-urlbar-switch-tooltip" />
+   </toolbarpalette>
+   <!-- Popup menus -->
+-  <popupset>
++  <popupset id="mainPopupSet">
+     <!-- Switch button context menu -->
+-    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="gFireIE.setAutoSwitchMenuItem();">
+-      <menuitem label="&fireie.options.title;"
++    <menupopup id="fireie-switch-button-context-menu" onpopupshowing="if (event.target == this) gFireIE.setMenuItems();">
++      <menuitem label="&fireie.options.title;..."
+       oncommand="gFireIE.openOptionsDialog();" />
+-      <menuitem label="&urlbar.switchRules.label;"
++      <menuseparator />
++      <menuitem label="&urlbar.switchRules.label;..."
+       oncommand="gFireIE.openRulesDialog();" />
+-      <menuitem label="&internetProperties.lable;"
++      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
++      <menuseparator id="fireie-erc-start" />
++      <menuitem label="&internetProperties.lable;..."
+       oncommand="gFireIE.openInternetPropertiesDialog();" />
+       <!-- Theme sub-menu -->
+       <menu id="fireie-skin-menu" label="&skin.label;">
+@@ -66,7 +69,6 @@ xmlns:html="http://www.w3.org/1999/xhtml">
+           oncommand="gFireIE.openMoreThemesPage();" />
+         </menupopup>
+       </menu>
+-      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();" type="checkbox" autocheck="false" closemenu="none"/>
+     </menupopup>
+   </popupset>
+ </overlay>
+diff --git a/extension/chrome/locale/en/fireie.dtd b/extension/chrome/locale/en/fireie.dtd
+index 0b521aa..d0d3491 100644
+--- a/extension/chrome/locale/en/fireie.dtd
++++ b/extension/chrome/locale/en/fireie.dtd
+@@ -4,7 +4,7 @@
+ <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options.">
+ <!ENTITY urlbar.switchRules.label "Switch Rules">
+ <!ENTITY internetProperties.lable "IE's Internet Properties">
+-<!ENTITY fireie.autoswitch.disable "Disable Auto-switch">
++<!ENTITY fireie.autoswitch.disable "Disable Auto-switch Everywhere">
+ <!ENTITY skin.label "Skins">
+ <!ENTITY default.lable "Default">
+ <!ENTITY skin.more.lable "More...">
+@@ -12,6 +12,7 @@
+ <!ENTITY fireie.options.title "Fire IE Options">
+ 
+ <!ENTITY fireie.options.general.tab "General">
++<!ENTITY fireie.options.general.pane "General">
+ <!ENTITY fireie.options.switch.caption "When switch rendering engine:">
+ <!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
+ <!ENTITY fireie.options.switch.disableAutoSwitch "Disable engine auto-switch">
+@@ -21,6 +22,7 @@
+ <!ENTITY fireie.options.private.privatebrowsingwarning "Show private browsing warning page">
+ <!ENTITY fireie.options.private.descr "IE-mode tabs does not support private browsing. You can choose whether to show a warning page in this situation.">
+ <!ENTITY fireie.options.ui.tab "UI">
++<!ENTITY fireie.options.ui.pane "UI">
+ <!ENTITY fireie.options.ui.urlBarButtonCaption "URL Bar Button">
+ <!ENTITY fireie.options.ui.iconDisplayLabel "Display style:">
+ <!ENTITY fireie.options.ui.iconHidden "Hidden">
+@@ -30,7 +32,9 @@
+ <!ENTITY fireie.options.ui.showTooltipText "Show engine status when hovering URL bar button">
+ <!ENTITY fireie.options.ui.statusBarCaption "Floating Status Bar">
+ <!ENTITY fireie.options.ui.showStatusText "Show IE engine's status in the floating status bar">
++<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
+ <!ENTITY fireie.options.integration.tab "Integration">
++<!ENTITY fireie.options.integration.pane "Integration">
+ <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">
+ <!ENTITY fireie.options.integration.mgDescr "Normally Fire-IE will detect your mouse gesture extensions and scripts and automatically enable the support if it found any. If you have a mouse gesture extension or script but can't use it in IE-mode tabs, you can try enable this option.">
+ <!ENTITY fireie.options.integration.forceMGSupport "Force the support of mouse gestures in IE-mode tabs">
+@@ -45,9 +49,11 @@
+ <!ENTITY fireie.options.rule.button.delete "Delete">
+ 
+ <!ENTITY fireie.options.iecompat.tab "IE Compatibility Mode">
++<!ENTITY fireie.options.iecompat.pane "IE Compatibility Mode">
+ <!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">
+ <!ENTITY fireie.options.iecompat.ie8 "IE8 Standards Mode">
+ <!ENTITY fireie.options.iecompat.ie9 "IE9 Standards Mode">
++<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
+ 
+ <!ENTITY fireie.options.apply "Apply">
+ <!ENTITY fireie.options.manager "Options Manager">
+diff --git a/extension/chrome/locale/en/global.properties b/extension/chrome/locale/en/global.properties
+index 5031b42..45ae913 100644
+--- a/extension/chrome/locale/en/global.properties
++++ b/extension/chrome/locale/en/global.properties
+@@ -2,6 +2,19 @@ fireie.urlbar.switch.label.fx=Fast
+ fireie.urlbar.switch.label.ie=Compatible
+ fireie.urlbar.switch.tooltip2.fx=Current engine: Firefox
+ fireie.urlbar.switch.tooltip2.ie=Current engine: IE
++fireie.erc.enableOnPage=Enable Auto-switch on this page
++fireie.erc.enableOnSite=Enable Auto-switch on --
++fireie.erc.enableOnUrl=Enable Auto-switch for --
++fireie.erc.disableOnPage=Disable Auto-switch on this page
++fireie.erc.disableOnSite=Disable Auto-switch on --
++fireie.erc.disableOnUrl=Disable Auto-switch for --
++fireie.erc.uaRules=User-agent Options
++fireie.erc.uaOnSite=Use IE's UA on This Site
++fireie.erc.uaESROnSite=Use ESR UA on This Site
++fireie.erc.uaOnPage=Use IE's UA for --
++fireie.erc.uaESROnPage=Use ESR UA for --
++fireie.erc.uaDefaultOnSite=Use Default UA on This Site
++fireie.erc.uaDefaultOnPage=Use Default UA for --
+ fireie.options.import.error=Failed to import.
+ fireie.options.alert.restart=Firefox must be restarted for all changes to take effect.
+ fireie.options.alert.modified=The preferences are modified. Save changes?
+@@ -19,6 +32,8 @@ newGroup.title=New rule group
+ switchGroup.title=Switch rule group
+ exceptionalGroup.title=Exceptional rule group
+ customGroup.title=Custom rule group
++uaExceptionalGroup.title=Exceptional user-agent rule group
++uaGroup.title=User-agent rule group
+ remove_subscription_warning=Do you really want to remove this subscription?
+ rule_regexp_tooltip=This rule is either a regular expression or too short to be optimized. Too many of these rules might slow down your browsing.
+ default_dialog_title=Fire IE
+diff --git a/extension/chrome/locale/zh-CN/fireie.dtd b/extension/chrome/locale/zh-CN/fireie.dtd
+index c539cc4..d5b7444 100644
+--- a/extension/chrome/locale/zh-CN/fireie.dtd
++++ b/extension/chrome/locale/zh-CN/fireie.dtd
+@@ -4,7 +4,7 @@
+ <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击设置 解雇IE 选项">
+ <!ENTITY urlbar.switchRules.label "切换规则">
+ <!ENTITY internetProperties.lable "IE的Internet 选项">
+-<!ENTITY fireie.autoswitch.disable "禁用自动切换">
++<!ENTITY fireie.autoswitch.disable "全局禁用自动切换">
+ <!ENTITY skin.label "皮肤">
+ <!ENTITY default.lable "默认">
+ <!ENTITY skin.more.lable "更多...">
+@@ -12,6 +12,7 @@
+ <!ENTITY fireie.options.title "解雇IE 选项">
+ 
+ <!ENTITY fireie.options.general.tab "常规">
++<!ENTITY fireie.options.general.pane "常规">
+ <!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
+ <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
+ <!ENTITY fireie.options.switch.disableAutoSwitch "禁用浏览引擎的自动切换">
+@@ -21,6 +22,7 @@
+ <!ENTITY fireie.options.private.privatebrowsingwarning "显示隐私浏览模式警告页面">
+ <!ENTITY fireie.options.private.descr "IE引擎不支持隐私浏览模式，您可以选择是否在这种情况下显示警告页面。">
+ <!ENTITY fireie.options.ui.tab "用户界面">
++<!ENTITY fireie.options.ui.pane "用户界面">
+ <!ENTITY fireie.options.ui.urlBarButtonCaption "地址栏按钮">
+ <!ENTITY fireie.options.ui.iconDisplayLabel "显示方式：">
+ <!ENTITY fireie.options.ui.iconHidden "隐藏">
+@@ -30,7 +32,9 @@
+ <!ENTITY fireie.options.ui.showTooltipText "鼠标悬停时显示引擎状态信息">
+ <!ENTITY fireie.options.ui.statusBarCaption "浮动状态栏">
+ <!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示IE引擎的状态消息">
++<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles-cn.png">
+ <!ENTITY fireie.options.integration.tab "集成">
++<!ENTITY fireie.options.integration.pane "集成">
+ <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
+ <!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动开启相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试打开这个选项。">
+ <!ENTITY fireie.options.integration.forceMGSupport "强制开启IE引擎鼠标手势支持">
+@@ -45,9 +49,11 @@
+ <!ENTITY fireie.options.rule.button.delete "删除">
+ 
+ <!ENTITY fireie.options.iecompat.tab "IE兼容模式">
++<!ENTITY fireie.options.iecompat.pane "IE兼容模式">
+ <!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">
+ <!ENTITY fireie.options.iecompat.ie8 "IE8标准模式">
+ <!ENTITY fireie.options.iecompat.ie9 "IE9标准模式">
++<!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式。">
+ 
+ <!ENTITY fireie.options.apply "应用">
+ <!ENTITY fireie.options.manager "选项管理">
+diff --git a/extension/chrome/locale/zh-CN/global.properties b/extension/chrome/locale/zh-CN/global.properties
+index 31727e8..16a9b5f 100644
+--- a/extension/chrome/locale/zh-CN/global.properties
++++ b/extension/chrome/locale/zh-CN/global.properties
+@@ -2,6 +2,19 @@ fireie.urlbar.switch.label.fx=高速
+ fireie.urlbar.switch.label.ie=兼容
+ fireie.urlbar.switch.tooltip2.fx=当前使用: 高速模式(火狐内核)
+ fireie.urlbar.switch.tooltip2.ie=当前使用: 兼容模式(IE内核)
++fireie.erc.enableOnPage=在本页启用自动切换
++fireie.erc.enableOnSite=在 -- 启用自动切换
++fireie.erc.enableOnUrl=对含 -- 的网址启用自动切换
++fireie.erc.disableOnPage=在本页禁用自动切换
++fireie.erc.disableOnSite=在 -- 禁用自动切换
++fireie.erc.disableOnUrl=对含 -- 的网址禁用自动切换
++fireie.erc.uaRules=用户代理(UA)选项
++fireie.erc.uaOnSite=在此站点使用 IE UA
++fireie.erc.uaESROnSite=在此站点使用 ESR UA
++fireie.erc.uaOnPage=对含 -- 的网址使用 IE UA
++fireie.erc.uaESROnPage=对含 -- 的网址使用 ESR UA
++fireie.erc.uaDefaultOnSite=在此站点使用默认 UA
++fireie.erc.uaDefaultOnPage=对含 -- 的网址使用默认 UA
+ fireie.options.import.error=导入失败。
+ fireie.options.alert.restart=设置生效需要重启火狐。
+ fireie.options.alert.modified=选项已修改，是否保存？
+@@ -19,6 +32,8 @@ newGroup.title=新建规则列表
+ switchGroup.title=规则列表
+ exceptionalGroup.title=例外规则列表
+ customGroup.title=自定义规则列表
++uaExceptionalGroup.title=用户代理例外规则列表
++uaGroup.title=用户代理规则列表
+ remove_subscription_warning=你真的希望移除该订阅么？
+ rule_regexp_tooltip=该规则是正则表达式或者太短而不能优化。如果这种类型的切换规则太多会降低您浏览的速度。
+ default_dialog_title=解雇IE
+diff --git a/extension/chrome/locale/zh-TW/fireie.dtd b/extension/chrome/locale/zh-TW/fireie.dtd
+index 82c2792..76e90c1 100644
+--- a/extension/chrome/locale/zh-TW/fireie.dtd
++++ b/extension/chrome/locale/zh-TW/fireie.dtd
+@@ -4,7 +4,7 @@
+ <!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊設定 解雇IE 選項">
+ <!ENTITY urlbar.switchRules.label "切換規則">
+ <!ENTITY internetProperties.lable "IE的Internet 選項">
+-<!ENTITY fireie.autoswitch.disable "禁用自動切換">
++<!ENTITY fireie.autoswitch.disable "全局禁用自動切換">
+ <!ENTITY skin.label "面板">
+ <!ENTITY default.lable "預設">
+ <!ENTITY skin.more.lable "更多...">
+@@ -12,6 +12,7 @@
+ <!ENTITY fireie.options.title "解雇IE 選項">
+ 
+ <!ENTITY fireie.options.general.tab "一般">
++<!ENTITY fireie.options.general.pane "一般">
+ <!ENTITY fireie.options.switch.caption "瀏覽引擎切換時:">
+ <!ENTITY fireie.options.switch.handleurl "總是以目前瀏覽引擎開啟網址列的新網址">
+ <!ENTITY fireie.options.switch.disableAutoSwitch "禁用瀏覽引擎的自動切換">
+@@ -21,6 +22,7 @@
+ <!ENTITY fireie.options.private.privatebrowsingwarning "顯示隱私瀏覽模式警告頁面">
+ <!ENTITY fireie.options.private.descr "IE引擎不支援隱私瀏覽模式，您可以選擇是否在這種情況下顯示警告頁面。">
+ <!ENTITY fireie.options.ui.tab "用戶界面">
++<!ENTITY fireie.options.ui.pane "用戶界面">
+ <!ENTITY fireie.options.ui.urlBarButtonCaption "網址列按鈕">
+ <!ENTITY fireie.options.ui.iconDisplayLabel "顯示方式：">
+ <!ENTITY fireie.options.ui.iconHidden "隱藏">
+@@ -30,7 +32,9 @@
+ <!ENTITY fireie.options.ui.showTooltipText "滑鼠懸停時顯示引擎狀態資訊">
+ <!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
+ <!ENTITY fireie.options.ui.showStatusText "在浮動狀態列中顯示IE引擎的狀態訊息">
++<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles-cn.png">
+ <!ENTITY fireie.options.integration.tab "集成">
++<!ENTITY fireie.options.integration.pane "集成">
+ <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">
+ <!ENTITY fireie.options.integration.mgDescr "通常，解雇IE會檢測您的滑鼠手勢擴展和腳本，並且自動開啟相應的支持。如果您的滑鼠手勢擴展或腳本無法在IE引擎下使用，請嘗試打開這個選項。">
+ <!ENTITY fireie.options.integration.forceMGSupport "強制開啟IE引擎滑鼠手勢支援">
+@@ -45,9 +49,11 @@
+ <!ENTITY fireie.options.rule.button.delete "刪除">
+ 
+ <!ENTITY fireie.options.iecompat.tab "IE兼容模式">
++<!ENTITY fireie.options.iecompat.pane "IE兼容模式">
+ <!ENTITY fireie.options.iecompat.ie7 "IE7標準模式">
+ <!ENTITY fireie.options.iecompat.ie8 "IE8標準模式">
+ <!ENTITY fireie.options.iecompat.ie9 "IE9標準模式">
++<!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支援設置 IE 兼容模式。">
+ 
+ <!ENTITY fireie.options.apply "應用">
+ <!ENTITY fireie.options.manager "選項管理">
+diff --git a/extension/chrome/locale/zh-TW/global.properties b/extension/chrome/locale/zh-TW/global.properties
+index 49ca88f..7ac823f 100644
+--- a/extension/chrome/locale/zh-TW/global.properties
++++ b/extension/chrome/locale/zh-TW/global.properties
+@@ -2,6 +2,19 @@ fireie.urlbar.switch.label.fx=高速
+ fireie.urlbar.switch.label.ie=兼容
+ fireie.urlbar.switch.tooltip2.fx=目前使用: 高速模式(火狐內核)
+ fireie.urlbar.switch.tooltip2.ie=目前使用: 兼容模式(IE內核)
++fireie.erc.enableOnPage=在本頁啟用自動切換
++fireie.erc.enableOnSite=在 -- 啟用自動切換
++fireie.erc.enableOnUrl=對含 -- 的網址啟用自動切換
++fireie.erc.disableOnPage=在本頁禁用自動切換
++fireie.erc.disableOnSite=在 -- 禁用自動切換
++fireie.erc.disableOnUrl=對含 -- 的網址禁用自動切換
++fireie.erc.uaRules=使用者代理(UA)選項
++fireie.erc.uaOnSite=在此網站使用 IE UA
++fireie.erc.uaESROnSite=在此網站使用 ESR UA
++fireie.erc.uaOnPage=對含 -- 的網址使用 IE UA
++fireie.erc.uaESROnPage=對含 -- 的網址使用 ESR UA
++fireie.erc.uaDefaultOnSite=在此網站使用默認 UA
++fireie.erc.uaDefaultOnPage=對含 -- 的網址使用默認 UA
+ fireie.options.import.error=匯入失敗。
+ fireie.options.alert.restart=設定生效需要重啟火狐。
+ fireie.options.alert.modified=選項已修改，是否儲存？
+@@ -19,6 +32,8 @@ newGroup.title=新建規則清單
+ switchGroup.title=規則清單
+ exceptionalGroup.title=例外規則清單
+ customGroup.title=自定義規則清單
++uaExceptionalGroup.title=使用者代理例外規則清單
++uaGroup.title=使用者代理規則清單
+ remove_subscription_warning=你真的希望移除該訂閱麼？
+ rule_regexp_tooltip=該規則是正規表達式或者太短而不能優化。如果這種類型的切換規則太多會降低您瀏覽的速度。
+ default_dialog_title=解雇IE
+diff --git a/extension/chrome/skin/options.css b/extension/chrome/skin/options.css
+index a183555..33b05a6 100644
+--- a/extension/chrome/skin/options.css
++++ b/extension/chrome/skin/options.css
+@@ -1,11 +1,10 @@
+ @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+ 
+-label.descr {
++.descr {
+   width: 300px;
+ }
+ 
+ image.icon-and-text {
+-  list-style-image: url("chrome://fireie/skin/url-button-styles.png");
+   -moz-image-region: rect(0px, 150px, 24px, 0px);
+ }
+ 
+@@ -22,4 +21,3 @@ image.icon-hidden {
+ .indent {
+   margin-right: 20px;
+ }
+-
+diff --git a/extension/chrome/skin/pane-general.png b/extension/chrome/skin/pane-general.png
+new file mode 100644
+index 0000000..cecde80
+Binary files /dev/null and b/extension/chrome/skin/pane-general.png differ
+diff --git a/extension/chrome/skin/pane-iemode.png b/extension/chrome/skin/pane-iemode.png
+new file mode 100644
+index 0000000..0ae0fae
+Binary files /dev/null and b/extension/chrome/skin/pane-iemode.png differ
+diff --git a/extension/chrome/skin/pane-integration.png b/extension/chrome/skin/pane-integration.png
+new file mode 100644
+index 0000000..48e7c14
+Binary files /dev/null and b/extension/chrome/skin/pane-integration.png differ
+diff --git a/extension/chrome/skin/pane-ui.png b/extension/chrome/skin/pane-ui.png
+new file mode 100644
+index 0000000..84d457e
+Binary files /dev/null and b/extension/chrome/skin/pane-ui.png differ
+diff --git a/extension/chrome/skin/url-button-styles-cn.png b/extension/chrome/skin/url-button-styles-cn.png
+new file mode 100644
+index 0000000..baa27ac
+Binary files /dev/null and b/extension/chrome/skin/url-button-styles-cn.png differ
+diff --git a/extension/defaults/preferences/fireie.js b/extension/defaults/preferences/fireie.js
+index c8126ac..b59b98f 100644
+--- a/extension/defaults/preferences/fireie.js
++++ b/extension/defaults/preferences/fireie.js
+@@ -12,6 +12,8 @@ pref("extensions.fireie.data_directory", "fireie");
+ pref("extensions.fireie.contentPolicy_ignoredSchemes", "http https about irc moz-safe-about news resource snews x-jsd addbook cid imap mailbox nntp pop data javascript moz-icon telnet");
+ pref("extensions.fireie.autoswitch_enabled", true);
+ pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
++pref("extensions.fireie.doc_link_languages", "{ \"default\": \"en\", \"zh-CN\": \"zh-CN\", \"zh-TW\": \"zh-CN\", \"en-US\": \"en\" }");
++pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) Gecko/20100101 Firefox/10.0");
+ pref("extensions.fireie.savestats", true);
+ 
+ pref("extensions.fireie.handleUrlBar", false);
+@@ -26,6 +28,7 @@ pref("extensions.fireie.compatMode", "ie7mode");
+ pref("extensions.fireie.forceMGSupport", false);
+ 
+ pref("extensions.fireie.currentTheme", "");
++pref("extensions.fireie.allowedThemeHosts", "[\"fireie.org\"]");
+ 
+ // History & Privacy control
+ pref("privacy.cpd.extensions-fireie", true);
+diff --git a/extension/install.rdf b/extension/install.rdf
+index a49bba6..adcaa5a 100644
+--- a/extension/install.rdf
++++ b/extension/install.rdf
+@@ -5,13 +5,13 @@
+ 
+    <em:id>fireie@fireie.org</em:id>
+    <em:name>Fire IE</em:name>
+-   <em:version>0.2.7</em:version>
++   <em:version>0.2.8</em:version>
+    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+    <em:creator>Yuan Xulei</em:creator>
+    <em:contributor>Wei Deng</em:contributor>
+    <em:contributor>Yifan Wu</em:contributor>   
+    <em:homepageURL>http://fireie.org/</em:homepageURL>
+-   <em:optionsURL>chrome://fireie/content/options.xul</em:optionsURL>
++   <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
+    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
+    <em:targetPlatform>WINNT</em:targetPlatform>
+    <em:unpack>true</em:unpack>
+diff --git a/extension/modules/AppIntegration.jsm b/extension/modules/AppIntegration.jsm
+index 8f95d46..f462cab 100644
+--- a/extension/modules/AppIntegration.jsm
++++ b/extension/modules/AppIntegration.jsm
+@@ -42,6 +42,7 @@ Cu.import(baseURL.spec + "RuleClasses.jsm");
+ Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
+ Cu.import(baseURL.spec + "Synchronizer.jsm");
+ Cu.import(baseURL.spec + "LightweightTheme.jsm");
++Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
+ Cu.import(baseURL.spec + "IECookieManager.jsm");
+ 
+ /**
+@@ -103,6 +104,8 @@ let AppIntegration = {
+       if (Prefs.currentVersion != addonVersion)
+       {
+         Prefs.currentVersion = addonVersion;
++        
++        refreshRuleCache();
+ 
+         if ("nsISessionStore" in Ci)
+         {
+@@ -199,6 +202,9 @@ function WindowWrapper(window)
+ 
+   this.window = window;
+   this.Utils = Utils;
++  Utils.userAgent = window.navigator.userAgent;
++  
++  this._genCE();
+ 
+   if (!isPluginListRefreshed)
+   {
+@@ -264,6 +270,17 @@ WindowWrapper.prototype = {
+     this.E = function(id) doc.getElementById(id);
+     return this.E(id);
+   },
++  
++  /**
++   * Shorthand for document.createElementNS
++   */
++  _genCE: function()
++  {
++    let doc = this.window.document;
++    this.CE = function(tag) doc.createElementNS(
++      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", tag);
++    return this.CE;
++  },
+ 
+   init: function()
+   {
+@@ -284,8 +301,10 @@ WindowWrapper.prototype = {
+     IECookieManager.changeIETempDirectorySetting();
+ 
+     // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
+-    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function()
++    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
+     {
++      if (!this._checkUtilsEventOrigin(e)) return;
++      
+       let focused = this.window.document.commandDispatcher.focusedElement;
+       while (focused)
+       {
+@@ -350,6 +369,29 @@ WindowWrapper.prototype = {
+     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
+     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
+   },
++  
++  // security check, do not let malicious sites send fake events
++  _checkEventOrigin: function(event)
++  {
++    let target = event.target;
++    if (!target) return false;
++    let doc = target.ownerDocument;
++    if (!doc) return false;
++    let allow = Utils.startsWith(doc.location.href, Utils.containerUrl);
++    if (!allow) Utils.LOG("Blocked content event: " + event.type);
++    return allow;
++  },
++
++  _checkUtilsEventOrigin: function(event)
++  {
++    let target = event.target;
++    if (!target) return false;
++    let doc = target.ownerDocument;
++    if (!doc) return false;
++    let allow = doc.location.href == Utils.browserUrl;
++    if (!allow) Utils.LOG("Blocked utils event: " + event.type);
++    return allow;
++  },
+ 
+   /**
+    * Updates the UI for an application window.
+@@ -763,7 +805,7 @@ WindowWrapper.prototype = {
+     if (!url) url = this.getURL();
+     let wnd = Services.wm.getMostRecentWindow("fireie:options");
+     if (wnd) wnd.focus();
+-    else this.window.openDialog("chrome://fireie/content/options.xul", "fireieOptionsDialog", "chrome,centerscreen,resizable=no", Utils.getHostname(url));
++    else this.window.openDialog("chrome://fireie/content/options2.xul", "fireieOptionsDialog", "chrome,titlebar,toolbar,centerscreen,dialog=yes", Utils.getHostname(url));
+   },
+ 
+   /** Show the rules dialog */
+@@ -868,6 +910,8 @@ WindowWrapper.prototype = {
+   /** Handler for IE progress change event */
+   _onIEProgressChange: function(event)
+   {
++    if (!this._checkEventOrigin(event)) return;
++    
+     let progress = parseInt(event.detail);
+     if (progress == 0) this.window.gBrowser.userTypedValue = null;
+     this._updateProgressStatus();
+@@ -877,6 +921,8 @@ WindowWrapper.prototype = {
+   /** Handler for IE new tab event*/
+   _onIENewTab: function(event)
+   {
++    if (!this._checkEventOrigin(event)) return;
++    
+     let data = JSON.parse(event.detail);
+     let url = data.url;
+     let id = data.id;
+@@ -892,6 +938,8 @@ WindowWrapper.prototype = {
+   /** Handler for receiving IE UserAgent from the plugin object */
+   _onIEUserAgentReceived: function(event)
+   {
++    if (!this._checkUtilsEventOrigin(event)) return;
++    
+     let userAgent = event.detail;
+     Utils.ieUserAgent = userAgent;
+     Utils.LOG("_onIEUserAgentReceived: " + userAgent);
+@@ -903,6 +951,8 @@ WindowWrapper.prototype = {
+    */
+   _onIESetCookie: function(event)
+   {
++    if (!this._checkUtilsEventOrigin(event)) return;
++    
+     let subject = null;
+     let topic = "fireie-set-cookie";
+     let data = event.detail;
+@@ -1023,6 +1073,19 @@ WindowWrapper.prototype = {
+     }
+   },
+ 
++  // do not allow intalling themes on sites other than fireie.org
++  _checkThemeSite: function(node)
++  {
++    if (!node) return false;
++    let doc = node.ownerDocument;
++    if (!doc) return false;
++    let url = doc.location.href;
++    let host = Utils.getEffectiveHost(url);
++    let allow = JSON.parse(Prefs.allowedThemeHosts).some(function(h) h == host);
++    if (!allow) Utils.LOG("Blocked theme request: untrusted site (" + host + ")");
++    return allow;
++  },
++
+   /**
+    * Install the theme specified by a web page via a InstallBrowserTheme event.
+    *
+@@ -1033,6 +1096,9 @@ WindowWrapper.prototype = {
+   {
+     // Get the theme data from the DOM node target of the event.
+     let node = event.target;
++    
++    if (!this._checkThemeSite(node)) return;
++    
+     let themeData = this._getThemeDataFromNode(node);
+ 
+     if (themeData != null)
+@@ -1072,6 +1138,9 @@ WindowWrapper.prototype = {
+   {
+     // Get the theme data from the DOM node target of the event.
+     let node = event.target;
++
++    if (!this._checkThemeSite(node)) return;
++    
+     let themeData = this._getThemeDataFromNode(node);
+     if (themeData != null)
+     {
+@@ -1087,6 +1156,7 @@ WindowWrapper.prototype = {
+    */
+   _onResetThemePreview: function(event)
+   {
++    if (!this._checkThemeSite(event.target)) return;
+     this._applyTheme(LightweightTheme.currentTheme);
+   },
+ 
+@@ -1762,10 +1832,11 @@ WindowWrapper.prototype = {
+     }
+     else
+     {
+-      this.window.addEventListener("IEUtilsPluginInitialized", function()
++      this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
+       {
++        if (!this._checkUtilsEventOrigin(e)) return;
+         callback.apply(self, arguments);
+-      }, false);
++      }), false);
+     }
+   },
+   // Handler for click event on engine switch button
+@@ -1785,27 +1856,30 @@ WindowWrapper.prototype = {
+       else
+       {
+         let gBrowser = this.window.gBrowser;
+-        let url = this._getURLAfterSwitch(gBrowser.selectedTab);
+-        // should load actual url after setting the manuallyswitched flag
+-        let newTab = gBrowser.addTab("about:blank");
+-        // first set manual switch flags
+-        this._setManuallySwitchFlag(newTab, url);
+-        // and then load the actual url
+-        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+-        newTab.linkedBrowser.loadURIWithFlags(url, flags);
+-        
+-        switch (where)
++        if (!Utils.isFirefoxOnly(this.getURL(gBrowser.currentTab)))
+         {
+-        case "window":
+-          gBrowser.hideTab(newTab);
+-          gBrowser.replaceTabWithWindow(newTab);
+-          break;
+-        case "tabshifted":
+-          // A background tab has been opened, nothing else to do here.
+-          break;
+-        case "tab":
+-          gBrowser.selectedTab = newTab;
+-          break;
++          let url = this._getURLAfterSwitch(gBrowser.selectedTab);
++          // should load actual url after setting the manuallyswitched flag
++          let newTab = gBrowser.addTab("about:blank");
++          // first set manual switch flags
++          this._setManuallySwitchFlag(newTab, url);
++          // and then load the actual url
++          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
++          newTab.linkedBrowser.loadURIWithFlags(url, flags);
++          
++          switch (where)
++          {
++          case "window":
++            gBrowser.hideTab(newTab);
++            gBrowser.replaceTabWithWindow(newTab);
++            break;
++          case "tabshifted":
++            // A background tab has been opened, nothing else to do here.
++            break;
++          case "tab":
++            gBrowser.selectedTab = newTab;
++            break;
++          }
+         }
+       }
+     }
+@@ -1887,10 +1961,16 @@ WindowWrapper.prototype = {
+     // Simulate mousedown events to support gesture extensions like FireGuestures
+     if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
+     {
++      if (!this._checkEventOrigin(event)) return;
++      
+       let evt = this.window.document.createEvent("MouseEvents");
+       evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
+-      let container = this.getContainerPlugin().parentNode;
+-      container.dispatchEvent(evt);
++      let pluginObject = this.getContainerPlugin();
++      if (pluginObject)
++      {
++        let container = pluginObject.parentNode;
++        container.dispatchEvent(evt);
++      }
+     }
+   },
+ 
+@@ -1918,6 +1998,19 @@ WindowWrapper.prototype = {
+   openContributePage: function()
+   {
+     Utils.loadDocLink("contribute");
++  },
++  
++  /**
++   * Update menu items of URL bar icon
++   */
++  setMenuItems: function()
++  {
++    this.setAutoSwitchMenuItem();
++    EasyRuleCreator.setPopupMenuItems(
++      this.CE,
++      this.E("fireie-switch-button-context-menu"),
++      this.getURL()
++    );
+   }
+ 
+ };
+@@ -1979,4 +2072,14 @@ function addSubscription()
+ 
+ }
+ 
++/**
++ * Ensures that rule cache file is refreshed after version upgrade
++ */
++function refreshRuleCache()
++{
++  Rule.fromText("!dummy"); // work against trapProperty
++  RuleStorage.loadFromDisk();
++  RuleNotifier.triggerListeners("save");
++}
++
+ init();
+diff --git a/extension/modules/ContentPolicy.jsm b/extension/modules/ContentPolicy.jsm
+index c9b65c2..97e4589 100644
+--- a/extension/modules/ContentPolicy.jsm
++++ b/extension/modules/ContentPolicy.jsm
+@@ -88,20 +88,20 @@ var Policy = {
+    */
+   checkEngineRule: function(url)
+   {
+-	if (Utils.isFirefoxOnly(url)) return false;
+-	let docDomain = Utils.getHostname(url);
+-	let match = EngineMatcher.matchesAny(url, docDomain);
+-	if (match)
+-	{
+-	  RuleStorage.increaseHitCount(match);
+-	}
+-	return match && match instanceof EngineRule;
++    if (Utils.isFirefoxOnly(url)) return false;
++    let docDomain = Utils.getHostname(url);
++    let match = EngineMatcher.matchesAny(url, docDomain);
++    if (match)
++    {
++      RuleStorage.increaseHitCount(match);
++    }
++    return match && match instanceof EngineRule;
+   },
+ 
+   /**
+    * Checks whether IE user agent should be used. 
+    * @param {String} url
+-   * @return {Boolean} true if IE user agent should be used. 
++   * @return {UserAgentRule} the rule if there's any match
+    */
+   checkUserAgentRule: function(url, domain)
+   {
+@@ -110,7 +110,7 @@ var Policy = {
+     {
+       RuleStorage.increaseHitCount(match);
+     }
+-    return match && match instanceof UserAgentRule;
++    return match instanceof UserAgentRule ? match : null;
+   },
+ 
+   /**
+@@ -199,10 +199,15 @@ var PolicyPrivate = {
+         }
+ 
+         // Changes the UserAgent to that of IE if necessary.
+-        if (Policy.checkUserAgentRule(url, domain) && Utils.ieUserAgent)
++        let match;
++        if (match = Policy.checkUserAgentRule(url, domain))
+         {
+           // Change user agent
+-          subject.setRequestHeader("user-agent", Utils.ieUserAgent, false);
++          let specialUA = (match.specialUA && match.specialUA.toUpperCase() == "ESR")
++            ? Utils.esrUserAgent : null;
++          let userAgent = specialUA || Utils.ieUserAgent;
++          if (userAgent)
++            subject.setRequestHeader("user-agent", userAgent, false);
+         }
+ 
+         if (Prefs.autoswitch_enabled)
+diff --git a/extension/modules/EasyRuleCreator.jsm b/extension/modules/EasyRuleCreator.jsm
+new file mode 100644
+index 0000000..b72eb50
+--- /dev/null
++++ b/extension/modules/EasyRuleCreator.jsm
+@@ -0,0 +1,428 @@
++/* ***** BEGIN LICENSE BLOCK *****
++ * Version: MPL 1.1
++ *
++ * The contents of this file are subject to the Mozilla Public License Version
++ * 1.1 (the "License"); you may not use this file except in compliance with
++ * the License. You may obtain a copy of the License at
++ * http://www.mozilla.org/MPL/
++ *
++ * Software distributed under the License is distributed on an "AS IS" basis,
++ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
++ * for the specific language governing rights and limitations under the
++ * License.
++ *
++ * The Original Code is AutoProxy.
++ *
++ * The Initial Developer of the Original Code is
++ * Wang Congming <lovelywcm@gmail.com>.
++ * Portions created by the Initial Developer are Copyright (C) 2010-2011
++ * the Initial Developer. All Rights Reserved.
++ *
++ * Contributor(s):
++ *   Yifan Wu (patwonder@163.com)
++ *
++ * ***** END LICENSE BLOCK ***** */
++
++/**
++ * @fileOverview Easy rule creator, makes creating auto-switching rules easier
++ */
++
++let EXPORTED_SYMBOLS = ["EasyRuleCreator"];
++
++const Cc = Components.classes;
++const Ci = Components.interfaces;
++const Cr = Components.results;
++const Cu = Components.utils;
++
++let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
++
++Cu.import("resource://gre/modules/Services.jsm");
++Cu.import("resource://gre/modules/XPCOMUtils.jsm");
++
++Cu.import(baseURL.spec + "Utils.jsm");
++Cu.import(baseURL.spec + "Prefs.jsm");
++Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
++Cu.import(baseURL.spec + "RuleClasses.jsm");
++Cu.import(baseURL.spec + "RuleStorage.jsm");
++Cu.import(baseURL.spec + "Matcher.jsm");
++Cu.import(baseURL.spec + "ContentPolicy.jsm");
++
++let EasyRuleCreator = {
++  _enableOnClassName: "fireie-enable-on",
++  
++  _removeMenuItemsByClass: function(menu, className, idToKeep)
++  {
++    if (idToKeep == "") idToKeep = null;
++    let submenu = menu.firstChild;
++    while (submenu)
++    {
++      let nextsubmenu = submenu.nextSibling;
++      if (submenu.className == className && submenu.getAttribute("id") != idToKeep)
++        menu.removeChild(submenu);
++      submenu = nextsubmenu;
++    }
++  },
++  
++  _setUARuleMenuItems: function(ctx)
++  {
++    let uaSiteRuleTexts =
++      this._makeSiteCheckbox(ctx, "##||", Utils.getString("fireie.erc.uaOnSite"),
++        ctx.effHost, ctx.effHost, "", "$SPECIAL-UA=ESR")
++      .concat(
++      this._makeSiteCheckbox(ctx, "##||", Utils.getString("fireie.erc.uaESROnSite"),
++        ctx.effHost, ctx.effHost, "$SPECIAL-UA=ESR", "", true));
++    
++    ctx.curItem.setAttribute("tooltiptext", Utils.esrUserAgent);
++    ctx.curItem.nextSibling.setAttribute("tooltiptext", Utils.ieUserAgent);
++    
++    let uaRule = UserAgentMatcher.matchesAny(ctx.url);
++    if (uaRule && !this._isExceptional(uaRule)
++      && uaSiteRuleTexts.every(function(t) t != uaRule.text))
++    {
++      this._addCheckbox(ctx, [uaRule],
++        Utils.getString(this._isESR(uaRule) ? "fireie.erc.uaESROnPage" : "fireie.erc.uaOnPage")
++          .replace(/--/, this._saturate(this._pureRuleText(uaRule))),
++        true).setAttribute("tooltiptext",
++                           this._isESR(uaRule) ? Utils.esrUserAgent : Utils.ieUserAgent);
++    }
++    
++    let tmpItem = ctx.curItem;
++    uaSiteRuleTexts = this._makeSiteCheckbox(ctx, "@@##||",
++      Utils.getString("fireie.erc.uaDefaultOnSite"), ctx.effHost, ctx.effHost);
++    if (ctx.curItem !== tmpItem)
++      ctx.curItem.setAttribute("tooltiptext", Utils.userAgent);
++    
++    if (uaRule && this._isExceptional(uaRule)
++      && uaSiteRuleTexts.every(function(t) t != uaRule.text))
++    {
++      this._addCheckbox(ctx, [uaRule],
++        Utils.getString("fireie.erc.uaDefaultOnPage")
++          .replace(/--/, this._saturate(this._pureRuleText(uaRule))),
++        true).setAttribute("tooltiptext", Utils.userAgent);
++    }
++  },
++
++  _setSwitchRuleMenuItems: function(ctx)
++  {
++    // auto-switch does not affect ua rules, so we check it here
++    if (!Prefs.autoswitch_enabled) return;
++    
++    this._makeSelfCheckbox(ctx, "", Utils.getString("fireie.erc.enableOnPage"), ctx.url);
++    let siteRuleTexts = this._makeSiteCheckbox(ctx, "||",
++      Utils.getString("fireie.erc.enableOnSite"), ctx.host, ctx.effHost);
++
++    let rule = EngineMatcher.matchesAny(ctx.url);
++    let inequalFunc = function(t) t != rule.text;
++    if (rule && !this._isExceptional(rule)
++      && siteRuleTexts.every(inequalFunc)
++      && this._selfRuleTexts("", ctx.url).every(inequalFunc))
++    {
++      this._addCheckbox(ctx, [rule],
++        Utils.getString("fireie.erc.enableOnUrl")
++          .replace(/--/, this._saturate(this._pureRuleText(rule))),
++        true);
++    }
++    
++    this._makeSelfCheckbox(ctx, "@@", Utils.getString("fireie.erc.disableOnPage"), ctx.url);
++    siteRuleTexts = this._makeSiteCheckbox(ctx, "@@||",
++      Utils.getString("fireie.erc.disableOnSite"), ctx.host, ctx.effHost);
++
++    if (rule && this._isExceptional(rule)
++      && siteRuleTexts.every(inequalFunc)
++      && this._selfRuleTexts("@@", ctx.url).every(inequalFunc))
++    {
++      this._addCheckbox(ctx, [rule],
++        Utils.getString("fireie.erc.disableOnUrl")
++          .replace(/--/, this._saturate(this._pureRuleText(rule))),
++        true);
++    }
++    
++    if (ctx.curItem !== ctx.lastItem) this._addSeparator(ctx);
++  },
++  
++  _resetPopupMenuItems: function(ctx)
++  {
++    this._removeMenuItemsByClass(ctx.menu, this._enableOnClassName, "fireie-erc-ua-rules");
++    if (ctx.type == "switch")
++    {
++      ctx.curItem = ctx.lastItem = ctx.menu.querySelector("#fireie-erc-ua-rules");
++      this._addSeparator(ctx);
++      ctx.lastItem = ctx.curItem;
++      this._setSwitchRuleMenuItems(ctx);
++    }
++    else if (ctx.type == "UA")
++    {
++      ctx.curItem = ctx.lastItem = null;
++      this._setUARuleMenuItems(ctx);
++    }
++  },
++
++  setPopupMenuItems: function(CE, menu, url)
++  {
++    // remove previously created items
++    this._removeMenuItemsByClass(menu, this._enableOnClassName);
++    
++    // check whether current url is auto-switchable
++    if (Utils.isFirefoxOnly(url))
++      return;
++    
++    let schemeIdx = url.indexOf(":");
++    let scheme = schemeIdx < 0 ? "" : url.substring(0, schemeIdx);
++    
++    if (!Policy.isSwitchableScheme(scheme))
++      return;
++    
++    let host = Utils.getHostname(url);
++    if (typeof(host) == "undefined" || host == null || host == "") return;
++    let effHost = Utils.getEffectiveHost(url);
++    
++    let ctx = {
++      type: "switch", CE: CE, url: url, host: host, effHost: effHost, menu: menu,
++      curItem: menu.querySelector("#fireie-erc-start"),
++      lastItem: menu.querySelector("#fireie-erc-start")
++    };
++    
++    let uaMenu = CE("menu");
++    uaMenu.className = this._enableOnClassName;
++    uaMenu.setAttribute("id", "fireie-erc-ua-rules");
++    uaMenu.setAttribute("label", Utils.getString("fireie.erc.uaRules"));
++    menu.insertBefore(uaMenu, ctx.curItem);
++    
++    let uaMenuPopup = CE("menupopup");
++    uaMenu.appendChild(uaMenuPopup);
++
++    ctx.curItem = uaMenu;
++    this._addSeparator(ctx);
++    ctx.lastItem = ctx.curItem;
++    
++    let uaCtx = {
++      type: "UA", CE: CE, url: url, host: host, effHost: effHost, menu: uaMenuPopup,
++      curItem: null, lastItem: null
++    };
++    
++    this._setSwitchRuleMenuItems(ctx);
++    this._setUARuleMenuItems(uaCtx);
++  },
++
++  _makeSelfCheckbox: function(ctx, prefix, description, url)
++  {
++    let rules = this._selfRuleTexts(prefix, url).map(Rule.fromText);
++    let active = rules.some(this._isActive);
++    if (active || !this._isExceptional(rules[0]))
++    {
++      let label = description;
++      this._addCheckbox(ctx, rules, label, active);
++    }
++  },
++
++  _makeSiteCheckbox: function(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable)
++  {
++    // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com^' is active.
++    if (!this._isActive(hostRule())) host = host.replace(/^www\./, '');
++    
++    let hostRuleTexts = [];
++    
++    while (true)
++    {
++      let rule = hostRule();
++      let rules = [rule].concat(relatedHostRules());
++      let opRules = typeof(opSuffix) == "string" ? 
++        [hostOpRule()].concat(relatedHostOpRules()) : null;
++      let active = rules.some(this._isActive);
++      if (active || !this._isExceptional(rule))
++      {
++        let label = description.replace(/--/, host);
++        this._addCheckbox(ctx, rules, label, active, nodisable, opRules);
++        Array.prototype.splice.apply(hostRuleTexts,
++          [hostRuleTexts.length, 0].concat(rules.map(function(r) r.text)));
++      }
++      if (host == effHost || host.length < effHost.length) break;
++
++      // strip sub domain
++      host = host.replace(/^[^\.]+\./, '');
++      // com
++      if (host.indexOf('.') <= 0) break;
++      // com.cn
++      if (/^(?:com|net|org|edu|gov)\.[a-z]{2}$/i.test(host) && !this._isActive(hostRule())) break;
++    }
++    
++    return hostRuleTexts;
++
++    function hostRule()
++    {
++      return Rule.fromText(prefix + host + "^" + (suffix || ""));
++    }
++    
++    function relatedHostRules()
++    {
++      return [prefix + host + "/" + (suffix || ""), prefix + host + (suffix || "")].map(Rule.fromText);
++    }
++    
++    function hostOpRule()
++    {
++      return Rule.fromText(prefix + host + "^" + (opSuffix || ""));
++    }
++    
++    function relatedHostOpRules()
++    {
++      return [prefix + host + "/" + (opSuffix || ""), prefix + host + (opSuffix || "")].map(Rule.fromText);
++    }
++  },
++
++  _addCheckbox: function(ctx, rules, label, active, nodisable, opRules)
++  {
++    let checkbox = this._makeNewCheckbox(ctx, rules, label, active, opRules);
++    if (ctx.curItem)
++      ctx.menu.insertBefore(checkbox, ctx.curItem);
++    else
++      ctx.menu.appendChild(checkbox);
++    ctx.curItem = checkbox;
++    if (active && !nodisable)
++    {
++      let item = ctx.curItem.nextSibling;
++      while (item != ctx.lastItem)
++      {
++        item.setAttribute("disabled", true);
++        item.style.color = "";
++        item = item.nextSibling;
++      }
++    }
++    return checkbox;
++  },
++  
++  _addSeparator: function(ctx)
++  {
++    let separator = ctx.CE("menuseparator");
++    separator.className = this._enableOnClassName;
++    ctx.menu.insertBefore(separator, ctx.curItem);
++    ctx.curItem = separator;
++    return separator;
++  },
++
++  _makeNewCheckbox: function(ctx, rules, label, active, opRules)
++  {
++    var checkbox = ctx.CE("menuitem");
++    checkbox.className = this._enableOnClassName;
++    checkbox.setAttribute("type", "checkbox");
++    checkbox.setAttribute("label", label);
++    checkbox.setAttribute("closemenu", "none");
++    checkbox.setAttribute("tooltiptext", rules[0].text);
++    let self = this;
++    checkbox.addEventListener('command', function()
++    {
++      self._toggleRules(rules, opRules);
++      self._resetPopupMenuItems(ctx);
++    }, false);
++
++    if (active)
++    {
++      checkbox.setAttribute("checked", true);
++      checkbox.style.color = this._isExceptional(rules[0]) ? "red" : "green";
++    }
++    return checkbox;
++  },
++
++  _saturate: function(str)
++  {
++    return Utils.saturateString(str, 30);
++  },
++  
++  _getParamsRegExp: /\?.*$/,
++  _anchorRegExp: /\#.*$/,
++  
++  _selfRuleTexts: function(prefix, url)
++  {
++    let mr = this._anchorRegExp.exec(url);
++    if (mr) url = url.substring(0, mr.index);
++    mr = this._getParamsRegExp.exec(url);
++    if (mr) url = url.substring(0, mr.index);
++    
++    return [prefix + "|" + url + "^", prefix + "|" + url, prefix + url + "^", prefix + url];
++  },
++
++  /**
++   * @return true  if rule exist & not disabled
++   */
++  _isActive: function(/**Rule*/ rule)
++  {
++    return !rule.disabled
++      && rule.subscriptions.some(function(s) !s.disabled);
++  },
++
++  /**
++   * @return true  if rule is an exceptional rule
++   */
++  _isExceptional: function(/**Rule*/ rule)
++  {
++    return rule.isExceptional;
++  },
++  
++  /**
++   * @return true  if rule is for switching to ESR UA
++   */
++  _isESR: function(/**Rule*/ rule)
++  {
++    return rule.specialUA && rule.specialUA.toUpperCase() == "ESR";
++  },
++  
++  /**
++   * @return rule text with options part striped off
++   */
++  _pureRuleText: function(/**Rule*/ rule)
++  {
++    let text = rule.text;
++    if (text.substring(0, 2) == "@@")
++      text = text.substring(2);
++    if (text.substring(0, 2) == "##")
++      text = text.substring(2);
++
++    // Rule.optionsRegExp is in a different compartment,
++    // using RegExp.leftContext will fail
++    let mr = null;
++    if (mr = Rule.optionsRegExp.exec(text))
++    {
++      return text.substring(0, mr.index);
++    }
++    return text;
++  },
++  
++  /**
++   * If the given rule is active, remove/disable it, Otherwise add/enable it.
++   */
++  _toggleRules: function(rules, opRules)
++  {
++    if (rules.some(this._isActive)) {
++      rules.forEach(function(rule) {
++        rule.disabled = true;
++      });
++    }
++    else {
++      if (opRules && opRules.some(this._isActive))
++      {
++        opRules.forEach(function(rule) {
++          rule.disabled = true;
++        });
++      }
++      for (let i = 0, l = rules.length; i < l; i++)
++      {
++        let rule = rules[i];
++        if (rule.subscriptions.every(function(s) s.disabled))
++          continue;
++        if (rule.disabled)
++          rule.disabled = false;
++        return;
++      }
++      let rule = rules[0];
++      let subscription = RuleStorage.getGroupForRule(rule);
++      if (!subscription || !subscription.isDefaultFor(rule))
++      {
++        subscription = SpecialSubscription.createForRule(rule);
++        RuleStorage.addSubscription(subscription);
++      }
++      else
++        RuleStorage.addRule(rule, subscription);
++      if (rule.disabled)
++        rule.disabled = false;
++    }
++  }
++};
+diff --git a/extension/modules/FontObserver.jsm b/extension/modules/FontObserver.jsm
+index 8e415bb..8386e51 100644
+--- a/extension/modules/FontObserver.jsm
++++ b/extension/modules/FontObserver.jsm
+@@ -84,22 +84,22 @@ var PrefsPrivate = {
+   notifyDataChange: function()
+   {
+     let fontName = this.getFirefoxDefaultFontName();
+-    if (fontName) setIEDefaultFont(fontName);
++    if (fontName && fontName.length) setIEDefaultFont(fontName);
+   },
+ 
+   getFirefoxDefaultFontName: function()
+   {
+     try
+     {
+-      let locale = Services.prefs.getCharPref("general.useragent.locale");
+-      let defaultFontTypeForLanguage = Services.prefs.getCharPref("font.default.%LANG%".replace(/%LANG%/, locale));
++      let group = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString);
++      let defaultFontTypeForLanguage = Services.prefs.getCharPref("font.default.%LANG%".replace(/%LANG%/, group));
+       let fontNameKey = defaultFontTypeForLanguage == "serif" ? "font.name.serif.%LANG%" : "font.name.sans-serif.%LANG%";
+-      return decodeURIComponent(escape(Services.prefs.getCharPref(fontNameKey.replace(/%LANG%/, locale))));
++      return decodeURIComponent(escape(Services.prefs.getCharPref(fontNameKey.replace(/%LANG%/, group))));
+     }
+     catch (e)
+     {
+       Utils.ERROR(e);
+-      return "";
++      return null;
+     }
+   },
+ 
+@@ -158,6 +158,6 @@ function setIEDefaultFont(fontName)
+   }
+   catch (e)
+   {
+-    Utils.ERROR(e);
++    Utils.LOG("Failed to set IE default font: " + e);
+   }
+ }
+\ No newline at end of file
+diff --git a/extension/modules/Matcher.jsm b/extension/modules/Matcher.jsm
+index 5e49290..042d0e2 100644
+--- a/extension/modules/Matcher.jsm
++++ b/extension/modules/Matcher.jsm
+@@ -126,7 +126,10 @@ Matcher.prototype = {
+     if (Rule.regexpRegExp.test(text)) return defaultResult;
+ 
+     // Remove options
+-    if (Rule.optionsRegExp.test(text)) text = RegExp.leftContext;
++    // Rule.optionsRegExp is in a different compartment,
++    // using RegExp.leftContext will fail
++    let mr = null;
++    if (mr = Rule.optionsRegExp.exec(text)) text = text.substring(0, mr.index);
+ 
+     // Remove whitelist marker
+     if (text.substr(0, 2) == "@@") text = text.substr(2);
+@@ -353,7 +356,7 @@ CombinedMatcher.prototype = {
+    */
+   add: function(rule)
+   {
+-    if (rule instanceof EngineExceptionalRule)
++    if (rule.isExceptional)
+     {
+       this.whitelist.add(rule);
+     }
+@@ -376,7 +379,7 @@ CombinedMatcher.prototype = {
+    */
+   remove: function(rule)
+   {
+-    if (rule instanceof EngineExceptionalRule)
++    if (rule.isExceptional)
+     {
+       this.whitelist.remove(rule);
+     }
+@@ -399,7 +402,8 @@ CombinedMatcher.prototype = {
+    */
+   findKeyword: function(rule)
+   {
+-    if (rule instanceof EngineExceptionalRule) return this.whitelist.findKeyword(rule);
++    if (rule.isExceptional)
++      return this.whitelist.findKeyword(rule);
+     else return this.blacklist.findKeyword(rule);
+   },
+ 
+@@ -408,7 +412,8 @@ CombinedMatcher.prototype = {
+    */
+   hasRule: function(rule)
+   {
+-    if (rule instanceof EngineExceptionalRule) return this.whitelist.hasRule(rule);
++    if (rule.isExceptional)
++      return this.whitelist.hasRule(rule);
+     else return this.blacklist.hasRule(rule);
+   },
+ 
+@@ -417,7 +422,8 @@ CombinedMatcher.prototype = {
+    */
+   getKeywordForRule: function(rule)
+   {
+-    if (rule instanceof EngineExceptionalRule) return this.whitelist.getKeywordForRule(rule);
++    if (rule.isExceptional)
++      return this.whitelist.getKeywordForRule(rule);
+     else return this.blacklist.getKeywordForRule(rule);
+   },
+ 
+@@ -426,7 +432,7 @@ CombinedMatcher.prototype = {
+    */
+   isSlowRule: function( /**RegExpRule*/ rule) /**Boolean*/
+   {
+-    let matcher = (rule instanceof EngineExceptionalRule ? this.whitelist : this.blacklist);
++    let matcher = rule.isExceptional ? this.whitelist : this.blacklist;
+     if (matcher.hasRule(rule)) return !matcher.getKeywordForRule(rule);
+     else return !matcher.findKeyword(rule);
+   },
+diff --git a/extension/modules/RuleClasses.jsm b/extension/modules/RuleClasses.jsm
+index bd8e5f0..e8306e8 100644
+--- a/extension/modules/RuleClasses.jsm
++++ b/extension/modules/RuleClasses.jsm
+@@ -428,6 +428,12 @@ function RegExpRule(text, regexpSource, matchCase, domains)
+ }
+ RegExpRule.prototype = {
+   __proto__: ActiveRule.prototype,
++  
++  /**
++   * Indicates whether the rule is an exceptional rule
++   * @type Boolean
++   */
++  isExceptional: false,
+ 
+   /**
+    * @see ActiveRule.domainSeparator
+@@ -519,6 +525,7 @@ RegExpRule.fromText = function(text)
+ 
+   let matchCase = null;
+   let domains = null;
++  let specialUA = null;
+   let options;
+   if (Rule.optionsRegExp.test(text))
+   {
+@@ -536,6 +543,7 @@ RegExpRule.fromText = function(text)
+       option = option.replace(/-/, "_");
+       if (option == "MATCH_CASE") matchCase = true;
+       else if (option == "DOMAIN" && typeof value != "undefined") domains = value;
++      else if (option == "SPECIAL_UA" && typeof value != "undefined") specialUA = value;
+     }
+   }
+ 
+@@ -545,7 +553,7 @@ RegExpRule.fromText = function(text)
+     {
+       if (userAgent)
+       {
+-        return new UserAgentRule(origText, text, matchCase, domains);
++        return new UserAgentRule(origText, text, matchCase, domains, specialUA);
+       }
+       else
+       {
+@@ -584,7 +592,8 @@ function EngineRule(text, regexpSource, matchCase, domains)
+   RegExpRule.call(this, text, regexpSource, matchCase, domains);
+ }
+ EngineRule.prototype = {
+-  __proto__: RegExpRule.prototype
++  __proto__: RegExpRule.prototype,
++  isExceptional: false
+ };
+ 
+ /**
+@@ -593,15 +602,19 @@ EngineRule.prototype = {
+  * @param {String} regexpSource see RegExpRule()
+  * @param {Boolean} matchCase see RegExpRule()
+  * @param {String} domains see RegExpRule()
++ * @param {String} special UA, overrides default IE engine UA
+  * @constructor
+  * @augments RegExpRule
+  */
+-function UserAgentRule(text, regexpSource, matchCase, domains)
++function UserAgentRule(text, regexpSource, matchCase, domains, specialUA)
+ {
+   RegExpRule.call(this, text, regexpSource, matchCase, domains);
++  if (specialUA)
++    this.specialUA = specialUA;
+ }
+ UserAgentRule.prototype = {
+-  __proto__: RegExpRule.prototype
++  __proto__: RegExpRule.prototype,
++  isExceptional: false
+ };
+ 
+ /**
+@@ -618,7 +631,8 @@ function EngineExceptionalRule(text, regexpSource, matchCase, domains)
+   RegExpRule.call(this, text, regexpSource, matchCase, domains);
+ }
+ EngineExceptionalRule.prototype = {
+-  __proto__: RegExpRule.prototype
++  __proto__: RegExpRule.prototype,
++  isExceptional: true
+ }
+ 
+ /**
+@@ -636,4 +650,5 @@ function UserAgentExceptionalRule(text, regexpSource, matchCase, domains)
+ }
+ UserAgentExceptionalRule.prototype = {
+   __proto__: RegExpRule.prototype,
++  isExceptional: true
+ }
+\ No newline at end of file
+diff --git a/extension/modules/RuleListener.jsm b/extension/modules/RuleListener.jsm
+index 3056c3b..6cd86a2 100644
+--- a/extension/modules/RuleListener.jsm
++++ b/extension/modules/RuleListener.jsm
+@@ -213,7 +213,7 @@ function addRule(rule)
+ 
+   let hasEnabled = false;
+   for (let i = 0; i < rule.subscriptions.length; i++)
+-  if (!rule.subscriptions[i].disabled) hasEnabled = true;
++    if (!rule.subscriptions[i].disabled) hasEnabled = true;
+   if (!hasEnabled) return;
+ 
+   if (rule instanceof RegExpRule) AllMatchers.add(rule);
+@@ -232,7 +232,7 @@ function removeRule(rule)
+   {
+     let hasEnabled = false;
+     for (let i = 0; i < rule.subscriptions.length; i++)
+-    if (!rule.subscriptions[i].disabled) hasEnabled = true;
++      if (!rule.subscriptions[i].disabled) hasEnabled = true;
+     if (hasEnabled) return;
+   }
+ 
+diff --git a/extension/modules/SubscriptionClasses.jsm b/extension/modules/SubscriptionClasses.jsm
+index d52d6b5..5920174 100644
+--- a/extension/modules/SubscriptionClasses.jsm
++++ b/extension/modules/SubscriptionClasses.jsm
+@@ -230,6 +230,7 @@ SpecialSubscription.prototype = {
+     {
+       for each(let type in this.defaults)
+       {
++        if (!(type in SpecialSubscription.defaultsMap)) continue;
+         if (rule instanceof SpecialSubscription.defaultsMap[type]) return true;
+         if (!(rule instanceof ActiveRule) && type == "blacklist") return true;
+       }
+@@ -252,7 +253,9 @@ SpecialSubscription.prototype = {
+ SpecialSubscription.defaultsMap = {
+   __proto__: null,
+   "exceptional": EngineExceptionalRule,
+-  "custom": EngineRule
++  "custom": EngineRule,
++  "ua": UserAgentRule,
++  "uaExceptional": UserAgentExceptionalRule
+ };
+ 
+ /**
+diff --git a/extension/modules/Utils.jsm b/extension/modules/Utils.jsm
+index 7f989dc..ab377ce 100644
+--- a/extension/modules/Utils.jsm
++++ b/extension/modules/Utils.jsm
+@@ -28,6 +28,7 @@ let _addonVersionCallbacks = [];
+  */
+ var Utils = {
+   _ieUserAgent: null,
++  _userAgent: null,
+ 
+   _ffMajorVersion: 4,
+ 
+@@ -75,7 +76,7 @@ var Utils = {
+   },
+ 
+   /**
+-   * Returns the user interface locale selected for adblockplus chrome package.
++   * Returns the user interface locale selected for fireie chrome package.
+    */
+   get appLocale()
+   {
+@@ -119,6 +120,25 @@ var Utils = {
+   {
+     Utils._ieUserAgent = value;
+   },
++  
++  get userAgent()
++  {
++    return Utils._userAgent;
++  },
++  
++  set userAgent(value)
++  {
++    Utils._userAgent = value;
++  },
++  
++  get esrUserAgent()
++  {
++    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
++    Cu.import(baseURL.spec + "Prefs.jsm");
++    
++    Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
++    return this.esrUserAgent;
++  },
+ 
+   /**
+    * Retrieves a string from global.properties string bundle, will throw if string isn't found.
+@@ -200,6 +220,11 @@ var Utils = {
+     return "chrome://fireie/content/container.xhtml?url=";
+   },
+ 
++  get browserUrl()
++  {
++    return "chrome://browser/content/browser.xul";
++  },
++
+   /** Converts URL into IE Engine URL */
+   toContainerUrl: function(url)
+   {
+@@ -381,7 +406,12 @@ var Utils = {
+   isFirefoxOnly: function(url)
+   {
+     url = url.trim();
+-    return (url && (url.length > 0) && ((Utils.startsWith(url, 'about:') && url != "about:blank") || Utils.startsWith(url, 'chrome://')));
++    return (url && (url.length > 0) &&
++      (
++       Utils.startsWith(url, 'about:') ||
++       Utils.startsWith(url, 'chrome://') ||
++       Utils.startsWith(url, 'resource://')
++      ));
+   },
+ 
+   /**
+@@ -631,7 +661,7 @@ var Utils = {
+ 
+   /**
+    * Opens a pre-defined documentation link in the browser window. This will
+-   * send the UI language to adblockplus.org so that the correct language
++   * send the UI language to fireie.org so that the correct language
+    * version of the page can be selected.
+    */
+   loadDocLink: function( /**String*/ linkID)
+@@ -639,7 +669,10 @@ var Utils = {
+     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+     Cu.import(baseURL.spec + "Prefs.jsm");
+ 
+-    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g, Utils.appLocale);
++    let availableLanguages = JSON.parse(Prefs.doc_link_languages);
++    let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g,
++      Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale]
++                                            : availableLanguages["default"]);
+     Utils.loadInBrowser(link);
+   },
+ 
+diff --git a/plugin.sln b/plugin.sln
+index bfbc893..099fc49 100644
+--- a/plugin.sln
++++ b/plugin.sln
+@@ -7,42 +7,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuleMaker", "RuleMaker\Rule
+ EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+-		Debug|Mixed Platforms = Debug|Mixed Platforms
+ 		Debug|Win32 = Debug|Win32
+ 		Debug|x64 = Debug|x64
+-		Debug|x86 = Debug|x86
+-		Release|Mixed Platforms = Release|Mixed Platforms
+ 		Release|Win32 = Release|Win32
+ 		Release|x64 = Release|x64
+-		Release|x86 = Release|x86
+ 	EndGlobalSection
+ 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|Mixed Platforms.Build.0 = Debug|x64
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|Win32.ActiveCfg = Debug|Win32
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|Win32.Build.0 = Debug|Win32
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|x64.ActiveCfg = Debug|x64
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|x64.Build.0 = Debug|x64
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Debug|x86.ActiveCfg = Debug|x64
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|Mixed Platforms.ActiveCfg = Release|x64
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|Mixed Platforms.Build.0 = Release|x64
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|Win32.ActiveCfg = Release|Win32
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|Win32.Build.0 = Release|Win32
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|x64.ActiveCfg = Release|x64
+ 		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|x64.Build.0 = Release|x64
+-		{E86D2430-709C-46DC-9464-E9F1572B765C}.Release|x86.ActiveCfg = Release|x64
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Mixed Platforms.Build.0 = Debug|x86
+ 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Win32.ActiveCfg = Debug|x86
++		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Win32.Build.0 = Debug|x86
+ 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x64.ActiveCfg = Debug|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x86.ActiveCfg = Debug|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x86.Build.0 = Debug|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Mixed Platforms.ActiveCfg = Release|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Mixed Platforms.Build.0 = Release|x86
++		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x64.Build.0 = Debug|x86
+ 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Win32.ActiveCfg = Release|x86
++		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Win32.Build.0 = Release|x86
+ 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x64.ActiveCfg = Release|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x86.ActiveCfg = Release|x86
+-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x86.Build.0 = Release|x86
++		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x64.Build.0 = Release|x86
+ 	EndGlobalSection
+ 	GlobalSection(SolutionProperties) = preSolution
+ 		HideSolutionNode = FALSE
+diff --git a/plugin/IEHostWindow.cpp b/plugin/IEHostWindow.cpp
+index ce64d3b..f2a55a1 100644
+--- a/plugin/IEHostWindow.cpp
++++ b/plugin/IEHostWindow.cpp
+@@ -58,6 +58,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
+ 	, m_strSecureLockInfo(_T("Unsecure"))
+ 	, m_pNavigateParams(NULL)
+ 	, m_strStatusText(_T(""))
++	, m_bUtils(false)
+ {
+ 	FBResetFindStatus();
+ }
+@@ -93,7 +94,7 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
+ 	return pInstance;
+ }
+ 
+-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
++CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils)
+ {
+ 	CIEHostWindow *pIEHostWindow = NULL;
+ 
+@@ -104,6 +105,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+ 		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
+ 		if (pIEHostWindow)
+ 		{
++			pIEHostWindow->m_bUtils = isUtils;
+ 			CIEHostWindow::s_NewIEWindowMap.Remove(dwId);
+ 		}
+ 		s_csNewIEWindowMap.Unlock();
+@@ -112,7 +114,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+ 	{
+ 		s_csNewIEWindowMap.Lock();
+ 		pIEHostWindow = new CIEHostWindow();
+-		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD))
++		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
+ 		{
+ 			if (pIEHostWindow)
+ 			{
+@@ -120,6 +122,10 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(DWORD dwId)
+ 			}
+ 			pIEHostWindow = NULL;
+ 		}
++		else
++		{
++			pIEHostWindow->m_bUtils = isUtils;
++		}
+ 		s_csNewIEWindowMap.Unlock();
+ 	}
+ 	return pIEHostWindow;
+@@ -1100,7 +1106,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
+ 	* ����IE�ؼ�û���ṩֱ�ӻ�ȡUserAgent�Ľӿڣ���Ҫ��IE�ؼ����ص�HTML
+ 	* �ĵ��л�ȡUserAgent��
+ 	*/
+-	if (s_strIEUserAgent.IsEmpty())
++	if (s_strIEUserAgent.IsEmpty() && m_bUtils)
+ 	{
+ 		s_strIEUserAgent = GetDocumentUserAgent();
+ 		if (!s_strIEUserAgent.IsEmpty() && m_pPlugin)
+diff --git a/plugin/IEHostWindow.h b/plugin/IEHostWindow.h
+index 11a946a..7ce0201 100644
+--- a/plugin/IEHostWindow.h
++++ b/plugin/IEHostWindow.h
+@@ -74,7 +74,7 @@ class CIEHostWindow : public CDialog
+ 	DECLARE_MESSAGE_MAP()
+ 
+ public:
+-	static CIEHostWindow* CreateNewIEHostWindow(DWORD dwId);
++	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils);
+ 
+ 	/** Get CIEHostWindow object by its window handle */
+ 	static CIEHostWindow* GetInstance(HWND hwnd);
+@@ -265,6 +265,9 @@ public:
+ 	void OnUtilsPluginInit();
+ 	void OnContentPluginInit();
+ 
++	// miscellaneous
++	bool IsUtils() const { return m_bUtils; }
++
+ protected:
+ 	BOOL m_bCanBack;
+ 	BOOL m_bCanForward;
+@@ -315,4 +318,7 @@ protected:
+ 	UserMessage::NavigateParams* m_pNavigateParams;
+ 	/** Ensure the operations on m_pNavigateParams are thread safe. */
+ 	CCriticalSection m_csNavigateParams;
++
++	/** Indicates whether the associated plugin is a utils plugin */
++	bool m_bUtils;
+ };
+diff --git a/plugin/Plugin/plugin.cpp b/plugin/Plugin/plugin.cpp
+index 21e47a8..f03a342 100644
+--- a/plugin/Plugin/plugin.cpp
++++ b/plugin/Plugin/plugin.cpp
+@@ -114,7 +114,7 @@ namespace Plugin
+ 			static const CString PREFIX(RES_CHROME_PREFIX_T);
+ 
+ 			// Secrity check. Do not allow other pages to load this plugin.
+-			if (!strHostUrl.Mid(0, PREFIX.GetLength()) == PREFIX)
++			if (strHostUrl.Mid(0, PREFIX.GetLength()) != PREFIX)
+ 				return FALSE;
+ 
+ 			// ��URL�����л�ȡʵ��Ҫ���ʵ�URL��ַ
+@@ -126,8 +126,17 @@ namespace Plugin
+ 			headers = GetNavigateHeaders();
+ 			RemoveNavigateParams();
+ 		}
++		else if (m_strId == RES_UTILS_OBJECT_T)
++		{
++			CString strHostUrl = GetHostURL();
++
++			// Secrity check. Do not allow pages other than the browser window to load the utils plugin.
++			if (strHostUrl != RES_UTILS_URL_T)
++				return FALSE;
++		}
++		else return FALSE;
+ 
+-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId);
++		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId, m_strId == RES_UTILS_OBJECT_T);
+ 		if (m_pIEHostWindow == NULL)
+ 		{
+ 			return FALSE;
+@@ -172,7 +181,7 @@ namespace Plugin
+ 		return TRUE;
+ 	}
+ 
+-	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId)
++	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils)
+ 	{
+ 		CIEHostWindow *pIEHostWindow = NULL;
+ 		CWnd parent;
+@@ -182,7 +191,7 @@ namespace Plugin
+ 		}
+ 		try
+ 		{
+-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(dwId);
++			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, dwId, isUtils);
+ 			if (pIEHostWindow == NULL)
+ 			{
+ 				throw CString(_T("Cannot Create CIEHostWindow!"));
+diff --git a/plugin/Plugin/plugin.h b/plugin/Plugin/plugin.h
+index b55c381..990c1dc 100644
+--- a/plugin/Plugin/plugin.h
++++ b/plugin/Plugin/plugin.h
+@@ -64,7 +64,7 @@ namespace Plugin
+ 
+ 		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
+ 	private: 
+-		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId);
++		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils);
+ 		
+ 		// Get the URL of the page where the plugin is hosted
+ 		CString GetHostURL() const;
+diff --git a/plugin/resource.h b/plugin/resource.h
+index 7c63c9c..53e5d08 100644
+--- a/plugin/resource.h
++++ b/plugin/resource.h
+@@ -12,6 +12,7 @@
+ #define RES_OBJECTNAME_T _T("fireie-object")
+ #define RES_CHROME_PREFIX_T _T("chrome://fireie/content/container.xhtml?url=")
+ #define RES_UTILS_OBJECT_T _T("fireie-utils-object")
++#define RES_UTILS_URL_T _T("chrome://browser/content/browser.xul")
+ #define RES_CONTAINER "FireIEContainer"
+ 
+ #if defined _M_X64
+diff --git a/tools/buildxpi-unified.bat b/tools/buildxpi-unified.bat
+new file mode 100644
+index 0000000..14ae4c7
+--- /dev/null
++++ b/tools/buildxpi-unified.bat
+@@ -0,0 +1,11 @@
++set XPI_NAME=fireie-unified.xpi
++cd ..
++del /f/q %XPI_NAME%
++cd extension
++..\tools\7za a ..\%XPI_NAME% chrome\
++..\tools\7za a ..\%XPI_NAME% defaults\
++..\tools\7za a ..\%XPI_NAME% components\
++..\tools\7za a ..\%XPI_NAME% modules\
++..\tools\7za a ..\%XPI_NAME% plugins\*.dll
++..\tools\7za a ..\%XPI_NAME% chrome.manifest
++..\tools\7za a ..\%XPI_NAME% install.rdf
+\ No newline at end of file
