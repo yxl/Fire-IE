@@ -134,7 +134,7 @@ function onIEUserAgentReceived(event)
 /**
  * Handles 'IESetCookie' event receiving from the plugin
  */
-function onIESetCookie()
+function onIESetCookie(event)
 {
   let subject = null;
   let topic = "fireie-set-cookie";
