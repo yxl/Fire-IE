@@ -152,6 +152,7 @@ let FireIEContainer = {};
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -164,6 +165,7 @@ let FireIEContainer = {};
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -201,6 +203,25 @@ let FireIEContainer = {};
       {
         Favicon.setIcon(document, faviconURL);
       }
+    }
+  }
+  
+  function onIEProgressChange(event)
+  {
+    let pluginObject = E('fireie-object');
+    if (!pluginObject) return;
+    
+    let url = pluginObject.URL;
+    if (!url) return;
+    
+    url = Utils.toContainerUrl(url);
+    if (window.location.href != url)
+    {
+      Utils.LOG("syncing url, before: " + window.location.href + ", after: " + url);
+      // HTML5 history manipulation,
+      // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
+      window.history.replaceState("", document.title, url);
+      if (window.location.href == url) Utils.LOG("confirm synced");
     }
   }
   

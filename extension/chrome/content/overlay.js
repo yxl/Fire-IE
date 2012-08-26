@@ -501,7 +501,7 @@ var gFireIE = null;
   {
     let history = this.webNavigation.sessionHistory;
     let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
-    if (uri)
+    if (uri && Utils.startsWith(uri.spec, Utils.containerUrl))
     {
       let entry = history.getEntryAtIndex(history.index, false);
       if (entry.URI.spec != uri.spec)
@@ -546,10 +546,12 @@ var gFireIE = null;
     }
     HM.hookProp(aURLBar, "value", null, function()
     {
+      Utils.LOG("set urlbar value = " + arguments[0]);
       let isIEEngine = arguments[0] && (arguments[0].substr(0, Utils.containerUrl.length) == Utils.containerUrl);
       if (isIEEngine)
       {
         arguments[0] = Utils.fromContainerUrl(arguments[0]);
+        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
       }
     });

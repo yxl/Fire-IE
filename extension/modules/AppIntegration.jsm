@@ -424,12 +424,14 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 
       // Update the content of the URL bar.
-      if (this.window.gURLBar && this.isIEEngine())
+      if (this.window.gURLBar && isIEEngine)
       {
         if (!this.window.gBrowser.userTypedValue)
         {
           if (url == "about:blank") url = "";
-          if (this.window.gURLBar.value != url) this.window.gURLBar.value = url;
+          if (this.window.gURLBar.value != url) {
+            this.window.gURLBar.value = url;
+          }
         }
       }
 
@@ -871,9 +873,10 @@ WindowWrapper.prototype = {
     {
       if (Utils.isValidUrl(url) || Utils.isValidDomainName(url))
       {
-        let isBlank = (Utils.fromContainerUrl(this.window.gBrowser.currentURI.spec) == "about:blank");
+        let originalURL = this.getURL();
+        let isBlank = (originalURL == "about:blank");
         let handleUrlBar = Prefs.handleUrlBar;
-        let isSimilar = Utils.getHostname(this.getURL()) == Utils.getHostname(url);
+        let isSimilar = Utils.getHostname(originalURL) == Utils.getHostname(url);
         if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
