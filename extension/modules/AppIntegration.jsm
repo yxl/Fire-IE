@@ -583,13 +583,20 @@ WindowWrapper.prototype = {
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
     if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
     {
-      if (aBrowser.contentDocument)
+      return this.getContainerPluginFromBrowser(aBrowser);
+    }
+    return null;
+  },
+  
+  /** Get the IE engine plugin object */
+  getContainerPluginFromBrowser: function(aBrowser)
+  {
+    if (aBrowser.contentDocument)
+    {
+      let obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
+      if (obj)
       {
-        let obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
-        if (obj)
-        {
-          return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
-        }
+        return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
       }
     }
     return null;

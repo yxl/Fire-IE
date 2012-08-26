@@ -195,6 +195,20 @@ HookManager.prototype = {
     }
   },
   
+  _wrapFunction: function(orgFunc, myFuncHead, myFuncTail, funcName)
+  {
+    if (myFuncHead)
+    {
+      if (myFuncTail) return this._wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, funcName);
+      else return this._wrapFunctionHead(orgFunc, myFuncHead, funcName);
+    }
+    else
+    {
+      if (myFuncTail) return this._wrapFunctionTail(orgFunc, myFuncTail, funcName);
+      else return orgFunc;
+    }
+  },
+  
   _getOriginalFunc: function(func)
   {
     let idx = func.FireIE_orgFuncIdx;
@@ -401,22 +415,24 @@ HookManager.prototype = {
   },
   
   /**
-   * Add some code at the beginning of Property's getter and setter
-   * This one uses wrapFunctionHead,
+   * Add some code at the beginning/end of Property's getter and setter
+   * This one uses _wrapFunction,
    * which is safe to preserve original getter/setter's closure
    * @param parentNode - the node whose property is to be hooked
    * @param propName - the name of the property to hook
-   * @param myGetter - the function to be called at the beginning of the getter
-   * @param mySetter - the function to be called at the beginning of the setter
+   * @param myGetterBegin - the function to be called at the beginning of the getter
+   * @param mySetterBegin - the function to be called at the beginning of the setter
+   * @param myGetterEnd - the function to be called at the end of the getter
+   * @param mySetterEnd - the function to be called at the end of the setter
    */
-  hookProp: function(parentNode, propName, myGetter, mySetter)
+  hookProp: function(parentNode, propName, myGetterBegin, mySetterBegin, myGetterEnd, mySetterEnd)
   {
     // must set both getter and setter or the other will be missing
     let oGetter = parentNode.__lookupGetter__(propName);
     let oSetter = parentNode.__lookupSetter__(propName);
-    if (oGetter && myGetter)
+    if (oGetter && (myGetterBegin || myGetterEnd))
     {
-      let newGetter = this._wrapFunctionHead(oGetter, myGetter, parentNode.toString() + ".get " + propName);
+      let newGetter = this._wrapFunction(oGetter, myGetterBegin, myGetterEnd, parentNode.toString() + ".get " + propName);
       try
       {
         parentNode.__defineGetter__(propName, newGetter);
@@ -430,9 +446,9 @@ HookManager.prototype = {
     {
       parentNode.__defineGetter__(propName, oGetter);
     }
-    if (oSetter && mySetter)
+    if (oSetter && (mySetterBegin || mySetterEnd))
     {
-      let newSetter = this._wrapFunctionHead(oSetter, mySetter, parentNode.toString() + ".set " + propName);
+      let newSetter = this._wrapFunction(oSetter, mySetterBegin, mySetterEnd, parentNode.toString() + ".set " + propName);
       try
       {
         parentNode.__defineSetter__(propName, newSetter);

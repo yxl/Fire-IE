@@ -481,20 +481,26 @@ var gFireIE = null;
   }
   
   // save space by reusing function handles
-  let currentURIGetter = function()
+  let currentURIGetter = function(uri)
   {
-    let uri = gFireIE.getURI(this);
-    if (uri)
+    if (Utils.startsWith(uri.spec, Utils.containerUrl))
     {
-      if (this.FireIE_bUseRealURI)
-        uri = makeURI(Utils.fromContainerUrl(uri.spec));
-      return RET.shouldReturn(uri);
+      let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
+      if (pluginObject)
+      {
+        let pluginURL = pluginObject.URL;
+        if (pluginURL)
+        {
+          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
+          return RET.modifyValue(Utils.makeURI(url));
+        }
+      }
     }
   };
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
-    let uri = gFireIE.getURI(this);
+    let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
     if (uri)
     {
       let entry = history.getEntryAtIndex(history.index, false);
@@ -511,7 +517,7 @@ var gFireIE = null;
     if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
     if (aBrowser.FireIE_hooked) return;
     // hook aBrowser.currentURI, Let firefox know the new URL after navigating inside the IE engine
-    HM.hookProp(aBrowser, "currentURI", currentURIGetter);
+    HM.hookProp(aBrowser, "currentURI", null, null, currentURIGetter);
     // hook aBrowser.sessionHistory
     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
     aBrowser.FireIE_hooked = true;
