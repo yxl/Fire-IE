@@ -224,6 +224,11 @@ var Utils = {
   {
     return "chrome://browser/content/browser.xul";
   },
+  
+  get hiddenWindowUrl()
+  {
+    return "resource://gre-resources/hiddenWindow.html";
+  },
 
   /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
@@ -797,6 +802,17 @@ var Utils = {
     if (str.length > length)
       str = str.substring(0, length - 3) + "...";
     return str;
+  },
+  /**
+   * Use the hidden window for utils plugin
+   */
+  getHiddenWindow: function()
+  {
+    let hiddenWindow = Cc["@mozilla.org/appshell/appShellService;1"]
+               .getService(Ci.nsIAppShellService)
+               .hiddenDOMWindow;
+    this.getHiddenWindow = function() hiddenWindow;
+    return hiddenWindow;
   }
 };
 

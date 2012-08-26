@@ -43,7 +43,7 @@ Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
 Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
-Cu.import(baseURL.spec + "IECookieManager.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -157,10 +157,7 @@ let AppIntegration = {
    */
   getAnyUtilsPlugin: function()
   {
-    if (wrappers.length == 0)
-      return null;
-
-    return wrappers[0].getUtilsPlugin();
+    return UtilsPluginManager.getPlugin();
   },
 
   /**
@@ -262,13 +259,33 @@ WindowWrapper.prototype = {
    * @type Boolean
    */
   isUpdating: false,
-
-  /**
-   * Whether the utils plugin is initialized
-   *
-   */
-  isPluginInitialized: false,
   
+  /**
+   * Whether the UI is scheduled to update at a later time.
+   * This is to prevent too frequent updates eating up CPU time.
+   * @type Boolean
+   */
+  hasScheduledUpdate: false,
+  
+  /**
+   * Whether we are in delayed update period.
+   * This is to prevent too frequent updates eating up CPU time.
+   * @type Boolean
+   */
+  isDelayingUpdate: false,
+  
+  /**
+   * The timeout id of the delay timer.
+   * @type Integer
+   */
+  nDelayTimeoutId: 0,
+  
+  /**
+   * Timeout of the delay
+   * @type Integer
+   */
+  DELAY_TIMEOUT: 100,
+
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
@@ -302,51 +319,12 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    this._installUtilsPlugin();
+    UtilsPluginManager.init();
 
     this._registerEventListeners();
 
     this.updateState();
   },
-
-  /**
-   * Install the plugin used to do utility things like sync cookie
-   */
-  _installUtilsPlugin: function()
-  {
-    // Change the default cookie and cache directories of the IE, which will
-    // be restored when the utils plugin is loaded.
-    IECookieManager.changeIETempDirectorySetting();
-
-    // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
-    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
-    {
-      if (!this._checkUtilsEventOrigin(e)) return;
-      
-      let focused = this.window.document.commandDispatcher.focusedElement;
-      while (focused)
-      {
-        if (focused === this.window.gURLBar)
-        {
-          this.window.gURLBar.blur();
-          this.window.gURLBar.focus();
-          break;
-        }
-        focused = focused.parentNode;
-      }
-      this.isPluginInitialized = true;
-    }), false);
-
-    let doc = this.window.document;
-    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.hidden = true;
-    embed.setAttribute("id", Utils.utilsPluginId);
-    embed.setAttribute("type", "application/fireie");
-    embed.style.visibility = "collapse";
-    let mainWindow = this.E("main-window");
-    mainWindow.appendChild(embed);
-  },
-
 
   /**
    * Sets up URL bar button
@@ -377,8 +355,6 @@ WindowWrapper.prototype = {
     // Listen to plugin events
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
-    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this._onIEUserAgentReceived), false);
-    this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
 
@@ -387,7 +363,7 @@ WindowWrapper.prototype = {
     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
   },
-  
+ 
   // security check, do not let malicious sites send fake events
   _checkEventOrigin: function(event)
   {
@@ -399,16 +375,19 @@ WindowWrapper.prototype = {
     if (!allow) Utils.LOG("Blocked content event: " + event.type);
     return allow;
   },
-
-  _checkUtilsEventOrigin: function(event)
+  
+  /**
+   * Run the delayed update UI action if there's any
+   */
+  _delayUpdateInterface: function()
   {
-    let target = event.target;
-    if (!target) return false;
-    let doc = target.ownerDocument;
-    if (!doc) return false;
-    let allow = doc.location.href == Utils.browserUrl;
-    if (!allow) Utils.LOG("Blocked utils event: " + event.type);
-    return allow;
+    this.nDelayTimeoutId = 0;
+    this.isDelayingUpdate = false;
+    if (this.hasScheduledUpdate)
+    {
+      this.hasScheduledUpdate = false;
+      this._updateInterface();
+    }
   },
 
   /**
@@ -419,6 +398,11 @@ WindowWrapper.prototype = {
   {
     if (this.isUpdating)
     {
+      return;
+    }
+    if (this.isDelayingUpdate)
+    {
+      this.hasScheduledUpdate = true;
       return;
     }
     try
@@ -503,6 +487,10 @@ WindowWrapper.prototype = {
     finally
     {
       this.isUpdating = false;
+      this.isDelayingUpdate = true;
+      this.hasScheduledUpdate = false;
+      this.nDelayTimeoutId = this.window.setTimeout(
+        this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
     }
   },
 
@@ -603,17 +591,6 @@ WindowWrapper.prototype = {
           return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
         }
       }
-    }
-    return null;
-  },
-
-  /** Get the IE utility plugin object */
-  getUtilsPlugin: function()
-  {
-    let obj = this.E(Utils.utilsPluginId);
-    if (obj)
-    {
-      return (obj.wrappedJSObject ? obj.wrappedJSObject : obj);
     }
     return null;
   },
@@ -953,30 +930,6 @@ WindowWrapper.prototype = {
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
   },
 
-  /** Handler for receiving IE UserAgent from the plugin object */
-  _onIEUserAgentReceived: function(event)
-  {
-    if (!this._checkUtilsEventOrigin(event)) return;
-    
-    let userAgent = event.detail;
-    Utils.ieUserAgent = userAgent;
-    Utils.LOG("_onIEUserAgentReceived: " + userAgent);
-    this._restoreIETempDirectorySetting();
-  },
-
-  /**
-   * Handles 'IESetCookie' event receiving from the plugin
-   */
-  _onIESetCookie: function(event)
-  {
-    if (!this._checkUtilsEventOrigin(event)) return;
-    
-    let subject = null;
-    let topic = "fireie-set-cookie";
-    let data = event.detail;
-    Services.obs.notifyObservers(subject, topic, data);
-  },
-
   _onIESetSecureLockIcon: function(event)
   {
     this.checkIdentity();
@@ -1224,11 +1177,6 @@ WindowWrapper.prototype = {
     this._updateInterface();
   },
 
-  _restoreIETempDirectorySetting: function()
-  {
-    IECookieManager.retoreIETempDirectorySetting();
-  },
-  
   // whether we should handle textbox commands, e.g. cmd_paste
   _shouldHandleTextboxCommand: function()
   {
@@ -1846,18 +1794,7 @@ WindowWrapper.prototype = {
   },
   fireAfterInit: function(callback, self, arguments)
   {
-    if (this.isPluginInitialized)
-    {
-      callback.apply(self, arguments);
-    }
-    else
-    {
-      this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
-      {
-        if (!this._checkUtilsEventOrigin(e)) return;
-        callback.apply(self, arguments);
-      }), false);
-    }
+    UtilsPluginManager.fireAfterInit(callback, self, arguments);
   },
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)
