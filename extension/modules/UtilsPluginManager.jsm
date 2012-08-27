@@ -49,6 +49,8 @@ let UtilsPluginManager = {
   {
     if (this._isInitCalled) return;
     this._isInitCalled = true;
+    
+    this._handleClickToPlay();
     this._install();
     this._registerHandlers();
   },
@@ -85,6 +87,42 @@ let UtilsPluginManager = {
     }
   },
 
+  /** handle click to play event in the hidden window */
+  _handleClickToPlay: function()
+  {
+    let clickToPlayHandler = function(event)
+    {
+      let plugin = event.target;
+
+      // We're expecting the target to be a plugin.
+      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+        return;
+        
+      // used to check whether the plugin is already activated
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      
+      let mimetype = plugin.getAttribute("type");
+      if (mimetype == "application/fireie")
+      {
+        // check the container page
+        let doc = plugin.ownerDocument;
+        let url = doc.location.href;
+        // is it a utils plugin?
+        if (doc.location.href == Utils.hiddenWindowUrl)
+        {
+          // ok, play the utils plugin
+          if (!objLoadingContent.activated)
+          {
+            plugin.playPlugin();
+          }
+          event.stopPropagation();
+        }
+        // let gPluginHandler do the rest of the work
+      }
+    };
+    Utils.getHiddenWindow().addEventListener("PluginClickToPlay", clickToPlayHandler, true);
+  },
+  
   /**
    * Install the plugin used to do utility things like sync cookie
    */

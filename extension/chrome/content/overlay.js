@@ -68,18 +68,6 @@ var gFireIE = null;
         event.stopPropagation();
         return RET.shouldReturn();
       }
-      // maybe it's a utils plugin
-      if (doc.location.href == "chrome://browser/content/browser.xul")
-      {
-        // ok, play the utils plugin
-        if (!objLoadingContent.activated)
-        {
-          plugin.playPlugin();
-          gFireIE.updateInterface();
-        }
-        event.stopPropagation();
-        return RET.shouldReturn();
-      }
       // let gPluginHandler do the rest of the work
     }
   };
