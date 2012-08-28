@@ -98,7 +98,7 @@ let FireIEContainer = {};
 
     let container = E('container');
 
-    if (E('fireie-object'))
+    if (E(Utils.containerPluginId))
     {
       unregisterEventHandler();
     }
@@ -194,24 +194,23 @@ let FireIEContainer = {};
   /** Handler for the IE document complete event */
 
   function onIEDocumentComplete(event)
-  { /** Sets the page favicon */
-    let po = E(Utils.containerPluginId);
-    if (po)
-    {
-      let faviconURL = po.FaviconURL;
-      if (faviconURL && faviconURL != "")
-      {
-        Favicon.setIcon(document, faviconURL);
-      }
-    }
+  {
+    syncURL();
+    syncFavicon();
   }
   
   function onIEProgressChange(event)
   {
-    let pluginObject = E('fireie-object');
-    if (!pluginObject) return;
+    syncURL();
+  }
+  
+  /** sync recorded url when IE engine navigates to another location */
+  function syncURL()
+  {
+    let po = E(Utils.containerPluginId);
+    if (!po) return;
     
-    let url = pluginObject.URL;
+    let url = po.URL;
     if (!url) return;
     
     url = Utils.toContainerUrl(url);
@@ -222,6 +221,20 @@ let FireIEContainer = {};
       // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
       window.history.replaceState("", document.title, url);
       if (window.location.href == url) Utils.LOG("confirm synced");
+    }
+  }
+  
+  /** Sets the page favicon */
+  function syncFavicon()
+  {
+    let po = E(Utils.containerPluginId);
+    if (po)
+    {
+      let faviconURL = po.FaviconURL;
+      if (faviconURL && faviconURL != "")
+      {
+        Favicon.setIcon(document, faviconURL);
+      }
     }
   }
   
