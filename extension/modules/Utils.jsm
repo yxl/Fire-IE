@@ -655,7 +655,7 @@ var Utils = {
 
     if (gBrowser)
     {
-      gBrowser.addTab(url);
+      gBrowser.selectedTab = gBrowser.addTab(url);
     }
     else
     {

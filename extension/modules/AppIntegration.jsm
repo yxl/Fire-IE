@@ -2013,7 +2013,7 @@ function addSubscription()
     }
     else
     {
-      Services.ww.openWindow(wrapper ? wrapper.window : null, "chrome://fireie/content/firstRun.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", null);
+      Services.ww.openWindow(wrapper ? wrapper.window : null, "chrome://fireie/content/firstRun.xul", "_blank", "chrome,centerscreen,dialog", null);
     }
   }
 

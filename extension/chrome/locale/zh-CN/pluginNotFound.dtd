@@ -1,0 +1,6 @@
+<!ENTITY dialog.title               "解雇IE 插件未能加载">
+<!ENTITY pluginNotFound1            "解雇IE 检测到 &quot;Fire IE DLL&quot; 插件未能成功加载。">
+<!ENTITY pluginNotFound2            "您可能安装了错误版本的解雇IE。">
+<!ENTITY correctVersion             "根据您的配置，您应该使用[bit]位版本。">
+<!ENTITY homepage                   "http://fireie.org/zh-CN">
+<!ENTITY visitHomepage              "请至 [link][host][/link] 下载安装。">

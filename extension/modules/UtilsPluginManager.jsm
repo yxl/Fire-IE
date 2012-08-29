@@ -51,6 +51,7 @@ let UtilsPluginManager = {
     this._isInitCalled = true;
     
     this._handleClickToPlay();
+    this._handleLoadFailure();
     this._install();
     this._registerHandlers();
   },
@@ -121,6 +122,38 @@ let UtilsPluginManager = {
       }
     };
     Utils.getHiddenWindow().addEventListener("PluginClickToPlay", clickToPlayHandler, true);
+  },
+  
+  /** handle the plugin not found event and inform user about that */
+  _handleLoadFailure: function()
+  {
+    let pluginNotFoundHandler = function(event)
+    {
+      let plugin = event.target;
+
+      // We're expecting the target to be a plugin.
+      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+        return;
+      
+      let mimetype = plugin.getAttribute("type");
+      if (mimetype == "application/fireie")
+      {
+        // check the container page
+        let doc = plugin.ownerDocument;
+        let url = doc.location.href;
+        // is it a utils plugin?
+        if (doc.location.href == Utils.hiddenWindowUrl)
+        {
+          // ok, we have trouble with the plugin now
+          IECookieManager.retoreIETempDirectorySetting();
+          // notify user about that
+          Utils.ERROR("Plugin not found. Possibly due to wrong Fire-IE version.");
+          Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
+            "_blank", "chrome,centerscreen,dialog", null);
+        }
+      }
+    };
+    Utils.getHiddenWindow().addEventListener("PluginNotFound", pluginNotFoundHandler, true);
   },
   
   /**

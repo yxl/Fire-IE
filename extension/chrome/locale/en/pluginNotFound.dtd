@@ -1,0 +1,6 @@
+<!ENTITY dialog.title               "Fire IE plugin not loaded">
+<!ENTITY pluginNotFound1            "Fire IE detected that the &quot;Fire IE DLL&quot; plugin is not successfully loaded.">
+<!ENTITY pluginNotFound2            "You may have installed a wrong version of Fire IE.">
+<!ENTITY correctVersion             "According to your configuration, you should use the [bit]-bit version.">
+<!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
+<!ENTITY visitHomepage              "Please visit [link][host][/link] to download and install.">
