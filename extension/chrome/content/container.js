@@ -216,11 +216,10 @@ let FireIEContainer = {};
     url = Utils.toContainerUrl(url);
     if (window.location.href != url)
     {
-      Utils.LOG("syncing url, before: " + window.location.href + ", after: " + url);
       // HTML5 history manipulation,
       // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
-      window.history.replaceState("", document.title, url);
-      if (window.location.href == url) Utils.LOG("confirm synced");
+      if (window.history)
+        window.history.replaceState("", document.title, url);
     }
   }
   

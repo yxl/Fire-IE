@@ -534,7 +534,6 @@ var gFireIE = null;
     }
     HM.hookProp(aURLBar, "value", null, function()
     {
-      Utils.LOG("set urlbar value = " + arguments[0]);
       let isIEEngine = arguments[0] && (arguments[0].substr(0, Utils.containerUrl.length) == Utils.containerUrl);
       if (isIEEngine)
       {
