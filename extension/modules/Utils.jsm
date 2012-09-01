@@ -364,10 +364,21 @@ var Utils = {
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     return chromeWin;
   },
+  
+  getChromeWindowFrom: function(window)
+  {
+    let mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIWebNavigation)
+                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                           .rootTreeItem
+                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindow); 
+    return mainWindow;
+  },
 
   getTabFromDocument: function(doc)
   {
-    let aBrowser = Utils.getChromeWindow().gBrowser;
+    let aBrowser = Utils.getChromeWindowFrom(doc.defaultView).gBrowser;
     if (!aBrowser.getBrowserIndexForDocument) return null;
     try
     {

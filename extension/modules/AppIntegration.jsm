@@ -275,16 +275,15 @@ WindowWrapper.prototype = {
   isDelayingUpdate: false,
   
   /**
-   * The timeout id of the delay timer.
-   * @type Integer
-   */
-  nDelayTimeoutId: 0,
-  
-  /**
    * Timeout of the delay
    * @type Integer
    */
   DELAY_TIMEOUT: 100,
+  
+  /**
+   * Reference to the progress listener
+   */
+  _progressListener: null,
 
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
@@ -341,6 +340,10 @@ WindowWrapper.prototype = {
    */
   _registerEventListeners: function( /**Boolean*/ addProgressListener)
   {
+    // Must keep a reference to the progress listener!
+    this._progressListener = new ProgressListener(this);
+    this.window.gBrowser.addProgressListener(this._progressListener);
+    
     this.window.addEventListener("unload", removeWindow, false);
 
     this.window.addEventListener("DOMContentLoaded", this._bindMethod(this._onPageShowOrLoad), false);
@@ -381,12 +384,11 @@ WindowWrapper.prototype = {
    */
   _delayUpdateInterface: function()
   {
-    this.nDelayTimeoutId = 0;
     this.isDelayingUpdate = false;
     if (this.hasScheduledUpdate)
     {
       this.hasScheduledUpdate = false;
-      this._updateInterface();
+      this._updateInterfaceCore();
     }
   },
 
@@ -396,15 +398,15 @@ WindowWrapper.prototype = {
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
-    if (this.isUpdating)
-    {
+    if (this.isUpdating || this.hasScheduledUpdate)
       return;
-    }
-    if (this.isDelayingUpdate)
-    {
-      this.hasScheduledUpdate = true;
-      return;
-    }
+
+    this.hasScheduledUpdate = true;
+    if (!this.isDelayingUpdate)
+      Utils.runAsync(this._delayUpdateInterface, this);
+  },
+  _updateInterfaceCore: function()
+  {
     try
     {
       this.isUpdating = true;
@@ -491,8 +493,7 @@ WindowWrapper.prototype = {
       this.isUpdating = false;
       this.isDelayingUpdate = true;
       this.hasScheduledUpdate = false;
-      this.nDelayTimeoutId = this.window.setTimeout(
-        this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
+      this.window.setTimeout(this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
     }
   },
 
@@ -1434,10 +1435,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
 
@@ -1472,10 +1470,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
   /* MouseGesturesRedox commands */
@@ -1509,10 +1504,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
   /* All-in-One Gestrues commands */
@@ -1553,7 +1545,7 @@ WindowWrapper.prototype = {
       Utils.ERROR("goDoAiOGCommand(" + cmd + "): " + ex);
       return false;
     }
-    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    this._updateInterface();
     return true;
   },
   /* called when original findbar issues a find */
@@ -2047,6 +2039,38 @@ function refreshRuleCache()
   Rule.fromText("!dummy"); // work against trapProperty
   RuleStorage.loadFromDisk();
   RuleNotifier.triggerListeners("save");
+}
+
+/**
+ * nsIWebProgressListener implementation
+ * @constructor
+ */
+function ProgressListener(windowWrapper) {
+  this.windowWrapper = windowWrapper;
+}
+
+ProgressListener.prototype = {
+
+  windowWrapper: null,
+
+  QueryInterface: function(aIID)
+  {
+   if (aIID.equals(Ci.nsIWebProgressListener) ||
+       aIID.equals(Ci.nsISupportsWeakReference) ||
+       aIID.equals(Ci.nsISupports))
+     return this;
+   throw Cr.NS_NOINTERFACE;
+  },
+ 
+  onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {}, 
+  onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },
+  onSecurityChange: function(aWebProgress, aRequest, aState) { },
+
+  onLocationChange: function(aProgress, aRequest, aURI)
+  {
+    this.windowWrapper.updateInterface();
+  }
 }
 
 init();

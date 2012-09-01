@@ -373,7 +373,7 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
-    let win = Utils.getChromeWindow();
+    let win = Utils.getChromeWindowFrom(window);
     if (win && win.gFireIE)
     {
       return win.gFireIE.getZoomLevel();
