@@ -98,7 +98,7 @@ let FireIEContainer = {};
 
     let container = E('container');
 
-    if (E('fireie-object'))
+    if (E(Utils.containerPluginId))
     {
       unregisterEventHandler();
     }
@@ -152,6 +152,7 @@ let FireIEContainer = {};
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -164,6 +165,7 @@ let FireIEContainer = {};
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -192,7 +194,38 @@ let FireIEContainer = {};
   /** Handler for the IE document complete event */
 
   function onIEDocumentComplete(event)
-  { /** Sets the page favicon */
+  {
+    syncURL();
+    syncFavicon();
+  }
+  
+  function onIEProgressChange(event)
+  {
+    syncURL();
+  }
+  
+  /** sync recorded url when IE engine navigates to another location */
+  function syncURL()
+  {
+    let po = E(Utils.containerPluginId);
+    if (!po) return;
+    
+    let url = po.URL;
+    if (!url) return;
+    
+    url = Utils.toContainerUrl(url);
+    if (window.location.href != url)
+    {
+      // HTML5 history manipulation,
+      // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
+      if (window.history)
+        window.history.replaceState("", document.title, url);
+    }
+  }
+  
+  /** Sets the page favicon */
+  function syncFavicon()
+  {
     let po = E(Utils.containerPluginId);
     if (po)
     {
@@ -340,7 +373,7 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
-    let win = Utils.getChromeWindow();
+    let win = Utils.getChromeWindowFrom(window);
     if (win && win.gFireIE)
     {
       return win.gFireIE.getZoomLevel();

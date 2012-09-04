@@ -224,6 +224,11 @@ var Utils = {
   {
     return "chrome://browser/content/browser.xul";
   },
+  
+  get hiddenWindowUrl()
+  {
+    return "resource://gre-resources/hiddenWindow.html";
+  },
 
   /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
@@ -359,10 +364,21 @@ var Utils = {
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
     return chromeWin;
   },
+  
+  getChromeWindowFrom: function(window)
+  {
+    let mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIWebNavigation)
+                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                           .rootTreeItem
+                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindow); 
+    return mainWindow;
+  },
 
   getTabFromDocument: function(doc)
   {
-    let aBrowser = Utils.getChromeWindow().gBrowser;
+    let aBrowser = Utils.getChromeWindowFrom(doc.defaultView).gBrowser;
     if (!aBrowser.getBrowserIndexForDocument) return null;
     try
     {
@@ -650,7 +666,7 @@ var Utils = {
 
     if (gBrowser)
     {
-      gBrowser.addTab(url);
+      gBrowser.selectedTab = gBrowser.addTab(url);
     }
     else
     {
@@ -797,6 +813,17 @@ var Utils = {
     if (str.length > length)
       str = str.substring(0, length - 3) + "...";
     return str;
+  },
+  /**
+   * Use the hidden window for utils plugin
+   */
+  getHiddenWindow: function()
+  {
+    let hiddenWindow = Cc["@mozilla.org/appshell/appShellService;1"]
+               .getService(Ci.nsIAppShellService)
+               .hiddenDOMWindow;
+    this.getHiddenWindow = function() hiddenWindow;
+    return hiddenWindow;
   }
 };
 

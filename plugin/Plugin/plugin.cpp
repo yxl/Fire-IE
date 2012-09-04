@@ -130,7 +130,7 @@ namespace Plugin
 		{
 			CString strHostUrl = GetHostURL();
 
-			// Secrity check. Do not allow pages other than the browser window to load the utils plugin.
+			// Secrity check. Do not allow pages other than the hidden window to load the utils plugin.
 			if (strHostUrl != RES_UTILS_URL_T)
 				return FALSE;
 		}

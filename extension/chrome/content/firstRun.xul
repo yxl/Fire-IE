@@ -5,7 +5,6 @@
    - http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://fireie/skin/firstRun.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://fireie/locale/firstRun.dtd">
 

@@ -68,18 +68,6 @@ var gFireIE = null;
         event.stopPropagation();
         return RET.shouldReturn();
       }
-      // maybe it's a utils plugin
-      if (doc.location.href == "chrome://browser/content/browser.xul")
-      {
-        // ok, play the utils plugin
-        if (!objLoadingContent.activated)
-        {
-          plugin.playPlugin();
-          gFireIE.updateInterface();
-        }
-        event.stopPropagation();
-        return RET.shouldReturn();
-      }
       // let gPluginHandler do the rest of the work
     }
   };
@@ -481,21 +469,27 @@ var gFireIE = null;
   }
   
   // save space by reusing function handles
-  let currentURIGetter = function()
+  let currentURIGetter = function(uri)
   {
-    let uri = gFireIE.getURI(this);
-    if (uri)
+    if (Utils.startsWith(uri.spec, Utils.containerUrl))
     {
-      if (this.FireIE_bUseRealURI)
-        uri = makeURI(Utils.fromContainerUrl(uri.spec));
-      return RET.shouldReturn(uri);
+      let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
+      if (pluginObject)
+      {
+        let pluginURL = pluginObject.URL;
+        if (pluginURL)
+        {
+          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
+          return RET.modifyValue(Utils.makeURI(url));
+        }
+      }
     }
   };
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
-    let uri = gFireIE.getURI(this);
-    if (uri)
+    let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
+    if (uri && Utils.startsWith(uri.spec, Utils.containerUrl))
     {
       let entry = history.getEntryAtIndex(history.index, false);
       if (entry.URI.spec != uri.spec)
@@ -511,7 +505,7 @@ var gFireIE = null;
     if (aBrowser.localName != "browser") aBrowser = aBrowser.getElementsByTagNameNS(kXULNS, "browser")[0];
     if (aBrowser.FireIE_hooked) return;
     // hook aBrowser.currentURI, Let firefox know the new URL after navigating inside the IE engine
-    HM.hookProp(aBrowser, "currentURI", currentURIGetter);
+    HM.hookProp(aBrowser, "currentURI", null, null, currentURIGetter);
     // hook aBrowser.sessionHistory
     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
     aBrowser.FireIE_hooked = true;
@@ -544,6 +538,7 @@ var gFireIE = null;
       if (isIEEngine)
       {
         arguments[0] = Utils.fromContainerUrl(arguments[0]);
+        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
       }
     });

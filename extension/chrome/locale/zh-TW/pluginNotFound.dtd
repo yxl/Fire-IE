@@ -1,0 +1,6 @@
+<!ENTITY dialog.title               "解雇IE 外掛程式未能載入">
+<!ENTITY pluginNotFound1            "解雇IE 檢測到 &quot;Fire IE DLL&quot; 外掛程式未能成功載入。">
+<!ENTITY pluginNotFound2            "您可能安裝了錯誤版本的解雇IE。">
+<!ENTITY correctVersion             "根據您的配置，您應該使用[bit]位版本。">
+<!ENTITY homepage                   "http://fireie.org/zh-CN">
+<!ENTITY visitHomepage              "請至 [link][host][/link] 下載安裝。">

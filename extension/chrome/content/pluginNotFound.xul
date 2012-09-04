@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://fireie/locale/pluginNotFound.dtd">
+
+<dialog
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  buttons="accept"
+  title="&dialog.title;"
+  id="fireiePluginNotFound"
+  windowtype="fireie:pluginNotFound"
+  onload="init()">
+
+  <script type="application/x-javascript;version=1.7" src="utils.js"/>
+  <script type="application/x-javascript;version=1.7" src="pluginNotFound.js"/>
+
+  <vbox>
+    <description>&pluginNotFound1;</description>
+    <description>&pluginNotFound2;</description>
+    <description id="correctVersion" _textTemplate="&correctVersion;"></description>
+    <description id="visitHomepage" _textTemplate="&visitHomepage;">
+      <label class="text-link" _url="&homepage;" onclick="visitHomepage(this);"/>
+    </description>
+  </vbox>
+</dialog>

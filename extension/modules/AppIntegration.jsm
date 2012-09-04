@@ -43,7 +43,7 @@ Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
 Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
-Cu.import(baseURL.spec + "IECookieManager.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -157,10 +157,7 @@ let AppIntegration = {
    */
   getAnyUtilsPlugin: function()
   {
-    if (wrappers.length == 0)
-      return null;
-
-    return wrappers[0].getUtilsPlugin();
+    return UtilsPluginManager.getPlugin();
   },
 
   /**
@@ -262,13 +259,32 @@ WindowWrapper.prototype = {
    * @type Boolean
    */
   isUpdating: false,
-
-  /**
-   * Whether the utils plugin is initialized
-   *
-   */
-  isPluginInitialized: false,
   
+  /**
+   * Whether the UI is scheduled to update at a later time.
+   * This is to prevent too frequent updates eating up CPU time.
+   * @type Boolean
+   */
+  hasScheduledUpdate: false,
+  
+  /**
+   * Whether we are in delayed update period.
+   * This is to prevent too frequent updates eating up CPU time.
+   * @type Boolean
+   */
+  isDelayingUpdate: false,
+  
+  /**
+   * Timeout of the delay
+   * @type Integer
+   */
+  DELAY_TIMEOUT: 100,
+  
+  /**
+   * Reference to the progress listener
+   */
+  _progressListener: null,
+
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
@@ -302,51 +318,12 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    this._installUtilsPlugin();
+    UtilsPluginManager.init();
 
     this._registerEventListeners();
 
     this.updateState();
   },
-
-  /**
-   * Install the plugin used to do utility things like sync cookie
-   */
-  _installUtilsPlugin: function()
-  {
-    // Change the default cookie and cache directories of the IE, which will
-    // be restored when the utils plugin is loaded.
-    IECookieManager.changeIETempDirectorySetting();
-
-    // Workaround for #35: Re-apply focus if URL is focused when utils plugin finishes initialization
-    this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
-    {
-      if (!this._checkUtilsEventOrigin(e)) return;
-      
-      let focused = this.window.document.commandDispatcher.focusedElement;
-      while (focused)
-      {
-        if (focused === this.window.gURLBar)
-        {
-          this.window.gURLBar.blur();
-          this.window.gURLBar.focus();
-          break;
-        }
-        focused = focused.parentNode;
-      }
-      this.isPluginInitialized = true;
-    }), false);
-
-    let doc = this.window.document;
-    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.hidden = true;
-    embed.setAttribute("id", Utils.utilsPluginId);
-    embed.setAttribute("type", "application/fireie");
-    embed.style.visibility = "collapse";
-    let mainWindow = this.E("main-window");
-    mainWindow.appendChild(embed);
-  },
-
 
   /**
    * Sets up URL bar button
@@ -363,6 +340,10 @@ WindowWrapper.prototype = {
    */
   _registerEventListeners: function( /**Boolean*/ addProgressListener)
   {
+    // Must keep a reference to the progress listener!
+    this._progressListener = new ProgressListener(this);
+    this.window.gBrowser.addProgressListener(this._progressListener);
+    
     this.window.addEventListener("unload", removeWindow, false);
 
     this.window.addEventListener("DOMContentLoaded", this._bindMethod(this._onPageShowOrLoad), false);
@@ -377,8 +358,6 @@ WindowWrapper.prototype = {
     // Listen to plugin events
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
-    this.window.addEventListener("IEUserAgentReceived", this._bindMethod(this._onIEUserAgentReceived), false);
-    this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
 
@@ -387,7 +366,7 @@ WindowWrapper.prototype = {
     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
   },
-  
+ 
   // security check, do not let malicious sites send fake events
   _checkEventOrigin: function(event)
   {
@@ -399,16 +378,18 @@ WindowWrapper.prototype = {
     if (!allow) Utils.LOG("Blocked content event: " + event.type);
     return allow;
   },
-
-  _checkUtilsEventOrigin: function(event)
+  
+  /**
+   * Run the delayed update UI action if there's any
+   */
+  _delayUpdateInterface: function()
   {
-    let target = event.target;
-    if (!target) return false;
-    let doc = target.ownerDocument;
-    if (!doc) return false;
-    let allow = doc.location.href == Utils.browserUrl;
-    if (!allow) Utils.LOG("Blocked utils event: " + event.type);
-    return allow;
+    this.isDelayingUpdate = false;
+    if (this.hasScheduledUpdate)
+    {
+      this.hasScheduledUpdate = false;
+      this._updateInterfaceCore();
+    }
   },
 
   /**
@@ -417,10 +398,15 @@ WindowWrapper.prototype = {
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
-    if (this.isUpdating)
-    {
+    if (this.isUpdating || this.hasScheduledUpdate)
       return;
-    }
+
+    this.hasScheduledUpdate = true;
+    if (!this.isDelayingUpdate)
+      Utils.runAsync(this._delayUpdateInterface, this);
+  },
+  _updateInterfaceCore: function()
+  {
     try
     {
       this.isUpdating = true;
@@ -440,12 +426,14 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 
       // Update the content of the URL bar.
-      if (this.window.gURLBar && this.isIEEngine())
+      if (this.window.gURLBar && isIEEngine)
       {
         if (!this.window.gBrowser.userTypedValue)
         {
           if (url == "about:blank") url = "";
-          if (this.window.gURLBar.value != url) this.window.gURLBar.value = url;
+          if (this.window.gURLBar.value != url) {
+            this.window.gURLBar.value = url;
+          }
         }
       }
 
@@ -503,6 +491,9 @@ WindowWrapper.prototype = {
     finally
     {
       this.isUpdating = false;
+      this.isDelayingUpdate = true;
+      this.hasScheduledUpdate = false;
+      this.window.setTimeout(this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
     }
   },
 
@@ -595,25 +586,21 @@ WindowWrapper.prototype = {
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
     if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
     {
-      if (aBrowser.contentDocument)
-      {
-        let obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
-        if (obj)
-        {
-          return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
-        }
-      }
+      return this.getContainerPluginFromBrowser(aBrowser);
     }
     return null;
   },
-
-  /** Get the IE utility plugin object */
-  getUtilsPlugin: function()
+  
+  /** Get the IE engine plugin object */
+  getContainerPluginFromBrowser: function(aBrowser)
   {
-    let obj = this.E(Utils.utilsPluginId);
-    if (obj)
+    if (aBrowser.contentDocument)
     {
-      return (obj.wrappedJSObject ? obj.wrappedJSObject : obj);
+      let obj = aBrowser.contentDocument.getElementById(Utils.containerPluginId);
+      if (obj)
+      {
+        return (obj.wrappedJSObject ? obj.wrappedJSObject : obj); // Ref: Safely accessing content DOM from chrome
+      }
     }
     return null;
   },
@@ -887,9 +874,10 @@ WindowWrapper.prototype = {
     {
       if (Utils.isValidUrl(url) || Utils.isValidDomainName(url))
       {
-        let isBlank = (Utils.fromContainerUrl(this.window.gBrowser.currentURI.spec) == "about:blank");
+        let originalURL = this.getURL();
+        let isBlank = (originalURL == "about:blank");
         let handleUrlBar = Prefs.handleUrlBar;
-        let isSimilar = Utils.getHostname(this.getURL()) == Utils.getHostname(url);
+        let isSimilar = Utils.getHostname(originalURL) == Utils.getHostname(url);
         if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
@@ -951,30 +939,6 @@ WindowWrapper.prototype = {
       id: id
     };
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
-  },
-
-  /** Handler for receiving IE UserAgent from the plugin object */
-  _onIEUserAgentReceived: function(event)
-  {
-    if (!this._checkUtilsEventOrigin(event)) return;
-    
-    let userAgent = event.detail;
-    Utils.ieUserAgent = userAgent;
-    Utils.LOG("_onIEUserAgentReceived: " + userAgent);
-    this._restoreIETempDirectorySetting();
-  },
-
-  /**
-   * Handles 'IESetCookie' event receiving from the plugin
-   */
-  _onIESetCookie: function(event)
-  {
-    if (!this._checkUtilsEventOrigin(event)) return;
-    
-    let subject = null;
-    let topic = "fireie-set-cookie";
-    let data = event.detail;
-    Services.obs.notifyObservers(subject, topic, data);
   },
 
   _onIESetSecureLockIcon: function(event)
@@ -1224,11 +1188,6 @@ WindowWrapper.prototype = {
     this._updateInterface();
   },
 
-  _restoreIETempDirectorySetting: function()
-  {
-    IECookieManager.retoreIETempDirectorySetting();
-  },
-  
   // whether we should handle textbox commands, e.g. cmd_paste
   _shouldHandleTextboxCommand: function()
   {
@@ -1476,10 +1435,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
 
@@ -1514,10 +1470,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
   /* MouseGesturesRedox commands */
@@ -1551,10 +1504,7 @@ WindowWrapper.prototype = {
         return true;
       }
     },
-    function()
-    {
-      this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
-    });
+    this._updateInterface);
     return this[funcName](cmd);
   },
   /* All-in-One Gestrues commands */
@@ -1595,7 +1545,7 @@ WindowWrapper.prototype = {
       Utils.ERROR("goDoAiOGCommand(" + cmd + "): " + ex);
       return false;
     }
-    this.window.setTimeout(this._bindMethod(this._updateInterface), 0);
+    this._updateInterface();
     return true;
   },
   /* called when original findbar issues a find */
@@ -1846,18 +1796,7 @@ WindowWrapper.prototype = {
   },
   fireAfterInit: function(callback, self, arguments)
   {
-    if (this.isPluginInitialized)
-    {
-      callback.apply(self, arguments);
-    }
-    else
-    {
-      this.window.addEventListener("IEUtilsPluginInitialized", this._bindMethod(function(e)
-      {
-        if (!this._checkUtilsEventOrigin(e)) return;
-        callback.apply(self, arguments);
-      }), false);
-    }
+    UtilsPluginManager.fireAfterInit(callback, self, arguments);
   },
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)
@@ -2066,7 +2005,7 @@ function addSubscription()
     }
     else
     {
-      Services.ww.openWindow(wrapper ? wrapper.window : null, "chrome://fireie/content/firstRun.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", null);
+      Services.ww.openWindow(wrapper ? wrapper.window : null, "chrome://fireie/content/firstRun.xul", "_blank", "chrome,centerscreen,dialog", null);
     }
   }
 
@@ -2100,6 +2039,38 @@ function refreshRuleCache()
   Rule.fromText("!dummy"); // work against trapProperty
   RuleStorage.loadFromDisk();
   RuleNotifier.triggerListeners("save");
+}
+
+/**
+ * nsIWebProgressListener implementation
+ * @constructor
+ */
+function ProgressListener(windowWrapper) {
+  this.windowWrapper = windowWrapper;
+}
+
+ProgressListener.prototype = {
+
+  windowWrapper: null,
+
+  QueryInterface: function(aIID)
+  {
+   if (aIID.equals(Ci.nsIWebProgressListener) ||
+       aIID.equals(Ci.nsISupportsWeakReference) ||
+       aIID.equals(Ci.nsISupports))
+     return this;
+   throw Cr.NS_NOINTERFACE;
+  },
+ 
+  onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {}, 
+  onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },
+  onSecurityChange: function(aWebProgress, aRequest, aState) { },
+
+  onLocationChange: function(aProgress, aRequest, aURI)
+  {
+    this.windowWrapper.updateInterface();
+  }
 }
 
 init();
