@@ -269,7 +269,7 @@ let FireIEContainer = {};
     
     if (statusHideTimeout)
       window.clearTimeout(statusHideTimeout);
-    if (statusbar.hidden == false && !isLinkStatus(statustext))
+    if (statusbar.hidden == false && !isLinkStatus(statustext) && !isLoadingStatus(statustext))
     {
       statusHideTimeout = window.setTimeout(function()
       {
@@ -334,16 +334,19 @@ let FireIEContainer = {};
       window.clearTimeout(statusHideTimeout);
     statusHideTimeout = 0;    
   }
-
-  let validProtocolSet = (function(list)
+  
+  let listToHashSet = function(list)
   {
     let ret = {};
     list.forEach(function(value) {
       ret[value] = true;
-    })
+    });
     return ret;
-  })(["http", "https", "ftp", "javascript", "file", "about", "mailto", "data", "rtsp", "telnet", "thunder", "ed2k", "magnet"]);
+  };
 
+  let validProtocolSet = listToHashSet(["http", "https", "ftp", "javascript", "file", "about", "mailto", "data", "rtsp", "telnet", "thunder", "ed2k", "magnet"]);
+  let loadingSuffix = "...";
+  
   function isLinkStatus(status)
   {
     let index = status.indexOf(":");
@@ -351,6 +354,11 @@ let FireIEContainer = {};
     let protocol = status.substring(0, index);
     if (validProtocolSet[protocol]) return true;
     return false;
+  }
+  
+  function isLoadingStatus(status)
+  {
+    return Utils.endsWith(status, loadingSuffix);
   }
 
   /**
