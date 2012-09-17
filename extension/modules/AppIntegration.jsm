@@ -394,6 +394,8 @@ WindowWrapper.prototype = {
 
   /**
    * Updates the UI for an application window.
+   * Note that UI is not immediately updated until the queued update code is run,
+   * so don't rely on any UI state after the update
    */
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()

@@ -24,6 +24,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include <comutil.h>
 #include "IEControlSite.h"
 #include "PluginApp.h"
+#include "HttpMonitorApp.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
 
@@ -43,7 +44,9 @@ CString CIEHostWindow::s_strIEUserAgent = _T("");
 
 IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 
-	CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
+typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
+
+CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
 	: CDialog(CIEHostWindow::IDD, pParent)
 	, m_pPlugin(pPlugin)
 	, m_bCanBack(FALSE)
@@ -92,6 +95,26 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	// 从Window Long中取出CIEHostWindow对象指针 
 	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 	return pInstance;
+}
+
+CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
+{
+	// 用一个循环网上找（最多找 5 层）
+	HWND hwnd = hwndChild;
+	int count = 0;
+	while ((count++ < 5) && (hwnd = ::GetParent(hwnd)))
+	{
+		CString strClassName;
+		GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+		strClassName.ReleaseBuffer();
+		if (strClassName != STR_WINDOW_CLASS_NAME)
+			continue;
+
+		// 从Window Long中取出CIEHostWindow对象指针 
+		CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+		return pInstance;
+	}
+	return NULL;
 }
 
 CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils)
@@ -229,11 +252,30 @@ void CIEHostWindow::InitIE()
 
 	// 允许打开拖拽到浏览器窗口的文件。
 	m_ie.put_RegisterAsDropTarget(TRUE);
+
+	CComPtr<IInternetSession> spSession;
+	if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession)
+	{
+		MetaFactory::CreateInstance(CLSID_HttpProtocol, &m_spCFHTTP);
+		spSession->RegisterNameSpace(m_spCFHTTP, CLSID_NULL, L"http", 0, 0, 0);
+
+		MetaFactory::CreateInstance(CLSID_HttpSProtocol, &m_spCFHTTPS);
+		spSession->RegisterNameSpace(m_spCFHTTPS, CLSID_NULL, L"https", 0, 0, 0);
+	}
 }
 
 
 void CIEHostWindow::UninitIE()
 {
+	CComPtr<IInternetSession> spSession;
+	if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession)
+	{
+		spSession->UnregisterNameSpace(m_spCFHTTP, L"http");
+		m_spCFHTTP.Release();
+		spSession->UnregisterNameSpace(m_spCFHTTPS, L"https");
+		m_spCFHTTPS.Release();
+	}
+
 	/**
 	*  屏蔽页面关闭时IE控件的脚本错误提示
 	*  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
@@ -1397,7 +1439,7 @@ BOOL CIEHostWindow::DestroyWindow()
 
 BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 {
-	return CDialog::Create(nIDTemplate,pParentWnd);
+	return CDialog::Create(nIDTemplate, pParentWnd);
 }
 
 void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)

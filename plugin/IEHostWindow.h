@@ -81,6 +81,8 @@ public:
 
 	/** Get CIEHostWindow object by its embeded Internet Explorer_Server window handle*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
+	/** Similar to FromInternetExplorerServer, but involves a lookup routine*/
+	static CIEHostWindow* FromChildWindow(HWND hwndChild);
 
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
@@ -141,6 +143,9 @@ protected:
 	static CString s_strIEUserAgent;
 
 	static const CString s_strSecureLockInfos[];
+
+	CComPtr<IClassFactory> m_spCFHTTP;
+	CComPtr<IClassFactory> m_spCFHTTPS;
 
 	void InitIE();
 	void UninitIE();

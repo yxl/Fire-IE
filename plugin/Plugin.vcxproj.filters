@@ -117,6 +117,9 @@
     <ClInclude Include="BrowserHook\GestureHandler.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
+    <ClInclude Include="ContentType.h">
+      <Filter>HttpMonitor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
