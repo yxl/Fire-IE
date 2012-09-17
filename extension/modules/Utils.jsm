@@ -515,7 +515,12 @@ var Utils = {
   },
   startsWith: function(s, prefix)
   {
-    if (s) return ((s.substring(0, prefix.length) == prefix));
+    if (s) return s.substring(0, prefix.length) == prefix;
+    else return false;
+  },
+  endsWith: function(s, suffix)
+  {
+    if (s) return s.substring(s.length - suffix.length) == suffix;
     else return false;
   },
 

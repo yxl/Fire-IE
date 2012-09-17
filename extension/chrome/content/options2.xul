@@ -29,6 +29,9 @@
           <checkbox label="&fireie.options.switch.handleurl;"
           id="handleurl" />
           <checkbox label="&fireie.options.switch.disableAutoSwitch;" id="disableAutoSwitch" />
+          <hbox>
+            <button id="openSwitchRules" label="&urlbar.switchRules.label;..." onclick="Utils.openRulesDialog();" />
+          </hbox>
         </vbox>
       </groupbox>
       <!-- Sets Shortcut key -->
