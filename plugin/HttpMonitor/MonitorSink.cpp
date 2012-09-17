@@ -191,7 +191,8 @@ namespace HttpMonitor
 
 				if (pContentType) VirtualFree(pContentType, 0, MEM_RELEASE);
 
-				if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest) aContentType = ContentType::TYPE_SUBDOCUMENT;
+				if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
+					aContentType = ContentType::TYPE_SUBDOCUMENT;
 
 				if (!CanLoadContent(aContentType))
 				{
@@ -280,7 +281,7 @@ namespace HttpMonitor
 		}
 
 		// 根据 URL 来识别是否是页面内的子请求
-		m_bIsSubRequest = !(m_pIEHostWindow && FuzzyUrlCompare(m_pIEHostWindow->GetURL(), m_strURL));
+		m_bIsSubRequest = !(m_pIEHostWindow && FuzzyUrlCompare(m_pIEHostWindow->GetLoadingURL(), m_strURL));
 	}
 
 	void MonitorSink::ExportCookies(LPCWSTR szResponseHeaders)
@@ -332,9 +333,14 @@ namespace HttpMonitor
 	bool MonitorSink::CanLoadContent(ContentType_T aContentType)
 	{
 		// stub implementation, filter baidu logo
-		bool result = !FuzzyUrlCompare(_T("http://www.baidu.com/img/baidu_sylogo1.gif"), m_strURL)
-			&& !FuzzyUrlCompare(_T("http://www.baidu.com/img/baidu_jgylogo3.gif"), m_strURL);
-		TRACE(_T("[CanLoadContent]: [%s] %s\n"), result ? _T("true") : _T("false"), m_strURL);
+		bool result = m_strURL != _T("http://www.baidu.com/img/baidu_sylogo1.gif")
+			&& m_strURL != _T("http://www.baidu.com/img/baidu_jgylogo3.gif")
+			&& m_strURL != _T("http://img.baidu.com/img/post-jg.gif")
+			&& m_strURL.Find(_T("http://tb2.bdstatic.com/tb/static-common/img/tieba_logo")) != 0
+			&& m_strURL.Find(_T("http://360.cn")) != 0
+			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
+		;
+		TRACE(_T("[CanLoadContent]: [%s] [%s] %s\n"), result ? _T("true") : _T("false"), m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL);
 		return result;
 	}
 
@@ -348,9 +354,16 @@ namespace HttpMonitor
 		switch ( ulStatusCode )
 		{
 			 
-		// 重定向了, 更新记录的 URL
 		case BINDSTATUS_REDIRECTING:
 			{
+				// 重定向了, 更新记录的 URL
+				if (!m_bIsSubRequest)
+				{
+					if (m_pIEHostWindow)
+						m_pIEHostWindow->SetLoadingURL(szStatusText);
+					m_strURL = szStatusText;
+				}
+
 				// 很多网站登录的时候会在302跳转时设置Cookie, 例如Gmail, 所以我们在这里也要处理 Cookie
 				CComPtr<IWinInetHttpInfo> spWinInetHttpInfo;
 				if (SUCCEEDED(m_spTargetProtocol->QueryInterface(&spWinInetHttpInfo)) && spWinInetHttpInfo )

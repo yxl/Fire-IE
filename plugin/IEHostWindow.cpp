@@ -62,6 +62,7 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
+	, m_strLoadingUrl(_T(""))
 {
 	FBResetFindStatus();
 }
@@ -1140,6 +1141,41 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 }
 
 
+static inline BOOL UrlCanHandle(LPCTSTR szUrl)
+{
+	// 可能性1: 类似 C:\Documents and Settings\<username>\My Documents\Filename.mht 这样的文件名
+	TCHAR c = _totupper(szUrl[0]);
+	if ( (c >= _T('A')) && (c <= _T('Z')) && (szUrl[1]==_T(':')) && (szUrl[2]==_T('\\')) )
+	{
+		return TRUE;
+	}
+
+	// 可能性2: \\fileserver\folder 这样的 UNC 路径
+	if ( PathIsUNC(szUrl) )
+	{
+		return TRUE;
+	}
+
+	// 可能性3: http://... https://... file://...
+	URL_COMPONENTS uc;
+	ZeroMemory( &uc, sizeof(uc) );
+	uc.dwStructSize = sizeof(uc);
+	if ( ! InternetCrackUrl( szUrl, 0, 0, &uc ) ) return FALSE;
+
+	switch ( uc.nScheme )
+	{
+	case INTERNET_SCHEME_HTTP:
+	case INTERNET_SCHEME_HTTPS:
+	case INTERNET_SCHEME_FILE:
+		return TRUE;
+	default:
+		{
+			// 可能性4: about:blank
+			return ( _tcsncmp(szUrl, _T("about:"), 6) == 0 );
+		}
+	}
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
 	// 按Firefox的设置缩放页面
@@ -1151,6 +1187,27 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			Zoom(level);
 		}
 	}
+
+	if (!URL) return;
+
+	COLE2T szUrl(URL->bstrVal);
+
+	// 滤掉非 HTTP 协议
+	if (!UrlCanHandle(szUrl)) return;
+
+	// 如果是在一个 frame 里面, 忽略
+	CComQIPtr<IWebBrowser2> spBrowser(pDisp);
+	if (spBrowser)
+	{
+		VARIANT_BOOL vbIsTopLevelContainer;
+		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
+		{
+			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
+		}
+	}
+
+	// 设置正在载入的Url
+	m_strLoadingUrl = szUrl;
 }
 
 

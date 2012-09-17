@@ -100,7 +100,10 @@ public:
 
 	/* Get the embedded Internet Explorer_server window */
 	HWND GetInternetExplorerServer() const;
-		
+
+	CString GetLoadingURL() const { return m_strLoadingUrl; }
+	void SetLoadingURL(const CString& value) { m_strLoadingUrl = value; }
+	
 public:
 	
 	virtual ~CIEHostWindow();
@@ -330,4 +333,7 @@ protected:
 
 	/** Indicates whether the associated plugin is a utils plugin */
 	bool m_bUtils;
+
+	/** The top-level url currently loading */
+	CString m_strLoadingUrl;
 };
