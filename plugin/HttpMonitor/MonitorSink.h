@@ -78,6 +78,9 @@ namespace HttpMonitor
 		// Export IE cookies to firefox by parsing the HTTP response headers
 		void ExportCookies(LPCWSTR szResponseHeaders);
 
+		// 设置Referer信息
+		void ExtractReferer(LPWSTR *pszAdditionalHeaders);
+
 		/** 本次请求的 URL */
 		CString m_strURL;
 

@@ -158,6 +158,8 @@ namespace HttpMonitor
 		// BeginningTransaction() 是本对象最开始被调用的方法, 在这里记下调用的 URL
 		m_strURL = szURL;
 
+		ExtractReferer(pszAdditionalHeaders);
+
 		// 查询请求所对应的 CIEHostWindow 对象, 后面随时会用到
 		QueryIEHostWindow();
 
@@ -330,6 +332,24 @@ namespace HttpMonitor
 		return ContentType::TYPE_OTHER;
 	}
 
+	void MonitorSink::ExtractReferer(LPWSTR *pszAdditionalHeaders)
+	{
+		if ( pszAdditionalHeaders )
+		{
+			static const WCHAR REFERER [] = L"Referer:";
+
+			CStringW strHeaders(*pszAdditionalHeaders);
+
+			LPWSTR lpReferer = NULL;
+			size_t nRefererLen = 0;
+			if (ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
+			{
+				m_strReferer = lpReferer;
+
+				VirtualFree( lpReferer, 0, MEM_RELEASE);
+			}
+		}
+	}
 	bool MonitorSink::CanLoadContent(ContentType_T aContentType)
 	{
 		// stub implementation, filter baidu logo
@@ -340,7 +360,7 @@ namespace HttpMonitor
 			&& m_strURL.Find(_T("http://360.cn")) != 0
 			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
 		;
-		TRACE(_T("[CanLoadContent]: [%s] [%s] %s\n"), result ? _T("true") : _T("false"), m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL);
+		TRACE(_T("[CanLoadContent]: [%s] [%s] %s [Referer: %s]\n"), result ? _T("true") : _T("false"), m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL, m_strReferer);
 		return result;
 	}
 
