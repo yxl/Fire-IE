@@ -17,7 +17,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// strutils.h : tstring utilities
+// strutils.h : wstring utilities
 //
 
 #include <string>
