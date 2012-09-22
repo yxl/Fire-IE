@@ -80,6 +80,8 @@ private:
 
 	// last position, for global RegExp's
 	int m_nLastPos;
+	// number of sub patterns, from compiled info
+	unsigned int m_nSubPatterns;
 private:
 	std::wstring getPattern() const;
 	void setAttributes();

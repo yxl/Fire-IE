@@ -114,14 +114,14 @@ void RegExp::compile()
 	if (m_bCompiled) return;
 
 	JSRegExp* re = NULL;
-	unsigned int numSubPatterns = 0;
+	m_nSubPatterns = 0;
 	const char* errorMessage = NULL;
 
 	wstring pattern = getPattern();
 	re = jsRegExpCompile((const UChar*)pattern.c_str(), (int)pattern.length(),
 		m_bIgnoreCase ? JSRegExpIgnoreCase : JSRegExpDoNotIgnoreCase,
 		m_bMultiLine ? JSRegExpMultiline : JSRegExpSingleLine,
-		&numSubPatterns, &errorMessage, jscre_malloc, jscre_free);
+		&m_nSubPatterns, &errorMessage, jscre_malloc, jscre_free);
 
 	if (re)
 	{
@@ -188,7 +188,7 @@ RegExpMatch* RegExp::exec(const wstring& str, int lastPos) const
 
 RegExpMatch* RegExp::execCore(const wstring& str, int lastPos) const
 {
-	int numBackRefs = m_re->top_backref;
+	int numBackRefs = (int)m_nSubPatterns;
 	int offsetLength = (numBackRefs + 1) * 3;
 	int* offsets = new int[offsetLength];
 

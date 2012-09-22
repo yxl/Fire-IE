@@ -319,7 +319,7 @@ void RegExpFilter::generateRegExp(const wstring& regexpSource)
 	// wrap to regexp syntax
 	source.insert(source.begin(), L'/');
 	source.push_back(L'/');
-	if (matchCase) source.push_back(L'i');
+	if (!matchCase) source.push_back(L'i');
 
 	// construct the RegExp object
 	regexp = source;
