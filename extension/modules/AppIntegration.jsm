@@ -2038,7 +2038,7 @@ function refreshRuleCache()
 {
   Rule.fromText("!dummy"); // work against trapProperty
   RuleStorage.loadFromDisk();
-  RuleNotifier.triggerListeners("save");
+  RuleStorage.saveToDisk();
 }
 
 /**
