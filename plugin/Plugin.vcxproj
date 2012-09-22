@@ -249,7 +249,7 @@ buildxpi.bat</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN64;_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -300,6 +300,9 @@ buildxpi64.bat</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="abp\FilterClasses.cpp" />
+    <ClCompile Include="abp\Matcher.cpp" />
+    <ClCompile Include="abp\RAIILock.cpp" />
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
     <ClCompile Include="BrowserHook\GestureHandler.cpp" />
     <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp" />
@@ -307,8 +310,52 @@ buildxpi64.bat</Command>
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
     <ClCompile Include="IEHostWindow.cpp" />
+    <ClCompile Include="jscre\JSRegExp_chartables.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_compile.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_exec.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_ucp_searchfuncs.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_xclass.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="jscre\ucptable.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="PluginApp.cpp" />
     <ClCompile Include="Plugin\PluginGlobal.cpp" />
+    <ClCompile Include="re\RegExp.cpp" />
+    <ClCompile Include="re\strutils.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -326,6 +373,12 @@ buildxpi64.bat</Command>
     <ClCompile Include="Utils\OS.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="abp\FilterClasses.h" />
+    <ClInclude Include="abp\FilterContentType.h" />
+    <ClInclude Include="abp\Matcher.h" />
+    <ClInclude Include="abp\RAIILock.h" />
+    <ClInclude Include="abp\TList.h" />
+    <ClInclude Include="abp\TriBool.h" />
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\GestureHandler.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
@@ -333,9 +386,17 @@ buildxpi64.bat</Command>
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />
     <ClInclude Include="IEHostWindow.h" />
+    <ClInclude Include="jscre\ASCIICType.h" />
+    <ClInclude Include="jscre\config.h" />
+    <ClInclude Include="jscre\JSRegExp.h" />
+    <ClInclude Include="jscre\JSRegExp_internal.h" />
+    <ClInclude Include="jscre\stdint.h" />
+    <ClInclude Include="jscre\ucpinternal.h" />
     <ClInclude Include="PluginApp.h" />
     <ClInclude Include="Plugin\PluginGlobal.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="re\RegExp.h" />
+    <ClInclude Include="re\strutils.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="np\npapi.h" />

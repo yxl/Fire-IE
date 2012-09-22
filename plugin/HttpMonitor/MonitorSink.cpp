@@ -8,6 +8,8 @@
 #include "MonitorSink.h"
 #include "PluginApp.h"
 #include "ScriptablePluginObject.h"
+#include "abp/FilterClasses.h"
+#include "abp/Matcher.h"
 
 namespace HttpMonitor
 {
@@ -130,6 +132,14 @@ namespace HttpMonitor
 		}
 
 		return bMatch;
+	}
+
+	// converts content types from nsIContentPolicy to ABP bit mask style
+	abp::ContentType_T nsItoABP(HttpMonitor::ContentType_T contentType)
+	{
+		static abp::ContentType_T typeMap[] = { 0, abp::OTHER, abp::SCRIPT, abp::IMAGE, abp::STYLESHEET, abp::OBJECT, abp::DOCUMENT, abp::SUBDOCUMENT, 0, abp::XBL, abp::PING, abp::XMLHTTPREQUEST, abp::OBJECT_SUBREQUEST, abp::DTD };
+
+		return typeMap[contentType];
 	}
 
 	// MonitorSink implementation
@@ -346,20 +356,22 @@ namespace HttpMonitor
 			{
 				m_strReferer = lpReferer;
 
-				VirtualFree( lpReferer, 0, MEM_RELEASE);
+				VirtualFree(lpReferer, 0, MEM_RELEASE);
 			}
 		}
 	}
 	bool MonitorSink::CanLoadContent(ContentType_T aContentType)
 	{
 		// stub implementation, filter baidu logo
-		bool result = m_strURL != _T("http://www.baidu.com/img/baidu_sylogo1.gif")
+		/*bool result = m_strURL != _T("http://www.baidu.com/img/baidu_sylogo1.gif")
 			&& m_strURL != _T("http://www.baidu.com/img/baidu_jgylogo3.gif")
 			&& m_strURL != _T("http://img.baidu.com/img/post-jg.gif")
 			&& m_strURL.Find(_T("http://tb2.bdstatic.com/tb/static-common/img/tieba_logo")) != 0
 			&& m_strURL.Find(_T("http://360.cn")) != 0
 			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
-		;
+		;*/ /*!re::RegExp(_T("/http:\\/\\/\\w+\\.(qhimg\\.com)/i")).test(std::wstring(m_strURL.GetString()));*/
+		abp::RegExpFilter* filter = abp::filterMatcher.matchesAny(m_strURL.GetString(), nsItoABP(aContentType), L"360.cn", false);
+		bool result = !filter || filter->isException();
 		TRACE(_T("[CanLoadContent]: [%s] [%s] %s [Referer: %s]\n"), result ? _T("true") : _T("false"), m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL, m_strReferer);
 		return result;
 	}
