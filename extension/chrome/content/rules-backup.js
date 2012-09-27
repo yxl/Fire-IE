@@ -140,7 +140,7 @@ var Backup =
       lines.push(line.value);
     stream.close();
 
-    if (lines.length < 2 || lines[0] != "# Adblock Plus preferences" || !/version=(\d+)/.test(lines[1]))
+    if (lines.length < 2 || lines[0] != "# Fire-IE preferences" || !/version=(\d+)/.test(lines[1]))
     {
       Utils.alert(window, E("backupButton").getAttribute("_restoreError"), E("backupButton").getAttribute("_restoreDialogTitle"));
       return;
@@ -177,7 +177,7 @@ var Backup =
       lines.push(line.value);
     stream.close();
 
-    if (!lines.length || !/\[Adblock(?:\s*Plus\s*([\d\.]+)?)?\]/i.test(lines[0]))
+    if (!lines.length || !/\[Fire-IE(?:\s*([\d\.]+)?)?\]/i.test(lines[0]))
     {
       Utils.alert(window, E("backupButton").getAttribute("_restoreError"), E("backupButton").getAttribute("_restoreDialogTitle"));
       return;
@@ -266,7 +266,7 @@ var Backup =
   backupCustomRules: function(/**nsIFile*/ file)
   {
     let subscriptions = RuleStorage.subscriptions.filter(function(s) s instanceof SpecialSubscription);
-    let list = ["[Adblock Plus 2.0]"];
+    let list = ["[Fire-IE %v]".replace(/%v/, Utils.addonVersion)];
     for (let i = 0; i < subscriptions.length; i++)
     {
       let subscription = subscriptions[i];
