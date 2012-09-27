@@ -34,7 +34,7 @@ namespace HttpMonitor
 	{
 		const BYTE * pBuffer = m_Sink->pTargetBuffer;
 		DWORD dwBufLen = m_Sink->dwTargetBufSize;
-		if ( pBuffer && ( dwBufLen > 0 ) )
+		if ( pBuffer )
 		{
 			DWORD dwSize = 0;
 			if ( dwBufLen > m_nDataWritten )

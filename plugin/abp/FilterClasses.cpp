@@ -31,6 +31,8 @@ using namespace std;
 
 static const wstring strEmpty = L"";
 
+const hash<size_t> Filter::Hasher::hasher;
+
 // Regular expression that element hiding filters should match
 const RegExp Filter::elemhideRegExp = L"/^([^\\/\\*\\|\\@\"!]*?)#(\\@)?(?:([\\w\\-]+|\\*)((?:\\([\\w\\-]+(?:[$^*]?=[^\\(\\)\"]*)?\\))*)|#([^{}]+))$/";
 
@@ -45,6 +47,16 @@ const RegExp Filter::optionsRegExp = L"/\\$(~?[\\w\\-]+(?:=[^,\\s]+)?(?:,~?[\\w\
  */
 unordered_map<wstring, Filter*> Filter::knownFilters;
 
+void Filter::clearKnownFilters()
+{
+	// not just a "clear" call, we should free the Filters themselves
+	for (auto iter = knownFilters.begin(); iter != knownFilters.end(); ++iter)
+	{
+		delete iter->second;
+	}
+	knownFilters.clear();
+}
+
 /**
  * Creates a filter of correct type from its text representation - does the basic parsing and
  * calls the right constructor then.
@@ -52,11 +64,12 @@ unordered_map<wstring, Filter*> Filter::knownFilters;
 Filter* Filter::fromText(const wstring& text)
 {
 	unordered_map<wstring, Filter*>::iterator iter = knownFilters.find(text);
-	if (iter != knownFilters.end()) return iter->second;
+	if (iter != knownFilters.end())
+		return iter->second;
 
 	Filter* ret = NULL;
 	RegExpMatch* match = (text.find(L'#') != wstring::npos ? elemhideRegExp.exec(text) : NULL);
-	if (match && match->substrings.size() > 5)
+	if (match)
 	{
 		const vector<wstring>& substrings = match->substrings;
 		ret = ElemHideBase::fromText(text, substrings[1], 0 != substrings[2].length(), substrings[3],
@@ -76,11 +89,36 @@ Filter* Filter::fromText(const wstring& text)
 	return ret;
 }
 
-/**
- * Removes unnecessary whitespaces from filter text
- */
-wstring Filter::normalize(const wstring& text)
+namespace abp { namespace funcStatic { namespace Filter_fromObject {
+	static const wstring strText = L"text";
+	static const wstring strDisabled = L"disabled";
+	static const wstring strTrue = L"true";
+} } } // namespace abp::funcStatic::Filter_fromObject
+
+Filter* Filter::fromObject(const map<wstring, wstring>& obj)
 {
+	using namespace funcStatic::Filter_fromObject;
+
+	auto iter = obj.find(strText);
+	if (iter != obj.end())
+	{
+		Filter* filter = Filter::fromText(iter->second);
+		if (filter)
+		{
+			ActiveFilter* af = filter->toActiveFilter();
+			if (af)
+			{
+				iter = obj.find(strDisabled);
+				if (iter != obj.end())
+					af->setDisabled(iter->second == strTrue);
+			}
+		}
+		return filter;
+	}
+	return NULL;
+}
+
+namespace abp { namespace funcStatic { namespace Filter_normalize {
 	// pre-compiled to speed up the process
 	static const RegExp re1 = L"/[^\\S ]/g";
 	static const RegExp re2 = L"/^\\s*!/";
@@ -88,6 +126,14 @@ wstring Filter::normalize(const wstring& text)
 	static const RegExp re4 = L"/\\s+$/";
 	static const RegExp re5 = L"/^(.*?)(#\\@?#?)(.*)$/";
 	static const RegExp re6 = L"/\\s/g";
+} } } // namespace abp::funcStatic::Filter_normalize
+
+/**
+ * Removes unnecessary whitespaces from filter text
+ */
+wstring Filter::normalize(const wstring& text)
+{
+	using namespace funcStatic::Filter_normalize;
 
 	// Remove line breaks and such
 	wstring res = replace(text, re1, strEmpty);
@@ -100,15 +146,15 @@ wstring Filter::normalize(const wstring& text)
 	{
 		// Special treatment for element hiding filters, right side is allowed to contain spaces
 		RegExpMatch* match = re5.exec(res);
-		if (match && match->substrings.size() > 3)
+		if (match)
 		{
 			const wstring& domain = match->substrings[1];
 			const wstring& separator = match->substrings[2];
 			const wstring& selector = match->substrings[3];
 			res = replace(domain, re6, strEmpty) + separator
 				+ replace(replace(selector, re3, strEmpty), re4, strEmpty);
+			delete match;
 		}
-		if (match) delete match;
 		return res;
 	}
 	else
@@ -117,16 +163,22 @@ wstring Filter::normalize(const wstring& text)
 	}
 }
 
+const map<wstring, bool> ActiveFilter::s_mEmpty;
+
 void ActiveFilter::setDisabled(bool value)
 {
 	// TODO: implement FilterNotifier
 	disabled = value;
 }
 
-void ActiveFilter::generateDomains(const wstring& domainSource)
-{
+namespace abp { namespace funcStatic { namespace ActiveFilter_generateDomains {
 	// pre-compiled to speed up the process
 	static const RegExp re1 = L"/\\.+$/";
+} } } // namespace abp::funcStatic::ActiveFilter_generateDomains
+
+void ActiveFilter::generateDomains(const wstring& domainSource)
+{
+	using namespace funcStatic::ActiveFilter_generateDomains;
 
 	if (domainSource.length())
 	{
@@ -167,13 +219,17 @@ void ActiveFilter::generateDomains(const wstring& domainSource)
 	}
 }
 
+namespace abp { namespace funcStatic { namespace ActiveFilter_isActiveOnDomain {
+	// pre-compiled to speed up the process
+	static const RegExp re1 = L"/\\.+$/";
+} } } // namespace abp::funcStatic::ActiveFilter_isActiveOnDomain
+
 /**
  * Checks whether this filter is active on a domain.
  */
 bool ActiveFilter::isActiveOnDomain(const wstring& docDomain) const
 {
-	// pre-compiled to speed up the process
-	static const RegExp re1 = L"/\\.+$/";
+	using namespace funcStatic::ActiveFilter_isActiveOnDomain;
 
 	// If no domains are set the rule matches everywhere
 	if (!domains) return true;
@@ -202,13 +258,17 @@ bool ActiveFilter::isActiveOnDomain(const wstring& docDomain) const
 	return domains->at(strEmpty);
 }
 
+namespace abp { namespace funcStatic { namespace ActiveFilter_isActiveOnlyOnDomain {
+	// pre-compiled to speed up the process
+	static const RegExp re1 = L"/\\.+$/";
+} } } // namespace abp::funcStatic::ActiveFilter_isActiveOnlyOnDomain
+
 /**
  * Checks whether this filter is active only on a domain and its subdomains.
  */
 bool ActiveFilter::isActiveOnlyOnDomain(const wstring& docDomain) const
 {
-	// pre-compiled to speed up the process
-	static const RegExp re1 = L"/\\.+$/";
+	using namespace funcStatic::ActiveFilter_isActiveOnlyOnDomain;
 
 	if (!docDomain.length() || domains || domains->at(strEmpty))
 		return false;
@@ -224,7 +284,7 @@ bool ActiveFilter::isActiveOnlyOnDomain(const wstring& docDomain) const
 	{
 		if (iter->second && iter->first != domain &&
 			(iter->first.length() <= domain.length() ||
-			iter->first.find(dotDomain) != iter->first.length() - dotDomain.length()))
+			iter->first.find_last_of(dotDomain) != iter->first.length() - dotDomain.length()))
 		{
 			return false;
 		}
@@ -262,11 +322,7 @@ RegExpFilter::TypeMapInitializer::TypeMapInitializer()
 	DEFTYPEMAP(ELEMHIDE);
 }
 
-/**
- * Regular expression to be used when testing against this filter
- */
-void RegExpFilter::generateRegExp(const wstring& regexpSource)
-{
+namespace abp { namespace funcStatic { namespace RegExpFilter_generateRegExp {
 	// pre-compiled to speed up the process
 	// Remove multiple wildcards
 	static const RegExp re1 = L"/\\*+/g";
@@ -299,6 +355,14 @@ void RegExpFilter::generateRegExp(const wstring& regexpSource)
 	// process anchor at expression end
 	static const RegExp re8 = L"/\\\\\\|$/";
 	static const wstring ws8 = L"$";
+} } } // namespace abp::funcStatic::RegExpFilter_generateRegExp
+
+/**
+ * Regular expression to be used when testing against this filter
+ */
+void RegExpFilter::generateRegExp(const wstring& regexpSource)
+{
+	using namespace funcStatic::RegExpFilter_generateRegExp;
 
 	// Remove multiple wildcards
 	wstring source = replace(regexpSource, re1, ws1);
@@ -330,16 +394,13 @@ void RegExpFilter::generateRegExp(const wstring& regexpSource)
  */
 bool RegExpFilter::matches(const wstring& location, ContentType_T contentType, const wstring& docDomain, bool thirdParty) const
 {
-	return (regexp.test(location) && (contentType & this->contentType)
+	return (contentType & this->contentType)
 		&& (this->thirdParty == TriNull || (this->thirdParty == TriTrue) == thirdParty)
-		&& isActiveOnDomain(docDomain));
+		&& regexp.test(location)
+		&& isActiveOnDomain(docDomain);
 }
 
-/**
- * Creates a RegExp filter from its text representation
- */
-Filter* RegExpFilter::fromText(const wstring& text)
-{
+namespace abp { namespace funcStatic { namespace RegExpFilter_fromText {
 	// pre-compiled to speed up the process
 	static const RegExp re1 = L"/-/";
 	static const RegExp re2 = L"/^\\|?[\\w\\-]+:/";
@@ -356,6 +417,14 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	static const wstring strSiteKey = L"SITEKEY";
 	static const wstring strBar = L"|";
 	static const wstring strDocument = L"DOCUMENT";
+} } } // namespace abp::funcStatic::RegExpFilter_fromText
+
+/**
+ * Creates a RegExp filter from its text representation
+ */
+Filter* RegExpFilter::fromText(const wstring& text)
+{
+	using namespace funcStatic::RegExpFilter_fromText;
 
 	bool blocking = true;
 	wstring origText = text;
@@ -374,13 +443,12 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	TriBool thirdParty = TriNull;
 	TriBool collapse = TriNull;
 	vector<wstring> options;
-	RegExpMatch* match = tt.find(L'$') != wstring::npos
-		? Filter::optionsRegExp.exec(tt) : NULL;
+	RegExpMatch* match = tt.find(L'$') != wstring::npos ? Filter::optionsRegExp.exec(tt) : NULL;
 	if (match)
 	{
 		options = split(toUpperCase(match->substrings[1]), strComma);
 		tt = match->input.substr(0, match->index);
-		delete match; match = NULL;
+		delete match;
 
 		for (size_t i = 0; i < options.size(); i++)
 		{
@@ -458,6 +526,7 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	}
 	catch (const RegExpCompileError& e)
 	{
+		UNUSED(e); // for release builds
 		TRACE("RegExpCompileError thrown: %s\n", e.what());
 		return new InvalidFilter(text, L"RegExp Compile Error");
 	}
@@ -468,14 +537,18 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	}
 }
 
-std::vector<std::wstring> WhitelistFilter::vEmpty;
+const std::vector<std::wstring> WhitelistFilter::s_vEmpty;
+
+namespace abp { namespace funcStatic { namespace ElemHideBase_ElemHideBase {
+	// pre-compiled to speed up the process
+	static const RegExp re1 = L"/,~[^,]+/g";
+	static const RegExp re2 = L"/^~[^,]+,?/";
+} } } // namespace abp::funcStatic::ElemHideBase_ElemHideBase
 
 ElemHideBase::ElemHideBase(const wstring& text, const wstring& domains, const wstring& selector)
 	: ActiveFilter(text, toUpperCase(domains), L",", false), selector(selector)
 {
-	// pre-compiled to speed up the process
-	static const RegExp re1 = L"/,~[^,]+/g";
-	static const RegExp re2 = L"/^~[^,]+,?/";
+	using namespace funcStatic::ElemHideBase_ElemHideBase;
 
 	if (domains.size())
 	{
@@ -483,18 +556,22 @@ ElemHideBase::ElemHideBase(const wstring& text, const wstring& domains, const ws
 	}
 }
 
-/**
- * Creates an element hiding filter from a pre-parsed text representation
- */
-Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool isException,
-	const wstring& tagName, const wstring& attrRules, const wstring& selector)
-{
+namespace abp { namespace funcStatic { namespace ElemHideBase_fromText {
 	// pre-compiled to speed up the process
 	static const RegExp re1 = L"/\\([\\w\\-]+(?:[$^*]?=[^\\(\\)\"]*)?\\)/g";
 	static const RegExp re2 = L"/=/";
 
 	static const wstring strEqQuot = L"=\"";
 	static const wstring strStar = L"*";
+} } } // namespace abp::funcStatic::ElemHideBase_fromText
+
+/**
+ * Creates an element hiding filter from a pre-parsed text representation
+ */
+Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool isException,
+	const wstring& tagName, const wstring& attrRules, const wstring& selector)
+{
+	using namespace funcStatic::ElemHideBase_fromText;
 
 	wstring sel = selector;
 	if (!sel.length())
@@ -523,7 +600,10 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 				else
 				{
 					if (id.length())
+					{
+						delete match;
 						return new InvalidFilter(text, L"Duplicate ID");
+					}
 					else
 						id = rule;
 				}
@@ -550,5 +630,5 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 			return new InvalidFilter(text, L"No Criteria");
 		}
 	}
-	return new ElemHideFilter(text, domain, selector, isException);
+	return new ElemHideFilter(text, domain, sel, isException);
 }

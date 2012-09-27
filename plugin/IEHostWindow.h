@@ -19,6 +19,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 #include "IECtrl.h"
 #include <vector>
+#include <string>
 
 namespace Plugin
 {
@@ -57,7 +58,8 @@ namespace UserMessage
 	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
 	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
 	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
-
+	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
+	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -101,8 +103,8 @@ public:
 	/* Get the embedded Internet Explorer_server window */
 	HWND GetInternetExplorerServer() const;
 
-	CString GetLoadingURL() const { return m_strLoadingUrl; }
-	void SetLoadingURL(const CString& value) { m_strLoadingUrl = value; }
+	CString GetLoadingURL();
+	void SetLoadingURL(const CString& value);
 	
 public:
 	
@@ -149,6 +151,8 @@ protected:
 
 	CComPtr<IClassFactory> m_spCFHTTP;
 	CComPtr<IClassFactory> m_spCFHTTPS;
+
+	static const TCHAR* const s_strElemHideClass;
 
 	void InitIE();
 	void UninitIE();
@@ -205,6 +209,11 @@ protected:
 	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
 
 	static BOOL CALLBACK GetInternetExplorerServerCallback(HWND hWnd, LPARAM lParam);
+
+	void ProcessElemHideStyles();
+	void ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc);
+	bool IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc);
+	void ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const std::vector<std::wstring>& vStyles);
 public:
 	CIECtrl m_ie;
 
@@ -276,6 +285,7 @@ public:
 	void OnSetSecureLockIcon(int state);
 	void OnUtilsPluginInit();
 	void OnContentPluginInit();
+	void OnABPFilterLoaded();
 
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
@@ -336,4 +346,6 @@ protected:
 
 	/** The top-level url currently loading */
 	CString m_strLoadingUrl;
+	/** Ensure the operations on m_strLoadingUrl are thread safe. */
+	CCriticalSection m_csLoadingUrl;
 };

@@ -544,6 +544,7 @@ namespace Plugin
 			NPN_ReleaseVariantValue(&vEvent);
 			if (!bOK || !NPVARIANT_IS_BOOLEAN(vNotCanceled)) 
 			{
+				NPN_ReleaseVariantValue(&vNotCanceled);
 				throw CString(_T("Cannot dispatchEvent"));
 			}
 			if (NPVARIANT_TO_BOOLEAN(vNotCanceled) != true)

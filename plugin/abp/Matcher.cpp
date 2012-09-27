@@ -66,16 +66,20 @@ void Matcher::remove(RegExpFilter* filter)
 	keywordByFilter.erase(iter);
 }
 
-/**
- * Chooses a keyword to be associated with the filter
- */
-wstring Matcher::findKeyword(RegExpFilter* filter) const
-{
+namespace abp { namespace funcStatic { namespace Matcher_findKeyword {
 	// pre-compiled to speed up the process
 	static const RegExp re1 = L"/[^a-z0-9%*][a-z0-9%]{3,}(?=[^a-z0-9%*])/g";
 
 	static const wstring strDoNotTrack = L"donottrack";
 	static const wstring strAtAt = L"@@";
+} } } // namespace abp::funcStatic::Matcher_findKeyword
+
+/**
+ * Chooses a keyword to be associated with the filter
+ */
+wstring Matcher::findKeyword(RegExpFilter* filter) const
+{
+	using namespace funcStatic::Matcher_findKeyword;
 
 	// For donottrack filters use "donottrack" as keyword if nothing else matches
 	wstring defaultResult = (filter->getContentType() & DONOTTRACK) ? strDoNotTrack : strEmpty;
@@ -161,16 +165,20 @@ RegExpFilter* Matcher::checkEntryMatch(const wstring& keyword, const wstring& lo
 	return NULL;
 }
 
+namespace abp { namespace funcStatic { namespace Matcher_matchesAny {
+	// pre-compiled to speed up the process
+	static const RegExp re1 = L"/[a-z0-9%]{3,}/g";
+
+	static const wstring strDoNotTrack = L"donottrack";
+} } } // namespace abp::funcStatic::Matcher_matchesAny
+
 /**
  * Tests whether the URL matches any of the known filters
  */
 RegExpFilter* Matcher::matchesAny(const wstring& location, ContentType_T contentType,
 	const wstring& docDomain, bool thirdParty) const
 {
-	// pre-compiled to speed up the process
-	static const RegExp re1 = L"/[a-z0-9%]{3,}/g";
-
-	static const wstring strDoNotTrack = L"donottrack";
+	using namespace funcStatic::Matcher_matchesAny;
 
 	RegExpMatch* candidateMatch = match(toLowerCase(location), re1);
 	vector<wstring> candidates;
@@ -226,6 +234,7 @@ void CombinedMatcher::clear()
 
 void CombinedMatcher::add(RegExpFilter* filter)
 {
+	if (!filter) return;
 	if (filter->isException())
 	{
 		// can safely cast to WhitelistFilter
@@ -315,6 +324,13 @@ RegExpFilter* CombinedMatcher::checkCandidateInternal(const wstring& keyword, co
 	return NULL;
 }
 
+namespace abp { namespace funcStatic { namespace CombinedMatcher_matchesAnyInternal {
+	// pre-compiled to speed up the process
+	static const RegExp re1 = L"/[a-z0-9%]{3,}/g";
+
+	static const wstring strDoNotTrack = L"donottrack";
+} } } // namespace abp::funcStatic::CombinedMatcher_matchesAnyInternal
+
 /**
  * Optimized filter matching testing both whitelist and blacklist matchers
  * simultaneously. For parameters see Matcher.matchesAny().
@@ -322,10 +338,7 @@ RegExpFilter* CombinedMatcher::checkCandidateInternal(const wstring& keyword, co
 RegExpFilter* CombinedMatcher::matchesAnyInternal(const wstring& location, ContentType_T contentType,
 	const wstring& docDomain, bool thirdParty) const
 {
-	// pre-compiled to speed up the process
-	static const RegExp re1 = L"/[a-z0-9%]{3,}/g";
-
-	static const wstring strDoNotTrack = L"donottrack";
+	using namespace funcStatic::CombinedMatcher_matchesAnyInternal;
 
 	RegExpMatch* candidateMatch = match(toLowerCase(location), re1);
 	vector<wstring> candidates;
@@ -379,46 +392,15 @@ RegExpFilter* CombinedMatcher::matchesByKey(const wstring& location, const wstri
 	const wstring& docDomain) const
 {
 	wstring ukey = toUpperCase(key);
-	auto iter = keys.find(key);
+	auto iter = keys.find(ukey);
 	if (iter != keys.end())
 	{
 		const unordered_map<wstring, Filter*>& knownFilters = Filter::getKnownFilters();
 		auto iterKnownFilter = knownFilters.find(iter->second);
 		if (iterKnownFilter != knownFilters.end())
 		{
-			RegExpFilter* filter = dynamic_cast<RegExpFilter*>(iterKnownFilter->second);
-			if (filter)
-				return filter;
+			return iterKnownFilter->second->toRegExpFilter();
 		}
 	}
 	return NULL;
 }
-
-CombinedMatcher abp::filterMatcher;
-
-static const wstring filterList[] = {
-	L"||tf.360.cn^",
-	L"||hao.360.cn/css/monitorscript.js",
-	L"||s.360.cn^",
-	L"||qhimg.com^",
-	L"@@||h.qhimg.com^",
-	L"||h.qhimg.com/js/iwt-hao360.js",
-	L"||h1.qhimg.com/js/monitor-v1.1.1.min.js",
-	L"||clkstat.qihoo.com^",
-	L"bbs.360.cn##.aXd"
-};
-
-static const size_t filterCount = sizeof(filterList) / sizeof(filterList[0]);
-
-class Loader {
-public:
-	Loader() {
-		for (size_t i = 0; i < filterCount; i++)
-		{
-			wstring text = filterList[i];
-			RegExpFilter* filter = dynamic_cast<RegExpFilter*>(Filter::fromText(text));
-			if (filter)
-				filterMatcher.add(filter);
-		}
-	}
-} matcherLoader;

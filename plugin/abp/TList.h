@@ -30,8 +30,18 @@ namespace abp {
 		public:
 			TList() : count(0) { } 
 			TList(const T& t) : t(t), count(1) { }
-			TList(const std::vector<T>& ts) : ts(new std::vector<T>(ts)), count(ts.size()) { }
-			TList(std::vector<T>&& ts) : ts(new std::vector<T>(std::move(ts))), count(ts.size()) { }
+			TList(const std::vector<T>& ts)
+			{
+				count = (unsigned int)ts.size();
+				if (count > 1) pts = new std::vector<T>(ts);
+				else if (count) t = ts[0];
+			}
+			TList(std::vector<T>&& ts)
+			{
+				count = (unsigned int)ts.size();
+				if (count > 1) pts = new std::vector<T>(std::move(ts));
+				else if (count) t = std::move(ts[0]);
+			}
 			TList(const TList& tl)
 			{
 				count = tl.count;
@@ -46,6 +56,14 @@ namespace abp {
 				tl.count = 0;
 				tl.pts = NULL;
 			}
+			TList& operator=(const std::vector<T>& ts)
+			{
+				return *this = TList(ts);
+			}
+			TList& operator=(std::vector<T>&& ts)
+			{
+				return *this = TList(std::move(ts));
+			}
 			TList& operator=(const TList& tl)
 			{
 				if (this == &tl) return *this;
@@ -53,6 +71,7 @@ namespace abp {
 				count = tl.count;
 				if (count > 1) pts = new std::vector<T>(*tl.pts);
 				else if (count) t = tl.t;
+				return *this;
 			}
 			TList& operator=(TList&& tl)
 			{
@@ -63,6 +82,7 @@ namespace abp {
 				else if (count) t = tl.t;
 				tl.count = 0;
 				tl.pts = NULL;
+				return *this;
 			}
 			unsigned int size() const { return count; }
 			const T& operator[] (unsigned int idx) const { return count > 1 ? (*pts)[idx] : t; }

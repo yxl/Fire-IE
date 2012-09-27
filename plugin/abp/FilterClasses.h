@@ -29,6 +29,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 namespace abp {
+	// Forward declaration
+	class ActiveFilter;
+	class RegExpFilter;
+	class ElemHideFilter;
+
 	/**
 	 * Abstract base class for filters
 	 */
@@ -41,18 +46,42 @@ namespace abp {
 		Filter(const std::wstring& text) : text(text) {}
 		virtual ~Filter() {}
 
-		std::wstring getText() const { return text; }
+		const std::wstring& getText() const { return text; }
 		std::wstring toString() const { return text; }
+
+		// custom dynamic_cast routines to avoid RTTI
+		virtual ActiveFilter* toActiveFilter() { return NULL; }
+		virtual const ActiveFilter* toActiveFilter() const { return NULL; }
+		virtual RegExpFilter* toRegExpFilter() { return NULL; }
+		virtual const RegExpFilter* toRegExpFilter() const { return NULL; }
+		virtual ElemHideFilter* toElemHideFilter() { return NULL; }
+		virtual const ElemHideFilter* toElemHideFilter() const { return NULL; }
 
 		static const re::RegExp regexpRegExp;
 		static const re::RegExp optionsRegExp;
 		static const re::RegExp elemhideRegExp;
 
 		static Filter* fromText(const std::wstring& text);
+		static Filter* fromObject(const std::map<std::wstring, std::wstring>& obj);
 		static std::wstring normalize(const std::wstring& text);
 
 		static const std::unordered_map<std::wstring, Filter*>&
 			getKnownFilters() { return knownFilters; }
+		static void clearKnownFilters();
+
+		// Hash function based on Filter*
+		class Hasher : public std::unary_function<Filter*, size_t> {
+		public:
+			size_t operator()(Filter* filter) const { return hasher(reinterpret_cast<size_t>(filter)); }
+		private:
+			static const std::hash<size_t> hasher;
+		};
+
+		// Equality function based on Filter*
+		class EqualTo : public std::binary_function<Filter*, Filter*, bool> {
+		public:
+			bool operator()(Filter* filterLeft, Filter* filterRight) const { return filterLeft == filterRight; }
+		};
 	private:
 		std::wstring text;
 		static std::unordered_map<std::wstring, Filter*> knownFilters;
@@ -100,7 +129,12 @@ namespace abp {
 
 		bool isActiveOnDomain(const std::wstring& docDomain) const;
 		bool isActiveOnlyOnDomain(const std::wstring& docDomain) const;
+		const std::map<std::wstring, bool>& getDomains() const { return domains ? *domains : s_mEmpty; }
+
 		virtual bool isException() const { return false; }
+
+		virtual ActiveFilter* toActiveFilter() { return this; }
+		virtual const ActiveFilter* toActiveFilter() const { return this; }
 	protected:
 		/*
 		 * @param {String} text see Filter()
@@ -135,6 +169,8 @@ namespace abp {
 		// number of domains are not many, using std::map suffices
 		std::map<std::wstring, bool>* domains;
 		void generateDomains(const std::wstring& domainSource);
+
+		static const std::map<std::wstring, bool> s_mEmpty;
 	};
 
 	/**
@@ -158,8 +194,8 @@ namespace abp {
 			TriBool thirdParty = TriNull)
 			: ActiveFilter(text, domains, L"|", true), contentType(contentType), matchCase(matchCase), thirdParty(thirdParty)
 		{
-			if (regexpSource.length() >= 2 && regexpSource[0] == L'/'
-				&& regexpSource[regexpSource.length() - 1] == L'/')
+			if (regexpSource.length() >= 2 && regexpSource.front() == L'/'
+				&& regexpSource.back() == L'/')
 			{
 				// The filter is a regular expression - convert it directly
 				regexp = regexpSource;
@@ -172,9 +208,9 @@ namespace abp {
 
 		ContentType_T getContentType() { return contentType; }
 		bool matches(const std::wstring& location, ContentType_T contentType, const std::wstring& docDomain, bool thirdParty) const;
-		// WTF???
-		RegExpFilter* ZERO() { return this; }
-		const RegExpFilter* ZERO() const { return this; }
+
+		virtual RegExpFilter* toRegExpFilter() { return this; }
+		virtual const RegExpFilter* toRegExpFilter() const { return this; }
 
 		static Filter* fromText(const std::wstring& text);
 		static const std::map<std::wstring, ContentType_T>&
@@ -186,9 +222,9 @@ namespace abp {
 		void generateRegExp(const std::wstring& regexpSource);
 
 		ContentType_T contentType;
-		bool matchCase;
 		// 3-value boolean, null: no restriction; false: first-party only; true: third-party only
 		TriBool thirdParty;
+		bool matchCase;
 
 		static std::map<std::wstring, ContentType_T> typeMap;
 		static std::map<ContentType_T, std::wstring> reverseTypeMap;
@@ -254,12 +290,13 @@ namespace abp {
 
 		~WhitelistFilter() { delete siteKeys; }
 
-		const std::vector<std::wstring>& getSiteKeys() { return siteKeys ? *siteKeys : vEmpty; }
-		bool isException() const { return true; }
+		const std::vector<std::wstring>& getSiteKeys() { return siteKeys ? *siteKeys : s_vEmpty; }
+
+		virtual bool isException() const { return true; }
 	private:
 		std::vector<std::wstring>* siteKeys;
 
-		static std::vector<std::wstring> vEmpty;
+		static const std::vector<std::wstring> s_vEmpty;
 	};
 
 	/**
@@ -276,8 +313,8 @@ namespace abp {
 		 */
 		ElemHideBase(const std::wstring& text, const std::wstring& domains, const std::wstring& selector);
 
-		std::wstring getSelector() const { return selector; }
-		std::wstring getSelectorDomain() const { return selectorDomain; }
+		const std::wstring& getSelector() const { return selector; }
+		const std::wstring& getSelectorDomain() const { return selectorDomain; }
 
 		static Filter* fromText(const std::wstring& text, const std::wstring& domain, bool isException,
 								const std::wstring& tagName, const std::wstring& attrRules,
@@ -303,7 +340,11 @@ namespace abp {
 		ElemHideFilter(const std::wstring& text, const std::wstring& domains,
 			const std::wstring& selector, bool isException)
 			: ElemHideBase(text, domains, selector), exception(isException) {}
-		bool isException() const { return exception; };
+
+		virtual bool isException() const { return exception; };
+
+		virtual ElemHideFilter* toElemHideFilter() { return this; }
+		virtual const ElemHideFilter* toElemHideFilter() const { return this; }
 	private:
 		bool exception;
 	};

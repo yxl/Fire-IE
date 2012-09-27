@@ -27,8 +27,15 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "HttpMonitorApp.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
+#include "URL.h"
+#include "abp/AdBlockPlus.h"
+#include "re/strutils.h"
 
 using namespace UserMessage;
+using namespace Utils;
+using namespace abp;
+using namespace std;
+using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow
 
@@ -39,6 +46,7 @@ CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
+const TCHAR* const CIEHostWindow::s_strElemHideClass = _T("fireie-elemhide-style");
 
 // CIEHostWindow dialog
 
@@ -293,6 +301,13 @@ void CIEHostWindow::UninitIE()
 	s_csUtilsIEWindowMap.Lock();
 	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
 	s_csUtilsIEWindowMap.Unlock();
+
+	if (m_bUtils)
+	{
+		// utils plugin, should free ABP filters here
+		AdBlockPlus::clearFilters();
+		MessageBox(L"ABP filters freed!", L"Oops", 0);
+	}
 }
 
 
@@ -362,6 +377,11 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 			OnDisplaySecurityInfo();
 		}
 		break;
+	case WPARAM_ABP_FILTER_LOADED:
+		{
+			OnABPFilterLoaded();
+		}
+		break;
 	}
 	return 0;
 }
@@ -413,95 +433,6 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 	vDest.vt = VT_ARRAY | VT_UI1;
 	vDest.parray = psa;
 	return NOERROR;
-}
-
-CString GetHostFromUrl(const CString& strUrl)
-{
-	CString strHost(strUrl);
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		strHost.Delete(0, pos+3);
-
-	}
-	pos = strHost.Find(_T("/"));
-	if (pos != -1)
-	{
-		strHost = strHost.Left(pos);
-	}
-	return strHost;
-}
-
-CString GetProtocolFromUrl(const CString& strUrl)
-{
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		return strUrl.Left(pos);
-	}
-	return _T("http"); // Assume http
-}
-
-CString GetPathFromUrl(const CString& strUrl)
-{
-	CString strPath(strUrl);
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		strPath.Delete(0, pos+3);
-
-	}
-	pos = strPath.Find(_T('/'));
-	if (pos != -1)
-	{
-		strPath = strPath.Mid(pos);
-		pos = strPath.Find(_T('?'));
-		if (pos != -1)
-		{
-			strPath = strPath.Left(pos);
-		}
-		pos = strPath.ReverseFind(_T('/'));
-		// pos can't be -1 here
-		strPath = strPath.Left(pos + 1);
-	}
-	else
-	{
-		strPath = _T("/");
-	}
-	return strPath;
-}
-
-CString GetURLRelative(const CString& baseURL, const CString relativeURL)
-{
-	if (relativeURL.Find(_T("://")) != -1)
-	{
-		// complete url, return immediately
-		// test url: https://addons.mozilla.org/zh-CN/firefox/
-		return relativeURL;
-	}
-
-	CString protocol = GetProtocolFromUrl(baseURL);
-	if (relativeURL.GetLength() >= 2 && relativeURL.Left(2) == _T("//"))
-	{
-		// same protocol semi-complete url, return immediately
-		// test url: http://www.windowsazure.com/zh-cn/
-		return protocol + _T(":") + relativeURL;
-	}
-
-	CString host = GetHostFromUrl(baseURL);
-	if (relativeURL.GetLength() && relativeURL[0] == _T('/'))
-	{
-		// root url
-		// test url: https://mail.qq.com/cgi-bin/loginpage?
-		return protocol + _T("://") + host + relativeURL;
-	}
-	else
-	{
-		CString path = GetPathFromUrl(baseURL);
-		// relative url
-		// test url: http://www.update.microsoft.com/windowsupdate/v6/thanks.aspx?ln=zh-cn&&thankspage=5
-		return protocol + _T("://") + host + path + relativeURL;
-	}
 }
 
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
@@ -858,15 +789,16 @@ CString CIEHostWindow::GetFaviconURL()
 			{
 				return GetURLRelative(url, contentFaviconURL);
 			}
-			host = GetHostFromUrl(url);
-			if (host != _T(""))
+			URLTokenizer tokens(url.GetString());
+			if (tokens.getAuthority().length())
 			{
-				CString protocol = GetProtocolFromUrl(url);
-				if (protocol.MakeLower() != _T("http") && protocol.MakeLower() != _T("https")) {
+				CString protocol = CString(tokens.protocol.c_str()).MakeLower();
+				if (protocol != _T("http") && protocol != _T("https")) {
 					// force http/https protocols -- others are not supported for purpose of fetching favicons
 					protocol = _T("http");
+					tokens.protocol = protocol.GetString();
 				}
-				favurl = protocol + _T("://") + host + _T("/favicon.ico");
+				favurl = tokens.getRelativeURL(_T("/favicon.ico")).c_str();
 			}
 		}
 	}
@@ -1063,6 +995,8 @@ void CIEHostWindow::OnUtilsPluginInit()
 	{
 		m_pPlugin->OnUtilsPluginInit();
 	}
+	// load abp filters here
+	AdBlockPlus::loadFilterFile(L"C:\\Users\\XXX\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\XXXXXXX\\adblockplus\\patterns.ini");
 }
 
 void CIEHostWindow::OnContentPluginInit()
@@ -1071,6 +1005,14 @@ void CIEHostWindow::OnContentPluginInit()
 	{
 		m_pPlugin->OnContentPluginInit();
 	}
+}
+
+void CIEHostWindow::OnABPFilterLoaded()
+{
+	AdBlockPlus::enable();
+	CString message;
+	message.Format(_T("AdBlock Plus filters loaded, ABP support enabled.\nNumber of filters: %d"), AdBlockPlus::getNumberOfFilters());
+	MessageBox(message, L"Hooray!!", MB_OK);
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
@@ -1176,6 +1118,21 @@ static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 	}
 }
 
+void CIEHostWindow::SetLoadingURL(const CString& url)
+{
+	m_csLoadingUrl.Lock();
+	m_strLoadingUrl = url;
+	m_csLoadingUrl.Unlock();
+}
+
+CString CIEHostWindow::GetLoadingURL()
+{
+	m_csLoadingUrl.Lock();
+	CString result = m_strLoadingUrl;
+	m_csLoadingUrl.Unlock();
+	return result;
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
 	// 按Firefox的设置缩放页面
@@ -1207,7 +1164,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	}
 
 	// 设置正在载入的Url
-	m_strLoadingUrl = szUrl;
+	SetLoadingURL(CString(szUrl));
 }
 
 
@@ -1245,6 +1202,9 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	/** Reset Find Bar state */
 	if (m_bFBInProgress)
 		FBResetFindRange();
+
+	/** Set element hiding styles */
+	ProcessElemHideStyles();
 
 	if (m_pPlugin)
 	{
@@ -1531,6 +1491,196 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			*Cancel = TRUE;
 		}
 		s_csNewIEWindowMap.Unlock();
+	}
+}
+
+void CIEHostWindow::ProcessElemHideStyles()
+{
+	if (!AdBlockPlus::isEnabled()) return;
+
+	if (m_ie.GetSafeHwnd())
+	{
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+		if (!pDoc) return;
+
+		ProcessElemHideStylesForDoc(pDoc);
+	}
+}
+
+void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	// first retrieve the head node
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return;
+
+	CComPtr<IHTMLElementCollection> pcolHead;
+	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
+		return;
+
+	long length;
+	if (FAILED(pcolHead->get_length(&length)) || length < 1)
+		return; // no head = =|
+
+	CComPtr<IDispatch> pDisp;
+	CComVariant varindex = 0;
+	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
+		return;
+
+	CComQIPtr<IHTMLElement> pHeadElement = pDisp;
+	if (!pHeadElement) return;
+
+	CComBSTR bstrInnerHTML;
+	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)))
+		return;
+
+	wstring html(bstrInnerHTML);
+	html.c_str();
+}
+
+void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	CComBSTR bstrURL;
+	// while -- break, essentially a break-able 'if'
+	while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
+	{
+		std::wstring strURL = CString(bstrURL).GetString();
+		URLTokenizer tokensURL(strURL);
+
+		std::wstring strProtocol = toLowerCase(tokensURL.protocol);
+		// Do not handle protocols other than http/https
+		if (strProtocol != L"http" && strProtocol != L"https") break;
+
+		std::vector<std::wstring> vStyles;
+		if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+		{
+			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
+			if (vStyles.size())
+				ApplyElemHideStylesForDoc(pDoc, vStyles);
+			//ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+		}
+		break;
+	}
+	DumpInnerHTML(pDoc);
+}
+
+bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return false;
+
+	// Remove all previously created stylesheets
+	CComPtr<IHTMLElementCollection> pcolStyles;
+	if (FAILED(pDoc3->getElementsByTagName(_T("style"), &pcolStyles)) || !pcolStyles)
+		return false;
+
+	long length;
+	if (FAILED(pcolStyles->get_length(&length)))
+		return false;
+
+	for (long i = 0; i < length; i++)
+	{
+		CComVariant varindex = i;
+		CComPtr<IDispatch> pDisp;
+		if (FAILED(pcolStyles->item(varindex, varindex, &pDisp)) || !pDisp)
+			continue;
+
+		CComQIPtr<IHTMLElement> pElem = pDisp;
+		if (!pElem) continue;
+
+		CComVariant varStrClassName;
+		if (FAILED(pElem->getAttribute(_T("class"), 0, &varStrClassName)))
+			continue;
+
+		if (varStrClassName.vt != VT_BSTR || CComBSTR(varStrClassName.bstrVal) != s_strElemHideClass)
+			continue;
+
+		TRACE(_T("[ElemHide] Stylesheet already exists, will not add.\n"));
+		return true;
+	}
+	return false;
+}
+
+void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const vector<wstring>& vStyles)
+{
+	// first retrieve the head node
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return;
+
+	CComPtr<IHTMLElementCollection> pcolHead;
+	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
+		return;
+
+	long length;
+	if (FAILED(pcolHead->get_length(&length)) || length < 1)
+		return; // no head = =|
+
+	CComPtr<IDispatch> pDisp;
+	CComVariant varindex = 0;
+	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
+		return;
+
+	CComQIPtr<IHTMLDOMNode> pHeadNode = pDisp;
+	if (!pHeadNode) return;
+
+	// add our stylesheets
+	for (size_t i = 0; i < vStyles.size(); i++)
+	{
+		const wstring& style = vStyles[i];
+
+		/*
+		CComPtr<IHTMLElement> pElem;
+		if (FAILED(pDoc->createElement(_T("style"), &pElem)) || !pElem)
+			continue;
+
+		CComVariant varStrClass = s_strElemHideClass;
+		if (FAILED(pElem->setAttribute(_T("class"), varStrClass)))
+			continue;
+
+		CComVariant varStrType = _T("text/css");
+		if (FAILED(pElem->setAttribute(_T("type"), varStrType)))
+			continue;
+
+		CComQIPtr<IHTMLStyleElement> pStyleElem = pElem;
+		if (!pStyleElem)
+			continue;
+
+		CComPtr<IHTMLStyleSheet> pStyleSheet;
+		if (FAILED(pStyleElem->get_styleSheet(&pStyleSheet)) || !pStyleSheet)
+			continue;
+
+		if (FAILED(pStyleSheet->put_cssText(CComBSTR(style.c_str()))))
+			continue;
+
+		CComQIPtr<IHTMLDOMNode> pNode = pElem;
+		if (!pNode) continue;
+
+		CComPtr<IHTMLDOMNode> pDummy;
+		pHeadNode->appendChild(pNode, &pDummy);
+
+		TRACE(_T("[ElemHide] Stylesheet added. Length: %d\n"), style.size());
+		*/
+		CComPtr<IHTMLStyleSheet> pStyleSheet;
+		if (FAILED(pDoc->createStyleSheet(_T(""), 0, &pStyleSheet)) || !pStyleSheet)
+			continue;
+
+		if (FAILED(pStyleSheet->put_cssText(CComBSTR(style.c_str()))))
+			continue;
+
+		CComPtr<IHTMLElement> pElem;
+		if (FAILED(pStyleSheet->get_owningElement(&pElem)) || !pElem)
+			continue;
+
+		CComVariant varStrType = _T("text/css");
+		if (FAILED(pElem->setAttribute(_T("type"), varStrType)))
+			continue;
+
+		CComVariant varStrClass = s_strElemHideClass;
+		if (FAILED(pElem->setAttribute(_T("class"), varStrClass)))
+			continue;
+
+		TRACE(_T("[ElemHide] Stylesheet added. Length: %d\n"), style.size());
 	}
 }
 

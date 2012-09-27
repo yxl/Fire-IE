@@ -24,6 +24,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace re {
 	class RegExp;
+	struct RegExpMatch;
 
 	namespace strutils {
 		inline bool startsWith(const std::wstring& base, const std::wstring& str)
@@ -36,7 +37,7 @@ namespace re {
 		}
 		inline bool startsWithChar(const std::wstring& base, wchar_t ch)
 		{
-			return base.length() && base[0] == ch;
+			return base.length() && base.front() == ch;
 		}
 		inline bool endsWithChar(const std::wstring& base, wchar_t ch)
 		{

@@ -81,6 +81,9 @@ namespace HttpMonitor
 		// 设置Referer信息
 		void ExtractReferer(LPWSTR *pszAdditionalHeaders);
 
+		// 设置自定义headers
+		void SetCustomHeaders(LPWSTR *pszAdditionalHeaders);
+
 		/** 本次请求的 URL */
 		CString m_strURL;
 

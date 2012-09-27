@@ -79,15 +79,16 @@ namespace abp {
 		Matcher whitelist;
 
 		std::unordered_map<std::wstring, std::wstring> keys;
+		
 		// Result cache is worth implementing dispite the fact that it's not naturally thread-safe.
 		// In most cases, result cache is accessed only twice for each URL, thus overhead should be minimal.
 		// TODO: implement result cache with minimal locking overhead
 		std::unordered_map<std::wstring, RegExpFilter*> resultCache;
 		size_t cacheEntries;
 		Mutex mtCache;
+
 		bool queryResultCache(const std::wstring& key, RegExpFilter*& result) const;
 		void putResultCache(const std::wstring& key, RegExpFilter* result);
-		void clearResultCacheIfFull();
 
 		RegExpFilter* checkCandidateInternal(const std::wstring& keyword, const std::wstring& location,
 			ContentType_T contentType, const std::wstring& docDomain, bool thirdParty,
@@ -97,7 +98,4 @@ namespace abp {
 
 		static const size_t maxCacheEntries;
 	};
-
-	extern CombinedMatcher filterMatcher;
-
 } // namespace abp

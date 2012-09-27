@@ -263,11 +263,12 @@ MessageHandleResult WheelHandler::handleMessageInternal(MSG* pMsg)
 
 const std::vector<GestureHandler*>& GestureHandler::getHandlers()
 {
-	if (s_vHandlers.size() == 0)
+	std::vector<GestureHandler*>& vHandlers = s_handlers.getHandlers();
+	if (vHandlers.size() == 0)
 	{
-		s_vHandlers.push_back(new TraceHandler());
-		s_vHandlers.push_back(new RockerHandler());
-		s_vHandlers.push_back(new WheelHandler());
+		vHandlers.push_back(new TraceHandler());
+		vHandlers.push_back(new RockerHandler());
+		vHandlers.push_back(new WheelHandler());
 	}
-	return s_vHandlers;
+	return vHandlers;
 }

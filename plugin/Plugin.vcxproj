@@ -300,6 +300,8 @@ buildxpi64.bat</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="abp\AdBlockPlus.cpp" />
+    <ClCompile Include="abp\ElemHideMatcher.cpp" />
     <ClCompile Include="abp\FilterClasses.cpp" />
     <ClCompile Include="abp\Matcher.cpp" />
     <ClCompile Include="abp\RAIILock.cpp" />
@@ -371,8 +373,11 @@ buildxpi64.bat</Command>
     <ClCompile Include="Plugin\ScriptablePluginObject.cpp" />
     <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
+    <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="abp\AdBlockPlus.h" />
+    <ClInclude Include="abp\ElemHideMatcher.h" />
     <ClInclude Include="abp\FilterClasses.h" />
     <ClInclude Include="abp\FilterContentType.h" />
     <ClInclude Include="abp\Matcher.h" />
@@ -382,7 +387,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\GestureHandler.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
-    <ClInclude Include="ContentType.h" />
+    <ClInclude Include="HttpMonitor\ContentType.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />
     <ClInclude Include="IEHostWindow.h" />
@@ -415,6 +420,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="Plugin\ScriptablePluginObject.h" />
     <ClInclude Include="Plugin\ScriptablePluginObjectBase.h" />
     <ClInclude Include="Utils\OS.h" />
+    <ClInclude Include="Utils\URL.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />

@@ -17,10 +17,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// RAIILock.h : RAII lock & mutex mechanism
+// RAIILock.h : RAII lock, mutex and condition mechanism
 //
-
-class CCriticalSection;
 
 namespace abp
 {
@@ -36,11 +34,36 @@ namespace abp
 		void lock() const;
 		void unlock() const;
 		friend class Lock;
-		CCriticalSection* m_cs;
+		CRITICAL_SECTION* m_pcs;
 	};
 
-	class Lock
-	{
+	class ReaderLock;
+	class WriterLock;
+	class Monitor;
+	class ReaderWriterMutex {
+	public:
+		ReaderWriterMutex();
+		~ReaderWriterMutex();
+	private:
+		ReaderWriterMutex(const ReaderWriterMutex&);
+		ReaderWriterMutex& operator=(const ReaderWriterMutex&);
+		void lockReader() const;
+		void unlockReader() const;
+		void lockWriter() const;
+		void unlockWriter() const;
+		friend class ReaderLock;
+		friend class WriterLock;
+
+		CRITICAL_SECTION* m_pcs;
+#ifdef NT6_CONDITION
+		CONDITION_VARIABLE* m_pcv;
+#else
+		Monitor* m_pMonitor;
+#endif
+		mutable unsigned int m_nReaderCount;
+	};
+
+	class Lock {
 	public:
 		Lock(const Mutex& mutex) : mutex(mutex) { mutex.lock(); }
 		~Lock() { mutex.unlock(); }
@@ -48,5 +71,25 @@ namespace abp
 		Lock(const Lock&);
 		Lock& operator=(const Lock&);
 		const Mutex& mutex;
+	};
+
+	class ReaderLock {
+	public:
+		ReaderLock(const ReaderWriterMutex& mutex) : mutex(mutex) { mutex.lockReader(); }
+		~ReaderLock() { mutex.unlockReader(); }
+	private:
+		ReaderLock(const ReaderLock&);
+		ReaderLock& operator=(const ReaderLock&);
+		const ReaderWriterMutex& mutex;
+	};
+
+	class WriterLock {
+	public:
+		WriterLock(const ReaderWriterMutex& mutex) : mutex(mutex) { mutex.lockWriter(); }
+		~WriterLock() { mutex.unlockWriter(); }
+	private:
+		WriterLock(const WriterLock&);
+		WriterLock& operator=(const WriterLock&);
+		const ReaderWriterMutex& mutex;
 	};
 } // namespace abp;

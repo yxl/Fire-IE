@@ -20,7 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace BrowserHook;
 
-std::vector<GestureHandler*> GestureHandler::s_vHandlers;
+GestureHandler::Handlers GestureHandler::s_handlers;
 
 GestureHandler::GestureHandler() :
 	m_state(GS_None), m_bEnabled(true)

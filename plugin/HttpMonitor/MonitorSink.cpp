@@ -8,8 +8,8 @@
 #include "MonitorSink.h"
 #include "PluginApp.h"
 #include "ScriptablePluginObject.h"
-#include "abp/FilterClasses.h"
-#include "abp/Matcher.h"
+#include "abp/AdBlockPlus.h"
+#include "URL.h"
 
 namespace HttpMonitor
 {
@@ -26,6 +26,9 @@ namespace HttpMonitor
 	/** 空白 HTML, 用来过滤网页 */
 	static const BYTE   BLANK_HTML []= "<HTML></HTML>";
 	static const DWORD  BLANK_HTML_LENGTH = sizeof(BLANK_HTML)-1;
+
+	static const BYTE   EMPTY_FILE []= "";
+	static const DWORD  EMPTY_FILE_LENGTH = sizeof(EMPTY_FILE)-1;
 
 	// 把以 \0 分隔的 Raw HTTP Header 数据转换成以 \r\n 分隔的 Header
 	void HttpRawHeader2CrLfHeader(LPCSTR szRawHeader, CString & strCrLfHeader)
@@ -59,12 +62,12 @@ namespace HttpMonitor
 
 			size_t nSize = pEnd - pStart;
 			size_t nBufLen = nSize + 2;		// 留给字符串的 0 结束符
-			LPWSTR lpBuffer = (LPWSTR)VirtualAlloc( NULL, nBufLen * sizeof(WCHAR), MEM_COMMIT, PAGE_READWRITE );
+			LPWSTR lpBuffer = (LPWSTR)malloc(nBufLen * sizeof(WCHAR));
 			if ( !lpBuffer ) break;
 
 			if (wcsncpy_s( lpBuffer, nBufLen, pStart, nSize))
 			{
-				VirtualFree( lpBuffer, 0, MEM_RELEASE);
+				free(lpBuffer);
 				break;
 			}
 
@@ -137,7 +140,22 @@ namespace HttpMonitor
 	// converts content types from nsIContentPolicy to ABP bit mask style
 	abp::ContentType_T nsItoABP(HttpMonitor::ContentType_T contentType)
 	{
-		static abp::ContentType_T typeMap[] = { 0, abp::OTHER, abp::SCRIPT, abp::IMAGE, abp::STYLESHEET, abp::OBJECT, abp::DOCUMENT, abp::SUBDOCUMENT, 0, abp::XBL, abp::PING, abp::XMLHTTPREQUEST, abp::OBJECT_SUBREQUEST, abp::DTD };
+		static abp::ContentType_T typeMap[] = { 0,
+			/* we do not support identifying XBL, PING, XMLHTTPREQUEST and so on.. thus put them here with OTHER */
+			abp::OTHER | abp::XBL | abp::PING | abp::XMLHTTPREQUEST | abp::OBJECT_SUBREQUEST | abp::DTD,
+			abp::SCRIPT,
+			abp::IMAGE,
+			abp::STYLESHEET,
+			abp::OBJECT,
+			abp::DOCUMENT,
+			abp::SUBDOCUMENT,
+			0,/* Redirect */
+			abp::XBL,
+			abp::PING,
+			abp::XMLHTTPREQUEST,
+			abp::OBJECT_SUBREQUEST,
+			abp::DTD
+		};
 
 		return typeMap[contentType];
 	}
@@ -173,6 +191,9 @@ namespace HttpMonitor
 		// 查询请求所对应的 CIEHostWindow 对象, 后面随时会用到
 		QueryIEHostWindow();
 
+		// 设置自定义header，如DNT等
+		SetCustomHeaders(pszAdditionalHeaders);
+		
 		return hr;
 	}
 
@@ -182,13 +203,16 @@ namespace HttpMonitor
 		LPCWSTR szRequestHeaders,
 		LPWSTR *pszAdditionalRequestHeaders)
 	{
+		if (pszAdditionalRequestHeaders)
+			*pszAdditionalRequestHeaders = NULL;
+
 		CComPtr<IHttpNegotiate> spHttpNegotiate;
 		QueryServiceFromClient(&spHttpNegotiate);
 		
 		HRESULT hr = spHttpNegotiate ?
 			spHttpNegotiate->OnResponse(dwResponseCode, szResponseHeaders,
 			szRequestHeaders, pszAdditionalRequestHeaders) :
-		E_UNEXPECTED;
+		S_OK;
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
@@ -201,12 +225,13 @@ namespace HttpMonitor
 			{
 				ContentType_T aContentType = ScanContentType(pContentType);
 
-				if (pContentType) VirtualFree(pContentType, 0, MEM_RELEASE);
+				if (pContentType) free(pContentType);
 
 				if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
 					aContentType = ContentType::TYPE_SUBDOCUMENT;
 
-				if (!CanLoadContent(aContentType))
+				// 只检查子请求：主页面始终应该被加载
+				if (m_bIsSubRequest && !CanLoadContent(aContentType))
 				{
 					// 被过滤了就不用导入 Cookie 了
 					bExportCookies = false;
@@ -228,11 +253,18 @@ namespace HttpMonitor
 
 							break;
 						}
+					case ContentType::TYPE_SCRIPT:
+					case ContentType::TYPE_STYLESHEET:
 					default:
 						{
-							// 对于其它类型的文件, 直接终止即可
-							hr = E_ABORT;
+							pTargetBuffer = EMPTY_FILE;
+							dwTargetBufSize = EMPTY_FILE_LENGTH;
+							break;
 						}
+						//{
+						//	// 对于其它类型的文件, 直接终止即可
+						//	hr = E_ABORT;
+						//}
 					}
 
 					if (m_spInternetProtocolSink) m_spInternetProtocolSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, 0, 0);
@@ -311,7 +343,7 @@ namespace HttpMonitor
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
 				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), strURL, strCookie);
 				CIEHostWindow::SetFirefoxCookie(strURL, strCookie);
-				VirtualFree(lpCookies, 0, MEM_RELEASE);
+				free(lpCookies);
 				lpCookies = NULL;
 				nCookieLen = 0;
 			}
@@ -348,15 +380,13 @@ namespace HttpMonitor
 		{
 			static const WCHAR REFERER [] = L"Referer:";
 
-			CStringW strHeaders(*pszAdditionalHeaders);
-
 			LPWSTR lpReferer = NULL;
 			size_t nRefererLen = 0;
 			if (ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
 			{
 				m_strReferer = lpReferer;
 
-				VirtualFree(lpReferer, 0, MEM_RELEASE);
+				free(lpReferer);
 			}
 		}
 	}
@@ -370,10 +400,51 @@ namespace HttpMonitor
 			&& m_strURL.Find(_T("http://360.cn")) != 0
 			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
 		;*/ /*!re::RegExp(_T("/http:\\/\\/\\w+\\.(qhimg\\.com)/i")).test(std::wstring(m_strURL.GetString()));*/
-		abp::RegExpFilter* filter = abp::filterMatcher.matchesAny(m_strURL.GetString(), nsItoABP(aContentType), L"360.cn", false);
-		bool result = !filter || filter->isException();
-		TRACE(_T("[CanLoadContent]: [%s] [%s] %s [Referer: %s]\n"), result ? _T("true") : _T("false"), m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL, m_strReferer);
+		bool thirdParty = m_strReferer.GetLength() ? Utils::IsThirdPartyRequest(m_strURL, m_strReferer) : false;
+		const CString& referer =  m_strReferer.GetLength() ? m_strReferer : m_strURL;
+
+		bool result = abp::AdBlockPlus::shouldLoad(m_strURL.GetString(), nsItoABP(aContentType), referer.GetString(), thirdParty);
+
+		TRACE(_T("[CanLoadContent]: [%s] [%s] %s [Referer: %s]\n"), result ? _T("true") : _T("false"),
+			m_bIsSubRequest ? _T("sub") : _T("main"), m_strURL, m_strReferer);
 		return result;
+	}
+
+	void MonitorSink::SetCustomHeaders(LPWSTR *pszAdditionalHeaders)
+	{
+		if (pszAdditionalHeaders && *pszAdditionalHeaders)
+		{
+			CStringW strHeaders(*pszAdditionalHeaders);
+			size_t nOrigLen = strHeaders.GetLength();
+
+			if (abp::AdBlockPlus::isDNTEnabled(m_strURL.GetString()))
+			{
+				LPWSTR lpDNT = NULL;
+				size_t nDNTLen = 0;
+				bool hasDNT = false;
+				if (ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
+				{
+					if (nDNTLen && lpDNT[0] == L'1')
+					{
+						// 已经有DNT头了，不用再加
+						hasDNT = true;
+					}
+					if (lpDNT) free(lpDNT);
+				}
+				// 增加 DoNotTrack (DNT) 头
+				if (!hasDNT)
+					strHeaders.Append(L"DNT: 1\r\n");
+			}
+
+			if (strHeaders.GetLength() == nOrigLen)
+				return; // 没改过，直接返回
+
+			size_t nLen = strHeaders.GetLength() + 2;
+			if (*pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen * sizeof(WCHAR)))
+			{
+				wcscpy_s(*pszAdditionalHeaders, nLen, strHeaders);
+			}
+		}
 	}
 
 	STDMETHODIMP MonitorSink::ReportProgress(
@@ -402,7 +473,7 @@ namespace HttpMonitor
 				{
 					CHAR szRawHeader[8192];		// IWinInetHttpInfo::QueryInfo() 返回的 Raw Header 不是 Unicode 的
 					DWORD dwBuffSize = ARRAYSIZE(szRawHeader);
-									
+
 					if (SUCCEEDED(spWinInetHttpInfo->QueryInfo(HTTP_QUERY_RAW_HEADERS, szRawHeader, &dwBuffSize, 0, NULL)))
 					{
 						// 注意 HTTP_QUERY_RAW_HEADERS 返回的 Raw Header 是 \0 分隔的, 以 \0\0 作为结束, 所以这里要做转换

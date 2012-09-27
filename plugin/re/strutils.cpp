@@ -141,13 +141,15 @@ vector<wstring> split(const wstring& base, const wstring& separator)
 
 wstring toUpperCase(wstring str)
 {
-	_wcsupr_s(&str[0], str.length() + 1);
+	if (str.length())
+		_wcsupr_s(&str[0], str.length() + 1);
 	return str;
 }
 
 wstring toLowerCase(wstring str)
 {
-	_wcslwr_s(&str[0], str.length() + 1);
+	if (str.length())
+		_wcslwr_s(&str[0], str.length() + 1);
 	return str;
 }
 

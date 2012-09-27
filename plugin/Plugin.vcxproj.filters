@@ -84,6 +84,15 @@
     <ClCompile Include="abp\RAIILock.cpp">
       <Filter>abp</Filter>
     </ClCompile>
+    <ClCompile Include="abp\AdBlockPlus.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\URL.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\ElemHideMatcher.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -153,9 +162,6 @@
     <ClInclude Include="BrowserHook\GestureHandler.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
-    <ClInclude Include="ContentType.h">
-      <Filter>HttpMonitor</Filter>
-    </ClInclude>
     <ClInclude Include="jscre\ucpinternal.h">
       <Filter>jscre</Filter>
     </ClInclude>
@@ -196,6 +202,18 @@
       <Filter>abp</Filter>
     </ClInclude>
     <ClInclude Include="abp\RAIILock.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\AdBlockPlus.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpMonitor\ContentType.h">
+      <Filter>HttpMonitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\URL.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\ElemHideMatcher.h">
       <Filter>abp</Filter>
     </ClInclude>
   </ItemGroup>

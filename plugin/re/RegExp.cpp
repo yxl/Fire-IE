@@ -29,29 +29,8 @@ using namespace jscre;
 using namespace std;
 using namespace strutils;
 
-namespace jscre {
-	// should have been defined here to know number of back refs
-	struct JSRegExp {
-		unsigned options;
-
-		unsigned short top_bracket;
-		unsigned short top_backref;
-    
-		unsigned short first_byte;
-		unsigned short req_byte;
-	};
-
-}
-
-static void* jscre_malloc(size_t size)
-{
-	return malloc(size);
-}
-
-static void jscre_free(void* address)
-{
-	free(address);
-}
+static void* (*jscre_malloc)(size_t size) = malloc;
+static void (*jscre_free)(void* address) = free;
 
 RegExp::RegExp()
 {
@@ -214,7 +193,7 @@ RegExpMatch* RegExp::execCore(const wstring& str, int lastPos) const
 	RegExpMatch* match = new RegExpMatch();
 	match->index = offsets[0];
 	match->input = str;
-	match->substrings.reserve(numBackRefs + 1);
+	match->substrings.reserve(m_nSubPatterns + 1);
 	match->substrings.push_back(str.substr(offsets[0], offsets[1] - offsets[0]));
 	for (int i = 1; i <= numBackRefs; i++)
 	{
@@ -222,6 +201,10 @@ RegExpMatch* RegExp::execCore(const wstring& str, int lastPos) const
 		if (l >= 0 && r >= l && r <= (int)str.length())
 			match->substrings.push_back(str.substr(l, r - l));
 		else match->substrings.push_back(L"");
+	}
+	for (int i = numBackRefs + 1; i <= (int)m_nSubPatterns; i++)
+	{
+		match->substrings.push_back(L"");
 	}
 	delete [] offsets;
 	return match;
@@ -250,8 +233,6 @@ void RegExp::setAttributes()
 	wstring strAttributes;
 	if (idx != wstring::npos)
 		strAttributes = m_strFullPattern.substr(idx + 1);
-	else
-		strAttributes = L"";
 	setAttributes(strAttributes);
 }
 
