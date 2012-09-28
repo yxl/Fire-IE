@@ -559,7 +559,10 @@ var Utils = {
         for (let i = 0, l = this._timers.length; i < l; i++)
         {
           if (this._timers[i] === timer)
+          {
             this._timers.splice(i, 1);
+            break;
+          }
         }
         callback.apply(thisPtr, params);
       }.bind(this)
