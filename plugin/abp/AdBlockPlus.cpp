@@ -96,7 +96,7 @@ void AdBlockPlus::loadFilterFile(const wstring& pathname)
 	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pstr));
 }
 
-void AdBlockPlus::_filerLoadedCallback(bool loaded)
+void AdBlockPlus::_filterLoadedCallback(bool loaded)
 {
 	s_bLoading = false;
 	if (loaded)

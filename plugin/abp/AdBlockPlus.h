@@ -46,7 +46,7 @@ public:
 	static const std::wstring& getLoadedFile() { return s_strFilterFile; }
 
 	// called by utils plugin window
-	static void _filerLoadedCallback(bool loaded);
+	static void _filterLoadedCallback(bool loaded);
 
 	// query routines
 	// Should we load the resource?
