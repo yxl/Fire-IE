@@ -42,6 +42,9 @@ namespace abp {
 
 		POPUP = 0x10000000,
 		DONOTTRACK = 0x20000000,
-		ELEMHIDE = 0x40000000
+		ELEMHIDE = 0x40000000,
+
+		/* we do not support identifying XBL, PING, XMLHTTPREQUEST and so on.. thus put them here with OTHER */
+		UNKNOWN_OTHER = OTHER | XBL | PING | XMLHTTPREQUEST | OBJECT_SUBREQUEST | DTD
 	};
 }

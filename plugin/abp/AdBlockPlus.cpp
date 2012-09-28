@@ -40,7 +40,10 @@ CombinedMatcher AdBlockPlus::regexpMatcher;
 ElemHideMatcher AdBlockPlus::elemhideMatcher;
 
 wstring AdBlockPlus::s_strFilterFile = L"";
+wstring AdBlockPlus::s_strLoadingFile = L"";
+
 bool AdBlockPlus::s_bEnabled = false;
+bool AdBlockPlus::s_bLoading = false;
 // do not process files larger than 10MB
 const ULONGLONG AdBlockPlus::FILE_SIZE_LIMIT = 10 * (1 << 20);
 
@@ -52,6 +55,7 @@ const vector<wstring> AdBlockPlus::vEmpty;
 void AdBlockPlus::clearFilters()
 {
 	disable();
+	s_strFilterFile.clear();
 	WriterLock wl(s_mutex);
 	clearFiltersInternal();
 }
@@ -67,6 +71,9 @@ void AdBlockPlus::clearFiltersInternal(bool reload)
 
 void AdBlockPlus::enable()
 {
+	// protection: dangerous to enable while still loading
+	if (s_bLoading)
+		return;
 	s_bEnabled = true;
 }
 
@@ -78,6 +85,22 @@ void AdBlockPlus::disable()
 void AdBlockPlus::reloadFilterFile()
 {
 	loadFilterFile(s_strFilterFile);
+}
+
+void AdBlockPlus::loadFilterFile(const wstring& pathname)
+{
+	disable();
+	s_strLoadingFile = pathname;
+	s_bLoading = true;
+	wstring* pstr = new wstring(pathname);
+	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pstr));
+}
+
+void AdBlockPlus::_filerLoadedCallback(bool loaded)
+{
+	s_bLoading = false;
+	if (loaded)
+		s_strFilterFile = s_strLoadingFile;
 }
 
 bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
@@ -99,7 +122,7 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
 	return !filter || filter->isException();
 }
 
-bool AdBlockPlus::isDNTEnabled(const wstring& location)
+bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 {
 	if (!s_bEnabled) return false;
 
@@ -112,6 +135,11 @@ bool AdBlockPlus::isDNTEnabled(const wstring& location)
 int AdBlockPlus::getNumberOfFilters()
 {
 	return (int)Filter::getKnownFilters().size();
+}
+
+int AdBlockPlus::getNumberOfActiveFilters()
+{
+	return regexpMatcher.getNumberOfFilters() + elemhideMatcher.getNumberOfFilters();
 }
 
 bool AdBlockPlus::getElemHideStyles(const wstring& location, vector<wstring>& out)
@@ -238,8 +266,14 @@ namespace abp {
 						for (size_t i = 0; i < curList.size(); i++)
 						{
 							const wstring& text = curList[i];
+							// need to reset the disabled property since we don't clear
+							// the global filter list between reloads
+							Filter* filter = Filter::fromText(text);
+							ActiveFilter* activeFilter = filter->toActiveFilter();
+							if (activeFilter)
+								activeFilter->setDisabled(false);
 							// just put the filter in INIParser::filters
-							filters.insert(Filter::fromText(text));
+							filters.insert(filter);
 						}
 					}
 				}
@@ -275,18 +309,13 @@ namespace abp {
 	}
 }
 
-void AdBlockPlus::loadFilterFile(const wstring& pathname)
-{
-	disable();
-	wstring* pstr = new wstring(pathname);
-	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pstr));
-}
-
 unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 {
 	wstring* pstr = reinterpret_cast<wstring*>(ppathname);
 	wstring pathname = *pstr;
 	delete pstr;
+
+	bool loaded = false;
 
 	// then load stuff
 	CFile file;
@@ -344,14 +373,14 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 			}
 			// generate the general filter list for elemhideMatcher to improve speed
 			elemhideMatcher.generateGeneralFilters();
+			loaded = true;
 		}
 	}
-	vector<wstring> cssContent = elemhideMatcher.generateCSSContentForDomain(L"www.baidu.com");
-	const vector<wstring>& generalCSSContent = elemhideMatcher.getGeneralCSSContent();
+
 	// Notify main thread about load completion
 	HWND hwndIEHostWindow = CIEHostWindow::GetAnyUtilsHWND();
 	if (hwndIEHostWindow)
-		PostMessage(hwndIEHostWindow, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_ABP_FILTER_LOADED, 0);
+		PostMessage(hwndIEHostWindow, UserMessage::WM_USER_MESSAGE, loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
 	return 0;
 }
 

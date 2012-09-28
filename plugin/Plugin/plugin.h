@@ -156,6 +156,12 @@ namespace Plugin
 
 		/** Content plugin intialized */
 		void OnContentPluginInit();
+
+		/** AdBlock Plus filters loaded */
+		void OnABPFilterLoaded(int numFilters);
+
+		/** AdBlock Plus filters failed load */
+		void OnABPLoadFailure();
 	protected:
 
 		NPP m_pNPInstance;

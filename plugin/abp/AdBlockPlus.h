@@ -39,23 +39,35 @@ public:
 	static void enable();
 	static void disable();
 	static int getNumberOfFilters();
+	static int getNumberOfActiveFilters();
 
 	static bool isEnabled() { return s_bEnabled; }
+	static bool isLoading() { return s_bLoading; }
+	static const std::wstring& getLoadedFile() { return s_strFilterFile; }
+
+	// called by utils plugin window
+	static void _filerLoadedCallback(bool loaded);
 
 	// query routines
 	// Should we load the resource?
 	static bool shouldLoad(const std::wstring& location, ContentType_T contentType,
 						   const std::wstring& docLocation, bool thirdParty);
 	// Should we emit DNT header for the url?
-	static bool isDNTEnabled(const std::wstring& location);
+	static bool shouldSendDNTHeader(const std::wstring& location);
 
 	// Retrieve CSS style texts for element hiding filters (excluding general styles)
 	static bool getElemHideStyles(const std::wstring& location, std::vector<std::wstring>& out);
 	// Retrieve global CSS style texts for element hiding filters
 	static const std::vector<std::wstring>& getGlobalElemHideStyles();
+#ifdef MATCHER_PERF
+	static void showPerfInfo() { regexpMatcher.showPerfInfo(); }
+#endif
 private:
 	static bool s_bEnabled;
+	static bool s_bLoading;
+
 	static std::wstring s_strFilterFile;
+	static std::wstring s_strLoadingFile;
 
 	static CombinedMatcher regexpMatcher;
 	static ElemHideMatcher elemhideMatcher;

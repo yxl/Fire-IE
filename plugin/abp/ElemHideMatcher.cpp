@@ -84,6 +84,7 @@ void ElemHideMatcher::add(ElemHideFilter* filter)
 			}
 		}
 	}
+	m_nFilters++;
 }
 
 // Clear all filters
@@ -94,6 +95,7 @@ void ElemHideMatcher::clear()
 	exceptionFiltersBySelector.clear();
 	generalFilters.clear();
 	generated = false;
+	m_nFilters = 0;
 }
 
 // Usually called at the end of the insertion step to optimize matching speed

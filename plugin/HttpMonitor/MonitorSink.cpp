@@ -141,8 +141,7 @@ namespace HttpMonitor
 	abp::ContentType_T nsItoABP(HttpMonitor::ContentType_T contentType)
 	{
 		static abp::ContentType_T typeMap[] = { 0,
-			/* we do not support identifying XBL, PING, XMLHTTPREQUEST and so on.. thus put them here with OTHER */
-			abp::OTHER | abp::XBL | abp::PING | abp::XMLHTTPREQUEST | abp::OBJECT_SUBREQUEST | abp::DTD,
+			abp::UNKNOWN_OTHER,
 			abp::SCRIPT,
 			abp::IMAGE,
 			abp::STYLESHEET,
@@ -218,57 +217,60 @@ namespace HttpMonitor
 		{
 			bool bExportCookies = true;
 
-			static const WCHAR CONTENT_TYPE_HEAD [] = L"Content-Type:";
-			LPWSTR pContentType = NULL;
-			size_t nLen = 0;
-			if (ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
+			if (abp::AdBlockPlus::isEnabled())
 			{
-				ContentType_T aContentType = ScanContentType(pContentType);
-
-				if (pContentType) free(pContentType);
-
-				if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
-					aContentType = ContentType::TYPE_SUBDOCUMENT;
-
-				// 只检查子请求：主页面始终应该被加载
-				if (m_bIsSubRequest && !CanLoadContent(aContentType))
+				static const WCHAR CONTENT_TYPE_HEAD [] = L"Content-Type:";
+				LPWSTR pContentType = NULL;
+				size_t nLen = 0;
+				if (ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
 				{
-					// 被过滤了就不用导入 Cookie 了
-					bExportCookies = false;
+					ContentType_T aContentType = ScanContentType(pContentType);
 
-					switch (aContentType)
+					if (pContentType) free(pContentType);
+
+					if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
+						aContentType = ContentType::TYPE_SUBDOCUMENT;
+
+					// 只检查子请求：主页面始终应该被加载
+					if (m_bIsSubRequest && !CanLoadContent(aContentType))
 					{
-					case ContentType::TYPE_IMAGE:
-						{
-							pTargetBuffer = TRANSPARENT_GIF_1x1;
-							dwTargetBufSize = TRANSPARENT_GIF_1x1_LENGTH;
+						// 被过滤了就不用导入 Cookie 了
+						bExportCookies = false;
 
-							break;
-						}
-					case ContentType::TYPE_DOCUMENT:
-					case ContentType::TYPE_SUBDOCUMENT:
+						switch (aContentType)
 						{
-							pTargetBuffer = BLANK_HTML;
-							dwTargetBufSize = BLANK_HTML_LENGTH;
+						case ContentType::TYPE_IMAGE:
+							{
+								pTargetBuffer = TRANSPARENT_GIF_1x1;
+								dwTargetBufSize = TRANSPARENT_GIF_1x1_LENGTH;
 
-							break;
+								break;
+							}
+						case ContentType::TYPE_DOCUMENT:
+						case ContentType::TYPE_SUBDOCUMENT:
+							{
+								pTargetBuffer = BLANK_HTML;
+								dwTargetBufSize = BLANK_HTML_LENGTH;
+
+								break;
+							}
+						case ContentType::TYPE_SCRIPT:
+						case ContentType::TYPE_STYLESHEET:
+						default:
+							{
+								pTargetBuffer = EMPTY_FILE;
+								dwTargetBufSize = EMPTY_FILE_LENGTH;
+								break;
+							}
+							//{
+							//	// 对于其它类型的文件, 直接终止即可
+							//	hr = E_ABORT;
+							//}
 						}
-					case ContentType::TYPE_SCRIPT:
-					case ContentType::TYPE_STYLESHEET:
-					default:
-						{
-							pTargetBuffer = EMPTY_FILE;
-							dwTargetBufSize = EMPTY_FILE_LENGTH;
-							break;
-						}
-						//{
-						//	// 对于其它类型的文件, 直接终止即可
-						//	hr = E_ABORT;
-						//}
+
+						if (m_spInternetProtocolSink) m_spInternetProtocolSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, 0, 0);
+						if (m_spInternetProtocolSink) m_spInternetProtocolSink->ReportResult(S_OK, S_OK, NULL);
 					}
-
-					if (m_spInternetProtocolSink) m_spInternetProtocolSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, 0, 0);
-					if (m_spInternetProtocolSink) m_spInternetProtocolSink->ReportResult(S_OK, S_OK, NULL);
 				}
 			}
 
@@ -332,6 +334,7 @@ namespace HttpMonitor
 	{
 		static const WCHAR SET_COOKIE_HEAD [] = L"\r\nSet-Cookie:";
 
+		std::vector<UserMessage::SetFirefoxCookieParams> vCookieParams;
 		LPWSTR p = (LPWSTR)szResponseHeaders;
 		LPWSTR lpCookies = NULL;
 		size_t nCookieLen = 0;
@@ -341,14 +344,19 @@ namespace HttpMonitor
 			{
 				CString strURL = GetBindURL();
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), strURL, strCookie);
-				CIEHostWindow::SetFirefoxCookie(strURL, strCookie);
 				free(lpCookies);
 				lpCookies = NULL;
+
+				UserMessage::SetFirefoxCookieParams cookieParam;
+				cookieParam.strURL = strURL;
+				cookieParam.strCookie = strCookie;
+				vCookieParams.push_back(cookieParam);
+				TRACE(_T("[ExportCookies] URL: %s  Cookie: %s\n"), strURL, strCookie);
 				nCookieLen = 0;
 			}
-
 		}
+		if (vCookieParams.size())
+			CIEHostWindow::SetFirefoxCookie(std::move(vCookieParams));
 	}
 
 	ContentType_T MonitorSink::ScanContentType(LPCWSTR szContentType)
@@ -417,7 +425,7 @@ namespace HttpMonitor
 			CStringW strHeaders(*pszAdditionalHeaders);
 			size_t nOrigLen = strHeaders.GetLength();
 
-			if (abp::AdBlockPlus::isDNTEnabled(m_strURL.GetString()))
+			if (abp::AdBlockPlus::shouldSendDNTHeader(m_strURL.GetString()))
 			{
 				LPWSTR lpDNT = NULL;
 				size_t nDNTLen = 0;

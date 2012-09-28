@@ -201,13 +201,14 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
 	return hwnd;
 }
 
-void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams)
 {
 	HWND hwnd = GetAnyUtilsHWND();
 	if (hwnd)
 	{
-		SetFirefoxCookieParams params = {strURL, strCookie};
-		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&params));
+		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
+			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
+		::PostMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(pvParams));
 	}
 }
 
@@ -302,14 +303,13 @@ void CIEHostWindow::UninitIE()
 	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
 	s_csUtilsIEWindowMap.Unlock();
 
+#ifdef MATCHER_PERF
 	if (m_bUtils)
 	{
-		// utils plugin, should free ABP filters here
-		AdBlockPlus::clearFilters();
-		MessageBox(L"ABP filters freed!", L"Oops", 0);
+		AdBlockPlus::showPerfInfo();
 	}
+#endif
 }
-
 
 void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 {
@@ -327,8 +327,14 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	{
 	case WPARAM_SET_FIREFOX_COOKIE:
 		{
-			SetFirefoxCookieParams* pData = reinterpret_cast<SetFirefoxCookieParams*>(lParam);
-			OnSetFirefoxCookie(pData->strURL, pData->strCookie);
+			vector<UserMessage::SetFirefoxCookieParams>* pvParams =
+				reinterpret_cast<vector<UserMessage::SetFirefoxCookieParams>*>(lParam);
+			for (size_t i = 0; i < pvParams->size(); i++)
+			{
+				const SetFirefoxCookieParams& param = (*pvParams)[i];
+				OnSetFirefoxCookie(param.strURL, param.strCookie);
+			}
+			delete pvParams;
 		}
 		break;
 	case WPARAM_UTILS_PLUGIN_INIT:
@@ -382,6 +388,10 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 			OnABPFilterLoaded();
 		}
 		break;
+	case WPARAM_ABP_LOAD_FAILURE:
+		{
+			OnABPLoadFailure();
+		}
 	}
 	return 0;
 }
@@ -734,6 +744,26 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 	}
 }
 
+void CIEHostWindow::ABPEnable()
+{
+	AdBlockPlus::enable();
+}
+
+void CIEHostWindow::ABPDisable()
+{
+	AdBlockPlus::disable();
+}
+
+void CIEHostWindow::ABPLoad(const CString& pathname)
+{
+	AdBlockPlus::loadFilterFile(pathname.GetString());
+}
+
+void CIEHostWindow::ABPClear()
+{
+	AdBlockPlus::clearFilters();
+}
+
 CString CIEHostWindow::GetURL()
 {
 	CString url;
@@ -995,8 +1025,6 @@ void CIEHostWindow::OnUtilsPluginInit()
 	{
 		m_pPlugin->OnUtilsPluginInit();
 	}
-	// load abp filters here
-	AdBlockPlus::loadFilterFile(L"C:\\Users\\XXX\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\XXXXXXX\\adblockplus\\patterns.ini");
 }
 
 void CIEHostWindow::OnContentPluginInit()
@@ -1009,10 +1037,20 @@ void CIEHostWindow::OnContentPluginInit()
 
 void CIEHostWindow::OnABPFilterLoaded()
 {
-	AdBlockPlus::enable();
-	CString message;
-	message.Format(_T("AdBlock Plus filters loaded, ABP support enabled.\nNumber of filters: %d"), AdBlockPlus::getNumberOfFilters());
-	MessageBox(message, L"Hooray!!", MB_OK);
+	AdBlockPlus::_filerLoadedCallback(true);
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnABPFilterLoaded(AdBlockPlus::getNumberOfActiveFilters());
+	}
+}
+
+void CIEHostWindow::OnABPLoadFailure()
+{
+	AdBlockPlus::_filerLoadedCallback(false);
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnABPLoadFailure();
+	}
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
@@ -1447,6 +1485,21 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 	return false;
 }
 
+BOOL CIEHostWindow::GetABPIsEnabled()
+{
+	return AdBlockPlus::isEnabled();
+}
+
+BOOL CIEHostWindow::GetABPIsLoading()
+{
+	return AdBlockPlus::isLoading();
+}
+
+CString CIEHostWindow::GetABPLoadedFile()
+{
+	return AdBlockPlus::getLoadedFile().c_str();
+}
+
 BOOL CIEHostWindow::DestroyWindow()
 {
 	UninitIE();
@@ -1558,11 +1611,32 @@ void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& p
 			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
 			if (vStyles.size())
 				ApplyElemHideStylesForDoc(pDoc, vStyles);
-			//ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+			ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
 		}
 		break;
 	}
-	DumpInnerHTML(pDoc);
+	//DumpInnerHTML(pDoc);
+
+	CComPtr<IHTMLFramesCollection2> pFrames;
+	long length;
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && pFrames && SUCCEEDED(pFrames->get_length(&length)))
+	{
+		for (long i = 0; i < length; i++)
+		{
+			CComVariant varindex = i;
+			CComVariant vDisp;
+			if (SUCCEEDED(pFrames->item(&varindex, &vDisp)))
+			{
+				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
+				CComQIPtr<IHTMLWindow2> pWindow;
+				CComPtr<IHTMLDocument2> pSubDoc;
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)) && pSubDoc)
+				{
+					ProcessElemHideStylesForDoc(pSubDoc);
+				}
+			}
+		}
+	}
 }
 
 bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc)
@@ -1629,43 +1703,11 @@ void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDo
 	{
 		const wstring& style = vStyles[i];
 
-		/*
-		CComPtr<IHTMLElement> pElem;
-		if (FAILED(pDoc->createElement(_T("style"), &pElem)) || !pElem)
-			continue;
-
-		CComVariant varStrClass = s_strElemHideClass;
-		if (FAILED(pElem->setAttribute(_T("class"), varStrClass)))
-			continue;
-
-		CComVariant varStrType = _T("text/css");
-		if (FAILED(pElem->setAttribute(_T("type"), varStrType)))
-			continue;
-
-		CComQIPtr<IHTMLStyleElement> pStyleElem = pElem;
-		if (!pStyleElem)
-			continue;
-
-		CComPtr<IHTMLStyleSheet> pStyleSheet;
-		if (FAILED(pStyleElem->get_styleSheet(&pStyleSheet)) || !pStyleSheet)
-			continue;
-
-		if (FAILED(pStyleSheet->put_cssText(CComBSTR(style.c_str()))))
-			continue;
-
-		CComQIPtr<IHTMLDOMNode> pNode = pElem;
-		if (!pNode) continue;
-
-		CComPtr<IHTMLDOMNode> pDummy;
-		pHeadNode->appendChild(pNode, &pDummy);
-
-		TRACE(_T("[ElemHide] Stylesheet added. Length: %d\n"), style.size());
-		*/
 		CComPtr<IHTMLStyleSheet> pStyleSheet;
 		if (FAILED(pDoc->createStyleSheet(_T(""), 0, &pStyleSheet)) || !pStyleSheet)
 			continue;
 
-		if (FAILED(pStyleSheet->put_cssText(CComBSTR(style.c_str()))))
+		if (FAILED(pStyleSheet->put_cssText(CComBSTR((int)style.length(), (LPCOLESTR)style.c_str()))))
 			continue;
 
 		CComPtr<IHTMLElement> pElem;
@@ -1801,7 +1843,7 @@ void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pD
 
 	CComPtr<IHTMLFramesCollection2> pFrames;
 	long length;
-	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && SUCCEEDED(pFrames->get_length(&length)))
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && pFrames && SUCCEEDED(pFrames->get_length(&length)))
 	{
 		for (long i = 0; i < length; i++)
 		{
@@ -1812,7 +1854,7 @@ void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pD
 				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
 				CComQIPtr<IHTMLWindow2> pWindow;
 				CComPtr<IHTMLDocument2> pSubDoc;
-				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)))
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)) && pSubDoc)
 				{
 					FBObtainFindRangeRecursive(pSubDoc);
 				}

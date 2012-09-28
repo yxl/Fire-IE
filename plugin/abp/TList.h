@@ -18,6 +18,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // TList.h : optimized for one-item lists
+// Warning: Do not use this for complex types.
+//          It is designed merely for primitive types (including pointers).
 //
 
 #include <vector>

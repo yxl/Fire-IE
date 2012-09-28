@@ -177,6 +177,27 @@ namespace Plugin
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
+		// readonly property {bool} ABPIsEnabled
+		else if (name == NPI_ID(ABPIsEnabled))
+		{
+			BOOL value = pMainWindow->GetABPIsEnabled();
+			BOOLEAN_TO_NPVARIANT(value, *result);
+			return true;
+		}
+		// readonly property {bool} ABPIsLoading
+		else if (name == NPI_ID(ABPIsLoading))
+		{
+			BOOL value = pMainWindow->GetABPIsLoading();
+			BOOLEAN_TO_NPVARIANT(value, *result);
+			return true;
+		}
+		// readonly property {String} ABPLoadedFile
+		else if (name == NPI_ID(ABPLoadedFile))
+		{
+			CString file = pMainWindow->GetABPLoadedFile();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(file), *result);
+			return true;
+		}
 
 		VOID_TO_NPVARIANT(*result);
 		return true;
@@ -362,72 +383,84 @@ namespace Plugin
 			pMainWindow->PrintSetup();
 			return true;
 		}
+		// void ViewPageSource()
 		else if (name == NPI_ID(ViewPageSource))
 		{
 			TRACE ("ViewPageSource called!\n");
 			pMainWindow->ViewPageSource();
 			return true;
 		}
+		// void PageUp()
 		else if (name == NPI_ID(PageUp))
 		{
 			TRACE ("PageUp called!\n");
 			pMainWindow->ScrollPage(true);
 			return true;
 		}
+		// void PageDown()
 		else if (name == NPI_ID(PageDown))
 		{
 			TRACE ("PageDown called!\n");
 			pMainWindow->ScrollPage(false);
 			return true;
 		}
+		// void LineUp()
 		else if (name == NPI_ID(LineUp))
 		{
 			TRACE ("LineUp called!\n");
 			pMainWindow->ScrollLine(true);
 			return true;
 		}
+		// void LineDown()
 		else if (name == NPI_ID(LineDown))
 		{
 			TRACE ("LineDown called!\n");
 			pMainWindow->ScrollLine(false);
 			return true;
 		}
+		// void ScrollTop()
 		else if (name == NPI_ID(ScrollTop))
 		{
 			TRACE ("ScrollTop called!\n");
 			pMainWindow->ScrollWhole(true);
 			return true;
 		}
+		// void ScrollBottom()
 		else if (name == NPI_ID(ScrollBottom))
 		{
 			TRACE ("ScrollBottom called!\n");
 			pMainWindow->ScrollWhole(false);
 			return true;
 		}
+		// void ScrollLeft()
 		else if (name == NPI_ID(ScrollLeft))
 		{
 			TRACE ("ScrollLeft called!\n");
 			pMainWindow->ScrollHorizontal(true);
 			return true;
 		}
+		// void ScrollRight()
 		else if (name == NPI_ID(ScrollRight))
 		{
 			TRACE ("ScrollRight called!\n");
 			pMainWindow->ScrollHorizontal(false);
 			return true;
 		}
+		// void ScrollWheelUp()
 		else if (name == NPI_ID(ScrollWheelUp))
 		{
 			TRACE ("ScrollWheelUp called!\n");
 			pMainWindow->ScrollWheelLine(true);
 			return true;
 		}
+		// void ScrollWheelDown()
 		else if (name == NPI_ID(ScrollWheelDown))
 		{
 			TRACE ("ScrollWheelDown called!\n");
 			pMainWindow->ScrollWheelLine(false);
 			return true;
 		}
+		// void FBFindText({String} text)
 		else if (name == NPI_ID(FBFindText))
 		{
 			TRACE ("FBFindText called!\n");
@@ -442,6 +475,7 @@ namespace Plugin
 			pMainWindow->FBFindText(text);
 			return true;
 		}
+		// void FBEndFindText()
 		else if (name == NPI_ID(FBEndFindText))
 		{
 			TRACE ("FBEndFindText called!\n");
@@ -449,6 +483,7 @@ namespace Plugin
 			pMainWindow->FBEndFindText();
 			return true;
 		}
+		// void FBFindAgain()
 		else if (name == NPI_ID(FBFindAgain))
 		{
 			TRACE ("FBFindAgain called!\n");
@@ -456,6 +491,7 @@ namespace Plugin
 			pMainWindow->FBFindAgain();
 			return true;
 		}
+		// void FBFindPrevious()
 		else if (name == NPI_ID(FBFindPrevious))
 		{
 			TRACE ("FBFindPrevious called!\n");
@@ -463,6 +499,7 @@ namespace Plugin
 			pMainWindow->FBFindPrevious();
 			return true;
 		}
+		// void FBToggleHighlight({Boolean} highlight)
 		else if (name == NPI_ID(FBToggleHighlight))
 		{
 			TRACE ("FBToggleHighlight called!\n");
@@ -478,6 +515,7 @@ namespace Plugin
 			pMainWindow->FBToggleHighlight(ifHighlight);
 			return true;
 		}
+		// void FBToggleCase({Boolean} case)
 		else if (name == NPI_ID(FBToggleCase))
 		{
 			TRACE ("FBToggleCase called!\n");
@@ -493,6 +531,7 @@ namespace Plugin
 			pMainWindow->FBToggleCase(ifCase);
 			return true;
 		}
+		// void FBSetFindText({String} text)
 		else if (name == NPI_ID(FBSetFindText))
 		{
 			TRACE ("FBSetFindText called!\n");
@@ -507,6 +546,7 @@ namespace Plugin
 			pMainWindow->FBSetFindText(text);
 			return true;
 		}
+		// void SetEnabledGestures({Array of String} gestures)
 		else if (name == NPI_ID(SetEnabledGestures))
 		{
 			TRACE ("SetEnabledGestures called!\n");
@@ -542,6 +582,46 @@ namespace Plugin
 					}
 				}
 			}
+		}
+		// void ABPEnable()
+		else if (name == NPI_ID(ABPEnable))
+		{
+			TRACE ("ABPEnable called!\n");
+			
+			pMainWindow->ABPEnable();
+			return true;
+		}
+		// void ABPDisable()
+		else if (name == NPI_ID(ABPDisable))
+		{
+			TRACE ("ABPDisable called!\n");
+			
+			pMainWindow->ABPDisable();
+			return true;
+		}
+		// void ABPLoad({String} pathname)
+		else if (name == NPI_ID(ABPLoad))
+		{
+			TRACE ("ABPLoad called!\n");
+			
+			if (argCount < 1) return false;
+
+			CString pathname = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				pathname = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			pMainWindow->ABPLoad(pathname);
+			return true;
+		}
+		// void ABPClear()
+		else if (name == NPI_ID(ABPClear))
+		{
+			TRACE ("ABPClear called!\n");
+			
+			pMainWindow->ABPClear();
+			return true;
 		}
 		return false;
 	}

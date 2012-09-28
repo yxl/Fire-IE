@@ -31,7 +31,7 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import(baseURL.spec + "AppIntegration.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
@@ -63,7 +63,7 @@ let GesturePrefObserver = {
   _getUtilsPlugin: function()
   {
     // since we don't have any window handles, we'll ask for one
-    return AppIntegration.getAnyUtilsPlugin();
+    return UtilsPluginManager.getPlugin();
   },
 
   /**

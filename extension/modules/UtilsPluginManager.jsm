@@ -72,6 +72,14 @@ let UtilsPluginManager = {
   },
   
   /**
+   * Retrieves the window where utils plugin sits in
+   */
+  getWindow: function()
+  {
+    return Utils.getHiddenWindow();
+  },
+  
+  /**
    * Ensures that the plugin is initialized before calling the callback
    */
   fireAfterInit: function(callback, self, arguments)

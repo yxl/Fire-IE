@@ -45,16 +45,21 @@ const RegExp Filter::optionsRegExp = L"/\\$(~?[\\w\\-]+(?:=[^,\\s]+)?(?:,~?[\\w\
 /**
  * Cache for known filters, maps string representation to filter objects.
  */
-unordered_map<wstring, Filter*> Filter::knownFilters;
+Filter::FiltersHolder Filter::knownFiltersHolder;
+unordered_map<wstring, Filter*>& Filter::knownFilters = knownFiltersHolder.filters;
+
+// Automatically cleanup at program exit
+void Filter::FiltersHolder::clear()
+{
+	// not just a "clear" call, we should free the Filters themselves
+	for (auto iter = filters.begin(); iter != filters.end(); ++iter)
+		delete iter->second;
+	filters.clear();
+}
 
 void Filter::clearKnownFilters()
 {
-	// not just a "clear" call, we should free the Filters themselves
-	for (auto iter = knownFilters.begin(); iter != knownFilters.end(); ++iter)
-	{
-		delete iter->second;
-	}
-	knownFilters.clear();
+	knownFiltersHolder.clear();
 }
 
 /**
@@ -320,6 +325,7 @@ RegExpFilter::TypeMapInitializer::TypeMapInitializer()
 	DEFTYPEMAP(POPUP);
 	DEFTYPEMAP(DONOTTRACK);
 	DEFTYPEMAP(ELEMHIDE);
+	DEFTYPEMAP(UNKNOWN_OTHER);
 }
 
 namespace abp { namespace funcStatic { namespace RegExpFilter_generateRegExp {

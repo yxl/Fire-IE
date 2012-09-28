@@ -60,6 +60,7 @@ namespace UserMessage
 	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
 	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
 	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
+	static const WPARAM WPARAM_ABP_LOAD_FAILURE = 12;
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -88,7 +89,7 @@ public:
 
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
-	static void SetFirefoxCookie(CString strURL, CString strCookie);
+	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams);
 
 	static HWND GetAnyUtilsHWND();
 	static CIEHostWindow* GetAnyUtilsWindow();
@@ -255,6 +256,12 @@ public:
 	void FBToggleCase(bool bCase);
 	CString FBGetLastFindStatus();
 
+	// ABP methods
+	void ABPEnable();
+	void ABPDisable();
+	void ABPLoad(const CString& pathname);
+	void ABPClear();
+
 	// read only plugin properties
 	CString GetURL();
 	CString GetTitle();
@@ -276,6 +283,9 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
+	BOOL GetABPIsEnabled();
+	BOOL GetABPIsLoading();
+	CString GetABPLoadedFile();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
@@ -286,6 +296,7 @@ public:
 	void OnUtilsPluginInit();
 	void OnContentPluginInit();
 	void OnABPFilterLoaded();
+	void OnABPLoadFailure();
 
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }

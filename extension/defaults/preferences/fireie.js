@@ -30,6 +30,8 @@ pref("extensions.fireie.forceMGSupport", false);
 pref("extensions.fireie.currentTheme", "");
 pref("extensions.fireie.allowedThemeHosts", "[\"fireie.org\"]");
 
+pref("extensions.fireie.abpSupportEnabled", false);
+
 // History & Privacy control
 pref("privacy.cpd.extensions-fireie", true);
 pref("privacy.clearOnShutdown.extensions-fireie", true);

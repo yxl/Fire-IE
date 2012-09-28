@@ -36,8 +36,7 @@ static const wstring strEmpty = L"";
  */
 void Matcher::add(RegExpFilter* filter)
 {
-	wstring text = filter->getText();
-	if (keywordByFilter.find(text) != keywordByFilter.end())
+	if (keywordByFilter.find(filter) != keywordByFilter.end())
 		return;
 
 	// Look for a suitable keyword
@@ -45,7 +44,7 @@ void Matcher::add(RegExpFilter* filter)
 	FList& flist = filterByKeyword[keyword];
 	flist.push_back(filter);
 
-	keywordByFilter[text] = keyword;
+	keywordByFilter[filter] = keyword;
 }
 
 /**
@@ -53,8 +52,7 @@ void Matcher::add(RegExpFilter* filter)
  */
 void Matcher::remove(RegExpFilter* filter)
 {
-	wstring text = filter->getText();
-	auto iter = keywordByFilter.find(text);
+	auto iter = keywordByFilter.find(filter);
 	if (iter == keywordByFilter.end()) return;
 
 	wstring keyword = iter->second;
@@ -131,7 +129,7 @@ wstring Matcher::findKeyword(RegExpFilter* filter) const
  */
 bool Matcher::hasFilter(RegExpFilter* filter) const
 {
-	return keywordByFilter.find(filter->getText()) != keywordByFilter.end();
+	return keywordByFilter.find(filter) != keywordByFilter.end();
 }
 
 
@@ -140,7 +138,7 @@ bool Matcher::hasFilter(RegExpFilter* filter) const
  */
 wstring Matcher::getKeywordForFilter(RegExpFilter* filter) const
 {
-	auto iter = keywordByFilter.find(filter->getText());
+	auto iter = keywordByFilter.find(filter);
 	if (iter != keywordByFilter.end())
 		return iter->second;
 	return strEmpty;
@@ -381,8 +379,19 @@ RegExpFilter* CombinedMatcher::matchesAny(const wstring& location, ContentType_T
 
 	RegExpFilter* result;
 	if (queryResultCache(key, result)) return result;
+#ifdef MATCHER_PERF
+	DWORD startTick = GetTickCount();
+#endif
 
 	result = matchesAnyInternal(location, contentType, docDomain, thirdParty);
+
+#ifdef MATCHER_PERF
+	// we only need the correct value at the end of the program,
+	// so no locking is needed
+	InterlockedExchangeAdd(&matchTicks, GetTickCount() - startTick);
+	InterlockedIncrement(&matchCount);
+	InterlockedExchangeAdd(&matchURLLen, (unsigned int)location.length());
+#endif
 	
 	putResultCache(key, result);
 	return result;

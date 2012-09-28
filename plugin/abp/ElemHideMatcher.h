@@ -31,7 +31,7 @@ namespace abp {
 
 	class ElemHideMatcher {
 	public:
-		ElemHideMatcher() { generated = false; }
+		ElemHideMatcher() { generated = false; m_nFilters = 0; }
 		void add(ElemHideFilter* filter);
 		void clear();
 		void generateGeneralFilters();
@@ -39,6 +39,8 @@ namespace abp {
 		std::vector<std::wstring> generateCSSContentForDomain(const std::wstring& domain);
 		// get the general CSS content that applys to every page
 		const std::vector<std::wstring>& getGeneralCSSContent() const { return generalCSSContent; }
+
+		int getNumberOfFilters() const { return m_nFilters; }
 	private:
 		struct FilterSetInternal;
 		std::vector<ElemHideFilter*> getFiltersForDomain(const std::wstring& domain);
@@ -52,6 +54,8 @@ namespace abp {
 		bool queryResultCache(const std::wstring& key, std::vector<ElemHideFilter*>& result) const;
 		void putResultCache(const std::wstring& key, const std::vector<ElemHideFilter*>& result);
 
+		// Keep track of number of filters
+		int m_nFilters;
 		// Filters grouped by active domain
 		std::unordered_map<std::wstring, TList<ElemHideFilter*> > filtersByDomain;
 		// Exception filters grouped by selector string

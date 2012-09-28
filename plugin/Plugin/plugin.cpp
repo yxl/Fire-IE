@@ -689,4 +689,19 @@ namespace Plugin
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}
+
+	void CPlugin::OnABPFilterLoaded(int numFilters)
+	{
+		CString strEventType = _T("IEABPFilterLoaded");
+		CString strDetail;
+		strDetail.Format(_T("%d"), numFilters);
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnABPLoadFailure()
+	{
+		CString strEventType = _T("IEABPLoadFailure");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
 }

@@ -44,6 +44,7 @@ Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
 Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
 Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
+Cu.import(baseURL.spec + "ABPObserver.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -319,6 +320,7 @@ WindowWrapper.prototype = {
   init: function()
   {
     UtilsPluginManager.init();
+    ABPObserver.init();
 
     this._registerEventListeners();
 

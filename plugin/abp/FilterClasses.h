@@ -84,7 +84,13 @@ namespace abp {
 		};
 	private:
 		std::wstring text;
-		static std::unordered_map<std::wstring, Filter*> knownFilters;
+
+		static struct FiltersHolder {
+			std::unordered_map<std::wstring, Filter*> filters;
+			void clear();
+			~FiltersHolder() { clear(); }
+		} knownFiltersHolder;
+		static std::unordered_map<std::wstring, Filter*>& knownFilters;
 	};
 
 	/**

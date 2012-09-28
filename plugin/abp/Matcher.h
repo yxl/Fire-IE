@@ -23,13 +23,14 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "FilterContentType.h"
+#include "FilterClasses.h"
 #include "TList.h"
 #include "RAIILock.h"
 
-namespace abp {
-	class RegExpFilter;
+// enable performance monitoring
+#define MATCHER_PERF
 
+namespace abp {
 	/**
 	 * Blacklist/whitelist filter matching
 	 */
@@ -48,10 +49,12 @@ namespace abp {
 			ContentType_T contentType, const std::wstring& docDomain, bool thirdParty) const;
 		RegExpFilter* matchesAny(const std::wstring& location, ContentType_T contentType,
 			const std::wstring& docDomain, bool thirdParty) const;
+
+		int getNumberOfFilters() const { return (int)keywordByFilter.size(); }
 	private:
 		typedef TList<RegExpFilter*> FList;
 		std::unordered_map<std::wstring, FList> filterByKeyword;
-		std::unordered_map<std::wstring, std::wstring> keywordByFilter;
+		std::unordered_map<RegExpFilter*, std::wstring, Filter::Hasher, Filter::EqualTo> keywordByFilter;
 	};
 
 
@@ -61,7 +64,24 @@ namespace abp {
 	 */
 	class CombinedMatcher {
 	public:
-		CombinedMatcher() { cacheEntries = 0; }
+		CombinedMatcher()
+		{
+			cacheEntries = 0;
+#ifdef MATCHER_PERF
+			matchTicks = 0;
+			matchURLLen = 0;
+			matchCount = 0;
+#endif
+		}
+
+#ifdef MATCHER_PERF
+		void showPerfInfo()
+		{
+			CString msg;
+			msg.Format(_T("Match Count: %d\nAverage Time: %.6fms\nAverage Len: %.1f\n"), matchCount, (double)matchTicks / max(matchCount, 1), (double)matchURLLen / max(matchCount, 1));
+			MessageBox(NULL, msg, _T("Matcher Performance"), MB_OK);
+		}
+#endif
 
 		void clear();
 		void add(RegExpFilter* filter);
@@ -74,6 +94,8 @@ namespace abp {
 			const std::wstring& docDomain, bool thirdParty);
 		RegExpFilter* matchesByKey(const std::wstring& location, const std::wstring& key,
 			const std::wstring& docDomain) const;
+
+		int getNumberOfFilters() const { return blacklist.getNumberOfFilters() + whitelist.getNumberOfFilters(); }
 	private:
 		Matcher blacklist;
 		Matcher whitelist;
@@ -97,5 +119,11 @@ namespace abp {
 			const std::wstring& docDomain, bool thirdParty) const;
 
 		static const size_t maxCacheEntries;
+#ifdef MATCHER_PERF
+		// For performance monitoring
+		volatile unsigned int matchTicks;
+		volatile unsigned int matchURLLen;
+		volatile unsigned int matchCount;
+#endif
 	};
 } // namespace abp
