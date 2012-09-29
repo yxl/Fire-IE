@@ -203,12 +203,20 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
 
 void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams)
 {
-	HWND hwnd = GetAnyUtilsHWND();
-	if (hwnd)
+	CIEHostWindow* pWindow = GetAnyUtilsWindow();
+	if (pWindow)
 	{
 		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
 			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
-		::PostMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(pvParams));
+		pWindow->RunAsync([=]
+		{
+			for (size_t i = 0; i < pvParams->size(); i++)
+			{
+				const SetFirefoxCookieParams& param = (*pvParams)[i];
+				pWindow->OnSetFirefoxCookie(param.strURL, param.strCookie);
+			}
+			delete pvParams;
+		});
 	}
 }
 
@@ -325,77 +333,31 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 {
 	switch(wParam)
 	{
-	case WPARAM_SET_FIREFOX_COOKIE:
+	case WPARAM_RUN_ASYNC_CALL:
 		{
-			vector<UserMessage::SetFirefoxCookieParams>* pvParams =
-				reinterpret_cast<vector<UserMessage::SetFirefoxCookieParams>*>(lParam);
-			for (size_t i = 0; i < pvParams->size(); i++)
-			{
-				const SetFirefoxCookieParams& param = (*pvParams)[i];
-				OnSetFirefoxCookie(param.strURL, param.strCookie);
-			}
-			delete pvParams;
+			ICallable* callable = reinterpret_cast<ICallable*>(lParam);
+			callable->call();
+			delete callable;
+			break;
 		}
-		break;
 	case WPARAM_UTILS_PLUGIN_INIT:
-		{
-			OnUtilsPluginInit();
-		}
+		OnUtilsPluginInit();
 		break;
 	case WPARAM_CONTENT_PLUGIN_INIT:
-		{
-			OnContentPluginInit();
-		}
-		break;
-	case WPARAM_NAVIGATE:
-		{
-			OnNavigate();
-		}
-		break;
-	case WPARAM_REFRESH:
-		{
-			OnRefresh();
-		}
-		break;
-	case WPARAM_STOP:
-		{
-			OnStop();
-		}
-		break;
-	case WPARAM_BACK:
-		{
-			OnBack();
-		}
-		break;
-	case WPARAM_FORWARD:
-		{
-			OnForward();
-		}
-		break;
-	case WPARAM_EXEC_OLE_CMD:
-		{
-			OLECMDID id = (OLECMDID)lParam;
-			ExecOleCmd(id);
-		}
-		break;
-	case WPARAM_DISPLAY_SECURITY_INFO:
-		{
-			OnDisplaySecurityInfo();
-		}
+		OnContentPluginInit();
 		break;
 	case WPARAM_ABP_FILTER_LOADED:
-		{
-			OnABPFilterLoaded();
-		}
+		OnABPFilterLoaded();
 		break;
 	case WPARAM_ABP_LOAD_FAILURE:
-		{
-			OnABPLoadFailure();
-		}
+		OnABPLoadFailure();
+		break;
+	default:
+		TRACE(_T("Unexpected user message sent: %d\n"), (int)wParam);
+		break;
 	}
 	return 0;
 }
-
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_COMMANDSTATECHANGE, CIEHostWindow::OnCommandStateChange, VTS_I4 VTS_BOOL)
@@ -463,28 +425,28 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	m_pNavigateParams->strHeaders = strHeaders;
 	m_csNavigateParams.Unlock();
 
-	//PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
+	//RunAsync([=] { OnNavigate(); });
 	OnNavigate();
 }
 
 void CIEHostWindow::Refresh()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_REFRESH, 0);
+	RunAsync([=] { OnRefresh(); });
 }
 
 void CIEHostWindow::Stop()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_STOP, 0);
+	RunAsync([=] { OnStop(); });
 }
 
 void CIEHostWindow::Back()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_BACK, 0);
+	RunAsync([=] { OnBack(); });
 }
 
 void CIEHostWindow::Forward()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_FORWARD, 0);
+	RunAsync([=] { OnForward(); });
 }
 
 void CIEHostWindow::Focus()
@@ -636,27 +598,27 @@ void CIEHostWindow::Zoom(double level)
 
 void CIEHostWindow::DisplaySecurityInfo()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_DISPLAY_SECURITY_INFO);
+	RunAsync([=] { OnDisplaySecurityInfo(); });
 }
 
 void CIEHostWindow::SaveAs()
 {
-	PostOleCmd(OLECMDID_SAVEAS);
+	RunAsyncOleCmd(OLECMDID_SAVEAS);
 }
 
 void CIEHostWindow::Print()
 {
-	PostOleCmd(OLECMDID_PRINT);
+	RunAsyncOleCmd(OLECMDID_PRINT);
 }
 
 void CIEHostWindow::PrintPreview()
 {
-	PostOleCmd(OLECMDID_PRINTPREVIEW);
+	RunAsyncOleCmd(OLECMDID_PRINTPREVIEW);
 }
 
 void CIEHostWindow::PrintSetup()
 {
-	PostOleCmd(OLECMDID_PAGESETUP);
+	RunAsyncOleCmd(OLECMDID_PAGESETUP);
 }
 
 void CIEHostWindow::ViewPageSource()
@@ -873,9 +835,9 @@ void CIEHostWindow::ExecOleCmd(OLECMDID cmdID)
 	}
 }
 
-void CIEHostWindow::PostOleCmd(OLECMDID cmdID)
+void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_EXEC_OLE_CMD, (LPARAM)cmdID);
+	RunAsync([=] { ExecOleCmd(cmdID); });
 }
 
 void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& strCookie)
@@ -1074,11 +1036,13 @@ void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
 	m_strStatusText = message;
-
-	if (m_pPlugin)
+	RunAsync([=]
 	{
-		m_pPlugin->SetStatus(message);
-	}
+		if (m_pPlugin)
+		{
+			m_pPlugin->SetStatus(m_strStatusText);
+		}
+	});
 }
 
 void CIEHostWindow::OnCloseIETab()

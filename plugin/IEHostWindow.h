@@ -61,6 +61,7 @@ namespace UserMessage
 	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
 	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
 	static const WPARAM WPARAM_ABP_LOAD_FAILURE = 12;
+	static const WPARAM WPARAM_RUN_ASYNC_CALL = 13;
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -167,7 +168,7 @@ protected:
 	// 执行浏览器命令
 	void ExecOleCmd(OLECMDID cmdID);
 	// delay ole cmd execution to next message loop
-	void PostOleCmd(OLECMDID cmdID);
+	void RunAsyncOleCmd(OLECMDID cmdID);
 
 	// 自定义窗口消息响应函数
 	void OnSetFirefoxCookie(const CString& strURL, const CString& strCookie);
@@ -300,7 +301,6 @@ public:
 
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
-
 protected:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
@@ -359,4 +359,37 @@ protected:
 	CString m_strLoadingUrl;
 	/** Ensure the operations on m_strLoadingUrl are thread safe. */
 	CCriticalSection m_csLoadingUrl;
+
+protected:
+	// Asynchronous function calling, replaces original PostMessage approach
+	// This makes code more readable by putting caller code and callee code together
+
+	// After message is sent the type info is lost (the handler only sees LPARAM),
+	// Our only hope is a vtable that dispatches to different functions
+	class ICallable {
+	public:
+		virtual void call() = 0;
+		virtual ~ICallable() { }
+	};
+
+	// Wraps callable function (typically a lambda expression) into ICallable
+	template<class Func>
+	class CallableFuncWrapper : public ICallable {
+	public:
+		CallableFuncWrapper(Func func) : func(func) { }
+		virtual void call()
+		{
+			func();
+		}
+	private:
+		Func func;
+	};
+
+	// Asynchronously run the specified function at next message loop
+	template <class Func>
+	void RunAsync(Func func)
+	{
+		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
+		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, reinterpret_cast<LPARAM>(wrapper));
+	}
 };
