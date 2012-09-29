@@ -177,7 +177,7 @@ var Backup =
       lines.push(line.value);
     stream.close();
 
-    if (!lines.length || !/\[Fire-IE(?:\s*([\d\.]+)?)?\]/i.test(lines[0]))
+    if (!lines.length || !/\[Fire-IE(?:\s*([\d\.]+(?:(?:a|alpha|b|beta|pre|rc)\d*)?)?)?\]/i.test(lines[0]))
     {
       Utils.alert(window, E("backupButton").getAttribute("_restoreError"), E("backupButton").getAttribute("_restoreDialogTitle"));
       return;
