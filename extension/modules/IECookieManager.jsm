@@ -104,7 +104,7 @@ function setIECtrlRegString(regName, value)
 let IECookieManager = {
   wininetDll: null,
   _ieCookieMap: {},
-  _bTmpDirRestored: false,
+  _bTmpDirChanged: false,
   
   /**
    * Called on module startup.
@@ -262,8 +262,8 @@ let IECookieManager = {
 
   changeIETempDirectorySetting: function()
   {
-    // safe guard: do not attempt to change after already restored
-    if (this._bTmpDirRestored) return;
+    // safe guard: do not attempt to change after already changed
+    if (this._bTmpDirChanged) return;
     
     let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
@@ -281,15 +281,15 @@ let IECookieManager = {
       setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
     }
     
+    this._bTmpDirChanged = true;
+    
     Utils.LOG("IE Temp dir changed.");
   },
   
   retoreIETempDirectorySetting: function()
   {
-    if (this._bTmpDirRestored) return;
+    if (!this._bTmpDirChanged) return;
   
-    this._bTmpDirRestored = true;
-    
     let cookies = getIECtrlRegString("Cookies_fireie");
     if (cookies)
     {
@@ -300,6 +300,8 @@ let IECookieManager = {
     {
       setIECtrlRegString("Cache", cache);
     }
+
+    this._bTmpDirChanged = false;
 
     Utils.LOG("IE Temp dir restored.");
   },

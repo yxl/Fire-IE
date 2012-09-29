@@ -42,6 +42,10 @@ var gFireIE = null;
   // hook click_to_play, should take place before WindowWrapper installs the utils plugin
   let clickToPlayHandler = function(event)
   {
+    // Only handle click_to_play events
+    if (event.type != "PluginClickToPlay")
+      return;
+    
     let plugin = event.target;
 
     // We're expecting the target to be a plugin.
