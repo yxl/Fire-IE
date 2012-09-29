@@ -999,7 +999,6 @@ void CIEHostWindow::OnContentPluginInit()
 
 void CIEHostWindow::OnABPFilterLoaded()
 {
-	AdBlockPlus::_filterLoadedCallback(true);
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnABPFilterLoaded(AdBlockPlus::getNumberOfActiveFilters());
@@ -1008,7 +1007,6 @@ void CIEHostWindow::OnABPFilterLoaded()
 
 void CIEHostWindow::OnABPLoadFailure()
 {
-	AdBlockPlus::_filterLoadedCallback(false);
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnABPLoadFailure();

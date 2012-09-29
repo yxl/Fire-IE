@@ -45,9 +45,6 @@ public:
 	static bool isLoading() { return s_bLoading; }
 	static const std::wstring& getLoadedFile() { return s_strFilterFile; }
 
-	// called by utils plugin window
-	static void _filterLoadedCallback(bool loaded);
-
 	// query routines
 	// Should we load the resource?
 	static bool shouldLoad(const std::wstring& location, ContentType_T contentType,
@@ -76,6 +73,9 @@ private:
 
 	// asynchronous filter loading
 	static unsigned int asyncLoader(void* ppathname);
+
+	// should be called on main thread
+	static void filterLoadedCallback(bool loaded);
 
 	// file reading utilities
 	static bool readFile(CFile& file, std::wstring& content);

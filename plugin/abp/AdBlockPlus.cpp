@@ -96,7 +96,7 @@ void AdBlockPlus::loadFilterFile(const wstring& pathname)
 	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pstr));
 }
 
-void AdBlockPlus::_filterLoadedCallback(bool loaded)
+void AdBlockPlus::filterLoadedCallback(bool loaded)
 {
 	s_bLoading = false;
 	if (loaded)
@@ -378,9 +378,17 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 	}
 
 	// Notify main thread about load completion
-	HWND hwndIEHostWindow = CIEHostWindow::GetAnyUtilsHWND();
-	if (hwndIEHostWindow)
-		PostMessage(hwndIEHostWindow, UserMessage::WM_USER_MESSAGE, loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
+	CIEHostWindow* pWindow = CIEHostWindow::GetAnyUtilsWindow();
+	if (pWindow)
+		pWindow->RunAsync([=]
+		{
+			filterLoadedCallback(loaded);
+			pWindow->SendMessage(UserMessage::WM_USER_MESSAGE,
+				loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
+		});
+	else
+		filterLoadedCallback(loaded);
+
 	return 0;
 }
 

@@ -35,14 +35,12 @@ namespace UserMessage
 	// Sub-types of the user defined window message
 	//
 
-	static const WPARAM WPARAM_SET_FIREFOX_COOKIE = 0;
 	struct SetFirefoxCookieParams
 	{
 		CString strURL;
 		CString strCookie;
 	};
 
-	static const WPARAM WPARAM_NAVIGATE = 1;
 	struct NavigateParams
 	{
 		CString strURL;
@@ -50,12 +48,6 @@ namespace UserMessage
 		CString strHeaders;
 	};
 
-	static const WPARAM WPARAM_REFRESH = 2;
-	static const WPARAM WPARAM_STOP = 3;
-	static const WPARAM WPARAM_BACK = 4;
-	static const WPARAM WPARAM_FORWARD = 5;
-	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
-	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
 	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
 	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
 	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
@@ -385,6 +377,7 @@ protected:
 		Func func;
 	};
 
+public:
 	// Asynchronously run the specified function at next message loop
 	template <class Func>
 	void RunAsync(Func func)
