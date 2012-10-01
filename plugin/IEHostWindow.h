@@ -276,6 +276,7 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
+	CString GetProcessName();
 	BOOL GetABPIsEnabled();
 	BOOL GetABPIsLoading();
 	CString GetABPLoadedFile();

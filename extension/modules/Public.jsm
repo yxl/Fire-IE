@@ -5,10 +5,10 @@
  */
 
 /**
- * @fileOverview Public Adblock Plus API.
+ * @fileOverview Public Fire-IE API.
  */
 
-var EXPORTED_SYMBOLS = ["AdblockPlus"];
+var EXPORTED_SYMBOLS = ["FireIEPublic"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -25,10 +25,10 @@ Cu.import(baseURL.spec + "SubscriptionClasses.jsm");
 const externalPrefix = "~external~";
 
 /**
- * Class implementing public Adblock Plus API
+ * Class implementing public Fire-IE API
  * @class
  */
-var AdblockPlus = {
+var FireIEPublic = {
   /**
    * Returns current subscription count
    * @type Integer
@@ -41,7 +41,7 @@ var AdblockPlus = {
   /**
    * Gets a subscription by its URL
    */
-  getSubscription: function( /**String*/ id) /**IAdblockPlusSubscription*/
+  getSubscription: function( /**String*/ id) /**IFireIESubscription*/
   {
     if (id in RuleStorage.knownSubscriptions) return createSubscriptionWrapper(RuleStorage.knownSubscriptions[id]);
 
@@ -51,7 +51,7 @@ var AdblockPlus = {
   /**
    * Gets a subscription by its position in the list
    */
-  getSubscriptionAt: function( /**Integer*/ index) /**IAdblockPlusSubscription*/
+  getSubscriptionAt: function( /**Integer*/ index) /**IFireIESubscription*/
   {
     if (index < 0 || index >= RuleStorage.subscriptions.length) return null;
 
@@ -144,9 +144,9 @@ var AdblockPlus = {
 };
 
 /**
- * Wraps a subscription into IAdblockPlusSubscription structure.
+ * Wraps a subscription into IFireIESubscription structure.
  */
-function createSubscriptionWrapper( /**Subscription*/ subscription) /**IAdblockPlusSubscription*/
+function createSubscriptionWrapper( /**Subscription*/ subscription) /**IFireIESubscription*/
 {
   if (!subscription) return null;
 

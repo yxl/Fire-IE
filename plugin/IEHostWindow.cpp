@@ -1447,6 +1447,19 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 	return false;
 }
 
+CString CIEHostWindow::GetProcessName()
+{
+	TCHAR szPathName[MAX_PATH];
+	GetModuleFileName(NULL, szPathName, MAX_PATH);
+	TCHAR szFileName[MAX_PATH];
+	TCHAR szFileExt[MAX_PATH];
+	if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
+	{
+		return CString(szFileName) + szFileExt;
+	}
+	return _T("");
+}
+
 BOOL CIEHostWindow::GetABPIsEnabled()
 {
 	return AdBlockPlus::isEnabled();

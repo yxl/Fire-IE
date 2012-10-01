@@ -50,8 +50,7 @@ let UtilsPluginManager = {
     if (this._isInitCalled) return;
     this._isInitCalled = true;
     
-    this._handleClickToPlay();
-    this._handleLoadFailure();
+    this._handlePluginEvents();
     this._install();
     this._registerHandlers();
   },
@@ -59,6 +58,7 @@ let UtilsPluginManager = {
   uninit: function()
   {
     this._unregisterHandlers();
+    this._cancelPluginEvents();
   },
   
   /**
@@ -68,7 +68,7 @@ let UtilsPluginManager = {
   {
     let doc = Utils.getHiddenWindow().document;
     let plugin = doc.getElementById(Utils.utilsPluginId);
-    return plugin.wrappedJSObject || plugin;
+    return plugin && (plugin.wrappedJSObject || plugin);
   },
   
   /**
@@ -97,72 +97,30 @@ let UtilsPluginManager = {
     }
   },
 
-  /** handle click to play event in the hidden window */
-  _handleClickToPlay: function()
+  _handlePluginEvents: function()
   {
-    let clickToPlayHandler = function(event)
-    {
-      let plugin = event.target;
+    let window = Utils.getHiddenWindow();
+    window.addEventListener("PluginClickToPlay", onPluginClickToPlay, true);
 
-      // We're expecting the target to be a plugin.
-      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-        return;
-        
-      // used to check whether the plugin is already activated
-      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      
-      let mimetype = plugin.getAttribute("type");
-      if (mimetype == "application/fireie")
-      {
-        // check the container page
-        let doc = plugin.ownerDocument;
-        let url = doc.location.href;
-        // is it a utils plugin?
-        if (doc.location.href == Utils.hiddenWindowUrl)
-        {
-          // ok, play the utils plugin
-          if (!objLoadingContent.activated)
-          {
-            plugin.playPlugin();
-          }
-          event.stopPropagation();
-        }
-        // let gPluginHandler do the rest of the work
-      }
-    };
-    Utils.getHiddenWindow().addEventListener("PluginClickToPlay", clickToPlayHandler, true);
+    window.addEventListener("PluginNotFound", onPluginLoadFailure, true);
+    window.addEventListener("PluginBlockListed", onPluginLoadFailure, true);
+    window.addEventListener("PluginOutdated", onPluginLoadFailure, true);
+    window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
+    window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
+    window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
   },
   
-  /** handle the plugin not found event and inform user about that */
-  _handleLoadFailure: function()
+  _cancelPluginEvents: function()
   {
-    let pluginNotFoundHandler = function(event)
-    {
-      let plugin = event.target;
+    let window = Utils.getHiddenWindow();
+    window.removeEventListener("PluginClickToPlay", onPluginClickToPlay, true);
 
-      // We're expecting the target to be a plugin.
-      if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-        return;
-      
-      let mimetype = plugin.getAttribute("type");
-      if (mimetype == "application/fireie")
-      {
-        // check the container page
-        let doc = plugin.ownerDocument;
-        let url = doc.location.href;
-        // is it a utils plugin?
-        if (doc.location.href == Utils.hiddenWindowUrl)
-        {
-          // ok, we have trouble with the plugin now
-          IECookieManager.retoreIETempDirectorySetting();
-          // notify user about that
-          Utils.ERROR("Plugin not found. Possibly due to wrong Fire-IE version.");
-          Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
-            "_blank", "chrome,centerscreen,dialog", null);
-        }
-      }
-    };
-    Utils.getHiddenWindow().addEventListener("PluginNotFound", pluginNotFoundHandler, true);
+    window.removeEventListener("PluginNotFound", onPluginLoadFailure, true);
+    window.removeEventListener("PluginBlockListed", onPluginLoadFailure, true);
+    window.removeEventListener("PluginOutdated", onPluginLoadFailure, true);
+    window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
+    window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
+    window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
   },
   
   /**
@@ -202,13 +160,81 @@ let UtilsPluginManager = {
   },
 };
 
+/** handle click to play event in the hidden window */
+function onPluginClickToPlay(event)
+{
+  let plugin = event.target;
+
+  // We're expecting the target to be a plugin.
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+    
+  // used to check whether the plugin is already activated
+  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  
+  let mimetype = plugin.getAttribute("type");
+  if (mimetype == "application/fireie")
+  {
+    // check the container page
+    let doc = plugin.ownerDocument;
+    let url = doc.location.href;
+    // is it a utils plugin?
+    if (doc.location.href == Utils.hiddenWindowUrl)
+    {
+      // ok, play the utils plugin
+      if (!objLoadingContent.activated)
+      {
+        plugin.playPlugin();
+      }
+      event.stopPropagation();
+    }
+  }
+};
+
+function genPluginEventHandler(subHandler)
+{
+  return function(event)
+  {
+    let plugin = event.target;
+
+    // We're expecting the target to be a plugin.
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+      return;
+    
+    let mimetype = plugin.getAttribute("type");
+    if (mimetype == "application/fireie")
+    {
+      // check the container page
+      let doc = plugin.ownerDocument;
+      let url = doc.location.href;
+      // is it a utils plugin?
+      if (doc.location.href == Utils.hiddenWindowUrl)
+      {
+        subHandler.apply(this, arguments);
+      }
+    }
+  }
+}
+  
+/** handle the plugin load failure events and inform user about that */
+var onPluginLoadFailure = genPluginEventHandler(
+function(event)
+{
+  // we have trouble with the plugin now
+  IECookieManager.restoreIETempDirectorySetting();
+  // notify user about that
+  Utils.ERROR("Plugin failed to load. Possibly due to wrong Fire-IE version.");
+  Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
+    "_blank", "chrome,centerscreen,dialog", null);
+});
+
 /** Handler for receiving IE UserAgent from the plugin object */
 function onIEUserAgentReceived(event)
 {
   let userAgent = event.detail;
   Utils.ieUserAgent = userAgent;
   Utils.LOG("_onIEUserAgentReceived: " + userAgent);
-  IECookieManager.retoreIETempDirectorySetting();
+  IECookieManager.restoreIETempDirectorySetting();
 }
 
 /**

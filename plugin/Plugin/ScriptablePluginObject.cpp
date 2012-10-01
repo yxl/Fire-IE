@@ -177,6 +177,13 @@ namespace Plugin
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
+		// readonly property {bool} ProcessName
+		else if (name == NPI_ID(ProcessName))
+		{
+			CString name = pMainWindow->GetProcessName();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
+			return true;
+		}
 		// readonly property {bool} ABPIsEnabled
 		else if (name == NPI_ID(ABPIsEnabled))
 		{

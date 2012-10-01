@@ -195,6 +195,25 @@ let AppIntegration = {
       }
     }
     return false;
+  },
+  
+  /**
+   * Retrieves the name of the process where the plugin sits
+   */
+  getPluginProcessName: function()
+  {
+    let plugin = this.getAnyUtilsPlugin();
+    if (plugin)
+    {
+      let ret = plugin.ProcessName;
+      if (typeof(ret) != "undefined") // in case utility plugin not fully loaded yet
+      {
+        this.getPluginProcessName = function() ret;
+        return ret;
+      }
+    }
+    // falls back to firefox.exe
+    return "firefox.exe";
   }
 };
 
@@ -1942,9 +1961,11 @@ WindowWrapper.prototype = {
    */
   openReportDialog: function()
   {
+  /* TODO: Implement our own
     let wnd = Services.wm.getMostRecentWindow("abp:sendReport");
     if (wnd) wnd.focus();
     else this.window.openDialog("chrome://adblockplus/content/ui/sendReport.xul", "_blank", "chrome,centerscreen,resizable=no", this.window.content, this.getCurrentLocation());
+    */
   },
 
   /**

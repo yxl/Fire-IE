@@ -105,11 +105,12 @@ namespace Plugin
 		NPI_DEF(StatusText);
 		NPI_DEF(ShouldShowStatusOurselves);
 		NPI_DEF(ShouldPreventStatusFlash);
+		NPI_DEF(ProcessName);
+
 		// ABP properties
 		NPI_DEF(ABPIsEnabled);
 		NPI_DEF(ABPIsLoading);
 		NPI_DEF(ABPLoadedFile);
-
 	public:
 		ScriptablePluginObject(NPP npp)
 			: ScriptablePluginObjectBase(npp)
@@ -180,6 +181,7 @@ namespace Plugin
 			NPN_GSI_P(StatusText);
 			NPN_GSI_P(ShouldShowStatusOurselves);
 			NPN_GSI_P(ShouldPreventStatusFlash);
+			NPN_GSI_P(ProcessName);
 			NPN_GSI_P(ABPIsEnabled);
 			NPN_GSI_P(ABPIsLoading);
 			NPN_GSI_P(ABPLoadedFile);
