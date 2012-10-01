@@ -90,6 +90,30 @@ HookManager.prototype = {
     }
   },
   
+  _evalInScope: function(expression)
+  {
+    return eval("with (this._scope) { " + expression + " }");
+  },
+  
+  _assignInScope: function(name, value)
+  {
+    // Creates an assign delegate function in this._scope
+    // Can't just assign it here cause "value" might be a property of this._scope
+    // We must have something that overrides "value" property of this._scope
+    // For example, using a function with a parameter named "value"
+    let assignDelegate =
+        eval("with (this._scope) { (function(value) { return " + name + " = value; }) }");
+    return assignDelegate(value);
+  },
+  
+  _genHookedFunction: function(idx, code)
+  {
+    let func = this._evalInScope(code);
+    func.FireIE_orgFuncIdx = idx;
+    func.FireIE_hookManager = this;
+    return func;
+  },
+  
   _closureVarsCode: "  let grn = [grn];\n"
                   + "  let hf = grn._hookFunctions[[idx]];\n"
                   + "  let Utils = grn.utils;\n"
@@ -122,12 +146,7 @@ HookManager.prototype = {
   {
     let idx = this._addHookFunction(new HookFunction(funcName, orgFunc, myFunc, null));
     let code = this._wrapFunctionHeadCode.replace(/\[gcvc\]/, this._genClosureVarsCode(idx));
-    with (this._scope) // in order to let the reference [grn] work
-    {
-      let func = eval(code);
-      func.FireIE_orgFuncIdx = idx;
-      return func;
-    }
+    return this._genHookedFunction(idx, code);
   },
   
   _wrapFunctionTailCode:
@@ -148,12 +167,7 @@ HookManager.prototype = {
   {
     let idx = this._addHookFunction(new HookFunction(funcName, orgFunc, null, myFunc));
     let code = this._wrapFunctionTailCode.replace(/\[gcvc\]/, this._genClosureVarsCode(idx));
-    with (this._scope) // in order to let the reference [grn] work
-    {
-      let func = eval(code);
-      func.FireIE_orgFuncIdx = idx;
-      return func;
-    }
+    return this._genHookedFunction(idx, code);
   },
   
   _wrapFunctionHeadTailCode:
@@ -186,13 +200,7 @@ HookManager.prototype = {
   {
     let idx = this._addHookFunction(new HookFunction(funcName, orgFunc, myFuncHead, myFuncTail));
     let code = this._wrapFunctionHeadTailCode.replace(/\[gcvc\]/, this._genClosureVarsCode(idx));
-    let func;
-    with (this._scope)
-    {
-      let func = eval(code);
-      func.FireIE_orgFuncIdx = idx;
-      return func;
-    }
+    return this._genHookedFunction(idx, code);
   },
   
   _wrapFunction: function(orgFunc, myFuncHead, myFuncTail, funcName)
@@ -212,9 +220,10 @@ HookManager.prototype = {
   _getOriginalFunc: function(func)
   {
     let idx = func.FireIE_orgFuncIdx;
-    if (typeof(idx) == "number")
+    let HM = func.FireIE_hookManager;
+    if (typeof(idx) == "number" && HM instanceof HookManager)
     {
-      let hf = this._hookFunctions[idx];
+      let hf = HM._hookFunctions[idx];
       if (hf instanceof HookFunction)
         return hf.orgFunc;
     }
@@ -250,16 +259,14 @@ HookManager.prototype = {
   {
     try
     {
-      let orgFunc;
-      with (this._scope) { orgFunc = eval(orgFuncName); }
+      let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
         let wrappedFunc = this._wrapFunctionHead(orgFunc, myFunc, orgFuncName);
         // execute the assignment
-        eval("with (this._scope) { " + orgFuncName + "=wrappedFunc; }");
-        let orgFuncNew;
+        this._assignInScope(orgFuncName, wrappedFunc);
         // check whether we are successful
-        with (this._scope) { orgFuncNew = eval(orgFuncName); }
+        let orgFuncNew = this._evalInScope(orgFuncName);
         if (wrappedFunc !== orgFuncNew)
         {
           this._recycleFunc(wrappedFunc);
@@ -285,16 +292,14 @@ HookManager.prototype = {
   {
     try
     {
-      let orgFunc;
-      with (this._scope) { orgFunc = eval(orgFuncName); }
+      let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
         let wrappedFunc = this._wrapFunctionTail(orgFunc, myFunc, orgFuncName);
         // execute the assignment
-        eval("with (this._scope) { " + orgFuncName + "=wrappedFunc; }");
-        let orgFuncNew;
+        this._assignInScope(orgFuncName, wrappedFunc);
         // check whether we are successful
-        with (this._scope) { orgFuncNew = eval(orgFuncName); }
+        let orgFuncNew = this._evalInScope(orgFuncName);
         if (wrappedFunc !== orgFuncNew)
         {
           this._recycleFunc(wrappedFunc);
@@ -321,16 +326,14 @@ HookManager.prototype = {
   {
     try
     {
-      let orgFunc;
-      with (this._scope) { orgFunc = eval(orgFuncName); }
+      let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
         let wrappedFunc = this._wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, orgFuncName);
         // execute the assignment
-        eval("with (this._scope) { " + orgFuncName + "=wrappedFunc; }");
-        let orgFuncNew;
+        this._assignInScope(orgFuncName, wrappedFunc);
         // check whether we are successful
-        with (this._scope) { orgFuncNew = eval(orgFuncName); }
+        let orgFuncNew = this._evalInScope(orgFuncName);
         if (wrappedFunc !== orgFuncNew)
         {
           this._recycleFunc(wrappedFunc);
@@ -355,18 +358,16 @@ HookManager.prototype = {
   {
     try
     {
-      let hookedFunc;
-      with (this._scope) { hookedFunc = eval(orgFuncName); }
+      let hookedFunc = this._evalInScope(orgFuncName);
       if (typeof(hookedFunc) == "function")
       {
         let orgFunc = this._getOriginalFunc(hookedFunc);
         if (orgFunc)
         {
           // execute the eval that restores original function
-          eval("with (this._scope) { " + orgFuncName + " = orgFunc; }");
+          this._assignInScope(orgFuncName, orgFunc);
           // check whether we are successful
-          let orgFuncNew;
-          with (this._scope) { orgFuncNew = eval(orgFuncName); }
+          let orgFuncNew = this._evalInScope(orgFuncName);
           if (orgFunc !== orgFuncNew)
             throw "eval assignment failure";
           // successful, reclaim func idx
@@ -498,10 +499,11 @@ HookManager.prototype = {
       orgFunc = func;
       let bModify = false;
       // use "while" in case we wrapped several hook levels ourselves
-      while (typeof(func) == "function" && typeof(func.FireIE_orgFuncIdx) == "number")
+      while (typeof(func) == "function" && typeof(func.FireIE_orgFuncIdx) == "number" &&
+             func.FireIE_hookManager instanceof HookManager)
       {
         bModify = true;
-        orgHookFunction = HM._hookFunctions[func.FireIE_orgFuncIdx];
+        orgHookFunction = func.FireIE_hookManager._hookFunctions[func.FireIE_orgFuncIdx];
         func = orgHookFunction.orgFunc;
       }
       if (bModify)
@@ -535,18 +537,21 @@ HookManager.prototype = {
       let func = arguments[funcIdx];
       let bModify = false;
       let orgHookFunctionIdx = null;
+      let orgHookManager = null;
       // use "while" in case we wrapped several hook levels ourselves
-      while (typeof(func) == "function" && typeof(func.FireIE_orgFuncIdx) == "number")
+      while (typeof(func) == "function" && typeof(func.FireIE_orgFuncIdx) == "number" &&
+             func.FireIE_hookManager instanceof HookManager)
       {
         bModify = true;
         orgHookFunctionIdx = func.FireIE_orgFuncIdx;
-        func = HM._hookFunctions[orgHookFunctionIdx].orgFunc;
+        orgHookManager = func.FireIE_hookManager;
+        func = orgHookManager._hookFunctions[orgHookFunctionIdx].orgFunc;
       }
       if (bModify)
       {
-        arguments[nameIdx] = HM._refName + "._hookFunctions[" + orgHookFunctionIdx + "].orgFunc";
+        arguments[nameIdx] = orgHookManager._refName + "._hookFunctions[" + orgHookFunctionIdx + "].orgFunc";
         arguments[funcIdx] = func;
-        Utils.LOG("Redirected name-func SPH from " + HM._hookFunctions[orgHookFunctionIdx].name + " to " + arguments[nameIdx]);
+        Utils.LOG("Redirected name-func SPH from " + orgHookManager._hookFunctions[orgHookFunctionIdx].name + " to " + arguments[nameIdx]);
         return HM.RET.modifyArguments(arguments);
       }
     });

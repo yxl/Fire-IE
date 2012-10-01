@@ -68,7 +68,7 @@ let UtilsPluginManager = {
   {
     let doc = Utils.getHiddenWindow().document;
     let plugin = doc.getElementById(Utils.utilsPluginId);
-    return plugin.wrappedJSObject || plugin;
+    return plugin && (plugin.wrappedJSObject || plugin);
   },
   
   /**
