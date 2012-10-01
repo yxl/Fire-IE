@@ -387,7 +387,8 @@ var RuleStorage = {
           if (!RuleStorage.subscriptions.length)
           {
             // No rule subscriptions in the file, this isn't right.
-            throw "No data in the file";
+            // Do not throw. It may due to a forced save action when upgrading
+            // throw "No data in the file";
           }
         }
 
