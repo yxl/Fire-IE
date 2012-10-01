@@ -68,7 +68,7 @@ void ElemHideMatcher::add(ElemHideFilter* filter)
 
 	if (filter->isException())
 	{
-		exceptionFiltersBySelector[filter->getSelector()] = filter;
+		exceptionFiltersBySelector[filter->getSelector()].push_back(filter);
 	}
 	else
 	{
@@ -94,6 +94,7 @@ void ElemHideMatcher::clear()
 	filtersByDomain.clear();
 	exceptionFiltersBySelector.clear();
 	generalFilters.clear();
+	generalCSSContent.clear();
 	generated = false;
 	m_nFilters = 0;
 }

@@ -44,6 +44,10 @@ wstring AdBlockPlus::s_strLoadingFile = L"";
 
 bool AdBlockPlus::s_bEnabled = false;
 bool AdBlockPlus::s_bLoading = false;
+
+unsigned int AdBlockPlus::s_loadStartTick = 0;
+unsigned int AdBlockPlus::s_loadTicks = 0;
+
 // do not process files larger than 10MB
 const ULONGLONG AdBlockPlus::FILE_SIZE_LIMIT = 10 * (1 << 20);
 
@@ -89,6 +93,7 @@ void AdBlockPlus::reloadFilterFile()
 
 void AdBlockPlus::loadFilterFile(const wstring& pathname)
 {
+	s_loadStartTick = GetTickCount();
 	disable();
 	s_strLoadingFile = pathname;
 	s_bLoading = true;
@@ -101,6 +106,7 @@ void AdBlockPlus::filterLoadedCallback(bool loaded)
 	s_bLoading = false;
 	if (loaded)
 		s_strFilterFile = s_strLoadingFile;
+	s_loadTicks = GetTickCount() - s_loadStartTick;
 }
 
 bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
@@ -183,7 +189,7 @@ namespace abp {
 		INIParser() : wantObj(false), subscriptionDisabled(false),
 			curSection(OTHER) {}
 		void process(const wstring& line, bool eof);
-		unordered_set<Filter*, Filter::Hasher, Filter::EqualTo> filters;
+		unordered_set<ActiveFilter*, ActiveFilter::Hasher, ActiveFilter::EqualTo> filters;
 
 		static map<wstring, Section> sectionMapper;
 	private:
@@ -192,7 +198,7 @@ namespace abp {
 			SectionMapperInit()
 			{
 				RegExp re = L"/_/";
-#define DEFSECTION(section) sectionMapper[replace(toLowerCase(L#section), re, L" ")] = section;
+#define DEFSECTION(section) sectionMapper[replace(toLowerCase(L#section), re, L" ")] = section
 				DEFSECTION(OTHER);
 				DEFSECTION(FILTER);
 				DEFSECTION(PATTERN);
@@ -209,6 +215,7 @@ namespace abp {
 		Section curSection;
 		map<wstring, wstring> curObj;
 		vector<wstring> curList;
+		unordered_set<Filter*, Filter::Hasher, Filter::EqualTo> persistedFilters;
 	};
 
 	map<wstring, INIParser::Section> INIParser::sectionMapper;
@@ -238,7 +245,7 @@ namespace abp {
 				strSection = toLowerCase(match->substrings[1]);
 				delete match;
 			}
-			if (curObj.size())
+			if (wantObj ? curObj.size() : curList.size())
 			{
 				// Process current object before going to next section
 				switch (curSection)
@@ -246,9 +253,9 @@ namespace abp {
 				case FILTER:
 				case PATTERN:
 					// create the filter, with certain properties set up
-					// after parsing is done, everything in INIParser::filters
-					// will be put into the matchers
-					filters.insert(Filter::fromObject(curObj));
+					// do not insert it into the filters set
+					// if it's active, it'll be inserted in some subscription we'll later parse
+					persistedFilters.insert(Filter::fromObject(curObj));
 					break;
 				case SUBSCRIPTION:
 					// not supported, just record whether the whole subscription is disabled or not
@@ -266,14 +273,18 @@ namespace abp {
 						for (size_t i = 0; i < curList.size(); i++)
 						{
 							const wstring& text = curList[i];
+							Filter* filter = Filter::fromText(text);
 							// need to reset the disabled property since we don't clear
 							// the global filter list between reloads
-							Filter* filter = Filter::fromText(text);
 							ActiveFilter* activeFilter = filter->toActiveFilter();
 							if (activeFilter)
-								activeFilter->setDisabled(false);
-							// just put the filter in INIParser::filters
-							filters.insert(filter);
+							{
+								// Only reset disabled property for those not persisted yet
+								if (persistedFilters.find(filter) == persistedFilters.end())
+									activeFilter->setDisabled(false);
+								// just put the filter in INIParser::filters
+								filters.insert(activeFilter);
+							}
 						}
 					}
 				}
@@ -356,19 +367,18 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 			// put everything in INIParser::filters into the matcher
 			for (auto iter = parser.filters.begin(); iter != parser.filters.end(); ++iter)
 			{
-				Filter* filter = *iter;
-				if (!filter) continue;
+				ActiveFilter* filter = *iter;
+				if (!filter || filter->isDisabled()) continue;
 
 				RegExpFilter* regexpFilter = filter->toRegExpFilter();
 				if (regexpFilter)
 				{
-					if (!regexpFilter->isDisabled())
-						regexpMatcher.add(regexpFilter);
+					regexpMatcher.add(regexpFilter);
 					continue;
 				}
 
 				ElemHideFilter* elemhideFilter = filter->toElemHideFilter();
-				if (elemhideFilter && !elemhideFilter->isDisabled())
+				if (elemhideFilter)
 					elemhideMatcher.add(elemhideFilter);
 			}
 			// generate the general filter list for elemhideMatcher to improve speed
@@ -484,7 +494,7 @@ bool AdBlockPlus::readANSI(CFile& file, wstring& content)
 
 bool AdBlockPlus::readUTF8(CFile& file, wstring& content, bool skipBOM)
 {
-	ULONGLONG contentLength = (file.GetLength() - (skipBOM ? 0 : 3));
+	ULONGLONG contentLength = (file.GetLength() - (skipBOM ? 3 : 0));
 	if (contentLength <= 0)
 	{
 		content = L"";

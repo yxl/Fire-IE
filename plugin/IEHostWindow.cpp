@@ -1001,7 +1001,8 @@ void CIEHostWindow::OnABPFilterLoaded()
 {
 	if (m_pPlugin)
 	{
-		m_pPlugin->OnABPFilterLoaded(AdBlockPlus::getNumberOfActiveFilters());
+		m_pPlugin->OnABPFilterLoaded(
+			AdBlockPlus::getNumberOfActiveFilters(), AdBlockPlus::getLoadTicks());
 	}
 }
 

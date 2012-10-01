@@ -690,11 +690,11 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	void CPlugin::OnABPFilterLoaded(int numFilters)
+	void CPlugin::OnABPFilterLoaded(int numFilters, unsigned int ticks)
 	{
 		CString strEventType = _T("IEABPFilterLoaded");
 		CString strDetail;
-		strDetail.Format(_T("%d"), numFilters);
+		strDetail.Format(_T("{ \"number\": %d, \"ticks\": %d }"), numFilters, ticks);
 		FireEvent(strEventType, strDetail);
 	}
 

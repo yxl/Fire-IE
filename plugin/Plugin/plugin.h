@@ -158,7 +158,7 @@ namespace Plugin
 		void OnContentPluginInit();
 
 		/** AdBlock Plus filters loaded */
-		void OnABPFilterLoaded(int numFilters);
+		void OnABPFilterLoaded(int numFilters, unsigned int ticks);
 
 		/** AdBlock Plus filters failed load */
 		void OnABPLoadFailure();

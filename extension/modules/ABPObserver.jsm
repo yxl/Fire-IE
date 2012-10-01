@@ -54,7 +54,7 @@ function detectABP()
     {
       Cu.import(abpURL.spec + "FilterNotifier.jsm", abp);
     }
-    catch(e) { }
+    catch (ex) { }
 
     installed = true;
   }
@@ -215,7 +215,15 @@ let ABPObserver = {
         file = Utils.resolveFilePath(Services.prefs.getDefaultBranch("extensions.adblockplus.").getCharPref("data_directory"));
         if (file)
           file.append("patterns.ini");
-      } catch(e) {}
+      } catch (ex) {}
+    }
+    if (!file)
+    {
+      // Still no good? Try the hard-coded path
+      try
+      {
+        file = Utils.resolveFilePath("adblockplus/patterns.ini");
+      } catch (ex) {}
     }
     let pathname = file ? file.path : null;
     Utils.LOG("Resolved ABP patterns.ini path: " + pathname);
@@ -337,9 +345,21 @@ let ABPObserver = {
    */
   _onFilterLoaded: function(e)
   {
-    Utils.LOG("ABP filters loaded: " + e.detail + " active filter(s).");
-    // enable ABP support by simply calling updateState()
-    this.updateState();
+    try
+    {
+      let detailObj = { number: "unknown", ticks: "unknown" };
+      detailObj = JSON.parse(e.detail);
+      Utils.LOG("ABP filters loaded: " + detailObj.number + " active filter(s) in " + detailObj.ticks + " ms.");
+    }
+    catch (ex)
+    {
+      Utils.LOG("ABP filters loaded.");
+    }
+    // enable ABP support
+    if (this._pendingUpdate)
+      this.updateState();
+    else
+      this._enable();
   },
   
   /**

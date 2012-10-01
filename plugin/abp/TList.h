@@ -31,7 +31,8 @@ namespace abp {
 		class TList {
 		public:
 			TList() : count(0) { } 
-			TList(const T& t) : t(t), count(1) { }
+			explicit TList(const T& t) : t(t), count(1) { }
+			explicit TList(T&& t) : t(std::move(t)), count(1) { }
 			TList(const std::vector<T>& ts)
 			{
 				count = (unsigned int)ts.size();

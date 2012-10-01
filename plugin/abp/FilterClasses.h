@@ -69,19 +69,24 @@ namespace abp {
 			getKnownFilters() { return knownFilters; }
 		static void clearKnownFilters();
 
-		// Hash function based on Filter*
-		class Hasher : public std::unary_function<Filter*, size_t> {
+		// Hash function based on Filter* or a derived class pointer
+		template <class FC>
+		class HasherTemplate : public std::unary_function<FC*, size_t> {
 		public:
-			size_t operator()(Filter* filter) const { return hasher(reinterpret_cast<size_t>(filter)); }
+			size_t operator()(FC* filter) const { return hasher(reinterpret_cast<size_t>(filter)); }
 		private:
 			static const std::hash<size_t> hasher;
 		};
 
-		// Equality function based on Filter*
-		class EqualTo : public std::binary_function<Filter*, Filter*, bool> {
+		// Equality function based on Filter* or a derived class pointer
+		template <class FC>
+		class EqualToTemplate : public std::binary_function<FC*, FC*, bool> {
 		public:
-			bool operator()(Filter* filterLeft, Filter* filterRight) const { return filterLeft == filterRight; }
+			bool operator()(FC* filterLeft, FC* filterRight) const { return filterLeft == filterRight; }
 		};
+
+		typedef HasherTemplate<Filter> Hasher;
+		typedef EqualToTemplate<Filter> EqualTo;
 	private:
 		std::wstring text;
 
@@ -92,6 +97,9 @@ namespace abp {
 		} knownFiltersHolder;
 		static std::unordered_map<std::wstring, Filter*>& knownFilters;
 	};
+
+	template <class FC>
+	const std::hash<size_t> Filter::HasherTemplate<FC>::hasher;
 
 	/**
 	 * Class for invalid filters
@@ -141,6 +149,9 @@ namespace abp {
 
 		virtual ActiveFilter* toActiveFilter() { return this; }
 		virtual const ActiveFilter* toActiveFilter() const { return this; }
+
+		typedef HasherTemplate<ActiveFilter> Hasher;
+		typedef EqualToTemplate<ActiveFilter> EqualTo;
 	protected:
 		/*
 		 * @param {String} text see Filter()

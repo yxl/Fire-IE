@@ -31,8 +31,6 @@ using namespace std;
 
 static const wstring strEmpty = L"";
 
-const hash<size_t> Filter::Hasher::hasher;
-
 // Regular expression that element hiding filters should match
 const RegExp Filter::elemhideRegExp = L"/^([^\\/\\*\\|\\@\"!]*?)#(\\@)?(?:([\\w\\-]+|\\*)((?:\\([\\w\\-]+(?:[$^*]?=[^\\(\\)\"]*)?\\))*)|#([^{}]+))$/";
 
@@ -116,6 +114,7 @@ Filter* Filter::fromObject(const map<wstring, wstring>& obj)
 				iter = obj.find(strDisabled);
 				if (iter != obj.end())
 					af->setDisabled(iter->second == strTrue);
+				else af->setDisabled(false);
 			}
 		}
 		return filter;
@@ -433,12 +432,11 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	using namespace funcStatic::RegExpFilter_fromText;
 
 	bool blocking = true;
-	wstring origText = text;
-	wstring tt = text;
+	wstring regexpSource = text;
 	if (startsWith(text, strAtAt))
 	{
 		blocking = false;
-		tt = tt.substr(2);
+		regexpSource = regexpSource.substr(2);
 	}
 
 	ContentType_T contentType = 0;
@@ -449,11 +447,11 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	TriBool thirdParty = TriNull;
 	TriBool collapse = TriNull;
 	vector<wstring> options;
-	RegExpMatch* match = tt.find(L'$') != wstring::npos ? Filter::optionsRegExp.exec(tt) : NULL;
+	RegExpMatch* match = regexpSource.find(L'$') != wstring::npos ? Filter::optionsRegExp.exec(regexpSource) : NULL;
 	if (match)
 	{
 		options = split(toUpperCase(match->substrings[1]), strComma);
-		tt = match->input.substr(0, match->index);
+		regexpSource = match->input.substr(0, match->index);
 		delete match;
 
 		for (size_t i = 0; i < options.size(); i++)
@@ -505,7 +503,7 @@ Filter* RegExpFilter::fromText(const wstring& text)
 
 	if (!blocking && (contentTypeNull || (contentType & DOCUMENT))
 		&& (!options.size() || find(options.begin(), options.end(), strDocument) == options.end())
-		&& !re2.test(tt))
+		&& !re2.test(regexpSource))
 	{
 		// Exception filters shouldn't apply to pages by default unless they start with a protocol name
 		if (contentTypeNull)
@@ -526,9 +524,9 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	try
 	{
 		if (blocking)
-			return new BlockingFilter(origText, tt, contentType, matchCase, domains, thirdParty, collapse);
+			return new BlockingFilter(text, regexpSource, contentType, matchCase, domains, thirdParty, collapse);
 		else
-			return new WhitelistFilter(origText, tt, contentType, matchCase, domains, thirdParty, std::move(siteKeys));
+			return new WhitelistFilter(text, regexpSource, contentType, matchCase, domains, thirdParty, std::move(siteKeys));
 	}
 	catch (const RegExpCompileError& e)
 	{

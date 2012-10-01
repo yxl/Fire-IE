@@ -38,8 +38,11 @@ public:
 	static void clearFilters();
 	static void enable();
 	static void disable();
+
+	// performance monitoring
 	static int getNumberOfFilters();
 	static int getNumberOfActiveFilters();
+	static unsigned int getLoadTicks() { return s_loadTicks; }
 
 	static bool isEnabled() { return s_bEnabled; }
 	static bool isLoading() { return s_bLoading; }
@@ -62,6 +65,9 @@ public:
 private:
 	static bool s_bEnabled;
 	static bool s_bLoading;
+
+	static unsigned int s_loadStartTick;
+	static unsigned int s_loadTicks;
 
 	static std::wstring s_strFilterFile;
 	static std::wstring s_strLoadingFile;
