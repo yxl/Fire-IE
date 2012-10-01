@@ -36,6 +36,7 @@ Cu.import(baseURL.spec + "Utils.jsm");
  * @param orgFunc - original function reference
  * @param myFuncHead - function that executes before original function
  * @param myFuncTail - function that executes after original function
+ * @constructor
  */
 let HookFunction = function(name, orgFunc, myFuncHead, myFuncTail) {
   this.name = name;
@@ -49,6 +50,7 @@ let HookFunction = function(name, orgFunc, myFuncHead, myFuncTail) {
  * @param globalScope - the global scope that hooked function names can be referenced in
  * @param globalReferencableName - the name that can be used to reference this HM instance
  *                                 in the global scope
+ * @constructor
  */
 let HookManager = function(globalScope, globalReferencableName) {
   this._scope = globalScope;
@@ -254,6 +256,7 @@ HookManager.prototype = {
    * The safer way: hook code while preserving original function's closures
    * @param orgFuncName - the name that can reference the function to hook in global scope
    * @param myFunc - hook function to call at the beginning of the original function
+   * @returns the original function
    */
   hookCodeHead: function(orgFuncName, myFunc)
   {
@@ -287,6 +290,7 @@ HookManager.prototype = {
    * Add a hook to the end of a globally referencable function
    * @param orgFuncName - the name that can reference the function to hook in global scope
    * @param myFunc - hook function to call at the end of the original function
+   * @returns the original function
    */
   hookCodeTail: function(orgFuncName, myFunc)
   {
@@ -321,6 +325,7 @@ HookManager.prototype = {
    * @param orgFuncName - the name that can reference the function to hook in global scope
    * @param myFuncHead - hook function to call at the beginning of the original function
    * @param myFuncTail - hook function to call at the end of the original function
+   * @returns the original function
    */
   hookCodeHeadTail: function(orgFuncName, myFuncHead, myFuncTail)
   {
@@ -353,6 +358,8 @@ HookManager.prototype = {
   /** 
    * Unhook a previously hooked function
    * @param orgFuncName - the name that can reference the hooked function in global scope
+   * @returns the hooked function, or null if the function is not hooked,
+   *          or the hook is broken by some third-party code
    */
   unhookCode: function(orgFuncName)
   {
@@ -380,6 +387,7 @@ HookManager.prototype = {
     catch (ex)
     {
       Utils.ERROR("Failed to unhook function " + orgFuncName + ": " + ex);
+      return null;
     }
   },
 
@@ -389,13 +397,14 @@ HookManager.prototype = {
    * @param attrName - the name of the attribute to hook
    * @param myFunc - the code string to append
    * @param insertAtEnd - whether insert the code at the beginning or the end
+   * @returns original attribute value, or null if the hook failed
    */
   hookAttr: function(parentNode, attrName, myFunc, insertAtEnd)
   {
-    if (typeof(parentNode) == "string")
-      throw "Hook attr using string name of the node is not supported."
     try
     {
+      if (typeof(parentNode) == "string")
+        throw "Hook attr using string name of the node is not supported."
       let attr = parentNode.getAttribute(attrName);
       parentNode.setAttribute(attrName,
         insertAtEnd ? attr + myFunc : myFunc + attr);
@@ -404,6 +413,7 @@ HookManager.prototype = {
     catch (ex)
     {
       Utils.ERROR("Failed to hook attribute " + attrName + ": " + ex);
+      return null;
     }
   },
   
@@ -425,6 +435,7 @@ HookManager.prototype = {
    * @param mySetterBegin - the function to be called at the beginning of the setter
    * @param myGetterEnd - the function to be called at the end of the getter
    * @param mySetterEnd - the function to be called at the end of the setter
+   * @returns an object with properties: { getter: original getter, setter: original setter }
    */
   hookProp: function(parentNode, propName, myGetterBegin, mySetterBegin, myGetterEnd, mySetterEnd)
   {
@@ -470,6 +481,7 @@ HookManager.prototype = {
    * Unhook previously hooked property getter and setter
    * @param parentNode - the node whose property is to be unhooked
    * @param propName - the name of the property to unhook
+   * @returns an object with properties: { getter: hooked getter, setter: hooked setter }
    */
   unhookProp: function(parentNode, propName)
   {
@@ -489,6 +501,7 @@ HookManager.prototype = {
    * Redirects dangerous source-patching hook functions to the original one
    * @param funcName - the globally referencable name of the function used to do source-patching hook
    * @param funcIdx - the index of function parameter in the above function
+   * @returns original function that does the source-patching hook
    */
   redirectSourcePatchingHook: function(funcName, funcIdx)
   {
@@ -528,6 +541,7 @@ HookManager.prototype = {
    * @param funcName - the globally referencable name of the function used to do source-patching hook
    * @param nameIdx - the index of function name parameter in the above function
    * @param funcIdx - the index of function parameter in the above function
+   * @returns original function that does the source-patching hook
    */
   redirectSPHNameFunc: function(funcName, nameIdx, funcIdx)
   {
