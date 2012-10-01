@@ -149,13 +149,18 @@ var PolicyPrivate = {
     // Ignore requests within a page
     if (contentType != Ci.nsIContentPolicy.TYPE_DOCUMENT) return Ci.nsIContentPolicy.ACCEPT;
 
-    let browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
-    if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
-
     let location = Utils.unwrapURL(contentLocation);
 
     // Ignore whitelisted schemes
     if (!Policy.isSwitchableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
+
+    let browserNode = null;
+    try
+    {
+      browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
+    }
+    catch (ex) { }
+    if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
     // User has manually switched to Firefox engine
     let hostName = Utils.getHostname(location.spec);
