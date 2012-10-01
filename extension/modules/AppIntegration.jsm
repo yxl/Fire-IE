@@ -194,6 +194,25 @@ let AppIntegration = {
       }
     }
     return false;
+  },
+  
+  /**
+   * Retrieves the name of the process where the plugin sits
+   */
+  getPluginProcessName: function()
+  {
+    let plugin = this.getAnyUtilsPlugin();
+    if (plugin)
+    {
+      let ret = plugin.ProcessName;
+      if (typeof(ret) != "undefined") // in case utility plugin not fully loaded yet
+      {
+        this.getPluginProcessName = function() ret;
+        return ret;
+      }
+    }
+    // falls back to firefox.exe
+    return "firefox.exe";
   }
 };
 

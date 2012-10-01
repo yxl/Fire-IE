@@ -100,6 +100,7 @@ namespace Plugin
 		NPI_DEF(StatusText);
 		NPI_DEF(ShouldShowStatusOurselves);
 		NPI_DEF(ShouldPreventStatusFlash);
+		NPI_DEF(ProcessName);
 
 	public:
 		ScriptablePluginObject(NPP npp)
@@ -167,6 +168,7 @@ namespace Plugin
 			NPN_GSI_P(StatusText);
 			NPN_GSI_P(ShouldShowStatusOurselves);
 			NPN_GSI_P(ShouldPreventStatusFlash);
+			NPN_GSI_P(ProcessName);
 		}
 
 		virtual bool HasMethod(NPIdentifier name);
