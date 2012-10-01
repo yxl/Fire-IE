@@ -213,7 +213,7 @@ var onPluginLoadFailure = genPluginEventHandler(
 function(event)
 {
   // we have trouble with the plugin now
-  IECookieManager.retoreIETempDirectorySetting();
+  IECookieManager.restoreIETempDirectorySetting();
   // notify user about that
   Utils.ERROR("Plugin failed to load. Possibly due to wrong Fire-IE version.");
   Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
@@ -226,7 +226,7 @@ function onIEUserAgentReceived(event)
   let userAgent = event.detail;
   Utils.ieUserAgent = userAgent;
   Utils.LOG("_onIEUserAgentReceived: " + userAgent);
-  IECookieManager.retoreIETempDirectorySetting();
+  IECookieManager.restoreIETempDirectorySetting();
 }
 
 /**
