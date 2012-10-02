@@ -130,7 +130,7 @@ let ABPObserver = {
       this._abpInstalled = detectABP();
       if (!this._abpInstalled) return;
       
-      Utils.LOG("Adblock Plus detected.");
+      Utils.LOG("[ABP] Adblock Plus detected.");
       
       this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
       
@@ -226,7 +226,7 @@ let ABPObserver = {
       } catch (ex) {}
     }
     let pathname = file ? file.path : null;
-    Utils.LOG("Resolved ABP patterns.ini path: " + pathname);
+    Utils.LOG("[ABP] Resolved patterns.ini path: " + pathname);
     return pathname;
   },
   
@@ -244,7 +244,7 @@ let ABPObserver = {
   _enable: function()
   {
     UtilsPluginManager.getPlugin().ABPEnable();
-    Utils.LOG("ABP support enabled.")
+    Utils.LOG("[ABP] Enabled.")
   },
   
   /**
@@ -253,7 +253,7 @@ let ABPObserver = {
   _disable: function()
   {
     UtilsPluginManager.getPlugin().ABPDisable();
-    Utils.LOG("ABP support disabled.")
+    Utils.LOG("[ABP] Disabled.")
   },
   
   /**
@@ -262,7 +262,7 @@ let ABPObserver = {
    */
   _updateStateCore: function()
   {
-    Utils.LOG("ABP updateState() called.");
+    Utils.LOG("[ABP] updateState() called.");
     this._scheduledUpdate = false;
     
     // updates the plugin state
@@ -318,7 +318,7 @@ let ABPObserver = {
    */
   reloadUpdate: function()
   {
-    Utils.LOG("Reloading filters...");
+    Utils.LOG("[ABP] Reloading filters...");
     this._needReload = true;
     this.updateState();
   },
@@ -349,11 +349,11 @@ let ABPObserver = {
     {
       let detailObj = { number: "unknown", ticks: "unknown" };
       detailObj = JSON.parse(e.detail);
-      Utils.LOG("ABP filters loaded: " + detailObj.number + " active filter(s) in " + detailObj.ticks + " ms.");
+      Utils.LOG("[ABP] Filters loaded: " + detailObj.number + " active filter(s) in " + detailObj.ticks + " ms.");
     }
     catch (ex)
     {
-      Utils.LOG("ABP filters loaded.");
+      Utils.LOG("[ABP] Filters loaded.");
     }
     // enable ABP support
     if (this._pendingUpdate)
@@ -367,8 +367,8 @@ let ABPObserver = {
    */
   _onLoadFailure: function(e)
   {
-    Utils.LOG("Failed to load ABP filters.");
-    Utils.ERROR("Failed to load ABP filters.");
+    Utils.LOG("[ABP] Failed to load filters.");
+    Utils.ERROR("[ABP] Failed to load filters.");
     if (this._pendingUpdate)
       this.updateState();
   }
