@@ -101,10 +101,9 @@ HookManager.prototype = {
   {
     // Creates an assign delegate function in this._scope
     // Can't just assign it here cause "value" might be a property of this._scope
-    // We must have something that overrides "value" property of this._scope
-    // For example, using a function with a parameter named "value"
+    // We must have something that passes value safely into the assignment
     let assignDelegate =
-        eval("with (this._scope) { (function(value) { return " + name + " = value; }) }");
+        eval("with (this._scope) { (function() { return " + name + " = arguments[0]; }) }");
     return assignDelegate(value);
   },
   
