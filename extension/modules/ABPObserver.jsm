@@ -19,7 +19,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
  * @fileOverview Manages ABP support and observes ABP preferences
  */
 
-let EXPORTED_SYMBOLS = ["ABPObserver"];
+let EXPORTED_SYMBOLS = ["ABPObserver", "ABPStatus"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -30,6 +30,7 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
@@ -37,14 +38,12 @@ Cu.import(baseURL.spec + "Prefs.jsm");
 
 let abp = {};
 
+const abpId = "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}";
 /**
- * Detect whether abp exists and fill object abp with essential stuff
- * Returns whether abp is detected
+ * Queries the FilterNotifier Object used to trigger reloads on "save" events
  */
-function detectABP()
+function queryFilterNotifier()
 {
-  let installed = false;
-
   // ABP 2.0 and older
   let ABPPrivate = Cc["@adblockplus.org/abp/private;1"];
   if (ABPPrivate)
@@ -53,46 +52,43 @@ function detectABP()
     try
     {
       Cu.import(abpURL.spec + "FilterNotifier.jsm", abp);
+      return;
     }
     catch (ex) { }
-
-    installed = true;
   }
 
-  if (!installed)
+  // ABP 2.1+
+  function require(/**String*/ module)
   {
-    // ABP 2.1+
-    function require(/**String*/ module)
+    let result = {};
+    result.wrappedJSObject = result;
+    Services.obs.notifyObservers(result, "adblockplus-require", module);
+    if(!result.exports)
     {
-      let result = {};
-      result.wrappedJSObject = result;
-      Services.obs.notifyObservers(result, "adblockplus-require", module);
-      if(!result.exports)
-      {
-        return null;
-      }
-      return result.exports;
+      return null;
     }
-
-    try
-    {
-      let {FilterNotifier} = require("filterNotifier");
-      if (FilterNotifier)
-      {
-        abp.FilterNotifier = FilterNotifier;
-        installed = true;
-      }
-    }
-    catch (e) { }
+    return result.exports;
   }
 
-  if (installed)
+  try
   {
-    installed = typeof(abp.FilterNotifier) === "object" && typeof(abp.FilterNotifier.addListener) === "function";
+    let {FilterNotifier} = require("filterNotifier");
+    if (FilterNotifier)
+    {
+      abp.FilterNotifier = FilterNotifier;
+      return;
+    }
   }
-
-  return installed;
+  catch (ex) { }
 }
+
+let ABPStatus = {
+  NotDetected: 0,
+  Enabled: 1,
+  Disabled: 2,
+  Loading: 3,
+  LoadFailed: 4
+};
 
 let ABPObserver = {
 
@@ -120,6 +116,16 @@ let ABPObserver = {
    */
   _scheduledUpdate: false,
   
+  /**
+   * ABP status
+   */
+  _status: ABPStatus.NotDetected,
+  
+  /**
+   * Listeners of ABPObserver
+   */
+  _listeners: [],
+  
   init: function()
   {
     if (this._isInitCalled) return;
@@ -127,11 +133,6 @@ let ABPObserver = {
     
     UtilsPluginManager.fireAfterInit(function()
     {
-      this._abpInstalled = detectABP();
-      if (!this._abpInstalled) return;
-      
-      Utils.LOG("[ABP] Adblock Plus detected.");
-      
       this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
       
       if (this._abpBranch)
@@ -141,13 +142,94 @@ let ABPObserver = {
       }
       
       this._registerListeners();
-      this.updateState();
+      
+      this._detectABP();
     }, this, []);
   },
   
   isInstalled: function()
   {
     return this._abpInstalled;
+  },
+  
+  getStatus: function()
+  {
+    return this._status;
+  },
+  
+  addListener: function(listener)
+  {
+    this._listeners.push(listener);
+  },
+  
+  removeListener: function(listener)
+  {
+    Utils.removeOneItem(this._listeners, listener);
+  },
+  
+  _onABPEnable: function()
+  {
+    this._abpInstalled = true;
+    Utils.LOG("[ABP] Adblock Plus detected.");
+    
+    if (!abp.FilterNotifier)
+      queryFilterNotifier();
+    this._setStatus(ABPStatus.Disabled);
+
+    try
+    {
+      abp.FilterNotifier.removeListener(onABPFilterNotify);
+      abp.FilterNotifier.addListener(onABPFilterNotify);
+    }
+    catch (ex)
+    {
+      Utils.LOG("[ABP] Failed to add listener to ABP's FilterNotifier: " + ex);
+    }
+    
+    this.reloadUpdate();
+  },
+  
+  _onABPDisable: function()
+  {
+    this._abpInstalled = false;
+    Utils.LOG("[ABP] Adblock Plus not installed or disabled.");
+
+    try
+    {
+      abp.FilterNotifier.removeListener(onABPFilterNotify);
+    }
+    catch (ex) {}
+
+    this.updateState();
+
+    abp = {};
+    this._setStatus(ABPStatus.NotDetected);
+  },
+  
+  _detectABP: function()
+  {
+    AddonManager.getAddonByID(abpId, function(addon)
+    {
+      let installed = (addon != null && addon.isActive);
+      if (installed)
+        this._onABPEnable();
+      else
+        this._onABPDisable();
+    }.bind(this));
+  },
+  
+  _setStatus: function(status)
+  {
+    this._status = status;
+    this._triggerListeners("statusChanged", status);
+  },
+  
+  _triggerListeners: function(topic, data)
+  {
+    this._listeners.forEach(function(listener)
+    {
+      try { listener(topic, data); } catch (ex) {}
+    });
   },
   
   /**
@@ -181,7 +263,7 @@ let ABPObserver = {
    */
   _canEnable: function()
   {
-    return Prefs.abpSupportEnabled && this._getABPBoolPref("enabled");
+    return this._abpInstalled && Prefs.abpSupportEnabled && this._getABPBoolPref("enabled");
   },
   
   /**
@@ -226,7 +308,6 @@ let ABPObserver = {
       } catch (ex) {}
     }
     let pathname = file ? file.path : null;
-    Utils.LOG("[ABP] Resolved patterns.ini path: " + pathname);
     return pathname;
   },
   
@@ -234,7 +315,19 @@ let ABPObserver = {
   {
     let pathname = this._getFilterFile();
     if (pathname)
-      UtilsPluginManager.getPlugin().ABPLoad(pathname);
+    {
+      try
+      {
+        UtilsPluginManager.getPlugin().ABPLoad(pathname);
+        this._setStatus(ABPStatus.Loading);
+        Utils.LOG("[ABP] Loading filters from \"" + pathname + "\"...");
+      }
+      catch (ex)
+      {
+        this._setStatus(ABPStatus.LoadFailed);
+        Utils.ERROR("[ABP] Failed to load filters from \"" + pathname + "\": " + ex);
+      }
+    }
     this._needReload = false;
   },
   
@@ -243,8 +336,17 @@ let ABPObserver = {
    */
   _enable: function()
   {
-    UtilsPluginManager.getPlugin().ABPEnable();
-    Utils.LOG("[ABP] Enabled.")
+    try
+    {
+      UtilsPluginManager.getPlugin().ABPEnable();
+      this._setStatus(ABPStatus.Enabled);
+      Utils.LOG("[ABP] Enabled.");
+    }
+    catch (ex)
+    {
+      this._setStatus(ABPStatus.Disabled);
+      Utils.ERROR("[ABP] Cannot enable ABP support: " + ex);
+    }
   },
   
   /**
@@ -252,8 +354,17 @@ let ABPObserver = {
    */
   _disable: function()
   {
-    UtilsPluginManager.getPlugin().ABPDisable();
-    Utils.LOG("[ABP] Disabled.")
+    try
+    {
+      UtilsPluginManager.getPlugin().ABPDisable();
+      this._setStatus(this._abpInstalled ? ABPStatus.Disabled : ABPStatus.NotDetected);
+      Utils.LOG("[ABP] Disabled.");
+    }
+    catch (ex)
+    {
+      this._setStatus(ABPStatus.Disabled);
+      Utils.ERROR("[ABP] Cannot disable ABP support: " + ex);
+    }
   },
   
   /**
@@ -331,13 +442,12 @@ let ABPObserver = {
     Prefs.addListener(function(name)
     {
       if (name == "abpSupportEnabled")
-        this.updateState();
+      {
+        this._onPrefChanged();
+      }
     }.bind(this));
-    abp.FilterNotifier.addListener(function(action, item, newValue, oldValue)
-    {
-      if (action == "save")
-        this.reloadUpdate();
-    }.bind(this));
+    
+    AddonManager.addAddonListener(ABPAddonListener);
   },
   
   /**
@@ -367,12 +477,26 @@ let ABPObserver = {
    */
   _onLoadFailure: function(e)
   {
+    this._setStatus(ABPStatus.LoadFailed);
     Utils.LOG("[ABP] Failed to load filters.");
     Utils.ERROR("[ABP] Failed to load filters.");
     if (this._pendingUpdate)
       this.updateState();
+  },
+  
+  _onPrefChanged: function()
+  {
+    this.updateState();
+    if (!this._canEnable())
+      this._setStatus(ABPStatus.Disabled);
   }
 };
+
+function onABPFilterNotify(action, item, newValue, oldValue)
+{
+  if (action == "save")
+    ABPObserver.reloadUpdate();
+}
 
 /**
  * Observer for ABP pref change
@@ -384,10 +508,52 @@ let ABPObserverPrivate = {
   observe: function(subject, topic, data)
   {
     if (topic == "nsPref:changed" && data == "enabled")
-    ABPObserver.updateState();
+    {
+      ABPObserver._onPrefChanged();
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
 
 };
 
+/**
+ * Listen for addon changes
+ */
+let ABPAddonListener = {
+  onEnabled: function(/* in Addon */addon)
+  {
+    if (addon.id == abpId)
+      Utils.runAsync(function()
+      {
+        ABPObserver._onABPEnable();
+      }, this);
+  },
+  
+  onDisabled: function(/* in Addon */addon)
+  {
+    if (addon.id == abpId)
+      Utils.runAsync(function()
+      {
+        ABPObserver._onABPDisable();
+      }, this);
+  },
+  
+  onInstalled: function(/* in Addon */addon)
+  {
+    if (addon.id == abpId)
+      Utils.runAsync(function()
+      {
+        ABPObserver._onABPEnable();
+      }, this);
+  },
+  
+  onUninstalled: function(/* in Addon */addon)
+  {
+    if (addon.id == abpId)
+      Utils.runAsync(function()
+      {
+        ABPObserver._onABPDisable();
+      }, this);
+  }
+};

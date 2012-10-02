@@ -152,7 +152,20 @@
         <checkbox id="forceMGSupport" label="&fireie.options.integration.forceMGSupport;" class="indent" />
         <label id="alreadyEnabledMGSupportLabel" style="color: green;">&fireie.options.integration.alreadyEnabledMGSupport;</label>
       </groupbox>
-    </vbox>  
+      <groupbox>
+        <caption label="&fireie.options.integration.abpCaption;" />
+        <label class="descr">&fireie.options.integration.abpDescr;</label>
+        <checkbox id="abpSupportEnabled" label="&fireie.options.integration.abpSupportEnabled;" class="indent" />
+        <hbox>
+          <label>&fireie.options.integration.abpStatusLabel;</label>
+          <label id="abpStatusNotDetected">&fireie.options.integration.abpStatusNotDetected;</label>
+          <label id="abpStatusEnabled" style="color: green">&fireie.options.integration.abpStatusEnabled;</label>
+          <label id="abpStatusDisabled">&fireie.options.integration.abpStatusDisabled;</label>
+          <label id="abpStatusLoading" style="color: green">&fireie.options.integration.abpStatusLoading;</label>
+          <label id="abpStatusLoadFailed" style="color: red">&fireie.options.integration.abpStatusLoadFailed;</label>
+        </hbox>
+      </groupbox>
+    </vbox>
   </prefpane>
 
   <prefpane id="iemodePane" label="&fireie.options.iecompat.pane;" image="chrome://fireie/skin/pane-iemode.png" flex="1">

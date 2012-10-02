@@ -21,6 +21,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 Cu.import(baseURL.spec + "AppIntegration.jsm");
 Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
+Cu.import(baseURL.spec + "ABPObserver.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -34,7 +35,7 @@ Options.export = function()
   let aCurrent = Options._getAllOptions(false);
   if (aCurrent) Options._saveToFile(aCurrent);
   Options._setAllOptions(aOld);
-}
+};
 
 Options.import = function()
 {
@@ -54,7 +55,7 @@ Options.import = function()
       alert(Utils.getString("fireie.options.import.error"));
     }
   }
-}
+};
 
 Options.restoreDefaultSettings = function()
 {
@@ -64,7 +65,7 @@ Options.restoreDefaultSettings = function()
   Options.initDialog();
   Options._setAllOptions(aOld);
   Options.updateApplyButton(true);
-}
+};
 
 // Apply options
 Options.apply = function(quiet)
@@ -98,6 +99,7 @@ Options.apply = function(quiet)
   Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
   Prefs.forceMGSupport = E("forceMGSupport").checked;
+  Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -121,7 +123,7 @@ Options.apply = function(quiet)
   {
     alert(Utils.getString("fireie.options.alert.restart"));
   }
-}
+};
 
 Options.getIECompatMode = function()
 {
@@ -171,7 +173,7 @@ Options.getIECompatMode = function()
   }
   
   Prefs.compatMode = mode;
-}
+};
 
 Options.applyIECompatMode = function()
 {
@@ -219,7 +221,7 @@ Options.applyIECompatMode = function()
   {
     wrk.close();
   }
-}
+};
 
 // Get IE's main version number
 Options.getIEMainVersion = function()
@@ -247,7 +249,7 @@ Options.getIEMainVersion = function()
     wrk.close();
   }
   return version;
-}
+};
 
 Options.updateIEModeTab = function()
 {
@@ -277,7 +279,20 @@ Options.updateIEModeTab = function()
   Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
-}
+};
+
+// Update ABP status according to ABPObserver
+Options.updateABPStatus = function()
+{
+  let status = ABPObserver.getStatus();
+  E("abpStatusNotDetected").hidden = (status != ABPStatus.NotDetected);
+  E("abpStatusEnabled").hidden = (status != ABPStatus.Enabled);
+  E("abpStatusDisabled").hidden = (status != ABPStatus.Disabled);
+  E("abpStatusLoading").hidden = (status != ABPStatus.Loading);
+  E("abpStatusLoadFailed").hidden = (status != ABPStatus.LoadFailed);
+  
+  E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
+};
 
 Options.initDialog = function()
 {
@@ -292,6 +307,7 @@ Options.initDialog = function()
   E("showTooltipText").checked = Prefs.showTooltipText;
   E("showStatusText").checked = Prefs.showStatusText;
   E("forceMGSupport").checked = Prefs.forceMGSupport;
+  E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
 
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
@@ -307,6 +323,8 @@ Options.initDialog = function()
   {
     E("alreadyEnabledMGSupportLabel").hidden = true;
   }
+  
+  Options.updateABPStatus();
 
   // updateStatus
   Options.updateApplyButton(false);
@@ -346,6 +364,8 @@ Options.init = function()
     }
   }
   
+  Options.initDialog();
+  
   // for multi-line label sizing problem
   window.sizeToContent();
   let vboxes = document.querySelectorAll("prefpane > vbox");
@@ -355,11 +375,16 @@ Options.init = function()
   });
   window.sizeToContent();
   
-  Options.initDialog();
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
   addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
+  
+  ABPObserver.addListener(Options.updateABPStatus);
+  window.addEventListener("unload", function()
+  {
+    ABPObserver.removeListener(Options.updateABPStatus);
+  });
 }
 
 Options.close = function()

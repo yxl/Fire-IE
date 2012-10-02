@@ -556,14 +556,7 @@ var Utils = {
     let event = {
       notify: function(timer)
       {
-        for (let i = 0, l = this._timers.length; i < l; i++)
-        {
-          if (this._timers[i] === timer)
-          {
-            this._timers.splice(i, 1);
-            break;
-          }
-        }
+        this.removeOneItem(this._timers, timer);
         callback.apply(thisPtr, params);
       }.bind(this)
     };
@@ -860,7 +853,26 @@ var Utils = {
                .hiddenDOMWindow;
     this.getHiddenWindow = function() hiddenWindow;
     return hiddenWindow;
-  }
+  },
+  
+  // Removes the first occurance of item in arr
+  removeOneItem: function(arr, item)
+  {
+    let idx = arr.indexOf(item);
+    if (idx != -1)
+      arr.splice(idx, 1);
+  },
+  
+  // Removes all occurances of item in arr
+  removeAllItems: function(arr, item)
+  {
+    let idx = arr.indexOf(item);
+    while (idx != -1)
+    {
+      arr.splice(idx, 1);
+      idx = arr.indexOf(item);
+    }
+  },
 };
 
 /**

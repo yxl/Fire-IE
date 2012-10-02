@@ -40,6 +40,15 @@
 <!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动开启相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试打开这个选项。">
 <!ENTITY fireie.options.integration.forceMGSupport "强制开启IE引擎鼠标手势支持">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已启用鼠标手势支持。">
+<!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支持">
+<!ENTITY fireie.options.integration.abpDescr "在IE引擎中使用 Adblock Plus 的规则来过滤广告。">
+<!ENTITY fireie.options.integration.abpSupportEnabled "开启 Adblock Plus 支持">
+<!ENTITY fireie.options.integration.abpStatusLabel "当前状态：">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "未检测到 Adblock Plus">
+<!ENTITY fireie.options.integration.abpStatusEnabled "已启用">
+<!ENTITY fireie.options.integration.abpStatusDisabled "已禁用">
+<!ENTITY fireie.options.integration.abpStatusLoading "正在载入过滤规则...">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "载入过滤规则失败">
 
 <!ENTITY fireie.options.rule.label "网址过滤">
 <!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">

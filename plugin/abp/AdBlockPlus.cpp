@@ -337,9 +337,6 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 		file.Close();
 		if (success)
 		{
-			// record filter file path
-			s_strFilterFile = pathname;
-
 			WriterLock wl(s_mutex);
 			clearFiltersInternal(true);
 
