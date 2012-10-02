@@ -1585,8 +1585,7 @@ void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& p
 		if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
 		{
 			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
-			if (vStyles.size())
-				ApplyElemHideStylesForDoc(pDoc, vStyles);
+			ApplyElemHideStylesForDoc(pDoc, vStyles);
 			ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
 		}
 		break;
@@ -1654,6 +1653,8 @@ bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& p
 
 void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const vector<wstring>& vStyles)
 {
+	if (!vStyles.size()) return;
+
 	// first retrieve the head node
 	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
 	if (!pDoc3) return;
