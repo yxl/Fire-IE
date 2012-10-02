@@ -940,7 +940,8 @@ WindowWrapper.prototype = {
     let progress = parseInt(event.detail);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this._updateProgressStatus();
-    this._updateInterface();
+    if (progress >= 100)
+      this._updateInterface();
   },
 
   /** Handler for IE new tab event*/
