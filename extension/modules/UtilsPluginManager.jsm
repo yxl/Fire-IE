@@ -124,11 +124,10 @@ let UtilsPluginManager = {
     // be restored when the utils plugin is loaded.
     IECookieManager.changeIETempDirectorySetting();
 
-    let self = this;
     Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
     {
-      self.isPluginInitialized = true;
-    }, false);
+      this.isPluginInitialized = true;
+    }.bind(this), false);
 
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
@@ -137,6 +136,13 @@ let UtilsPluginManager = {
     embed.setAttribute("type", "application/fireie");
     embed.style.visibility = "collapse";
     doc.body.appendChild(embed);
+    
+    // Check after 30 sec whether the plugin is initialized yet
+    Utils.runAsyncTimeout(function()
+    {
+      if (!this.isPluginInitialized)
+        loadFailureSubHandler();
+    }, this, 30000);
   },
   
   _registerHandlers: function()
@@ -207,10 +213,8 @@ function genPluginEventHandler(subHandler)
     }
   }
 }
-  
-/** handle the plugin load failure events and inform user about that */
-var onPluginLoadFailure = genPluginEventHandler(
-function(event)
+
+function loadFailureSubHandler()
 {
   // we have trouble with the plugin now
   IECookieManager.restoreIETempDirectorySetting();
@@ -218,6 +222,13 @@ function(event)
   Utils.ERROR("Plugin failed to load. Possibly due to wrong Fire-IE version.");
   Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
     "_blank", "chrome,centerscreen,dialog", null);
+}
+
+/** handle the plugin load failure events and inform user about that */
+var onPluginLoadFailure = genPluginEventHandler(
+function(event)
+{
+  loadFailureSubHandler();
 });
 
 /** Handler for receiving IE UserAgent from the plugin object */
