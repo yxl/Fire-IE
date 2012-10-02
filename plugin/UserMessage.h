@@ -39,8 +39,6 @@ namespace UserMessage
 		CString strHeaders;
 	};
 
-	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
-	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
 	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
 	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
 	static const WPARAM WPARAM_ABP_LOAD_FAILURE = 12;

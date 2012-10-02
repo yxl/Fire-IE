@@ -339,12 +339,6 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 			delete callable;
 			break;
 		}
-	case WPARAM_UTILS_PLUGIN_INIT:
-		OnUtilsPluginInit();
-		break;
-	case WPARAM_CONTENT_PLUGIN_INIT:
-		OnContentPluginInit();
-		break;
 	case WPARAM_ABP_FILTER_LOADED:
 		OnABPFilterLoaded();
 		break;
@@ -969,22 +963,6 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 		varinput.vt = VT_EMPTY;
 		CComVariant varoutput;
 		pCmd->Exec(&CGID_ShellDocView, SHDVID_SSLSTATUS, 0, &varinput, &varoutput);
-	}
-}
-
-void CIEHostWindow::OnUtilsPluginInit()
-{
-	if (m_pPlugin)
-	{
-		m_pPlugin->OnUtilsPluginInit();
-	}
-}
-
-void CIEHostWindow::OnContentPluginInit()
-{
-	if (m_pPlugin)
-	{
-		m_pPlugin->OnContentPluginInit();
 	}
 }
 

@@ -166,9 +166,7 @@ namespace Plugin
 		{
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
-			if (hwnd)
-				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_UTILS_PLUGIN_INIT, 0);
+			m_pIEHostWindow->RunAsync([=] { OnUtilsPluginInit(); });
 		}
 		else
 		{
@@ -176,9 +174,7 @@ namespace Plugin
 
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
-			if (hwnd)
-				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_CONTENT_PLUGIN_INIT, 0);
+			m_pIEHostWindow->RunAsync([=] { OnContentPluginInit(); });
 		}
 
 		return TRUE;

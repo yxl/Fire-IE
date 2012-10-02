@@ -257,8 +257,6 @@ public:
 	void OnStatusChanged(const CString& message);
 	void OnCloseIETab();
 	void OnSetSecureLockIcon(int state);
-	void OnUtilsPluginInit();
-	void OnContentPluginInit();
 	void OnABPFilterLoaded();
 	void OnABPLoadFailure();
 
@@ -331,7 +329,7 @@ protected:
 	// Our only hope is a vtable that dispatches to different functions
 	class ICallable {
 	public:
-		virtual void call() = 0;
+		virtual void call() const = 0;
 		virtual ~ICallable() { }
 	};
 
@@ -339,11 +337,8 @@ protected:
 	template<class Func>
 	class CallableFuncWrapper : public ICallable {
 	public:
-		CallableFuncWrapper(Func func) : func(func) { }
-		virtual void call()
-		{
-			func();
-		}
+		CallableFuncWrapper(const Func& func) : func(func) { }
+		virtual void call() const { func(); }
 	private:
 		Func func;
 	};
@@ -351,7 +346,7 @@ protected:
 public:
 	// Asynchronously run the specified function at next message loop
 	template <class Func>
-	void RunAsync(Func func)
+	void RunAsync(const Func& func)
 	{
 		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
 		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, reinterpret_cast<LPARAM>(wrapper));
