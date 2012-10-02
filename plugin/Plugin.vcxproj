@@ -419,6 +419,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="Plugin\pluginbase.h" />
     <ClInclude Include="Plugin\ScriptablePluginObject.h" />
     <ClInclude Include="Plugin\ScriptablePluginObjectBase.h" />
+    <ClInclude Include="UserMessage.h" />
     <ClInclude Include="Utils\OS.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>

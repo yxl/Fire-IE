@@ -41,6 +41,8 @@
 #include "npruntime.h"
 #include "PluginApp.h"
 #include "pluginbase.h"
+#include "UserMessage.h"
+#include <vector>
 
 class CIEHostWindow;
 
@@ -121,7 +123,11 @@ namespace Plugin
 		/**
 		 * Sets Firefox Cookie by firing a JavaScript event.
 		 */
-		void SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader);
+		void SetFirefoxCookie(const CString& strURL, const CString& strCookie);
+		/**
+		 * Batch-setting Firefox Cookie by firing a JavaScript event.
+		 */
+		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies);
 
 		/** 
 		 * Sets Firefox Cookie using NPAPI

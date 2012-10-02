@@ -49,6 +49,9 @@
 #include "json/json.h"
 #include "OS.h"
 
+using namespace std;
+using namespace UserMessage;
+
 namespace Plugin
 {
 
@@ -617,6 +620,24 @@ namespace Plugin
 		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
 		json["header"] = T2A_EX(strCookieHeader, strCookieHeader.GetLength() + 1);
 		strDetail = CA2T(json.toStyledString().c_str());
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies)
+	{
+		USES_CONVERSION_EX;
+		CString strEventType = _T("IEBatchSetCookie");
+		CString strDetail;
+		Json::Value aCookies;
+		for (size_t i = 0; i < vCookies.size(); i++)
+		{
+			const SetFirefoxCookieParams& param = vCookies[i];
+			Json::Value cookie;
+			cookie["url"] = T2A_EX(param.strURL, param.strURL.GetLength() + 1);
+			cookie["header"] = T2A_EX(param.strCookie, param.strCookie.GetLength() + 1);
+			aCookies.append(cookie);
+		}
+		strDetail = CA2T(aCookies.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 

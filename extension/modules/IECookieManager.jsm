@@ -96,6 +96,23 @@ function setIECtrlRegString(regName, value)
   }
 }
 
+function getNameValueFromCookieHeader(header)
+{
+  header = header.trim();
+  let terminate = header.indexOf(";");
+  if (terminate == -1)
+  {
+    terminate = header.length;
+  }
+  let seperate = header.indexOf("=");
+  if (seperate == -1 || seperate > terminate)
+  {
+    return {name: null, value: null};
+  }
+  let cookieName = header.substring(0, seperate).trim();
+  let cookieValue = header.substring(seperate + 1, terminate).trim();
+  return {name: cookieName, vlaue: cookieValue};
+}
 
 /**
  * Monitors the cookie changes of Firefox and synchronizes to IE.
@@ -125,24 +142,6 @@ let IECookieManager = {
   
   saveFirefoxCookie: function(url, cookieHeader)
   {
-    function getNameValueFromCookieHeader(header)
-    {
-      header = header.trim();
-      let terminate = header.indexOf(";");
-      if (terminate == -1)
-      {
-        terminate = header.length;
-      }
-      let seperate = header.indexOf("=");
-      if (seperate == -1 || seperate > terminate)
-      {
-        return {name: null, value: null};
-      }
-      let cookieName = header.substring(0, seperate).trim();
-      let cookieValue = header.substring(seperate + 1, terminate).trim();
-      return {name: cookieName, vlaue: cookieValue};
-    }
-
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
     this._ieCookieMap[name] = value;
@@ -321,12 +320,14 @@ let CookieObserver = {
   {
     Services.obs.addObserver(this, "cookie-changed", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
+    Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
     Services.obs.removeObserver(this, "fireie-set-cookie");
+    Services.obs.removeObserver(this, "fireie-batch-set-cookie");
   },
 
   // nsIObserver
@@ -339,6 +340,9 @@ let CookieObserver = {
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
+      break;
+    case 'fireie-batch-set-cookie':
+      this.onIEBatchCookieChanged(data);
       break;
     }
   },
@@ -391,6 +395,23 @@ let CookieObserver = {
     catch(e)
     {
       Utils.ERROR("onIECookieChanged(" + data + "): " + e);
+    }
+  },
+
+  onIEBatchCookieChanged: function(data)
+  {
+    try
+    {
+      let cookies = JSON.parse(data);
+      cookies.forEach(function(cookie)
+      {
+        let {header, url} = cookie;
+        IECookieManager.saveFirefoxCookie(url, header);
+      });
+    }
+    catch(e)
+    {
+      Utils.ERROR("onIEBatchCookieChanged(" + data + "): " + e);
     }
   },
 

@@ -18,42 +18,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"
 #include "IECtrl.h"
+#include "UserMessage.h"
 #include <vector>
 #include <string>
 
 namespace Plugin
 {
 	class CPlugin;
-}
-
-namespace UserMessage
-{
-	// User defined window message
-	static const UINT WM_USER_MESSAGE =  WM_USER + 200;
-
-	//
-	// Sub-types of the user defined window message
-	//
-
-	struct SetFirefoxCookieParams
-	{
-		CString strURL;
-		CString strCookie;
-	};
-
-	struct NavigateParams
-	{
-		CString strURL;
-		CString strPost;
-		CString strHeaders;
-	};
-
-	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
-	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
-	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
-	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
-	static const WPARAM WPARAM_ABP_LOAD_FAILURE = 12;
-	static const WPARAM WPARAM_RUN_ASYNC_CALL = 13;
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -163,7 +134,6 @@ protected:
 	void RunAsyncOleCmd(OLECMDID cmdID);
 
 	// 自定义窗口消息响应函数
-	void OnSetFirefoxCookie(const CString& strURL, const CString& strCookie);
 	void OnNavigate();
 	void OnRefresh();
 	void OnStop();

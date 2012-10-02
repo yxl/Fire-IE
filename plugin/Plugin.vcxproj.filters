@@ -216,6 +216,7 @@
     <ClInclude Include="abp\ElemHideMatcher.h">
       <Filter>abp</Filter>
     </ClInclude>
+    <ClInclude Include="UserMessage.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />

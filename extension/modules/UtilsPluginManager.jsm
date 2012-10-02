@@ -149,14 +149,18 @@ let UtilsPluginManager = {
   
   _registerHandlers: function()
   {
-    Utils.getHiddenWindow().addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
-    Utils.getHiddenWindow().addEventListener("IESetCookie", onIESetCookie, false);
+    let window = Utils.getHiddenWindow();
+    window.addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
+    window.addEventListener("IESetCookie", onIESetCookie, false);
+    window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
   },
   
   _unregisterHandlers: function()
   {
-    Utils.getHiddenWindow().removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
-    Utils.getHiddenWindow().removeEventListener("IESetCookie", onIESetCookie, false);
+    let window = Utils.getHiddenWindow();
+    window.removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
+    window.removeEventListener("IESetCookie", onIESetCookie, false);
+    window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
   },
 };
 
@@ -244,6 +248,17 @@ function onIESetCookie(event)
 {
   let subject = null;
   let topic = "fireie-set-cookie";
+  let data = event.detail;
+  Services.obs.notifyObservers(subject, topic, data);
+}
+
+/**
+ * Handles 'IEBatchSetCookie' event receiving from the plugin
+ */
+function onIEBatchSetCookie(event)
+{
+  let subject = null;
+  let topic = "fireie-batch-set-cookie";
   let data = event.detail;
   Services.obs.notifyObservers(subject, topic, data);
 }

@@ -210,10 +210,9 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
 		pWindow->RunAsync([=]
 		{
-			for (size_t i = 0; i < pvParams->size(); i++)
+			if (pWindow->m_pPlugin)
 			{
-				const SetFirefoxCookieParams& param = (*pvParams)[i];
-				pWindow->OnSetFirefoxCookie(param.strURL, param.strCookie);
+				pWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
 			}
 			delete pvParams;
 		});
@@ -838,14 +837,6 @@ void CIEHostWindow::ExecOleCmd(OLECMDID cmdID)
 void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 {
 	RunAsync([=] { ExecOleCmd(cmdID); });
-}
-
-void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& strCookie)
-{
-	if (m_pPlugin)
-	{
-		m_pPlugin->SetFirefoxCookie(strURL, strCookie);
-	}
 }
 
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
