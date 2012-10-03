@@ -142,7 +142,7 @@ wstring URLTokenizer::getAuthority() const
 
 wstring URLTokenizer::getPathWithoutFile() const
 {
-	size_t pos = path.find_last_of(L'/');
+	size_t pos = path.rfind(L'/');
 	if (pos != wstring::npos)
 	{
 		// pos can't be wstring::npos here

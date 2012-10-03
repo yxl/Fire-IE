@@ -25,7 +25,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "regdom-libs/tld-canon.h"
 
 namespace Utils {
-	regdom::tldnode* rootTLDNode = NULL;
+	const regdom::tldnode* rootTLDNode = NULL;
 }
 
 using namespace Utils;
@@ -35,6 +35,24 @@ TLD::TLDInit TLD::init;
 TLD::TLDInit::TLDInit()
 {
 	rootTLDNode = regdom::readTldTree(tldString);
+	ASSERT(getEffectiveDomain(_T("")) == _T(""));
+	ASSERT(getEffectiveDomain(_T("addons.mozilla.org")) == _T("mozilla.org"));
+	ASSERT(getEffectiveDomain(_T("www.com.cn")) == _T("www.com.cn"));
+	ASSERT(getEffectiveDomain(_T("a.b.c.idontknow")) == _T("a.b.c.idontknow"));
+	ASSERT(getEffectiveDomain(_T("localhost")) == _T("localhost"));
+	ASSERT(getEffectiveDomain(_T("www.sjtu.ed.cn")) == _T("ed.cn"));
+	ASSERT(getEffectiveDomain(_T("www.sjtu.edu.cn")) == _T("sjtu.edu.cn"));
+	ASSERT(getEffectiveDomain(_T("www.sina.com.cn")) == _T("sina.com.cn"));
+	ASSERT(getEffectiveDomain(_T("co.uk")) == _T("co.uk"));
+	ASSERT(getEffectiveDomain(_T("bn.sjtu.info")) == _T("sjtu.info"));
+	ASSERT(getEffectiveDomain(_T("图书馆.上海交通大学.中国")) == _T("上海交通大学.中国"));
+	ASSERT(getEffectiveDomain(_T("www.lib.sjtu.edu.cn")) == _T("sjtu.edu.cn"));
+	ASSERT(getEffectiveDomain(_T("www.lib.sjtu.edu.cn.www.lib.sjtu.edu.cn.www.lib.sjtu.edu.cn")) == _T("sjtu.edu.cn"));
+	ASSERT(getEffectiveDomain(_T("a.b.c.d.e.f.g.h.i.j.k.l.m.n")) == _T("a.b.c.d.e.f.g.h.i.j.k.l.m.n"));
+	ASSERT(getEffectiveDomain(_T("..........")) == _T(".........."));
+	ASSERT(getEffectiveDomain(_T(".........com.cn")) == _T(".com.cn"));
+	ASSERT(getEffectiveDomain(_T("192.168.0.1")) == _T("192.168.0.1"));
+	ASSERT(getEffectiveDomain(_T("what.is.this.domain.اليمن")) == _T("domain.اليمن"));
 }
 
 TLD::TLDInit::~TLDInit()
@@ -44,11 +62,6 @@ TLD::TLDInit::~TLDInit()
 
 CString TLD::getEffectiveDomain(const CString& domain)
 {
-	wchar_t* utf8Result = regdom::getRegisteredDomain(domain, rootTLDNode);
-	if (!utf8Result) return domain;
-
-	CString result = utf8Result;
-
-	free(utf8Result);
-	return result;
+	const wchar_t* utf8Result = regdom::getRegisteredDomain(domain, rootTLDNode);
+	return utf8Result ? utf8Result : domain;
 }

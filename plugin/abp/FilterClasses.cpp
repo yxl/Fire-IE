@@ -287,7 +287,7 @@ bool ActiveFilter::isActiveOnlyOnDomain(const wstring& docDomain) const
 	{
 		if (iter->second && iter->first != domain &&
 			(iter->first.length() <= domain.length() ||
-			iter->first.find_last_of(dotDomain) != iter->first.length() - dotDomain.length()))
+			iter->first.rfind(dotDomain) != iter->first.length() - dotDomain.length()))
 		{
 			return false;
 		}

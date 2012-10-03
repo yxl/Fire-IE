@@ -36,26 +36,13 @@ struct tldnode_el {
 
 typedef struct tldnode_el tldnode;
 
-struct dlist_el {
-	wchar_t* val;
-
-	struct dlist_el* next;
-};
-
-typedef struct dlist_el dlist;
-
 /* PROTOTYPES */
-extern int readTldString(tldnode*,wchar_t*,int,int);
-extern tldnode* findTldNode(tldnode*,wchar_t*);
-extern wchar_t* concatDomLabel(wchar_t*,wchar_t*);
-extern wchar_t* findRegisteredDomain(tldnode*,dlist*);
-extern void freeDomLabels(dlist*,wchar_t*);
-extern tldnode* readTldTree(wchar_t*);
-extern wchar_t* getRegisteredDomain(const wchar_t*,tldnode*);
-extern void freeTldTree(tldnode*);
+extern const tldnode* readTldTree(const wchar_t*);
+extern const wchar_t* getRegisteredDomain(const wchar_t*, const tldnode*);
+extern void freeTldTree(const tldnode*);
 
 #ifdef DEBUG
-extern void printTldTree(tldnode*, const wchar_t *);
+extern void printTldTree(const tldnode*, const wchar_t *);
 #endif /* DEBUG */
 
 } } // namespace Utils::regdom

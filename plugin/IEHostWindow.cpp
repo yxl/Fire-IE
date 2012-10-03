@@ -310,12 +310,13 @@ void CIEHostWindow::UninitIE()
 	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
 	s_csUtilsIEWindowMap.Unlock();
 
-#ifdef MATCHER_PERF
 	if (m_bUtils)
 	{
+		AdBlockPlus::clearFilters();
+#ifdef MATCHER_PERF
 		AdBlockPlus::showPerfInfo();
-	}
 #endif
+	}
 }
 
 void CIEHostWindow::OnSize(UINT nType, int cx, int cy)

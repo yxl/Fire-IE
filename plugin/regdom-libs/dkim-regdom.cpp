@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 #include "dkim-regdom.h"
 
@@ -32,13 +33,16 @@ using namespace std;
 
 namespace Utils { namespace regdom {
 
+extern int readTldString(tldnode*, const wchar_t*, int, int);
+extern const tldnode* findTldNode(const tldnode*, const wchar_t*, int len);
+
 wchar_t ALL[] = L"*";
 wchar_t THIS[] = L"!";
 
 // wchar_t* tldString = "root(3:ac(5:com,edu,gov,net,ad(3:nom,co!,*)),de,com)";
 
 // helper function to parse node in tldString
-int readTldString(tldnode* node, wchar_t* s, int len, int pos) {
+int readTldString(tldnode* node, const wchar_t* s, int len, int pos) {
 
 	int start = pos;
 	int state = 0;
@@ -84,9 +88,21 @@ int readTldString(tldnode* node, wchar_t* s, int len, int pos) {
 
 					int i;
 					for (i=0; i<node->num_children; i++) {
-						node->subnodes[i] = (tldnode*)malloc(sizeof(tldnode));
-						pos = readTldString(node->subnodes[i], s, len, pos + 1);
+						tldnode* subnode = (tldnode*)malloc(sizeof(tldnode));
+						pos = readTldString(subnode, s, len, pos + 1);
+						node->subnodes[i] = subnode;
 					}
+
+					// sort alphabetically for better search performance
+					sort(node->subnodes, node->subnodes + node->num_children,
+						[] (const tldnode* node1, const tldnode* node2) -> bool {
+							// asterisks always comes first
+							if (wcscmp(node1->dom, ALL) == 0) return true;
+							if (wcscmp(node2->dom, ALL) == 0) return false;
+							
+							return wcscmp(node1->dom, node2->dom) < 0;
+						}
+					);
 
 					return pos + 1;
 				}
@@ -101,17 +117,17 @@ int readTldString(tldnode* node, wchar_t* s, int len, int pos) {
 }
 
 // reads TLDs once at daemon startup
-tldnode* readTldTree(wchar_t* tlds) {
+const tldnode* readTldTree(const wchar_t* tlds) {
 	tldnode* root = (tldnode *)malloc(sizeof(tldnode));
 
-	readTldString(root, tlds, wcslen(tlds), 0);
+	readTldString(root, tlds, (int)wcslen(tlds), 0);
 
 	return root;
 }
 
 #ifdef DEBUG
 
-void printTldTree(tldnode* node, const wchar_t * spacer) {
+void printTldTree(const tldnode* node, const wchar_t * spacer) {
 	if (node->num_children != 0) {
 		// has children
 		wprintf(L"%ls%ls:\n", spacer, node->dom);
@@ -131,7 +147,7 @@ void printTldTree(tldnode* node, const wchar_t * spacer) {
 
 #endif /* DEBUG */
 
-void freeTldTree(tldnode* node) {
+void freeTldTree(const tldnode* node) {
 
 	if (node->num_children != 0) {
 		int i;
@@ -140,125 +156,63 @@ void freeTldTree(tldnode* node) {
 		}
 	}
 	free(node->dom);
-	free(node);
+	free(const_cast<tldnode*>(node));
 }
 
-// linear search for domain (and * if available)
-tldnode* findTldNode(tldnode* parent, wchar_t* subdom) {
+// binary search for domain (and * if available)
+const tldnode* findTldNode(const tldnode* parent, const wchar_t* subdom, int len) {
+	if (!parent->num_children) return NULL;
 
-	tldnode* allNode = NULL;
+	const tldnode* allNode = 
+		wcscmp(parent->subnodes[0]->dom, ALL) == 0 ? parent->subnodes[0] : NULL;
 
-	int i;
-	for (i=0; i<parent->num_children; i++) {
-		if (wcscmp(subdom, parent->subnodes[i]->dom) == 0) {
-			return parent->subnodes[i];
-		}
-		if (allNode==NULL && wcscmp(ALL, parent->subnodes[i]->dom) == 0) {
-			allNode = parent->subnodes[i];
-		}
+	int l = allNode ? 1 : 0;
+	int h = parent->num_children;
+	while (l < h) {
+		int m = (l + h) / 2;
+		int cmp = wcsncmp(subdom, parent->subnodes[m]->dom, len);
+		if (cmp == 0 && !parent->subnodes[m]->dom[len])
+			return parent->subnodes[m];
+		if (cmp > 0)
+			l = m + 1;
+		else
+			h = m;
 	}
 	return allNode;
 }
 
-// concatenate a domain with its parent domain
-wchar_t* concatDomLabel(wchar_t* dl, wchar_t* du) {
+const wchar_t* getRegisteredDomain(const wchar_t* signingDomain, const tldnode* tree) {
 
-	wchar_t* s;
+	static const int MAX_TOKENS = 10;
 
-	if (dl == NULL) {
-		int count = wcslen(du) + 1;
-		s = (wchar_t*) malloc(count * sizeof(wchar_t));
-		wcsncpy_s(s, count, du, count);
-	} else {
-		int lenl = wcslen(dl);
-		int lenu = wcslen(du);
-		s = (wchar_t*) malloc((lenl+1+lenu+1) * sizeof(wchar_t));
-		wcsncpy_s(s, lenl+1+lenu+1, dl, lenl);
-		wcsncpy_s(s+lenl, 1+lenu+1, L".", 1);
-		wcsncpy_s(s+lenl+1, lenu+1, du, lenu+1);
+	// split domain by . separator, and find tld simutaneously
+	const wchar_t* sDbegin = signingDomain;
+	const wchar_t* sDend = signingDomain + wcslen(signingDomain);
+	reverse_iterator<const wchar_t*> sDrbegin(sDend);
+	reverse_iterator<const wchar_t*> sDrend(sDbegin);
+
+	reverse_iterator<const wchar_t*> next;
+	
+	const tldnode* subtree = tree;
+
+	while (sDrend != (next = find(sDrbegin, sDrend, L'.'))) {
+		const tldnode* subnode = 
+			findTldNode(subtree, next.base(), (int)(sDrbegin.base() - next.base()));
+		if (subnode == NULL || (subnode->num_children == 1 && subnode->subnodes[0]->attr == THIS))
+			return sDrbegin.base() != sDend ? next.base() : NULL;
+		subtree = subnode;
+		sDrbegin = next + 1;
 	}
-	return s;
-}
 
-// recursive helper method
-wchar_t* findRegisteredDomain(tldnode* subtree, dlist* dom) {
-
-	tldnode* subNode = findTldNode(subtree, dom->val);
-	if (subNode==NULL || (subNode->num_children==1 && subNode->subnodes[0]->attr == THIS)) {
-		int count = wcslen(dom->val)+1;
-		wchar_t* domain = (wchar_t*) malloc(count * sizeof(wchar_t));
-		wcsncpy_s(domain, count, dom->val, count);
-		return domain;
-	} else if (dom->next==NULL) {
+	if (sDrbegin.base() == sDend)
 		return NULL;
-	}
 
-	wchar_t* fRegDom = findRegisteredDomain(subNode, dom->next);
-	wchar_t* concDomain = NULL;
-	if (fRegDom!=NULL) {
-		concDomain = concatDomLabel(fRegDom, dom->val);
-		free(fRegDom);
-	}
+	const tldnode* subnode = 
+		findTldNode(subtree, sDrend.base(), (int)(sDrbegin.base() - sDrend.base()));
+	if (subnode == NULL || (subnode->num_children == 1 && subnode->subnodes[0]->attr == THIS))
+		return sDrend.base();
 
-	return concDomain;
-}
-
-void freeDomLabels(dlist* head, wchar_t* sDcopy) {
-
-	dlist* cur;
-
-	// free list of separated domain parts
-	while (head) {
-		cur = head;
-		head = cur->next;
-		free(cur);
-	}
-
-	free(sDcopy);
-}
-
-wchar_t* getRegisteredDomain(const wchar_t* signingDomain, tldnode* tree) {
-
-	dlist *cur, *head = NULL;
-	wchar_t *saveptr;
-
-	// split domain by . separator
-	int count = wcslen(signingDomain)+1;
-	wchar_t* sDcopy = (wchar_t*) malloc(count * sizeof(wchar_t));
-	wcsncpy_s(sDcopy, count, signingDomain, count);
-	wchar_t* token = wcstok_s(sDcopy, L".", &saveptr);
-	while (token != NULL) {
-		cur = (dlist*) malloc(sizeof(dlist));
-		cur->val = token;
-		cur->next = head;
-		head = cur;
-		token = wcstok_s(NULL, L".", &saveptr);
-	}
-
-	if (!head) return NULL;
-
-	wchar_t* result = findRegisteredDomain(tree, head);
-
-	if (result==NULL) {
-		freeDomLabels(head, sDcopy);
-		return NULL;
-	}
-
-	// assure there is at least 1 TLD in the stripped signing domain
-	if (wcschr(result, L'.')==NULL) {
-		free(result);
-		if (head->next == NULL) {
-			freeDomLabels(head, sDcopy);
-			return NULL;
-		} else {
-			wchar_t* minDomain = concatDomLabel(head->next->val, head->val);
-			freeDomLabels(head, sDcopy);
-			return minDomain;
-		}
-	}
-
-	freeDomLabels(head, sDcopy);
-	return result;
+	return NULL;
 }
 
 } } // namespace Utils::regdom

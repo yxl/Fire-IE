@@ -229,7 +229,7 @@ bool RegExp::testCore(const wstring& str) const
 
 void RegExp::setAttributes()
 {
-	size_t idx = m_strFullPattern.find_last_of(L'/');
+	size_t idx = m_strFullPattern.rfind(L'/');
 	wstring strAttributes;
 	if (idx != wstring::npos)
 		strAttributes = m_strFullPattern.substr(idx + 1);
@@ -256,7 +256,7 @@ wstring RegExp::getPattern() const
 	if (!startsWithChar(m_strFullPattern, L'/'))
 		return m_strFullPattern;
 	size_t idxStart = 1;
-	size_t idxEnd = m_strFullPattern.find_last_of(L'/');
+	size_t idxEnd = m_strFullPattern.rfind(L'/');
 	if (idxEnd == wstring::npos || idxEnd <= idxStart) return L"";
 	return m_strFullPattern.substr(idxStart, idxEnd - idxStart);
 }
