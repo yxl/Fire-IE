@@ -28,7 +28,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "RAIILock.h"
 
 // enable performance monitoring
-#define MATCHER_PERF
+//#define MATCHER_PERF
 
 namespace abp {
 	/**
