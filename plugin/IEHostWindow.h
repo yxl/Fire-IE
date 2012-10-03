@@ -259,6 +259,7 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
+	CString GetProcessName();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);

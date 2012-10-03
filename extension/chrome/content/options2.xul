@@ -165,8 +165,16 @@
         hidden="true" value="ie7mode" />
         <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
         hidden="true" value="ie8mode" />
+        <radio id="ie8forced-radio" label="&fireie.options.iecompat.ie8f;"
+        hidden="true" value="ie8forced" />
         <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
         hidden="true" value="ie9mode" />
+        <radio id="ie9forced-radio" label="&fireie.options.iecompat.ie9f;"
+        hidden="true" value="ie9forced" />
+        <radio id="ie10mode-radio" label="&fireie.options.iecompat.ie10;"
+        hidden="true" value="ie10mode" />
+        <radio id="ie10forced-radio" label="&fireie.options.iecompat.ie10f;"
+        hidden="true" value="ie10forced" />
       </radiogroup>
       <label id="iemodeDescr" class="descr" style="margin-top:20px;" hidden="true">
         &fireie.options.restart.descr;</label>

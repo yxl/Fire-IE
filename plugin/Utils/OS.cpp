@@ -66,6 +66,13 @@ namespace Utils
 		if (s_ieversion)
 			return s_ieversion;
 
+		return s_ieversion = GetIEVersionFromRegistry();
+	}
+
+	int OS::GetIEVersionFromRegistry()
+	{
+		int version = 6;
+
 		HKEY hkey;
 		if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Internet Explorer"), 0,
 			KEY_QUERY_VALUE, &hkey))
@@ -77,20 +84,18 @@ namespace Utils
 			if (ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Version"), NULL, NULL, (LPBYTE)cstrVersion, &dwSize))
 			{
 				cstrVersion[BUFFER_LEN - 1] = _T('\0');
-				for (int i = 0; i < BUFFER_LEN; i++)
+				version = _tstoi(cstrVersion);
+				if (version >= 9 && ERROR_SUCCESS == RegQueryValueEx(hkey, _T("svcVersion"), NULL, NULL, (LPBYTE)cstrVersion, &dwSize))
 				{
-					if (cstrVersion[i] < _T('0') || cstrVersion[i] > _T('9'))
-					{
-						cstrVersion[i] = _T('\0');
-						break;
-					}
+					// for IE 10, version equals to "9.10.*.*", which should be handled specially
+					// by the way, f**k Microsoft for this u*ly change
+					cstrVersion[BUFFER_LEN - 1] = _T('\0');
+					version = _tstoi(cstrVersion);
 				}
-				s_ieversion = _tstoi(cstrVersion);
 			}
 
 			RegCloseKey(hkey);
 		}
-		return s_ieversion;
+		return version;
 	}
-
 }

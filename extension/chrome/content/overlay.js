@@ -281,7 +281,7 @@ var gFireIE = null;
       HM.hookCodeHead("PrintUtils.showPageSetup", function() { if (gFireIE.goDoCommand('PrintSetup')) return RET.shouldReturn(); });
       HM.hookCodeHead("PrintUtils.printPreview", function() { if (gFireIE.goDoCommand('PrintPreview')) return RET.shouldReturn(); });
       // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
-      HM.hookCodeHead("goDoCommand", function() { if (gFireIE.goDoCommand(arguments[0])) return RET.shouldReturn(); }); 
+      HM.hookCodeHead("goDoCommand", function(cmd) { if (gFireIE.goDoCommand(cmd)) return RET.shouldReturn(); }); 
       
       let displaySecurityInfoFunc = function()
       {
@@ -293,9 +293,9 @@ var gFireIE = null;
       HM.hookCodeHead("BrowserViewSourceOfDocument", function() { if(gFireIE.goDoCommand('ViewPageSource')) return RET.shouldReturn(); });
       
       // make firegestures' and others' selection based functions work
-      HM.hookCodeHead("getBrowserSelection", function()
+      HM.hookCodeHead("getBrowserSelection", function(maxlen)
       {
-        let value = gFireIE.getSelectionText(arguments[0]);
+        let value = gFireIE.getSelectionText(maxlen);
         if (value != null) return RET.shouldReturn(value);
       });
 
@@ -324,13 +324,13 @@ var gFireIE = null;
   function initializeFindBarHooks()
   {
     // find_next, find_prev, arguments[0] denotes whether find_prev
-    HM.hookCodeHead("gFindBar.onFindAgainCommand", function()
+    HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)
     {
       if (gFindBar.getElement('findbar-textbox').value.length != 0
         && gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value,
                                  gFindBar.getElement('highlight').checked,
                                  gFindBar.getElement('find-case-sensitive').checked)
-        && gFireIE.goDoCommand(arguments[0] ? 'FindPrevious' : 'FindAgain'))
+        && gFireIE.goDoCommand(prev ? 'FindPrevious' : 'FindAgain'))
       {
         gFireIE.updateFindBarUI(gFindBar);
         return RET.shouldReturn();
@@ -351,9 +351,9 @@ var gFireIE = null;
     // do not return in order to let findbar set the case sensitivity pref
     HM.hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); }");
 
-    HM.hookCodeHead("gFindBar._find", function()
+    HM.hookCodeHead("gFindBar._find", function(text)
     {
-      let value = arguments[0] || gFindBar.getElement('findbar-textbox').value;
+      let value = text || gFindBar.getElement('findbar-textbox').value;
       if (gFireIE.setFindParams(value, gFindBar.getElement('highlight').checked,
                                 gFindBar.getElement('find-case-sensitive').checked)
         && gFireIE.findText(value))

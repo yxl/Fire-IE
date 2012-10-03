@@ -123,36 +123,101 @@ Options.apply = function(quiet)
   }
 }
 
+Options.getIECompatMode = function()
+{
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  let value = 7000;
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_READ);
+    value = wrk.readIntValue(AppIntegration.getPluginProcessName());
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  
+  let mode = "ie7mode";
+  switch (value)
+  {
+  case 7000:
+    mode = "ie7mode";
+    break;
+  case 8000:
+    mode = "ie8mode";
+    break;
+  case 8888:
+    mode = "ie8forced";
+    break;
+  case 9000:
+    mode = "ie9mode";
+    break;
+  case 9999:
+    mode = "ie9forced";
+    break;
+  case 10000:
+    mode = "ie10mode";
+    break;
+  case 10001:
+    mode = "ie10forced";
+    break;
+  default:
+    mode = "ie7mode";
+    break;
+  }
+  
+  Prefs.compatMode = mode;
+}
+
 Options.applyIECompatMode = function()
 {
-  let mode = Services.prefs.getCharPref("extensions.fireie.compatMode");
+  let mode = Prefs.compatMode;
   let value = 7000;
   switch (mode)
   {
-  case 'ie7mode':
+  case "ie7mode":
     value = 7000;
     break;
-  case 'ie8mode':
+  case "ie8mode":
     value = 8000;
     break;
-  case 'ie9mode':
+  case "ie8forced":
+    value = 8888;
+    break;
+  case "ie9mode":
     value = 9000;
+    break;
+  case "ie9forced":
+    value = 9999;
+    break;
+  case "ie10mode":
+    value = 10000;
+    break;
+  case "ie10forced":
+    value = 10001;
     break;
   default:
     value = 7000;
     break;
   }
   
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
   try
   {
-	wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_ALL);
-	wrk.writeIntValue("firefox.exe", value);
-	wrk.close();
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_WRITE);
+    wrk.writeIntValue(AppIntegration.getPluginProcessName(), value);
   }
   catch (e)
   {
-	Utils.ERROR(e);
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
   }
 }
 
@@ -160,18 +225,28 @@ Options.applyIECompatMode = function()
 Options.getIEMainVersion = function()
 {
   let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  let versionString = "0";
+  let version = 6;
   try
   {
-	wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
-    versionString = wrk.readStringValue("version");
-    wrk.close();
+    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+    let versionString = wrk.readStringValue("version");
+    version = parseInt(versionString);
+    // for IE 10, version equals to "9.10.*.*", which should be handled specially
+    if (version == 9)
+    {
+      versionString = wrk.readStringValue("svcVersion");
+      version = parseInt(versionString);
+    }
   }
   catch (e)
   {
     Utils.ERROR(e);
-  }  
-  return parseInt(versionString);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  return version;
 }
 
 Options.updateIEModeTab = function()
@@ -182,17 +257,24 @@ Options.updateIEModeTab = function()
   {
     return;
   }
-  switch (mainIEVersion)
+  if (mainIEVersion >= 10)
   {
-  case 9:
-    E("ie9mode-radio").hidden = false;
-  case 8:
-    E("ie8mode-radio").hidden = false;
-    E("ie7mode-radio").hidden = false;
-    break;
+    E("ie10mode-radio").hidden = false;
+    E("ie10forced-radio").hidden = false;
   }
+  if (mainIEVersion >= 9)
+  {
+    E("ie9mode-radio").hidden = false;
+    E("ie9forced-radio").hidden = false;
+  }
+  // mainIEVersion >= 8
+  E("ie8mode-radio").hidden = false;
+  E("ie8forced-radio").hidden = false;
+  E("ie7mode-radio").hidden = false;
+
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
+  Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
 }

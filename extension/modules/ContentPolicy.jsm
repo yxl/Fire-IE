@@ -14,7 +14,7 @@
  */
 
 /**
- * @fileOverview Content policy implementation, responsible for automatially engin switching.
+ * @fileOverview Content policy implementation, responsible for automatic engine switching.
  */
 
 var EXPORTED_SYMBOLS = ["Policy"];
