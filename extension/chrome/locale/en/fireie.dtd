@@ -49,11 +49,15 @@
 <!ENTITY fireie.options.rule.button.add "Add">
 <!ENTITY fireie.options.rule.button.delete "Delete">
 
-<!ENTITY fireie.options.iecompat.tab "IE Compatibility Mode">
-<!ENTITY fireie.options.iecompat.pane "IE Compatibility Mode">
-<!ENTITY fireie.options.iecompat.ie7 "IE7 Standards Mode">
-<!ENTITY fireie.options.iecompat.ie8 "IE8 Standards Mode">
-<!ENTITY fireie.options.iecompat.ie9 "IE9 Standards Mode">
+<!ENTITY fireie.options.iecompat.tab   "IE Compatibility Mode">
+<!ENTITY fireie.options.iecompat.pane  "IE Compatibility Mode">
+<!ENTITY fireie.options.iecompat.ie7   "IE7 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie8   "IE8 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie8f  "IE8 Forced Standards Mode">
+<!ENTITY fireie.options.iecompat.ie9   "IE9 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie9f  "IE9 Forced Standards Mode">
+<!ENTITY fireie.options.iecompat.ie10  "IE10 Standards Mode">
+<!ENTITY fireie.options.iecompat.ie10f "IE10 Forced Standards Mode">
 <!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
 
 <!ENTITY fireie.options.apply "Apply">

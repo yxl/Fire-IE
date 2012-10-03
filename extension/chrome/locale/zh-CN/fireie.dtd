@@ -49,11 +49,15 @@
 <!ENTITY fireie.options.rule.button.add "添加">
 <!ENTITY fireie.options.rule.button.delete "删除">
 
-<!ENTITY fireie.options.iecompat.tab "IE兼容模式">
-<!ENTITY fireie.options.iecompat.pane "IE兼容模式">
-<!ENTITY fireie.options.iecompat.ie7 "IE7标准模式">
-<!ENTITY fireie.options.iecompat.ie8 "IE8标准模式">
-<!ENTITY fireie.options.iecompat.ie9 "IE9标准模式">
+<!ENTITY fireie.options.iecompat.tab   "IE兼容模式">
+<!ENTITY fireie.options.iecompat.pane  "IE兼容模式">
+<!ENTITY fireie.options.iecompat.ie7   "IE7标准模式">
+<!ENTITY fireie.options.iecompat.ie8   "IE8标准模式">
+<!ENTITY fireie.options.iecompat.ie8f  "IE8强制标准模式">
+<!ENTITY fireie.options.iecompat.ie9   "IE9标准模式">
+<!ENTITY fireie.options.iecompat.ie9f  "IE9强制标准模式">
+<!ENTITY fireie.options.iecompat.ie10  "IE10标准模式">
+<!ENTITY fireie.options.iecompat.ie10f "IE10强制标准模式">
 <!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式。">
 
 <!ENTITY fireie.options.apply "应用">

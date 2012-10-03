@@ -286,7 +286,7 @@ let IECookieManager = {
     Utils.LOG("IE Temp dir changed.");
   },
   
-  retoreIETempDirectorySetting: function()
+  restoreIETempDirectorySetting: function()
   {
     if (!this._bTmpDirChanged) return;
   

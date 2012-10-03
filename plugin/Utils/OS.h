@@ -30,6 +30,8 @@ namespace Utils
 	private:
 		static Version s_version;
 		static int s_ieversion;
+
+		static int GetIEVersionFromRegistry();
 	};
 
 }

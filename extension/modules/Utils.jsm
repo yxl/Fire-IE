@@ -31,6 +31,9 @@ var Utils = {
   _userAgent: null,
 
   _ffMajorVersion: 4,
+  
+  /** nsITimer's */
+  _timers: [],
 
   /**
    * Returns the add-on ID used by Adblock Plus
@@ -495,8 +498,8 @@ var Utils = {
   },
   getEffectiveHost: function( /**String*/ url) /**String*/
   {
-      // Cache the eTLDService if this is our first time through
-      // Do not cache to gIdentityHandler, thus minimizing the impact
+    // Cache the eTLDService if this is our first time through
+    // Do not cache to gIdentityHandler, thus minimizing the impact
     var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
     var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
     this.getEffectiveHost = function(u)
@@ -539,6 +542,34 @@ var Utils = {
       }
     };
     Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
+  },
+  
+  /**
+   * Posts an action to the event queue of the current thread to run it
+   * asynchronously, after a specified timeout. (Just like setTimeout)
+   * Any additional parameters to this function are passed as parameters
+   * to the callback.
+   */
+  runAsyncTimeout: function( /**Function*/ callback, /**Object*/ thisPtr, /**Number*/ timeout)
+  {
+    let params = Array.prototype.slice.call(arguments, 3);
+    let event = {
+      notify: function(timer)
+      {
+        for (let i = 0, l = this._timers.length; i < l; i++)
+        {
+          if (this._timers[i] === timer)
+          {
+            this._timers.splice(i, 1);
+            break;
+          }
+        }
+        callback.apply(thisPtr, params);
+      }.bind(this)
+    };
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(event, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timers.push(timer);
   },
 
   /**
