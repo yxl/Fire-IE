@@ -93,6 +93,12 @@
     <ClCompile Include="abp\ElemHideMatcher.cpp">
       <Filter>abp</Filter>
     </ClCompile>
+    <ClCompile Include="regdom-libs\dkim-regdom.cpp">
+      <Filter>regdom-libs</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TLD.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -217,6 +223,15 @@
       <Filter>abp</Filter>
     </ClInclude>
     <ClInclude Include="UserMessage.h" />
+    <ClInclude Include="regdom-libs\dkim-regdom.h">
+      <Filter>regdom-libs</Filter>
+    </ClInclude>
+    <ClInclude Include="regdom-libs\tld-canon.h">
+      <Filter>regdom-libs</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TLD.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
@@ -258,6 +273,9 @@
     </Filter>
     <Filter Include="re">
       <UniqueIdentifier>{34c92999-e07e-47a9-8dd6-24e0956040c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="regdom-libs">
+      <UniqueIdentifier>{a453b9ff-d57d-4f23-956c-daa98578b0b7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

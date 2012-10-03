@@ -356,6 +356,12 @@ buildxpi64.bat</Command>
     </ClCompile>
     <ClCompile Include="PluginApp.cpp" />
     <ClCompile Include="Plugin\PluginGlobal.cpp" />
+    <ClCompile Include="regdom-libs\dkim-regdom.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="re\RegExp.cpp" />
     <ClCompile Include="re\strutils.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -373,6 +379,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="Plugin\ScriptablePluginObject.cpp" />
     <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
+    <ClCompile Include="Utils\TLD.cpp" />
     <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -399,6 +406,8 @@ buildxpi64.bat</Command>
     <ClInclude Include="jscre\ucpinternal.h" />
     <ClInclude Include="PluginApp.h" />
     <ClInclude Include="Plugin\PluginGlobal.h" />
+    <ClInclude Include="regdom-libs\dkim-regdom.h" />
+    <ClInclude Include="regdom-libs\tld-canon.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="re\RegExp.h" />
     <ClInclude Include="re\strutils.h" />
@@ -421,6 +430,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="Plugin\ScriptablePluginObjectBase.h" />
     <ClInclude Include="UserMessage.h" />
     <ClInclude Include="Utils\OS.h" />
+    <ClInclude Include="Utils\TLD.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>
   <ItemGroup>

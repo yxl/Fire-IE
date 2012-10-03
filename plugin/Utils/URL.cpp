@@ -20,6 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 #include "URL.h"
+#include "TLD.h"
 #include "re/RegExp.h"
 #include "re/strutils.h"
 #include <algorithm>
@@ -59,7 +60,7 @@ bool IsThirdPartyRequest(const CString& request, const CString& referer)
 	// TODO: use effective tld list to determine third party or not
 	CString host1 = GetHostFromUrl(request).MakeLower();
 	CString host2 = GetHostFromUrl(referer).MakeLower();
-	return !IsSubDomain(host1, host2);
+	return TLD::getEffectiveDomain(host1) != TLD::getEffectiveDomain(host2);
 }
 
 bool IsSubDomain(const CString& subdomain, const CString& domain)
