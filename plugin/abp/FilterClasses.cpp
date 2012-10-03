@@ -171,7 +171,6 @@ const map<wstring, bool> ActiveFilter::s_mEmpty;
 
 void ActiveFilter::setDisabled(bool value)
 {
-	// TODO: implement FilterNotifier
 	disabled = value;
 }
 

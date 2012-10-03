@@ -57,7 +57,6 @@ CString GetURLRelative(const CString& baseURL, const CString& relativeURL)
 
 bool IsThirdPartyRequest(const CString& request, const CString& referer)
 {
-	// TODO: use effective tld list to determine third party or not
 	CString host1 = GetHostFromUrl(request).MakeLower();
 	CString host2 = GetHostFromUrl(referer).MakeLower();
 	return TLD::getEffectiveDomain(host1) != TLD::getEffectiveDomain(host2);
