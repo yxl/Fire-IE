@@ -182,9 +182,6 @@ const tldnode* findTldNode(const tldnode* parent, const wchar_t* subdom, int len
 }
 
 const wchar_t* getRegisteredDomain(const wchar_t* signingDomain, const tldnode* tree) {
-
-	static const int MAX_TOKENS = 10;
-
 	// split domain by . separator, and find tld simutaneously
 	const wchar_t* sDbegin = signingDomain;
 	const wchar_t* sDend = signingDomain + wcslen(signingDomain);
