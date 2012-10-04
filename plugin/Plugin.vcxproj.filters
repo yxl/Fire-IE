@@ -99,6 +99,9 @@
     <ClCompile Include="Utils\TLD.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="test\test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -232,6 +235,9 @@
     <ClInclude Include="Utils\TLD.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="test\test.h">
+      <Filter>test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
@@ -276,6 +282,9 @@
     </Filter>
     <Filter Include="regdom-libs">
       <UniqueIdentifier>{a453b9ff-d57d-4f23-956c-daa98578b0b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{8ba6f65f-4a26-4d74-a74e-c6037ba83c5c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

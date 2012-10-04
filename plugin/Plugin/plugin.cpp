@@ -49,6 +49,10 @@
 #include "json/json.h"
 #include "OS.h"
 
+#ifdef DEBUG
+#include "test/test.h"
+#endif
+
 using namespace std;
 using namespace UserMessage;
 
@@ -695,6 +699,9 @@ namespace Plugin
 
 	void CPlugin::OnUtilsPluginInit()
 	{
+#ifdef DEBUG
+		test::doTest();
+#endif
 		CString strEventType = _T("IEUtilsPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);

@@ -15,35 +15,12 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// TLD.cpp : Effective Top-Level-Domain Service impl.
-//
+#pragma once
 
-#include "StdAfx.h"
+#ifdef DEBUG
 
-#include "TLD.h"
-#include "regdom-libs/dkim-regdom.h"
-#include "regdom-libs/tld-canon.h"
-
-namespace Utils {
-	const regdom::tldnode* rootTLDNode = NULL;
+namespace test {
+	void doTest();
 }
 
-using namespace Utils;
-
-TLD::TLDInit TLD::init;
-
-TLD::TLDInit::TLDInit()
-{
-	rootTLDNode = regdom::readTldTree(tldString);
-}
-
-TLD::TLDInit::~TLDInit()
-{
-	freeTldTree(rootTLDNode);
-}
-
-CString TLD::getEffectiveDomain(const CString& domain)
-{
-	const wchar_t* utf8Result = regdom::getRegisteredDomain(domain, rootTLDNode);
-	return utf8Result ? utf8Result : domain;
-}
+#endif
