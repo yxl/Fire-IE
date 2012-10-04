@@ -167,6 +167,11 @@ let IECookieManager = {
     {
       hostname = hostname.substring(1);
     }
+    
+    // Might be a private-browsing warning cookie, ignore it
+    if (hostname == "fireie")
+      return;
+    
     /* The URL format must be correct or set cookie will fail
      * http://.baidu.com must be transformed into
      * http://baidu.com before it can be recognized
@@ -188,7 +193,7 @@ let IECookieManager = {
       if (!ret)
       {
         let errCode = ctypes.winLastError || 0;
-        Utils.ERROR('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
+        Utils.LOG('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
       }
     }
   },
