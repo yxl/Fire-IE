@@ -96,6 +96,23 @@ function setIECtrlRegString(regName, value)
   }
 }
 
+function getNameValueFromCookieHeader(header)
+{
+  header = header.trim();
+  let terminate = header.indexOf(";");
+  if (terminate == -1)
+  {
+    terminate = header.length;
+  }
+  let seperate = header.indexOf("=");
+  if (seperate == -1 || seperate > terminate)
+  {
+    return {name: null, value: null};
+  }
+  let cookieName = header.substring(0, seperate).trim();
+  let cookieValue = header.substring(seperate + 1, terminate).trim();
+  return {name: cookieName, vlaue: cookieValue};
+}
 
 /**
  * Monitors the cookie changes of Firefox and synchronizes to IE.
@@ -125,24 +142,6 @@ let IECookieManager = {
   
   saveFirefoxCookie: function(url, cookieHeader)
   {
-    function getNameValueFromCookieHeader(header)
-    {
-      header = header.trim();
-      let terminate = header.indexOf(";");
-      if (terminate == -1)
-      {
-        terminate = header.length;
-      }
-      let seperate = header.indexOf("=");
-      if (seperate == -1 || seperate > terminate)
-      {
-        return {name: null, value: null};
-      }
-      let cookieName = header.substring(0, seperate).trim();
-      let cookieValue = header.substring(seperate + 1, terminate).trim();
-      return {name: cookieName, vlaue: cookieValue};
-    }
-
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
     this._ieCookieMap[name] = value;
