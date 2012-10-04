@@ -48,8 +48,8 @@ bool AdBlockPlus::s_bLoading = false;
 unsigned int AdBlockPlus::s_loadStartTick = 0;
 unsigned int AdBlockPlus::s_loadTicks = 0;
 
-// do not process files larger than 10MB
-const ULONGLONG AdBlockPlus::FILE_SIZE_LIMIT = 10 * (1 << 20);
+// do not process files larger than 20MB
+const ULONGLONG AdBlockPlus::FILE_SIZE_LIMIT = 20 * (1 << 20);
 
 // synchronization
 ReaderWriterMutex AdBlockPlus::s_mutex;
