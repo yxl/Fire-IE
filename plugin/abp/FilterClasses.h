@@ -159,7 +159,7 @@ namespace abp {
 		 * @constructor
 		 */
 		ActiveFilter(const std::wstring& text, const std::wstring& domains = L"", 
-					 const std::wstring& domainSeparator = L"|", bool ignoreTrailingDot = true)
+					 wchar_t domainSeparator = L'|', bool ignoreTrailingDot = true)
 			: Filter(text), domainSeparator(domainSeparator), ignoreTrailingDot(ignoreTrailingDot), disabled(false)
 		{
 			this->domains = NULL;
@@ -172,7 +172,7 @@ namespace abp {
 		 * Separator character used in domainSource property, must be overridden by subclasses
 		 * @type String
 		 */
-		std::wstring domainSeparator;
+		wchar_t domainSeparator;
 
 		/**
 		 * Determines whether the trailing dot in domain names isn't important and
@@ -209,7 +209,7 @@ namespace abp {
 		RegExpFilter(const std::wstring& text, const std::wstring& regexpSource,
 			ContentType_T contentType = DEFAULT_CONTENT_TYPE, bool matchCase = false, const std::wstring& domains = L"",
 			TriBool thirdParty = TriNull)
-			: ActiveFilter(text, domains, L"|", true), contentType(contentType), matchCase(matchCase), thirdParty(thirdParty)
+			: ActiveFilter(text, domains, L'|', true), contentType(contentType), matchCase(matchCase), thirdParty(thirdParty)
 		{
 			if (regexpSource.length() >= 2 && regexpSource.front() == L'/'
 				&& regexpSource.back() == L'/')

@@ -188,7 +188,7 @@ void ActiveFilter::generateDomains(const wstring& domainSource)
 		map<wstring, bool> domains;
 
 		wstring ds = toUpperCase(domainSource);
-		vector<wstring> list = split(ds, domainSeparator);
+		vector<wstring> list = split(ds, wstring(1, domainSeparator));
 
 		bool hasIncludes = false;
 		for (size_t i = 0; i < list.size(); i++)
@@ -549,7 +549,7 @@ namespace abp { namespace funcStatic { namespace ElemHideBase_ElemHideBase {
 } } } // namespace abp::funcStatic::ElemHideBase_ElemHideBase
 
 ElemHideBase::ElemHideBase(const wstring& text, const wstring& domains, const wstring& selector)
-	: ActiveFilter(text, toUpperCase(domains), L",", false), selector(selector)
+	: ActiveFilter(text, toUpperCase(domains), L',', false), selector(selector)
 {
 	using namespace funcStatic::ElemHideBase_ElemHideBase;
 
