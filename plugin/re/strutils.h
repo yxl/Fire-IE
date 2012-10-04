@@ -21,6 +21,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include <string>
+#include <vector>
 
 namespace re {
 	class RegExp;

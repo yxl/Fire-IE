@@ -28,6 +28,12 @@ using namespace std;
 namespace re { namespace strutils {
 
 // See https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter
+// Some tricky test cases:
+// "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$001"): "$001"
+// "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$01"): "a"
+// "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$10"): "j"
+// "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$15"): "a5"
+// "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$20"): "b0"
 void insertReplacedString(wstring& builder, const wstring& base, const wstring& str, const RegExpMatch* match)
 {
 	const vector<wstring>& substrings = match->substrings;
@@ -55,10 +61,16 @@ void insertReplacedString(wstring& builder, const wstring& base, const wstring& 
 				if (ch >= L'0' && ch <= L'9')
 				{
 					int expidx = 0;
-					wchar_t ch2 = str.length() > i + 2 ? str[i + 1] : L'\0';
+					wchar_t ch2 = str.length() > i + 1 ? str[i + 1] : L'\0';
 					if (ch2 >= L'0' && ch2 <= L'9')
 					{
 						expidx = ch2 - L'0' + 10 * (ch - L'0');
+						// if expidx overflows, fall back to single-digit
+						if (expidx == 0 || expidx >= (int)substrings.size())
+						{
+							expidx = ch - L'0';
+							ch2 = 0;
+						}
 					}
 					else
 					{
@@ -66,7 +78,7 @@ void insertReplacedString(wstring& builder, const wstring& base, const wstring& 
 						expidx = ch - L'0';
 					}
 					// substrings.size() is 1 bigger than actual sub matches
-					if (expidx < (int)substrings.size() || expidx > 0)
+					if (expidx < (int)substrings.size() && expidx > 0)
 					{
 						const wstring& submstr = substrings[expidx];
 						builder.append(submstr);
