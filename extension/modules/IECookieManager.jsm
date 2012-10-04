@@ -111,7 +111,7 @@ function getNameValueFromCookieHeader(header)
   }
   let cookieName = header.substring(0, seperate).trim();
   let cookieValue = header.substring(seperate + 1, terminate).trim();
-  return {name: cookieName, vlaue: cookieValue};
+  return {name: cookieName, value: cookieValue};
 }
 
 /**
@@ -153,7 +153,7 @@ let IECookieManager = {
 
   saveIECookie: function(cookie2)
   {  
-    // If the cookie is received from IE, does not sync it back
+    // If the cookie is received from IE, do not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
     if (valueInMap !== null && valueInMap === cookie2.value)
     {
