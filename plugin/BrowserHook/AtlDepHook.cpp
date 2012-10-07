@@ -77,6 +77,7 @@ namespace BrowserHook
 	const size_t s_FunctionsCount = sizeof(s_Functions)/sizeof(FunctionInfo);
 
 	// WindowProc thunks 
+#if !defined(_M_X64)
 #pragma pack(push,1)
 	struct _WndProcThunk
 	{
@@ -99,7 +100,34 @@ namespace BrowserHook
 		}
 		return TRUE;
 	}
+#else
+#pragma pack(push,2)
+	struct _WndProcThunk
+	{
+		USHORT  RcxMov;         // mov rcx, pThis
+		ULONG64 RcxImm;         //
+		USHORT  RaxMov;         // mov rax, target
+		ULONG64 RaxImm;         //
+		USHORT  RaxJmp;         // jmp target
+	};
 
+	BOOL CheckThunk(_WndProcThunk* pThunk)
+	{
+		if (pThunk->RcxMov != 0xb948)
+		{
+			return FALSE;
+		}
+		if (pThunk->RaxMov != 0xb848)
+		{
+			return FALSE;
+		}
+		if (pThunk->RaxJmp != 0xe0ff)
+		{
+			return FALSE;
+		}
+		return TRUE;
+	}
+#endif
 	BOOL FixThunk(LONG dwLong)
 	{
 		_WndProcThunk* pThunk = (_WndProcThunk*)dwLong;
