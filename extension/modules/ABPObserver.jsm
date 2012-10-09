@@ -486,6 +486,9 @@ let ABPObserver = {
   
   _onPrefChanged: function()
   {
+    // do not take actions on pref change when abp is not detected
+    if (!this._abpInstalled)
+      return;
     this.updateState();
     if (!this._canEnable())
       this._setStatus(ABPStatus.Disabled);
