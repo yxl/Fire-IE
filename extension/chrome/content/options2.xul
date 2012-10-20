@@ -30,7 +30,7 @@
           id="handleurl" />
           <checkbox label="&fireie.options.switch.disableAutoSwitch;" id="disableAutoSwitch" />
           <hbox>
-            <button id="openSwitchRules" label="&urlbar.switchRules.label;..." onclick="Utils.openRulesDialog();" />
+            <button id="openSwitchRules" label="&urlbar.switchRules.label;..." oncommand="Utils.openRulesDialog();" />
           </hbox>
         </vbox>
       </groupbox>
