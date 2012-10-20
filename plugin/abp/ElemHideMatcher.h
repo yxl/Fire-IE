@@ -46,8 +46,8 @@ namespace abp {
 		std::vector<ElemHideFilter*> getFiltersForDomain(const std::wstring& domain);
 		void getFilterSetForDomain(const std::wstring& domain, FilterSetInternal& filterSet) const;
 
-		std::vector<std::wstring> generateCSSContent(const std::vector<ElemHideFilter*> filters) const;
-		std::wstring generateSingleCSSContent(const std::vector<ElemHideFilter*> filters, size_t begin, size_t end) const;
+		std::vector<std::wstring> generateCSSContent(const std::vector<ElemHideFilter*>& filters) const;
+		std::wstring generateSingleCSSContent(const std::vector<ElemHideFilter*>& filters, size_t begin, size_t end) const;
 
 		// worth implementing a cache
 		std::unordered_map<std::wstring, std::vector<ElemHideFilter*> > resultCache;

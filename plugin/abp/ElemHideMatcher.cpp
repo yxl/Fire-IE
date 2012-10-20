@@ -132,7 +132,7 @@ void ElemHideMatcher::generateGeneralFilters()
 	generated = true;
 }
 
-vector<wstring> ElemHideMatcher::generateCSSContent(const vector<ElemHideFilter*> filters) const
+vector<wstring> ElemHideMatcher::generateCSSContent(const vector<ElemHideFilter*>& filters) const
 {
 	vector<wstring> result;
 	// Due to IE's 4096 selectors limit per <style> or <link rel="stylesheet">
@@ -146,7 +146,7 @@ vector<wstring> ElemHideMatcher::generateCSSContent(const vector<ElemHideFilter*
 	return result;
 }
 
-wstring ElemHideMatcher::generateSingleCSSContent(const vector<ElemHideFilter*> filters, size_t begin, size_t end) const
+wstring ElemHideMatcher::generateSingleCSSContent(const vector<ElemHideFilter*>& filters, size_t begin, size_t end) const
 {
 	wstring result;
 	size_t length = 0;

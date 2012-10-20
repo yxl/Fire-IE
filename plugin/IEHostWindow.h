@@ -170,7 +170,7 @@ protected:
 	bool FBCheckDocument();
 	static bool FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange);
 	static bool FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2);
-	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
+	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices>& pDS, const CComPtr<IMarkupServices>& pMS, const CComPtr<IHTMLTxtRange>& pRange);
 
 	static BOOL CALLBACK GetInternetExplorerServerCallback(HWND hWnd, LPARAM lParam);
 

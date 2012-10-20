@@ -2242,7 +2242,7 @@ bool CIEHostWindow::FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange)
 	return true;
 }
 
-bool CIEHostWindow::FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange)
+bool CIEHostWindow::FBCheckRangeHighlightable(const CComPtr<IDisplayServices>& pDS, const CComPtr<IMarkupServices>& pMS, const CComPtr<IHTMLTxtRange>& pRange)
 {
 	CComPtr<IDisplayPointer> pDStart, pDEnd;
 	CComPtr<IMarkupPointer> pMStart, pMEnd;
