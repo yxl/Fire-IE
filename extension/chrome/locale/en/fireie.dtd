@@ -58,8 +58,9 @@
 <!ENTITY fireie.options.rule.button.add "Add">
 <!ENTITY fireie.options.rule.button.delete "Delete">
 
-<!ENTITY fireie.options.iecompat.tab   "IE Compatibility Mode">
-<!ENTITY fireie.options.iecompat.pane  "IE Compatibility Mode">
+<!ENTITY fireie.options.ieoptions.tab  "IE Options">
+<!ENTITY fireie.options.ieoptions.pane "IE Options">
+<!ENTITY fireie.options.iecompat.group "IE Compatibility Mode">
 <!ENTITY fireie.options.iecompat.ie7   "IE7 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie8   "IE8 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie8f  "IE8 Forced Standards Mode">
@@ -68,6 +69,8 @@
 <!ENTITY fireie.options.iecompat.ie10  "IE10 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie10f "IE10 Forced Standards Mode">
 <!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
+<!ENTITY fireie.options.iefeat.group   "Advanced Features">
+<!ENTITY fireie.options.iefeat.gpuRendering "Enable hardware accelerated rendering">
 
 <!ENTITY fireie.options.apply "Apply">
 <!ENTITY fireie.options.manager "Options Manager">

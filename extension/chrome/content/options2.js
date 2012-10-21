@@ -114,6 +114,15 @@ Options.apply = function(quiet)
     Prefs.compatMode = newMode;
     Options.applyIECompatMode();
   }
+  
+  // GPU Rendering State
+  let newGPURendering = E("gpuRendering").checked;
+  if (Prefs.gpuRendering != newGPURendering)
+  {
+    requiresRestart = true;
+    Prefs.gpuRendering = newGPURendering;
+    Options.applyGPURenderingState();
+  }
 
   //update UI
   Options.updateApplyButton(false);
@@ -223,6 +232,45 @@ Options.applyIECompatMode = function()
   }
 };
 
+Options.getGPURenderingState = function()
+{
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  let state = false;
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_GPU_RENDERING", wrk.ACCESS_READ);
+    state = wrk.readIntValue(AppIntegration.getPluginProcessName()) == 1;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  
+  Prefs.gpuRendering = state;
+};
+
+Options.applyGPURenderingState = function()
+{
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_GPU_RENDERING", wrk.ACCESS_WRITE);
+    wrk.writeIntValue(AppIntegration.getPluginProcessName(), Prefs.gpuRendering ? 1 : 0);
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+};
+
 // Get IE's main version number
 Options.getIEMainVersion = function()
 {
@@ -254,7 +302,7 @@ Options.getIEMainVersion = function()
 Options.updateIEModeTab = function()
 {
   let mainIEVersion = Options.getIEMainVersion();
-  // IE7 or lower does not support compatible modes
+  // IE7 or lower does not support compatible modes and GPU rendering
   if (mainIEVersion < 8)
   {
     return;
@@ -268,17 +316,24 @@ Options.updateIEModeTab = function()
   {
     E("ie9mode-radio").hidden = false;
     E("ie9forced-radio").hidden = false;
+    // IE9+ supports hardware accelerated rendering
+    E("ieFeatures").hidden = false;
+    E("gpuRendering").hidden = false;
   }
   // mainIEVersion >= 8
   E("ie8mode-radio").hidden = false;
   E("ie8forced-radio").hidden = false;
   E("ie7mode-radio").hidden = false;
-
+  
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
+  
   Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
+  
+  Options.getGPURenderingState();
+  E("gpuRendering").checked = Prefs.gpuRendering;
 };
 
 // Update ABP status according to ABPObserver
@@ -332,18 +387,18 @@ Options.initDialog = function()
 
   // IE Compatibility Mode
   Options.updateIEModeTab();
-}
+};
 
 Options.setIconDisplayValue = function(value)
 {
   E("iconDisplay").value = value;
   this.updateApplyButton(true);
-}
+};
 
 Options.updateApplyButton = function(e)
 {
   document.getElementById("myApply").disabled = !e;
-}
+};
 
 Options.handleShortcutEnabled = function(e)
 {
@@ -351,7 +406,7 @@ Options.handleShortcutEnabled = function(e)
   E("shortcut-modifiers").disabled = disable;
   E("shortcut-plus").disabled = disable;
   E("shortcut-key").disabled = disable;
-}
+};
 
 Options.init = function()
 {
@@ -385,7 +440,7 @@ Options.init = function()
   {
     ABPObserver.removeListener(Options.updateABPStatus);
   });
-}
+};
 
 Options.close = function()
 {
@@ -397,7 +452,7 @@ Options.close = function()
       Options.apply(true);
     }
   }
-}
+};
 
 Options._saveToFile = function(aList)
 {
@@ -431,7 +486,7 @@ Options._saveToFile = function(aList)
       stream.close();
     }
   }
-}
+};
 
 Options._loadFromFile = function()
 {
@@ -461,7 +516,7 @@ Options._loadFromFile = function()
     }
   }
   return [false, null];
-}
+};
 
 Options._getAllOptions = function(isDefault)
 {
@@ -495,7 +550,7 @@ Options._getAllOptions = function(isDefault)
     }
   }
   return aList;
-}
+};
 
 Options._setAllOptions = function(aList)
 {
@@ -543,4 +598,4 @@ Options._setAllOptions = function(aList)
       Utils.ERROR(e);
     }
   }
-}
+};
