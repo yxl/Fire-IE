@@ -114,9 +114,6 @@ protected:
 
 	static const CString s_strSecureLockInfos[];
 
-	CComPtr<IClassFactory> m_spCFHTTP;
-	CComPtr<IClassFactory> m_spCFHTTPS;
-
 	static const TCHAR* const s_strElemHideClass;
 
 	void InitIE();

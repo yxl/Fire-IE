@@ -269,30 +269,11 @@ void CIEHostWindow::InitIE()
 
 	// 允许打开拖拽到浏览器窗口的文件。
 	m_ie.put_RegisterAsDropTarget(TRUE);
-
-	CComPtr<IInternetSession> spSession;
-	if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession)
-	{
-		MetaFactory::CreateInstance(CLSID_HttpProtocol, &m_spCFHTTP);
-		spSession->RegisterNameSpace(m_spCFHTTP, CLSID_NULL, L"http", 0, 0, 0);
-
-		MetaFactory::CreateInstance(CLSID_HttpSProtocol, &m_spCFHTTPS);
-		spSession->RegisterNameSpace(m_spCFHTTPS, CLSID_NULL, L"https", 0, 0, 0);
-	}
 }
 
 
 void CIEHostWindow::UninitIE()
 {
-	CComPtr<IInternetSession> spSession;
-	if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession)
-	{
-		spSession->UnregisterNameSpace(m_spCFHTTP, L"http");
-		m_spCFHTTP.Release();
-		spSession->UnregisterNameSpace(m_spCFHTTPS, L"https");
-		m_spCFHTTPS.Release();
-	}
-
 	/**
 	*  屏蔽页面关闭时IE控件的脚本错误提示
 	*  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
