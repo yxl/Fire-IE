@@ -131,8 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,3,0,0
+ PRODUCTVERSION 1,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -147,16 +147,16 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "hi@yxl.name"
+            VALUE "CompanyName", "fireie@fireie.org"
             VALUE "FileDescription", "Fire IE DLL"
             VALUE "FileExtents", "*"
-            VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "npfireid.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2012 yxl.name"
+            VALUE "FileVersion", "1.3.0.0"
+            VALUE "InternalName", "npfireie.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2012 fireie.org"
             VALUE "MIMEType", "application/fireie"
-            VALUE "OriginalFilename", "npfireid.dll"
+            VALUE "OriginalFilename", "npfireie.dll"
             VALUE "ProductName", "Fire IE DLL"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
