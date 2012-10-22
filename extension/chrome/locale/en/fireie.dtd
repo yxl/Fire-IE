@@ -68,7 +68,7 @@
 <!ENTITY fireie.options.iecompat.ie9f  "IE9 Forced Standards Mode">
 <!ENTITY fireie.options.iecompat.ie10  "IE10 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie10f "IE10 Forced Standards Mode">
-<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
+<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode or advanced features.">
 <!ENTITY fireie.options.iefeat.group   "Advanced Features">
 <!ENTITY fireie.options.iefeat.gpuRendering "Enable hardware accelerated rendering">
 

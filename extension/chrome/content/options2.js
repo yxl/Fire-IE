@@ -52,7 +52,7 @@ Options.import = function()
     }
     else
     {
-      alert(Utils.getString("fireie.options.import.error"));
+      Utils.alert(window, Utils.getString("fireie.options.import.error"), Utils.getString("fireie.options.alert.title"));
     }
   }
 };
@@ -130,7 +130,7 @@ Options.apply = function(quiet)
   //notify of restart requirement
   if (requiresRestart && !quiet)
   {
-    alert(Utils.getString("fireie.options.alert.restart"));
+    Utils.alert(window, Utils.getString("fireie.options.alert.restart"), Utils.getString("fireie.options.alert.title"));
   }
 };
 
@@ -447,7 +447,7 @@ Options.close = function()
   let isModified = !document.getElementById("myApply").disabled;
   if (isModified)
   {
-    if (confirm(Utils.getString("fireie.options.alert.modified")))
+    if (Utils.confirm(window, Utils.getString("fireie.options.alert.modified"), Utils.getString("fireie.options.alert.title")))
     {
       Options.apply(true);
     }
