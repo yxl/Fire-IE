@@ -126,6 +126,14 @@ let ABPObserver = {
    */
   _listeners: [],
   
+  /**
+   * Lazy initialization on first browser window creation. See Bootstrap.jsm
+   */
+  lazyStartup: function()
+  {
+    this.init();
+  },
+  
   init: function()
   {
     if (this._isInitCalled) return;
@@ -144,6 +152,24 @@ let ABPObserver = {
       this._registerListeners();
       
       this._detectABP();
+    }, this, []);
+  },
+  
+  shutdown: function()
+  {
+    if (!this._isInitCalled) return;
+    UtilsPluginManager.fireAfterInit(function()
+    {
+      this._listeners = [];
+      this._abpBranch = null;
+      this._unregisterListeners();
+      
+      // unload all filters if possible
+      try
+      {
+        UtilsPluginManager.getPlugin().ABPClear();
+      }
+      catch (e) {}
     }, this, []);
   },
   
@@ -437,51 +463,19 @@ let ABPObserver = {
   _registerListeners: function()
   {
     let window = UtilsPluginManager.getWindow();
-    window.addEventListener("IEABPFilterLoaded", this._onFilterLoaded.bind(this), false);
-    window.addEventListener("IEABPLoadFailure", this._onLoadFailure.bind(this), false);
-    Prefs.addListener(function(name)
-    {
-      if (name == "abpSupportEnabled")
-      {
-        this._onPrefChanged();
-      }
-    }.bind(this));
-    
+    window.addEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
+    window.addEventListener("IEABPLoadFailure", onABPLoadFailure, false);
+    Prefs.addListener(onFireIEPrefChanged);
     AddonManager.addAddonListener(ABPAddonListener);
   },
   
-  /**
-   * Filter load handler: enables ABP support if necessary
-   */
-  _onFilterLoaded: function(e)
+  _unregisterListeners: function()
   {
-    try
-    {
-      let detailObj = { number: "unknown", ticks: "unknown" };
-      detailObj = JSON.parse(e.detail);
-      Utils.LOG("[ABP] Filters loaded: " + detailObj.number + " active filter(s) in " + detailObj.ticks + " ms.");
-    }
-    catch (ex)
-    {
-      Utils.LOG("[ABP] Filters loaded.");
-    }
-    // enable ABP support
-    if (this._pendingUpdate)
-      this.updateState();
-    else
-      this._enable();
-  },
-  
-  /**
-   * Filter load failure handler
-   */
-  _onLoadFailure: function(e)
-  {
-    this._setStatus(ABPStatus.LoadFailed);
-    Utils.LOG("[ABP] Failed to load filters.");
-    Utils.ERROR("[ABP] Failed to load filters.");
-    if (this._pendingUpdate)
-      this.updateState();
+    let window = UtilsPluginManager.getWindow();
+    window.removeEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
+    window.removeEventListener("IEABPLoadFailure", onABPLoadFailure, false);
+    Prefs.removeListener(onFireIEPrefChanged);
+    AddonManager.removeAddonListener(ABPAddonListener);
   },
   
   _onPrefChanged: function()
@@ -494,6 +488,51 @@ let ABPObserver = {
       this._setStatus(ABPStatus.Disabled);
   }
 };
+  
+/**
+ * Filter load handler: enables ABP support if necessary
+ */
+function onABPFilterLoaded(e)
+{
+  try
+  {
+    let detailObj = { number: "unknown", ticks: "unknown" };
+    detailObj = JSON.parse(e.detail);
+    Utils.LOG("[ABP] Filters loaded: " + detailObj.number + " active filter(s) in " + detailObj.ticks + " ms.");
+  }
+  catch (ex)
+  {
+    Utils.LOG("[ABP] Filters loaded.");
+  }
+  // enable ABP support
+  let self = ABPObserver;
+  if (self._pendingUpdate)
+    self.updateState();
+  else
+    self._enable();
+}
+
+/**
+ * Filter load failure handler
+ */
+function onABPLoadFailure(e)
+{
+  let self = ABPObserver;
+  self._setStatus(ABPStatus.LoadFailed);
+  Utils.LOG("[ABP] Failed to load filters.");
+  Utils.ERROR("[ABP] Failed to load filters.");
+  if (self._pendingUpdate)
+    self.updateState();
+}
+
+function onFireIEPrefChanged(name)
+{
+  if (name == "abpSupportEnabled")
+  {
+    let self = ABPObserver;
+    self._onPrefChanged();
+  }
+}
 
 function onABPFilterNotify(action, item, newValue, oldValue)
 {

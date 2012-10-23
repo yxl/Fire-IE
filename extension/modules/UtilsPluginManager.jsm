@@ -45,6 +45,16 @@ let UtilsPluginManager = {
    */
   _isInitCalled: false,
   
+  lazyStartup: function()
+  {
+    this.init();
+  },
+  
+  shutdown: function()
+  {
+    this.uninit();
+  },
+  
   init: function()
   {
     if (this._isInitCalled) return;
@@ -57,6 +67,7 @@ let UtilsPluginManager = {
   
   uninit: function()
   {
+    if (!this._isInitCalled) return;
     this._unregisterHandlers();
     this._cancelPluginEvents();
   },
@@ -82,18 +93,21 @@ let UtilsPluginManager = {
   /**
    * Ensures that the plugin is initialized before calling the callback
    */
-  fireAfterInit: function(callback, self, arguments)
+  fireAfterInit: function(callback, self, args)
   {
     if (this.isPluginInitialized)
     {
-      callback.apply(self, arguments);
+      callback.apply(self, args);
     }
     else
     {
-      Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
+      let window = Utils.getHiddenWindow();
+      let handler = function(e)
       {
-        callback.apply(self, arguments);
-      }, false);
+        window.removeEventListener("IEUtilsPluginInitialized", handler, false);
+        callback.apply(self, args);
+      };
+      window.addEventListener("IEUtilsPluginInitialized", handler, false);
     }
   },
 

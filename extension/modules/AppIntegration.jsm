@@ -44,7 +44,6 @@ Cu.import(baseURL.spec + "Synchronizer.jsm");
 Cu.import(baseURL.spec + "LightweightTheme.jsm");
 Cu.import(baseURL.spec + "EasyRuleCreator.jsm");
 Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
-Cu.import(baseURL.spec + "ABPObserver.jsm");
 
 /**
  * Wrappers for tracked application windows.
@@ -148,7 +147,7 @@ let AppIntegration = {
   getWrapperForWindow: function( /**Window*/ wnd) /**WindowWrapper*/
   {
     for each(let wrapper in wrappers)
-    if (wrapper.window == wnd) return wrapper;
+      if (wrapper.window == wnd) return wrapper;
 
     return null;
   },
@@ -338,8 +337,7 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    UtilsPluginManager.init();
-    ABPObserver.init();
+    Services.obs.notifyObservers(null, "fireie-lazy-init", null);
 
     this._registerEventListeners();
 
@@ -1818,9 +1816,9 @@ WindowWrapper.prototype = {
   {
     this.E("fireie-menu-item-autoswitch-disabled").setAttribute("checked", !Prefs.autoswitch_enabled);
   },
-  fireAfterInit: function(callback, self, arguments)
+  fireAfterInit: function(callback, self, args)
   {
-    UtilsPluginManager.fireAfterInit(callback, self, arguments);
+    UtilsPluginManager.fireAfterInit(callback, self, args);
   },
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)
