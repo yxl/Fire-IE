@@ -127,6 +127,11 @@ let ABPObserver = {
   _listeners: [],
   
   /**
+   * Timer for clearing the loaded ABP filters
+   */
+  _clearTimer: null,
+  
+  /**
    * Lazy initialization on first browser window creation. See Bootstrap.jsm
    */
   lazyStartup: function()
@@ -170,6 +175,8 @@ let ABPObserver = {
         UtilsPluginManager.getPlugin().ABPClear();
       }
       catch (e) {}
+      
+      this._cancelClearTimer();
     }, this, []);
   },
   
@@ -247,6 +254,18 @@ let ABPObserver = {
   _setStatus: function(status)
   {
     this._status = status;
+    switch (this._status)
+    {
+    case ABPStatus.NotDetected:
+    case ABPStatus.Disabled:
+    case ABPStatus.LoadFailed:
+      this._setClearTimer();
+      break;
+    case ABPStatus.Loading:
+    case ABPStatus.Enabled:
+      this._cancelClearTimer();
+      break;
+    }
     this._triggerListeners("statusChanged", status);
   },
   
@@ -486,6 +505,25 @@ let ABPObserver = {
     this.updateState();
     if (!this._canEnable())
       this._setStatus(ABPStatus.Disabled);
+  },
+  
+  _setClearTimer: function()
+  {
+    if (this._clearTimer) return;
+    this._clearTimer = Utils.runAsyncTimeout(function()
+    {
+      UtilsPluginManager.getPlugin().ABPClear();
+      Utils.LOG("[ABP] Cleared.");
+    }, this, 60000);
+    Utils.LOG("[ABP] Scheduled to clear in 60 seconds.");
+  },
+  
+  _cancelClearTimer: function()
+  {
+    if (!this._clearTimer) return;
+    Utils.cancelAsyncTimeout(this._clearTimer);
+    this._clearTimer = null;
+    Utils.LOG("[ABP] Canceled previous clear schedule.");
   }
 };
   

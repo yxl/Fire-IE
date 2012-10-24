@@ -550,7 +550,7 @@ var Utils = {
    * Any additional parameters to this function are passed as parameters
    * to the callback.
    */
-  runAsyncTimeout: function( /**Function*/ callback, /**Object*/ thisPtr, /**Number*/ timeout)
+  runAsyncTimeout: function( /**Function*/ callback, /**Object*/ thisPtr, /**Number*/ timeout) /**nsITimer*/
   {
     let params = Array.prototype.slice.call(arguments, 3);
     let event = {
@@ -563,6 +563,19 @@ var Utils = {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(event, timeout, Ci.nsITimer.TYPE_ONE_SHOT);
     this._timers.push(timer);
+    return timer;
+  },
+  
+  /**
+   * Cancels previous runAsyncTimeout operation
+   */
+  cancelAsyncTimeout: function( /**nsITimer*/ timer)
+  {
+    if (timer)
+    {
+      timer.cancel();
+      this.removeOneItem(this._timers, timer);
+    }
   },
 
   /**
