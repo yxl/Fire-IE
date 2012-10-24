@@ -60,11 +60,26 @@ let factoryPrivate = {
 };
 
 let defaultModules = [
-baseURL.spec + "Prefs.jsm", baseURL.spec + "RuleListener.jsm", baseURL.spec + "ContentPolicy.jsm", baseURL.spec + "Synchronizer.jsm", baseURL.spec + "IECookieManager.jsm", baseURL.spec + "FontObserver.jsm"];
+  baseURL.spec + "Prefs.jsm",
+  baseURL.spec + "RuleListener.jsm",
+  baseURL.spec + "ContentPolicy.jsm",
+  baseURL.spec + "Synchronizer.jsm",
+  baseURL.spec + "IECookieManager.jsm",
+  baseURL.spec + "FontObserver.jsm",
+  baseURL.spec + "UtilsPluginManager.jsm",
+  baseURL.spec + "ABPObserver.jsm"
+];
 
 let loadedModules = {
   __proto__: null
 };
+
+let lazyLoadModules = {
+  __proto__: null
+};
+
+// Ensures ordered initialization for lazy loaded modules
+let lazyLoadModulesOrdered = [];
 
 let initialized = false;
 
@@ -87,8 +102,7 @@ var Bootstrap = {
     registrar.registerFactory(cidPrivate, "Fire-IE private module URL", contractIDPrivate, factoryPrivate);
 
     // Load and initialize modules
-    for each(let url in defaultModules)
-    Bootstrap.loadModule(url);
+    defaultModules.forEach(Bootstrap.loadModule);
 
     let categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
     let enumerator = categoryManager.enumerateCategory("fireie-module-location");
@@ -100,7 +114,12 @@ var Bootstrap = {
 
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-added", true);
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-removed", true);
-
+    
+    if (lazyLoadModulesOrdered.length)
+    {
+      // add lazy init observer if there's any such modules
+      Services.obs.addObserver(BootstrapLazyLoadPrivate, "fireie-lazy-init", true);
+    }
   },
 
   /**
@@ -112,10 +131,11 @@ var Bootstrap = {
 
     // Shut down modules
     for (let url in loadedModules)
-    Bootstrap.shutdownModule(url);
+      Bootstrap.shutdownModule(url);
 
     Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-added");
     Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-removed");
+    Services.obs.removeObserver(BootstrapLazyLoadPrivate, "fireie-lazy-init");
   },
 
   /**
@@ -123,7 +143,7 @@ var Bootstrap = {
    */
   loadModule: function( /**String*/ url)
   {
-    if (url in loadedModules) return;
+    if (url in loadedModules || url in lazyLoadModules) return;
 
     let module = {};
     try
@@ -136,8 +156,9 @@ var Bootstrap = {
       return;
     }
 
-    for each(let obj in module)
+    for (let prop in module)
     {
+      let obj = module[prop];
       if ("startup" in obj)
       {
         try
@@ -149,6 +170,12 @@ var Bootstrap = {
         {
           Cu.reportError("Fire-IE: Calling method startup() for module " + url + " failed: " + e);
         }
+        return;
+      }
+      if ("lazyStartup" in obj)
+      {
+        lazyLoadModules[url] = obj;
+        lazyLoadModulesOrdered.push(url);
         return;
       }
     }
@@ -176,6 +203,28 @@ var Bootstrap = {
       }
       return;
     }
+  },
+  
+  /**
+   * Lazy load all modules in lazyLoadModules
+   */
+  doLazyLoadModules: function()
+  {
+    lazyLoadModulesOrdered.forEach(function(url)
+    {
+      let obj = lazyLoadModules[url];
+      try
+      {
+        obj.lazyStartup();
+        loadedModules[url] = obj;
+      }
+      catch (e)
+      {
+        Cu.reportError("Fire-IE: Calling method lazyStartup() for module " + url + " failed: " + e);
+      }
+    });
+    lazyLoadModules = null;
+    lazyLoadModulesOrdered = null;
   }
 };
 
@@ -199,5 +248,19 @@ var BootstrapPrivate = {
       Bootstrap.unloadModule(subject.QueryInterface(Ci.nsISupportsCString).data, true);
       break;
     }
+  }
+};
+
+/**
+ * Observer called on module lazy initialization
+ * @class
+ */
+var BootstrapLazyLoadPrivate = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  
+  observe: function(subject, topic, data)
+  {
+    if (topic == "fireie-lazy-init")
+      Bootstrap.doLazyLoadModules();
   }
 };

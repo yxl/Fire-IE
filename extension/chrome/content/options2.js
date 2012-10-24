@@ -21,6 +21,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 Cu.import(baseURL.spec + "AppIntegration.jsm");
 Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
+Cu.import(baseURL.spec + "ABPObserver.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -34,7 +35,7 @@ Options.export = function()
   let aCurrent = Options._getAllOptions(false);
   if (aCurrent) Options._saveToFile(aCurrent);
   Options._setAllOptions(aOld);
-}
+};
 
 Options.import = function()
 {
@@ -51,10 +52,10 @@ Options.import = function()
     }
     else
     {
-      alert(Utils.getString("fireie.options.import.error"));
+      Utils.alert(window, Utils.getString("fireie.options.import.error"), Utils.getString("fireie.options.alert.title"));
     }
   }
-}
+};
 
 Options.restoreDefaultSettings = function()
 {
@@ -64,7 +65,7 @@ Options.restoreDefaultSettings = function()
   Options.initDialog();
   Options._setAllOptions(aOld);
   Options.updateApplyButton(true);
-}
+};
 
 // Apply options
 Options.apply = function(quiet)
@@ -98,6 +99,7 @@ Options.apply = function(quiet)
   Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
   Prefs.forceMGSupport = E("forceMGSupport").checked;
+  Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -112,6 +114,15 @@ Options.apply = function(quiet)
     Prefs.compatMode = newMode;
     Options.applyIECompatMode();
   }
+  
+  // GPU Rendering State
+  let newGPURendering = E("gpuRendering").checked;
+  if (Prefs.gpuRendering != newGPURendering)
+  {
+    requiresRestart = true;
+    Prefs.gpuRendering = newGPURendering;
+    Options.applyGPURenderingState();
+  }
 
   //update UI
   Options.updateApplyButton(false);
@@ -119,9 +130,9 @@ Options.apply = function(quiet)
   //notify of restart requirement
   if (requiresRestart && !quiet)
   {
-    alert(Utils.getString("fireie.options.alert.restart"));
+    Utils.alert(window, Utils.getString("fireie.options.alert.restart"), Utils.getString("fireie.options.alert.title"));
   }
-}
+};
 
 Options.getIECompatMode = function()
 {
@@ -171,7 +182,7 @@ Options.getIECompatMode = function()
   }
   
   Prefs.compatMode = mode;
-}
+};
 
 Options.applyIECompatMode = function()
 {
@@ -219,7 +230,46 @@ Options.applyIECompatMode = function()
   {
     wrk.close();
   }
-}
+};
+
+Options.getGPURenderingState = function()
+{
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  let state = false;
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_GPU_RENDERING", wrk.ACCESS_READ);
+    state = wrk.readIntValue(AppIntegration.getPluginProcessName()) == 1;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  
+  Prefs.gpuRendering = state;
+};
+
+Options.applyGPURenderingState = function()
+{
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_GPU_RENDERING", wrk.ACCESS_WRITE);
+    wrk.writeIntValue(AppIntegration.getPluginProcessName(), Prefs.gpuRendering ? 1 : 0);
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+};
 
 // Get IE's main version number
 Options.getIEMainVersion = function()
@@ -247,12 +297,12 @@ Options.getIEMainVersion = function()
     wrk.close();
   }
   return version;
-}
+};
 
 Options.updateIEModeTab = function()
 {
   let mainIEVersion = Options.getIEMainVersion();
-  // IE7 or lower does not support compatible modes
+  // IE7 or lower does not support compatible modes and GPU rendering
   if (mainIEVersion < 8)
   {
     return;
@@ -266,18 +316,38 @@ Options.updateIEModeTab = function()
   {
     E("ie9mode-radio").hidden = false;
     E("ie9forced-radio").hidden = false;
+    // IE9+ supports hardware accelerated rendering
+    E("ieFeatures").hidden = false;
+    E("gpuRendering").hidden = false;
   }
   // mainIEVersion >= 8
   E("ie8mode-radio").hidden = false;
   E("ie8forced-radio").hidden = false;
   E("ie7mode-radio").hidden = false;
-
+  
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
+  
   Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
-}
+  
+  Options.getGPURenderingState();
+  E("gpuRendering").checked = Prefs.gpuRendering;
+};
+
+// Update ABP status according to ABPObserver
+Options.updateABPStatus = function()
+{
+  let status = ABPObserver.getStatus();
+  E("abpStatusNotDetected").hidden = (status != ABPStatus.NotDetected);
+  E("abpStatusEnabled").hidden = (status != ABPStatus.Enabled);
+  E("abpStatusDisabled").hidden = (status != ABPStatus.Disabled);
+  E("abpStatusLoading").hidden = (status != ABPStatus.Loading);
+  E("abpStatusLoadFailed").hidden = (status != ABPStatus.LoadFailed);
+  
+  E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
+};
 
 Options.initDialog = function()
 {
@@ -292,6 +362,7 @@ Options.initDialog = function()
   E("showTooltipText").checked = Prefs.showTooltipText;
   E("showStatusText").checked = Prefs.showStatusText;
   E("forceMGSupport").checked = Prefs.forceMGSupport;
+  E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
 
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
@@ -307,6 +378,8 @@ Options.initDialog = function()
   {
     E("alreadyEnabledMGSupportLabel").hidden = true;
   }
+  
+  Options.updateABPStatus();
 
   // updateStatus
   Options.updateApplyButton(false);
@@ -314,18 +387,18 @@ Options.initDialog = function()
 
   // IE Compatibility Mode
   Options.updateIEModeTab();
-}
+};
 
 Options.setIconDisplayValue = function(value)
 {
   E("iconDisplay").value = value;
   this.updateApplyButton(true);
-}
+};
 
 Options.updateApplyButton = function(e)
 {
   document.getElementById("myApply").disabled = !e;
-}
+};
 
 Options.handleShortcutEnabled = function(e)
 {
@@ -333,7 +406,7 @@ Options.handleShortcutEnabled = function(e)
   E("shortcut-modifiers").disabled = disable;
   E("shortcut-plus").disabled = disable;
   E("shortcut-key").disabled = disable;
-}
+};
 
 Options.init = function()
 {
@@ -346,6 +419,8 @@ Options.init = function()
     }
   }
   
+  Options.initDialog();
+  
   // for multi-line label sizing problem
   window.sizeToContent();
   let vboxes = document.querySelectorAll("prefpane > vbox");
@@ -355,24 +430,29 @@ Options.init = function()
   });
   window.sizeToContent();
   
-  Options.initDialog();
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
   addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
-}
+  
+  ABPObserver.addListener(Options.updateABPStatus);
+  window.addEventListener("unload", function()
+  {
+    ABPObserver.removeListener(Options.updateABPStatus);
+  });
+};
 
 Options.close = function()
 {
   let isModified = !document.getElementById("myApply").disabled;
   if (isModified)
   {
-    if (confirm(Utils.getString("fireie.options.alert.modified")))
+    if (Utils.confirm(window, Utils.getString("fireie.options.alert.modified"), Utils.getString("fireie.options.alert.title")))
     {
       Options.apply(true);
     }
   }
-}
+};
 
 Options._saveToFile = function(aList)
 {
@@ -406,7 +486,7 @@ Options._saveToFile = function(aList)
       stream.close();
     }
   }
-}
+};
 
 Options._loadFromFile = function()
 {
@@ -436,7 +516,7 @@ Options._loadFromFile = function()
     }
   }
   return [false, null];
-}
+};
 
 Options._getAllOptions = function(isDefault)
 {
@@ -470,7 +550,7 @@ Options._getAllOptions = function(isDefault)
     }
   }
   return aList;
-}
+};
 
 Options._setAllOptions = function(aList)
 {
@@ -518,4 +598,4 @@ Options._setAllOptions = function(aList)
       Utils.ERROR(e);
     }
   }
-}
+};

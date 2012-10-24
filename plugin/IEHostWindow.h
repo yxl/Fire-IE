@@ -18,46 +18,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "resource.h"
 #include "IECtrl.h"
+#include "UserMessage.h"
 #include <vector>
+#include <string>
 
 namespace Plugin
 {
 	class CPlugin;
-}
-
-namespace UserMessage
-{
-	// User defined window message
-	static const UINT WM_USER_MESSAGE =  WM_USER + 200;
-
-	//
-	// Sub-types of the user defined window message
-	//
-
-	static const WPARAM WPARAM_SET_FIREFOX_COOKIE = 0;
-	struct SetFirefoxCookieParams
-	{
-		CString strURL;
-		CString strCookie;
-	};
-
-	static const WPARAM WPARAM_NAVIGATE = 1;
-	struct NavigateParams
-	{
-		CString strURL;
-		CString strPost;
-		CString strHeaders;
-	};
-
-	static const WPARAM WPARAM_REFRESH = 2;
-	static const WPARAM WPARAM_STOP = 3;
-	static const WPARAM WPARAM_BACK = 4;
-	static const WPARAM WPARAM_FORWARD = 5;
-	static const WPARAM WPARAM_EXEC_OLE_CMD = 6;
-	static const WPARAM WPARAM_DISPLAY_SECURITY_INFO = 7;
-	static const WPARAM WPARAM_UTILS_PLUGIN_INIT = 8;
-	static const WPARAM WPARAM_CONTENT_PLUGIN_INIT = 9;
-
 }
 
 // Firefox 4.0 开始采用了新的窗口结构
@@ -81,10 +48,12 @@ public:
 
 	/** Get CIEHostWindow object by its embeded Internet Explorer_Server window handle*/
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
+	/** Similar to FromInternetExplorerServer, but involves a lookup routine*/
+	static CIEHostWindow* FromChildWindow(HWND hwndChild);
 
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
-	static void SetFirefoxCookie(CString strURL, CString strCookie);
+	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams);
 
 	static HWND GetAnyUtilsHWND();
 	static CIEHostWindow* GetAnyUtilsWindow();
@@ -98,7 +67,10 @@ public:
 
 	/* Get the embedded Internet Explorer_server window */
 	HWND GetInternetExplorerServer() const;
-		
+
+	CString GetLoadingURL();
+	void SetLoadingURL(const CString& value);
+	
 public:
 	
 	virtual ~CIEHostWindow();
@@ -142,6 +114,8 @@ protected:
 
 	static const CString s_strSecureLockInfos[];
 
+	static const TCHAR* const s_strElemHideClass;
+
 	void InitIE();
 	void UninitIE();
 
@@ -154,10 +128,9 @@ protected:
 	// 执行浏览器命令
 	void ExecOleCmd(OLECMDID cmdID);
 	// delay ole cmd execution to next message loop
-	void PostOleCmd(OLECMDID cmdID);
+	void RunAsyncOleCmd(OLECMDID cmdID);
 
 	// 自定义窗口消息响应函数
-	void OnSetFirefoxCookie(const CString& strURL, const CString& strCookie);
 	void OnNavigate();
 	void OnRefresh();
 	void OnStop();
@@ -194,9 +167,14 @@ protected:
 	bool FBCheckDocument();
 	static bool FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange);
 	static bool FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const CComPtr<IHTMLTxtRange>& pRange2);
-	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange);
+	static bool FBCheckRangeHighlightable(const CComPtr<IDisplayServices>& pDS, const CComPtr<IMarkupServices>& pMS, const CComPtr<IHTMLTxtRange>& pRange);
 
 	static BOOL CALLBACK GetInternetExplorerServerCallback(HWND hWnd, LPARAM lParam);
+
+	void ProcessElemHideStyles();
+	void ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc);
+	bool IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc);
+	void ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const std::vector<std::wstring>& vStyles);
 public:
 	CIECtrl m_ie;
 
@@ -238,6 +216,12 @@ public:
 	void FBToggleCase(bool bCase);
 	CString FBGetLastFindStatus();
 
+	// ABP methods
+	void ABPEnable();
+	void ABPDisable();
+	void ABPLoad(const CString& pathname);
+	void ABPClear();
+
 	// read only plugin properties
 	CString GetURL();
 	CString GetTitle();
@@ -260,6 +244,9 @@ public:
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
 	CString GetProcessName();
+	BOOL GetABPIsEnabled();
+	BOOL GetABPIsLoading();
+	CString GetABPLoadedFile();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
@@ -267,12 +254,11 @@ public:
 	void OnStatusChanged(const CString& message);
 	void OnCloseIETab();
 	void OnSetSecureLockIcon(int state);
-	void OnUtilsPluginInit();
-	void OnContentPluginInit();
+	void OnABPFilterLoaded();
+	void OnABPLoadFailure();
 
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
-
 protected:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
@@ -326,4 +312,40 @@ protected:
 
 	/** Indicates whether the associated plugin is a utils plugin */
 	bool m_bUtils;
+
+	/** The top-level url currently loading */
+	CString m_strLoadingUrl;
+	/** Ensure the operations on m_strLoadingUrl are thread safe. */
+	CCriticalSection m_csLoadingUrl;
+
+protected:
+	// Asynchronous function calling, replaces original PostMessage approach
+	// This makes code more readable by putting caller code and callee code together
+
+	// After message is sent the type info is lost (the handler only sees LPARAM),
+	// Our only hope is a vtable that dispatches to different functions
+	class ICallable {
+	public:
+		virtual void call() const = 0;
+		virtual ~ICallable() { }
+	};
+
+	// Wraps callable function (typically a lambda expression) into ICallable
+	template<class Func>
+	class CallableFuncWrapper : public ICallable {
+	public:
+		CallableFuncWrapper(const Func& func) : func(func) { }
+		virtual void call() const { func(); }
+	private:
+		Func func;
+	};
+
+public:
+	// Asynchronously run the specified function at next message loop
+	template <class Func>
+	void RunAsync(const Func& func)
+	{
+		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
+		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, reinterpret_cast<LPARAM>(wrapper));
+	}
 };

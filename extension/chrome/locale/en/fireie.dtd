@@ -38,8 +38,17 @@
 <!ENTITY fireie.options.integration.pane "Integration">
 <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">
 <!ENTITY fireie.options.integration.mgDescr "Normally Fire-IE will detect your mouse gesture extensions and scripts and automatically enable the support if it found any. If you have a mouse gesture extension or script but can't use it in IE-mode tabs, you can try enable this option.">
-<!ENTITY fireie.options.integration.forceMGSupport "Force the support of mouse gestures in IE-mode tabs">
+<!ENTITY fireie.options.integration.forceMGSupport "Force enable mouse gestures support in IE-mode tabs">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Mouse gestures support is currently enabled.">
+<!ENTITY fireie.options.integration.abpCaption "Adblock Plus Support">
+<!ENTITY fireie.options.integration.abpDescr "Use filters from Adblock Plus to block ads in IE engine.">
+<!ENTITY fireie.options.integration.abpSupportEnabled "Enable Adblock Plus support">
+<!ENTITY fireie.options.integration.abpStatusLabel "Current Status: ">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "Adblock Plus not detected">
+<!ENTITY fireie.options.integration.abpStatusEnabled "Enabled">
+<!ENTITY fireie.options.integration.abpStatusDisabled "Disabled">
+<!ENTITY fireie.options.integration.abpStatusLoading "Loading filters...">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "Failed to load filters">
 
 <!ENTITY fireie.options.rule.label "Sites Rule">
 <!ENTITY fireie.options.rule.enabled "Enable Sites Rule">
@@ -49,8 +58,9 @@
 <!ENTITY fireie.options.rule.button.add "Add">
 <!ENTITY fireie.options.rule.button.delete "Delete">
 
-<!ENTITY fireie.options.iecompat.tab   "IE Compatibility Mode">
-<!ENTITY fireie.options.iecompat.pane  "IE Compatibility Mode">
+<!ENTITY fireie.options.ieoptions.tab  "IE Options">
+<!ENTITY fireie.options.ieoptions.pane "IE Options">
+<!ENTITY fireie.options.iecompat.group "IE Compatibility Mode">
 <!ENTITY fireie.options.iecompat.ie7   "IE7 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie8   "IE8 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie8f  "IE8 Forced Standards Mode">
@@ -58,7 +68,9 @@
 <!ENTITY fireie.options.iecompat.ie9f  "IE9 Forced Standards Mode">
 <!ENTITY fireie.options.iecompat.ie10  "IE10 Standards Mode">
 <!ENTITY fireie.options.iecompat.ie10f "IE10 Forced Standards Mode">
-<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode.">
+<!ENTITY fireie.options.iecompat.notSupported "Your version of IE does not support IE compatibility mode or advanced features.">
+<!ENTITY fireie.options.iefeat.group   "Advanced Features">
+<!ENTITY fireie.options.iefeat.gpuRendering "Enable hardware accelerated rendering">
 
 <!ENTITY fireie.options.apply "Apply">
 <!ENTITY fireie.options.manager "Options Manager">

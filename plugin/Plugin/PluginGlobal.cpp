@@ -18,7 +18,7 @@ namespace Plugin
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
-		// 监视http和https请求，同步cookie
+		// 监视http和https请求，同步cookie，过滤广告
 		CComPtr<IInternetSession> spSession;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )
 		{
@@ -52,7 +52,7 @@ namespace Plugin
 			FEATURE_LOCALMACHINE_LOCKDOWN,		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
 			FEATURE_SAFE_BINDTOOBJECT,			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
 			FEATURE_TABBED_BROWSING			// 启用多标签浏览
-		};			
+		};
 		int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
 		for (int i=0; i<n; i++)
 		{

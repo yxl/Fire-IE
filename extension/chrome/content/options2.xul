@@ -152,30 +152,50 @@
         <checkbox id="forceMGSupport" label="&fireie.options.integration.forceMGSupport;" class="indent" />
         <label id="alreadyEnabledMGSupportLabel" style="color: green;">&fireie.options.integration.alreadyEnabledMGSupport;</label>
       </groupbox>
-    </vbox>  
+      <groupbox>
+        <caption label="&fireie.options.integration.abpCaption;" />
+        <label class="descr">&fireie.options.integration.abpDescr;</label>
+        <checkbox id="abpSupportEnabled" label="&fireie.options.integration.abpSupportEnabled;" class="indent" />
+        <hbox>
+          <label>&fireie.options.integration.abpStatusLabel;</label>
+          <label id="abpStatusNotDetected">&fireie.options.integration.abpStatusNotDetected;</label>
+          <label id="abpStatusEnabled" style="color: green">&fireie.options.integration.abpStatusEnabled;</label>
+          <label id="abpStatusDisabled">&fireie.options.integration.abpStatusDisabled;</label>
+          <label id="abpStatusLoading" style="color: green">&fireie.options.integration.abpStatusLoading;</label>
+          <label id="abpStatusLoadFailed" style="color: red">&fireie.options.integration.abpStatusLoadFailed;</label>
+        </hbox>
+      </groupbox>
+    </vbox>
   </prefpane>
 
-  <prefpane id="iemodePane" label="&fireie.options.iecompat.pane;" image="chrome://fireie/skin/pane-iemode.png" flex="1">
+  <prefpane id="iemodePane" label="&fireie.options.ieoptions.pane;" image="chrome://fireie/skin/pane-iemode.png" flex="1">
     <preferences></preferences>
     <vbox flex="1">
       <label id="iemodeNotSupported" class="descr" style="margin-top:20px;">
         &fireie.options.iecompat.notSupported;</label>
-      <radiogroup id="iemode">
-        <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
-        hidden="true" value="ie7mode" />
-        <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
-        hidden="true" value="ie8mode" />
-        <radio id="ie8forced-radio" label="&fireie.options.iecompat.ie8f;"
-        hidden="true" value="ie8forced" />
-        <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
-        hidden="true" value="ie9mode" />
-        <radio id="ie9forced-radio" label="&fireie.options.iecompat.ie9f;"
-        hidden="true" value="ie9forced" />
-        <radio id="ie10mode-radio" label="&fireie.options.iecompat.ie10;"
-        hidden="true" value="ie10mode" />
-        <radio id="ie10forced-radio" label="&fireie.options.iecompat.ie10f;"
-        hidden="true" value="ie10forced" />
-      </radiogroup>
+      <groupbox>
+        <caption label="&fireie.options.iecompat.group;" />
+        <radiogroup id="iemode">
+          <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
+          hidden="true" value="ie7mode" />
+          <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
+          hidden="true" value="ie8mode" />
+          <radio id="ie8forced-radio" label="&fireie.options.iecompat.ie8f;"
+          hidden="true" value="ie8forced" />
+          <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
+          hidden="true" value="ie9mode" />
+          <radio id="ie9forced-radio" label="&fireie.options.iecompat.ie9f;"
+          hidden="true" value="ie9forced" />
+          <radio id="ie10mode-radio" label="&fireie.options.iecompat.ie10;"
+          hidden="true" value="ie10mode" />
+          <radio id="ie10forced-radio" label="&fireie.options.iecompat.ie10f;"
+          hidden="true" value="ie10forced" />
+        </radiogroup>
+      </groupbox>
+      <groupbox id="ieFeatures" hidden="true">
+        <caption label="&fireie.options.iefeat.group;" />
+        <checkbox id="gpuRendering" label="&fireie.options.iefeat.gpuRendering;" hidden="true" />
+      </groupbox>
       <label id="iemodeDescr" class="descr" style="margin-top:20px;" hidden="true">
         &fireie.options.restart.descr;</label>
     </vbox>

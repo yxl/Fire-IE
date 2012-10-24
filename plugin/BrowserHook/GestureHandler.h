@@ -37,7 +37,12 @@ namespace BrowserHook
 	private:
 		bool shouldKeepTrack(MessageHandleResult res) const;
 
-		static std::vector<GestureHandler*> s_vHandlers;
+		static struct Handlers {
+			~Handlers();
+			std::vector<GestureHandler*> m_vHandlers;
+		} s_handlers;
+
+		static std::vector<GestureHandler*>& s_vHandlers;
 	protected:
 		GestureState m_state;
 		bool m_bEnabled;
