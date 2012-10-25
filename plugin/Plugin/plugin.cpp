@@ -49,6 +49,13 @@
 #include "json/json.h"
 #include "OS.h"
 
+#ifdef DEBUG
+#include "test/test.h"
+#endif
+
+using namespace std;
+using namespace UserMessage;
+
 namespace Plugin
 {
 
@@ -163,9 +170,7 @@ namespace Plugin
 		{
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
-			if (hwnd)
-				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_UTILS_PLUGIN_INIT, 0);
+			m_pIEHostWindow->RunAsync([=] { OnUtilsPluginInit(); });
 		}
 		else
 		{
@@ -173,9 +178,7 @@ namespace Plugin
 
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			HWND hwnd = m_pIEHostWindow->GetSafeHwnd();
-			if (hwnd)
-				PostMessage(hwnd, UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_CONTENT_PLUGIN_INIT, 0);
+			m_pIEHostWindow->RunAsync([=] { OnContentPluginInit(); });
 		}
 
 		return TRUE;
@@ -544,6 +547,7 @@ namespace Plugin
 			NPN_ReleaseVariantValue(&vEvent);
 			if (!bOK || !NPVARIANT_IS_BOOLEAN(vNotCanceled)) 
 			{
+				NPN_ReleaseVariantValue(&vNotCanceled);
 				throw CString(_T("Cannot dispatchEvent"));
 			}
 			if (NPVARIANT_TO_BOOLEAN(vNotCanceled) != true)
@@ -619,6 +623,24 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
+	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies)
+	{
+		USES_CONVERSION_EX;
+		CString strEventType = _T("IEBatchSetCookie");
+		CString strDetail;
+		Json::Value aCookies;
+		for (size_t i = 0; i < vCookies.size(); i++)
+		{
+			const SetFirefoxCookieParams& param = vCookies[i];
+			Json::Value cookie;
+			cookie["url"] = T2A_EX(param.strURL, param.strURL.GetLength() + 1);
+			cookie["header"] = T2A_EX(param.strCookie, param.strCookie.GetLength() + 1);
+			aCookies.append(cookie);
+		}
+		strDetail = CA2T(aCookies.toStyledString().c_str());
+		FireEvent(strEventType, strDetail);
+	}
+
 	void CPlugin::SetURLCookie(const CString& strURL, const CString& strCookie)
 	{
 		char* url = CStringToNPStringCharacters(strURL);
@@ -677,6 +699,9 @@ namespace Plugin
 
 	void CPlugin::OnUtilsPluginInit()
 	{
+#ifdef DEBUG
+		test::doTest();
+#endif
 		CString strEventType = _T("IEUtilsPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
@@ -685,6 +710,21 @@ namespace Plugin
 	void CPlugin::OnContentPluginInit()
 	{
 		CString strEventType = _T("IEContentPluginInitialized");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnABPFilterLoaded(int numFilters, unsigned int ticks)
+	{
+		CString strEventType = _T("IEABPFilterLoaded");
+		CString strDetail;
+		strDetail.Format(_T("{ \"number\": %d, \"ticks\": %d }"), numFilters, ticks);
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnABPLoadFailure()
+	{
+		CString strEventType = _T("IEABPLoadFailure");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}

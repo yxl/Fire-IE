@@ -45,6 +45,16 @@ let UtilsPluginManager = {
    */
   _isInitCalled: false,
   
+  lazyStartup: function()
+  {
+    this.init();
+  },
+  
+  shutdown: function()
+  {
+    this.uninit();
+  },
+  
   init: function()
   {
     if (this._isInitCalled) return;
@@ -57,6 +67,7 @@ let UtilsPluginManager = {
   
   uninit: function()
   {
+    if (!this._isInitCalled) return;
     this._unregisterHandlers();
     this._cancelPluginEvents();
   },
@@ -72,20 +83,31 @@ let UtilsPluginManager = {
   },
   
   /**
+   * Retrieves the window where utils plugin sits in
+   */
+  getWindow: function()
+  {
+    return Utils.getHiddenWindow();
+  },
+  
+  /**
    * Ensures that the plugin is initialized before calling the callback
    */
-  fireAfterInit: function(callback, self, arguments)
+  fireAfterInit: function(callback, self, args)
   {
     if (this.isPluginInitialized)
     {
-      callback.apply(self, arguments);
+      callback.apply(self, args);
     }
     else
     {
-      Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
+      let window = Utils.getHiddenWindow();
+      let handler = function(e)
       {
-        callback.apply(self, arguments);
-      }, false);
+        window.removeEventListener("IEUtilsPluginInitialized", handler, false);
+        callback.apply(self, args);
+      };
+      window.addEventListener("IEUtilsPluginInitialized", handler, false);
     }
   },
 
@@ -136,7 +158,7 @@ let UtilsPluginManager = {
     embed.setAttribute("type", "application/fireie");
     embed.style.visibility = "collapse";
     doc.body.appendChild(embed);
-    
+
     // Check after 30 sec whether the plugin is initialized yet
     Utils.runAsyncTimeout(function()
     {
@@ -147,14 +169,18 @@ let UtilsPluginManager = {
   
   _registerHandlers: function()
   {
-    Utils.getHiddenWindow().addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
-    Utils.getHiddenWindow().addEventListener("IESetCookie", onIESetCookie, false);
+    let window = Utils.getHiddenWindow();
+    window.addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
+    window.addEventListener("IESetCookie", onIESetCookie, false);
+    window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
   },
   
   _unregisterHandlers: function()
   {
-    Utils.getHiddenWindow().removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
-    Utils.getHiddenWindow().removeEventListener("IESetCookie", onIESetCookie, false);
+    let window = Utils.getHiddenWindow();
+    window.removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
+    window.removeEventListener("IESetCookie", onIESetCookie, false);
+    window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
   },
 };
 
@@ -213,7 +239,7 @@ function genPluginEventHandler(subHandler)
     }
   }
 }
-
+  
 function loadFailureSubHandler()
 {
   // we have trouble with the plugin now
@@ -247,6 +273,17 @@ function onIESetCookie(event)
 {
   let subject = null;
   let topic = "fireie-set-cookie";
+  let data = event.detail;
+  Services.obs.notifyObservers(subject, topic, data);
+}
+
+/**
+ * Handles 'IEBatchSetCookie' event receiving from the plugin
+ */
+function onIEBatchSetCookie(event)
+{
+  let subject = null;
+  let topic = "fireie-batch-set-cookie";
   let data = event.detail;
   Services.obs.notifyObservers(subject, topic, data);
 }

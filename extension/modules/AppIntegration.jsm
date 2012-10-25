@@ -147,7 +147,7 @@ let AppIntegration = {
   getWrapperForWindow: function( /**Window*/ wnd) /**WindowWrapper*/
   {
     for each(let wrapper in wrappers)
-    if (wrapper.window == wnd) return wrapper;
+      if (wrapper.window == wnd) return wrapper;
 
     return null;
   },
@@ -337,7 +337,7 @@ WindowWrapper.prototype = {
 
   init: function()
   {
-    UtilsPluginManager.init();
+    Services.obs.notifyObservers(null, "fireie-lazy-init", null);
 
     this._registerEventListeners();
 
@@ -413,6 +413,8 @@ WindowWrapper.prototype = {
 
   /**
    * Updates the UI for an application window.
+   * Note that UI is not immediately updated until the queued update code is run,
+   * so don't rely on any UI state after the update
    */
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
@@ -1814,9 +1816,9 @@ WindowWrapper.prototype = {
   {
     this.E("fireie-menu-item-autoswitch-disabled").setAttribute("checked", !Prefs.autoswitch_enabled);
   },
-  fireAfterInit: function(callback, self, arguments)
+  fireAfterInit: function(callback, self, args)
   {
-    UtilsPluginManager.fireAfterInit(callback, self, arguments);
+    UtilsPluginManager.fireAfterInit(callback, self, args);
   },
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)

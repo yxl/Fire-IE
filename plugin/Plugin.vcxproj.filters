@@ -48,6 +48,60 @@
     <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp">
       <Filter>BrowserHook</Filter>
     </ClCompile>
+    <ClCompile Include="jscre\ucptable.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_chartables.c">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_compile.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_exec.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_tables.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_ucp_searchfuncs.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="jscre\JSRegExp_xclass.cpp">
+      <Filter>jscre</Filter>
+    </ClCompile>
+    <ClCompile Include="re\RegExp.cpp">
+      <Filter>re</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\FilterClasses.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="re\strutils.cpp">
+      <Filter>re</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\Matcher.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\RAIILock.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\AdBlockPlus.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\URL.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="abp\ElemHideMatcher.cpp">
+      <Filter>abp</Filter>
+    </ClCompile>
+    <ClCompile Include="regdom-libs\dkim-regdom.cpp">
+      <Filter>regdom-libs</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TLD.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="test\test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -117,6 +171,73 @@
     <ClInclude Include="BrowserHook\GestureHandler.h">
       <Filter>BrowserHook</Filter>
     </ClInclude>
+    <ClInclude Include="jscre\ucpinternal.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\ASCIICType.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\config.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\JSRegExp.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\JSRegExp_internal.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\stdint.h">
+      <Filter>jscre</Filter>
+    </ClInclude>
+    <ClInclude Include="re\RegExp.h">
+      <Filter>re</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\FilterClasses.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="re\strutils.h">
+      <Filter>re</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\TriBool.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\FilterContentType.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\Matcher.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\TList.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\RAIILock.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\AdBlockPlus.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpMonitor\ContentType.h">
+      <Filter>HttpMonitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\URL.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="abp\ElemHideMatcher.h">
+      <Filter>abp</Filter>
+    </ClInclude>
+    <ClInclude Include="UserMessage.h" />
+    <ClInclude Include="regdom-libs\dkim-regdom.h">
+      <Filter>regdom-libs</Filter>
+    </ClInclude>
+    <ClInclude Include="regdom-libs\tld-canon.h">
+      <Filter>regdom-libs</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\TLD.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="test\test.h">
+      <Filter>test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
@@ -149,6 +270,21 @@
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{ad158e8c-751c-405f-b9a1-724f4860bdb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jscre">
+      <UniqueIdentifier>{70d9eaef-9e09-4049-b1dc-5a62b57ebe25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="abp">
+      <UniqueIdentifier>{e5aa9f7e-47a0-4090-994b-12429b516e93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="re">
+      <UniqueIdentifier>{34c92999-e07e-47a9-8dd6-24e0956040c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="regdom-libs">
+      <UniqueIdentifier>{a453b9ff-d57d-4f23-956c-daa98578b0b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{8ba6f65f-4a26-4d74-a74e-c6037ba83c5c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

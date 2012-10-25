@@ -37,9 +37,18 @@
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
-<!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动开启相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试打开这个选项。">
-<!ENTITY fireie.options.integration.forceMGSupport "强制开启IE引擎鼠标手势支持">
+<!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动启用相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试启用这个选项。">
+<!ENTITY fireie.options.integration.forceMGSupport "强制启用IE引擎鼠标手势支持">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已启用鼠标手势支持。">
+<!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支持">
+<!ENTITY fireie.options.integration.abpDescr "在IE引擎中使用 Adblock Plus 的规则来过滤广告。">
+<!ENTITY fireie.options.integration.abpSupportEnabled "启用 Adblock Plus 支持">
+<!ENTITY fireie.options.integration.abpStatusLabel "当前状态：">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "未检测到 Adblock Plus">
+<!ENTITY fireie.options.integration.abpStatusEnabled "已启用">
+<!ENTITY fireie.options.integration.abpStatusDisabled "已禁用">
+<!ENTITY fireie.options.integration.abpStatusLoading "正在载入过滤规则...">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "载入过滤规则失败">
 
 <!ENTITY fireie.options.rule.label "网址过滤">
 <!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">
@@ -49,8 +58,9 @@
 <!ENTITY fireie.options.rule.button.add "添加">
 <!ENTITY fireie.options.rule.button.delete "删除">
 
-<!ENTITY fireie.options.iecompat.tab   "IE兼容模式">
-<!ENTITY fireie.options.iecompat.pane  "IE兼容模式">
+<!ENTITY fireie.options.ieoptions.tab  "IE引擎选项">
+<!ENTITY fireie.options.ieoptions.pane "IE引擎选项">
+<!ENTITY fireie.options.iecompat.group "IE兼容模式">
 <!ENTITY fireie.options.iecompat.ie7   "IE7标准模式">
 <!ENTITY fireie.options.iecompat.ie8   "IE8标准模式">
 <!ENTITY fireie.options.iecompat.ie8f  "IE8强制标准模式">
@@ -58,7 +68,9 @@
 <!ENTITY fireie.options.iecompat.ie9f  "IE9强制标准模式">
 <!ENTITY fireie.options.iecompat.ie10  "IE10标准模式">
 <!ENTITY fireie.options.iecompat.ie10f "IE10强制标准模式">
-<!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式。">
+<!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式和高级特性。">
+<!ENTITY fireie.options.iefeat.group   "高级特性">
+<!ENTITY fireie.options.iefeat.gpuRendering "启用硬件加速渲染">
 
 <!ENTITY fireie.options.apply "应用">
 <!ENTITY fireie.options.manager "选项管理">

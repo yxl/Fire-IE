@@ -325,12 +325,14 @@ let CookieObserver = {
   {
     Services.obs.addObserver(this, "cookie-changed", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
+    Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
   },
 
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
     Services.obs.removeObserver(this, "fireie-set-cookie");
+    Services.obs.removeObserver(this, "fireie-batch-set-cookie");
   },
 
   // nsIObserver
@@ -343,6 +345,9 @@ let CookieObserver = {
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
+      break;
+    case 'fireie-batch-set-cookie':
+      this.onIEBatchCookieChanged(data);
       break;
     }
   },
@@ -395,6 +400,23 @@ let CookieObserver = {
     catch(e)
     {
       Utils.ERROR("onIECookieChanged(" + data + "): " + e);
+    }
+  },
+
+  onIEBatchCookieChanged: function(data)
+  {
+    try
+    {
+      let cookies = JSON.parse(data);
+      cookies.forEach(function(cookie)
+      {
+        let {header, url} = cookie;
+        IECookieManager.saveFirefoxCookie(url, header);
+      });
+    }
+    catch(e)
+    {
+      Utils.ERROR("onIEBatchCookieChanged(" + data + "): " + e);
     }
   },
 

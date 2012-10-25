@@ -4,13 +4,9 @@
 
 namespace HttpMonitor
 {
-
 	class HttpMonitorAPP;
+	typedef PassthroughAPP::CustomSinkStartPolicy<HttpMonitorAPP, MonitorSink> HttpMonitorStartPolicy;
 
-	typedef PassthroughAPP::CustomSinkStartPolicy<HttpMonitorAPP, MonitorSink>
-		HttpMonitorStartPolicy;
-
-	/** 这个类在coral ietab中用于过滤广告http请求，我们没有进行过滤，所以接口不做处理*/
 	class HttpMonitorAPP : public PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy>
 	{
 		typedef PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy> BaseClass;
@@ -19,7 +15,7 @@ namespace HttpMonitor
 
 		HttpMonitorAPP() {}
 
-		~HttpMonitorAPP() {}
+		~HttpMonitorAPP();
 
 		// IInternetProtocolRoot
 		STDMETHODIMP Start(
@@ -40,6 +36,14 @@ namespace HttpMonitor
 	public:
 
 		HRESULT FinalConstruct();
+
+	private:
+
+		/** 对应的 MonitorSink 对象 */
+		MonitorSink *m_Sink;
+
+		/** 计数器, 因为 Read() 方法会被反复调用, 我们需要一个变量来记录已经 Read 了多少数据了 */
+		DWORD m_nDataWritten;
 	};
 
 }

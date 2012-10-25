@@ -78,6 +78,11 @@ namespace Plugin
 
 		// util methods
 		NPI_DEF(SetEnabledGestures);
+		// ABP methods
+		NPI_DEF(ABPEnable);
+		NPI_DEF(ABPDisable);
+		NPI_DEF(ABPLoad);
+		NPI_DEF(ABPClear);
 
 		// properties
 		NPI_DEF(URL);
@@ -102,6 +107,10 @@ namespace Plugin
 		NPI_DEF(ShouldPreventStatusFlash);
 		NPI_DEF(ProcessName);
 
+		// ABP properties
+		NPI_DEF(ABPIsEnabled);
+		NPI_DEF(ABPIsLoading);
+		NPI_DEF(ABPLoadedFile);
 	public:
 		ScriptablePluginObject(NPP npp)
 			: ScriptablePluginObjectBase(npp)
@@ -146,6 +155,10 @@ namespace Plugin
 			NPN_GSI_M(FBToggleCase);
 			NPN_GSI_M(FBSetFindText);
 			NPN_GSI_M(SetEnabledGestures);
+			NPN_GSI_M(ABPEnable);
+			NPN_GSI_M(ABPDisable);
+			NPN_GSI_M(ABPLoad);
+			NPN_GSI_M(ABPClear);
 
 			// properties
 			NPN_GSI_P(URL);
@@ -169,6 +182,9 @@ namespace Plugin
 			NPN_GSI_P(ShouldShowStatusOurselves);
 			NPN_GSI_P(ShouldPreventStatusFlash);
 			NPN_GSI_P(ProcessName);
+			NPN_GSI_P(ABPIsEnabled);
+			NPN_GSI_P(ABPIsLoading);
+			NPN_GSI_P(ABPLoadedFile);
 		}
 
 		virtual bool HasMethod(NPIdentifier name);

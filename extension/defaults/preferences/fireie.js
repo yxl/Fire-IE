@@ -26,9 +26,12 @@ pref("extensions.fireie.showTooltipText", true);
 pref("extensions.fireie.showStatusText", true);
 pref("extensions.fireie.compatMode", "ie7mode");
 pref("extensions.fireie.forceMGSupport", false);
+pref("extensions.fireie.gpuRendering", false);
 
 pref("extensions.fireie.currentTheme", "");
 pref("extensions.fireie.allowedThemeHosts", "[\"fireie.org\"]");
+
+pref("extensions.fireie.abpSupportEnabled", true);
 
 // History & Privacy control
 pref("privacy.cpd.extensions-fireie", true);

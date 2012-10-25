@@ -24,10 +24,18 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include <comutil.h>
 #include "IEControlSite.h"
 #include "PluginApp.h"
+#include "HttpMonitorApp.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
+#include "URL.h"
+#include "abp/AdBlockPlus.h"
+#include "re/strutils.h"
 
 using namespace UserMessage;
+using namespace Utils;
+using namespace abp;
+using namespace std;
+using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow
 
@@ -38,12 +46,15 @@ CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
+const TCHAR* const CIEHostWindow::s_strElemHideClass = _T("fireie-elemhide-style");
 
 // CIEHostWindow dialog
 
 IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 
-	CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
+typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
+
+CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
 	: CDialog(CIEHostWindow::IDD, pParent)
 	, m_pPlugin(pPlugin)
 	, m_bCanBack(FALSE)
@@ -59,6 +70,7 @@ IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
+	, m_strLoadingUrl(_T(""))
 {
 	FBResetFindStatus();
 }
@@ -92,6 +104,26 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	// 从Window Long中取出CIEHostWindow对象指针 
 	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
 	return pInstance;
+}
+
+CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
+{
+	// 用一个循环网上找（最多找 5 层）
+	HWND hwnd = hwndChild;
+	int count = 0;
+	while ((count++ < 5) && (hwnd = ::GetParent(hwnd)))
+	{
+		CString strClassName;
+		GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+		strClassName.ReleaseBuffer();
+		if (strClassName != STR_WINDOW_CLASS_NAME)
+			continue;
+
+		// 从Window Long中取出CIEHostWindow对象指针 
+		CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+		return pInstance;
+	}
+	return NULL;
 }
 
 CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils)
@@ -169,13 +201,21 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
 	return hwnd;
 }
 
-void CIEHostWindow::SetFirefoxCookie(CString strURL, CString strCookie)
+void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams)
 {
-	HWND hwnd = GetAnyUtilsHWND();
-	if (hwnd)
+	CIEHostWindow* pWindow = GetAnyUtilsWindow();
+	if (pWindow)
 	{
-		SetFirefoxCookieParams params = {strURL, strCookie};
-		::SendMessage(hwnd, WM_USER_MESSAGE, WPARAM_SET_FIREFOX_COOKIE, reinterpret_cast<LPARAM>(&params));
+		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
+			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
+		pWindow->RunAsync([=]
+		{
+			if (pWindow->m_pPlugin)
+			{
+				pWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
+			}
+			delete pvParams;
+		});
 	}
 }
 
@@ -250,8 +290,15 @@ void CIEHostWindow::UninitIE()
 	s_csUtilsIEWindowMap.Lock();
 	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
 	s_csUtilsIEWindowMap.Unlock();
-}
 
+	if (m_bUtils)
+	{
+		AdBlockPlus::clearFilters();
+#ifdef MATCHER_PERF
+		AdBlockPlus::showPerfInfo();
+#endif
+	}
+}
 
 void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 {
@@ -267,62 +314,25 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 {
 	switch(wParam)
 	{
-	case WPARAM_SET_FIREFOX_COOKIE:
+	case WPARAM_RUN_ASYNC_CALL:
 		{
-			SetFirefoxCookieParams* pData = reinterpret_cast<SetFirefoxCookieParams*>(lParam);
-			OnSetFirefoxCookie(pData->strURL, pData->strCookie);
+			ICallable* callable = reinterpret_cast<ICallable*>(lParam);
+			callable->call();
+			delete callable;
+			break;
 		}
+	case WPARAM_ABP_FILTER_LOADED:
+		OnABPFilterLoaded();
 		break;
-	case WPARAM_UTILS_PLUGIN_INIT:
-		{
-			OnUtilsPluginInit();
-		}
+	case WPARAM_ABP_LOAD_FAILURE:
+		OnABPLoadFailure();
 		break;
-	case WPARAM_CONTENT_PLUGIN_INIT:
-		{
-			OnContentPluginInit();
-		}
-		break;
-	case WPARAM_NAVIGATE:
-		{
-			OnNavigate();
-		}
-		break;
-	case WPARAM_REFRESH:
-		{
-			OnRefresh();
-		}
-		break;
-	case WPARAM_STOP:
-		{
-			OnStop();
-		}
-		break;
-	case WPARAM_BACK:
-		{
-			OnBack();
-		}
-		break;
-	case WPARAM_FORWARD:
-		{
-			OnForward();
-		}
-		break;
-	case WPARAM_EXEC_OLE_CMD:
-		{
-			OLECMDID id = (OLECMDID)lParam;
-			ExecOleCmd(id);
-		}
-		break;
-	case WPARAM_DISPLAY_SECURITY_INFO:
-		{
-			OnDisplaySecurityInfo();
-		}
+	default:
+		TRACE(_T("Unexpected user message sent: %d\n"), (int)wParam);
 		break;
 	}
 	return 0;
 }
-
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_COMMANDSTATECHANGE, CIEHostWindow::OnCommandStateChange, VTS_I4 VTS_BOOL)
@@ -372,95 +382,6 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 	return NOERROR;
 }
 
-CString GetHostFromUrl(const CString& strUrl)
-{
-	CString strHost(strUrl);
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		strHost.Delete(0, pos+3);
-
-	}
-	pos = strHost.Find(_T("/"));
-	if (pos != -1)
-	{
-		strHost = strHost.Left(pos);
-	}
-	return strHost;
-}
-
-CString GetProtocolFromUrl(const CString& strUrl)
-{
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		return strUrl.Left(pos);
-	}
-	return _T("http"); // Assume http
-}
-
-CString GetPathFromUrl(const CString& strUrl)
-{
-	CString strPath(strUrl);
-	int pos = strUrl.Find(_T("://"));
-	if (pos != -1)
-	{
-		strPath.Delete(0, pos+3);
-
-	}
-	pos = strPath.Find(_T('/'));
-	if (pos != -1)
-	{
-		strPath = strPath.Mid(pos);
-		pos = strPath.Find(_T('?'));
-		if (pos != -1)
-		{
-			strPath = strPath.Left(pos);
-		}
-		pos = strPath.ReverseFind(_T('/'));
-		// pos can't be -1 here
-		strPath = strPath.Left(pos + 1);
-	}
-	else
-	{
-		strPath = _T("/");
-	}
-	return strPath;
-}
-
-CString GetURLRelative(const CString& baseURL, const CString relativeURL)
-{
-	if (relativeURL.Find(_T("://")) != -1)
-	{
-		// complete url, return immediately
-		// test url: https://addons.mozilla.org/zh-CN/firefox/
-		return relativeURL;
-	}
-
-	CString protocol = GetProtocolFromUrl(baseURL);
-	if (relativeURL.GetLength() >= 2 && relativeURL.Left(2) == _T("//"))
-	{
-		// same protocol semi-complete url, return immediately
-		// test url: http://www.windowsazure.com/zh-cn/
-		return protocol + _T(":") + relativeURL;
-	}
-
-	CString host = GetHostFromUrl(baseURL);
-	if (relativeURL.GetLength() && relativeURL[0] == _T('/'))
-	{
-		// root url
-		// test url: https://mail.qq.com/cgi-bin/loginpage?
-		return protocol + _T("://") + host + relativeURL;
-	}
-	else
-	{
-		CString path = GetPathFromUrl(baseURL);
-		// relative url
-		// test url: http://www.update.microsoft.com/windowsupdate/v6/thanks.aspx?ln=zh-cn&&thankspage=5
-		return protocol + _T("://") + host + path + relativeURL;
-	}
-}
-
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
 	m_csNavigateParams.Lock();
@@ -479,28 +400,28 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	m_pNavigateParams->strHeaders = strHeaders;
 	m_csNavigateParams.Unlock();
 
-	//PostMessage(WM_USER_MESSAGE, WPARAM_NAVIGATE, 0);
+	//RunAsync([=] { OnNavigate(); });
 	OnNavigate();
 }
 
 void CIEHostWindow::Refresh()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_REFRESH, 0);
+	RunAsync([=] { OnRefresh(); });
 }
 
 void CIEHostWindow::Stop()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_STOP, 0);
+	RunAsync([=] { OnStop(); });
 }
 
 void CIEHostWindow::Back()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_BACK, 0);
+	RunAsync([=] { OnBack(); });
 }
 
 void CIEHostWindow::Forward()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_FORWARD, 0);
+	RunAsync([=] { OnForward(); });
 }
 
 void CIEHostWindow::Focus()
@@ -652,27 +573,27 @@ void CIEHostWindow::Zoom(double level)
 
 void CIEHostWindow::DisplaySecurityInfo()
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_DISPLAY_SECURITY_INFO);
+	RunAsync([=] { OnDisplaySecurityInfo(); });
 }
 
 void CIEHostWindow::SaveAs()
 {
-	PostOleCmd(OLECMDID_SAVEAS);
+	RunAsyncOleCmd(OLECMDID_SAVEAS);
 }
 
 void CIEHostWindow::Print()
 {
-	PostOleCmd(OLECMDID_PRINT);
+	RunAsyncOleCmd(OLECMDID_PRINT);
 }
 
 void CIEHostWindow::PrintPreview()
 {
-	PostOleCmd(OLECMDID_PRINTPREVIEW);
+	RunAsyncOleCmd(OLECMDID_PRINTPREVIEW);
 }
 
 void CIEHostWindow::PrintSetup()
 {
-	PostOleCmd(OLECMDID_PAGESETUP);
+	RunAsyncOleCmd(OLECMDID_PAGESETUP);
 }
 
 void CIEHostWindow::ViewPageSource()
@@ -760,6 +681,26 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 	}
 }
 
+void CIEHostWindow::ABPEnable()
+{
+	AdBlockPlus::enable();
+}
+
+void CIEHostWindow::ABPDisable()
+{
+	AdBlockPlus::disable();
+}
+
+void CIEHostWindow::ABPLoad(const CString& pathname)
+{
+	AdBlockPlus::loadFilterFile(pathname.GetString());
+}
+
+void CIEHostWindow::ABPClear()
+{
+	AdBlockPlus::clearFilters();
+}
+
 CString CIEHostWindow::GetURL()
 {
 	CString url;
@@ -815,15 +756,16 @@ CString CIEHostWindow::GetFaviconURL()
 			{
 				return GetURLRelative(url, contentFaviconURL);
 			}
-			host = GetHostFromUrl(url);
-			if (host != _T(""))
+			URLTokenizer tokens(url.GetString());
+			if (tokens.getAuthority().length())
 			{
-				CString protocol = GetProtocolFromUrl(url);
-				if (protocol.MakeLower() != _T("http") && protocol.MakeLower() != _T("https")) {
+				CString protocol = CString(tokens.protocol.c_str()).MakeLower();
+				if (protocol != _T("http") && protocol != _T("https")) {
 					// force http/https protocols -- others are not supported for purpose of fetching favicons
 					protocol = _T("http");
+					tokens.protocol = protocol.GetString();
 				}
-				favurl = protocol + _T("://") + host + _T("/favicon.ico");
+				favurl = tokens.getRelativeURL(_T("/favicon.ico")).c_str();
 			}
 		}
 	}
@@ -868,17 +810,9 @@ void CIEHostWindow::ExecOleCmd(OLECMDID cmdID)
 	}
 }
 
-void CIEHostWindow::PostOleCmd(OLECMDID cmdID)
+void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 {
-	PostMessage(WM_USER_MESSAGE, WPARAM_EXEC_OLE_CMD, (LPARAM)cmdID);
-}
-
-void CIEHostWindow::OnSetFirefoxCookie(const CString& strURL, const CString& strCookie)
-{
-	if (m_pPlugin)
-	{
-		m_pPlugin->SetFirefoxCookie(strURL, strCookie);
-	}
+	RunAsync([=] { ExecOleCmd(cmdID); });
 }
 
 /** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
@@ -1014,19 +948,20 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 	}
 }
 
-void CIEHostWindow::OnUtilsPluginInit()
+void CIEHostWindow::OnABPFilterLoaded()
 {
 	if (m_pPlugin)
 	{
-		m_pPlugin->OnUtilsPluginInit();
+		m_pPlugin->OnABPFilterLoaded(
+			AdBlockPlus::getNumberOfActiveFilters(), AdBlockPlus::getLoadTicks());
 	}
 }
 
-void CIEHostWindow::OnContentPluginInit()
+void CIEHostWindow::OnABPLoadFailure()
 {
 	if (m_pPlugin)
 	{
-		m_pPlugin->OnContentPluginInit();
+		m_pPlugin->OnABPLoadFailure();
 	}
 }
 
@@ -1051,11 +986,13 @@ void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
 	m_strStatusText = message;
-
-	if (m_pPlugin)
+	RunAsync([=]
 	{
-		m_pPlugin->SetStatus(message);
-	}
+		if (m_pPlugin)
+		{
+			m_pPlugin->SetStatus(m_strStatusText);
+		}
+	});
 }
 
 void CIEHostWindow::OnCloseIETab()
@@ -1098,6 +1035,56 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 }
 
 
+static inline BOOL UrlCanHandle(LPCTSTR szUrl)
+{
+	// 可能性1: 类似 C:\Documents and Settings\<username>\My Documents\Filename.mht 这样的文件名
+	TCHAR c = _totupper(szUrl[0]);
+	if ( (c >= _T('A')) && (c <= _T('Z')) && (szUrl[1]==_T(':')) && (szUrl[2]==_T('\\')) )
+	{
+		return TRUE;
+	}
+
+	// 可能性2: \\fileserver\folder 这样的 UNC 路径
+	if ( PathIsUNC(szUrl) )
+	{
+		return TRUE;
+	}
+
+	// 可能性3: http://... https://... file://...
+	URL_COMPONENTS uc;
+	ZeroMemory( &uc, sizeof(uc) );
+	uc.dwStructSize = sizeof(uc);
+	if ( ! InternetCrackUrl( szUrl, 0, 0, &uc ) ) return FALSE;
+
+	switch ( uc.nScheme )
+	{
+	case INTERNET_SCHEME_HTTP:
+	case INTERNET_SCHEME_HTTPS:
+	case INTERNET_SCHEME_FILE:
+		return TRUE;
+	default:
+		{
+			// 可能性4: about:blank
+			return ( _tcsncmp(szUrl, _T("about:"), 6) == 0 );
+		}
+	}
+}
+
+void CIEHostWindow::SetLoadingURL(const CString& url)
+{
+	m_csLoadingUrl.Lock();
+	m_strLoadingUrl = url;
+	m_csLoadingUrl.Unlock();
+}
+
+CString CIEHostWindow::GetLoadingURL()
+{
+	m_csLoadingUrl.Lock();
+	CString result = m_strLoadingUrl;
+	m_csLoadingUrl.Unlock();
+	return result;
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
 	// 按Firefox的设置缩放页面
@@ -1109,6 +1096,27 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			Zoom(level);
 		}
 	}
+
+	if (!URL) return;
+
+	COLE2T szUrl(URL->bstrVal);
+
+	// 滤掉非 HTTP 协议
+	if (!UrlCanHandle(szUrl)) return;
+
+	// 如果是在一个 frame 里面, 忽略
+	CComQIPtr<IWebBrowser2> spBrowser(pDisp);
+	if (spBrowser)
+	{
+		VARIANT_BOOL vbIsTopLevelContainer;
+		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
+		{
+			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
+		}
+	}
+
+	// 设置正在载入的Url
+	SetLoadingURL(CString(szUrl));
 }
 
 
@@ -1146,6 +1154,9 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	/** Reset Find Bar state */
 	if (m_bFBInProgress)
 		FBResetFindRange();
+
+	/** Set element hiding styles */
+	ProcessElemHideStyles();
 
 	if (m_pPlugin)
 	{
@@ -1401,6 +1412,21 @@ CString CIEHostWindow::GetProcessName()
 	return _T("");
 }
 
+BOOL CIEHostWindow::GetABPIsEnabled()
+{
+	return AdBlockPlus::isEnabled();
+}
+
+BOOL CIEHostWindow::GetABPIsLoading()
+{
+	return AdBlockPlus::isLoading();
+}
+
+CString CIEHostWindow::GetABPLoadedFile()
+{
+	return AdBlockPlus::getLoadedFile().c_str();
+}
+
 BOOL CIEHostWindow::DestroyWindow()
 {
 	UninitIE();
@@ -1410,7 +1436,7 @@ BOOL CIEHostWindow::DestroyWindow()
 
 BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 {
-	return CDialog::Create(nIDTemplate,pParentWnd);
+	return CDialog::Create(nIDTemplate, pParentWnd);
 }
 
 void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
@@ -1445,6 +1471,186 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			*Cancel = TRUE;
 		}
 		s_csNewIEWindowMap.Unlock();
+	}
+}
+
+void CIEHostWindow::ProcessElemHideStyles()
+{
+	if (!AdBlockPlus::isEnabled()) return;
+
+	if (m_ie.GetSafeHwnd())
+	{
+		CComQIPtr<IDispatch> pDisp;
+		pDisp.Attach(m_ie.get_Document());
+		CComQIPtr<IHTMLDocument2> pDoc = pDisp;
+		if (!pDoc) return;
+
+		ProcessElemHideStylesForDoc(pDoc);
+	}
+}
+
+void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	// first retrieve the head node
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return;
+
+	CComPtr<IHTMLElementCollection> pcolHead;
+	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
+		return;
+
+	long length;
+	if (FAILED(pcolHead->get_length(&length)) || length < 1)
+		return; // no head = =|
+
+	CComPtr<IDispatch> pDisp;
+	CComVariant varindex = 0;
+	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
+		return;
+
+	CComQIPtr<IHTMLElement> pHeadElement = pDisp;
+	if (!pHeadElement) return;
+
+	CComBSTR bstrInnerHTML;
+	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)))
+		return;
+
+	wstring html(bstrInnerHTML);
+	html.c_str();
+}
+
+void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	CComBSTR bstrURL;
+	// while -- break, essentially a break-able 'if'
+	while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
+	{
+		std::wstring strURL = CString(bstrURL).GetString();
+		URLTokenizer tokensURL(strURL);
+
+		std::wstring strProtocol = toLowerCase(tokensURL.protocol);
+		// Do not handle protocols other than http/https
+		if (strProtocol != L"http" && strProtocol != L"https") break;
+
+		std::vector<std::wstring> vStyles;
+		if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+		{
+			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
+			ApplyElemHideStylesForDoc(pDoc, vStyles);
+			ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+		}
+		break;
+	}
+	//DumpInnerHTML(pDoc);
+
+	CComPtr<IHTMLFramesCollection2> pFrames;
+	long length;
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && pFrames && SUCCEEDED(pFrames->get_length(&length)))
+	{
+		for (long i = 0; i < length; i++)
+		{
+			CComVariant varindex = i;
+			CComVariant vDisp;
+			if (SUCCEEDED(pFrames->item(&varindex, &vDisp)))
+			{
+				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
+				CComQIPtr<IHTMLWindow2> pWindow;
+				CComPtr<IHTMLDocument2> pSubDoc;
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)) && pSubDoc)
+				{
+					ProcessElemHideStylesForDoc(pSubDoc);
+				}
+			}
+		}
+	}
+}
+
+bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc)
+{
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return false;
+
+	// Remove all previously created stylesheets
+	CComPtr<IHTMLElementCollection> pcolStyles;
+	if (FAILED(pDoc3->getElementsByTagName(_T("style"), &pcolStyles)) || !pcolStyles)
+		return false;
+
+	long length;
+	if (FAILED(pcolStyles->get_length(&length)))
+		return false;
+
+	for (long i = 0; i < length; i++)
+	{
+		CComVariant varindex = i;
+		CComPtr<IDispatch> pDisp;
+		if (FAILED(pcolStyles->item(varindex, varindex, &pDisp)) || !pDisp)
+			continue;
+
+		CComQIPtr<IHTMLElement> pElem = pDisp;
+		if (!pElem) continue;
+
+		CComVariant varStrClassName;
+		if (FAILED(pElem->getAttribute(_T("class"), 0, &varStrClassName)))
+			continue;
+
+		if (varStrClassName.vt != VT_BSTR || CComBSTR(varStrClassName.bstrVal) != s_strElemHideClass)
+			continue;
+
+		TRACE(_T("[ElemHide] Stylesheet already exists, will not add.\n"));
+		return true;
+	}
+	return false;
+}
+
+void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const vector<wstring>& vStyles)
+{
+	if (!vStyles.size()) return;
+
+	// first retrieve the head node
+	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+	if (!pDoc3) return;
+
+	CComPtr<IHTMLElementCollection> pcolHead;
+	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
+		return;
+
+	long length;
+	if (FAILED(pcolHead->get_length(&length)) || length < 1)
+		return; // no head = =|
+
+	CComPtr<IDispatch> pDisp;
+	CComVariant varindex = 0;
+	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
+		return;
+
+	CComQIPtr<IHTMLDOMNode> pHeadNode = pDisp;
+	if (!pHeadNode) return;
+
+	// add our stylesheets
+	for (size_t i = 0; i < vStyles.size(); i++)
+	{
+		const wstring& style = vStyles[i];
+
+		CComPtr<IHTMLStyleSheet> pStyleSheet;
+		if (FAILED(pDoc->createStyleSheet(_T(""), 0, &pStyleSheet)) || !pStyleSheet)
+			continue;
+
+		if (FAILED(pStyleSheet->put_cssText(CComBSTR((int)style.length(), (LPCOLESTR)style.c_str()))))
+			continue;
+
+		CComPtr<IHTMLElement> pElem;
+		if (FAILED(pStyleSheet->get_owningElement(&pElem)) || !pElem)
+			continue;
+
+		CComVariant varStrType = _T("text/css");
+		if (FAILED(pElem->setAttribute(_T("type"), varStrType)))
+			continue;
+
+		CComVariant varStrClass = s_strElemHideClass;
+		if (FAILED(pElem->setAttribute(_T("class"), varStrClass)))
+			continue;
+
+		TRACE(_T("[ElemHide] Stylesheet added. Length: %d\n"), style.size());
 	}
 }
 
@@ -1565,7 +1771,7 @@ void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pD
 
 	CComPtr<IHTMLFramesCollection2> pFrames;
 	long length;
-	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && SUCCEEDED(pFrames->get_length(&length)))
+	if (SUCCEEDED(pDoc->get_frames(&pFrames)) && pFrames && SUCCEEDED(pFrames->get_length(&length)))
 	{
 		for (long i = 0; i < length; i++)
 		{
@@ -1576,7 +1782,7 @@ void CIEHostWindow::FBObtainFindRangeRecursive(const CComPtr<IHTMLDocument2>& pD
 				CComPtr<IDispatch> pDisp = vDisp.pdispVal;
 				CComQIPtr<IHTMLWindow2> pWindow;
 				CComPtr<IHTMLDocument2> pSubDoc;
-				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)))
+				if ((pWindow = pDisp) && SUCCEEDED(pWindow->get_document(&pSubDoc)) && pSubDoc)
 				{
 					FBObtainFindRangeRecursive(pSubDoc);
 				}
@@ -2017,7 +2223,7 @@ bool CIEHostWindow::FBCheckRangeVisible(const CComPtr<IHTMLTxtRange>& pRange)
 	return true;
 }
 
-bool CIEHostWindow::FBCheckRangeHighlightable(const CComPtr<IDisplayServices> pDS, const CComPtr<IMarkupServices> pMS, const CComPtr<IHTMLTxtRange>& pRange)
+bool CIEHostWindow::FBCheckRangeHighlightable(const CComPtr<IDisplayServices>& pDS, const CComPtr<IMarkupServices>& pMS, const CComPtr<IHTMLTxtRange>& pRange)
 {
 	CComPtr<IDisplayPointer> pDStart, pDEnd;
 	CComPtr<IMarkupPointer> pMStart, pMEnd;
