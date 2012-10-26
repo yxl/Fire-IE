@@ -513,6 +513,7 @@ let ABPObserver = {
     this._clearTimer = Utils.runAsyncTimeout(function()
     {
       UtilsPluginManager.getPlugin().ABPClear();
+      this._clearTimer = null;
       Utils.LOG("[ABP] Cleared.");
     }, this, 60000);
     Utils.LOG("[ABP] Scheduled to clear in 60 seconds.");
