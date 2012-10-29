@@ -1512,7 +1512,7 @@ void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
 	if (!pHeadElement) return;
 
 	CComBSTR bstrInnerHTML;
-	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)))
+	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)) || !bstrInnerHTML)
 		return;
 
 	wstring html(bstrInnerHTML);
@@ -1632,7 +1632,7 @@ void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDo
 		const wstring& style = vStyles[i];
 
 		CComPtr<IHTMLStyleSheet> pStyleSheet;
-		if (FAILED(pDoc->createStyleSheet(_T(""), 0, &pStyleSheet)) || !pStyleSheet)
+		if (FAILED(pDoc->createStyleSheet(_T(""), -1, &pStyleSheet)) || !pStyleSheet)
 			continue;
 
 		if (FAILED(pStyleSheet->put_cssText(CComBSTR((int)style.length(), (LPCOLESTR)style.c_str()))))

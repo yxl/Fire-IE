@@ -156,7 +156,12 @@ bool AdBlockPlus::getElemHideStyles(const wstring& location, vector<wstring>& ou
 
 	// Check whether we are allowed to hide elements on this page
 	Utils::URLTokenizer tokens(location);
-	RegExpFilter* docFilter = regexpMatcher.matchesAny(location, ELEMHIDE, tokens.domain, false);
+	// Check document exception rules
+	RegExpFilter* docFilter = regexpMatcher.matchesAny(location, DOCUMENT, tokens.domain, false);
+	if (docFilter && docFilter->isException())
+		return false;
+	// Check elemhide exception rules
+	docFilter = regexpMatcher.matchesAny(location, ELEMHIDE, tokens.domain, false);
 	if (docFilter && docFilter->isException())
 		return false;
 
