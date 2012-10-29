@@ -42,6 +42,10 @@
 *.properties text
 *.manifest text
 
+*.sln             text eol=crlf
+*.vcxproj         text eol=crlf
+*.vcxproj.filters text eol=crlf
+
 *.jpg   binary
 *.png   binary
 *.gif   binary
