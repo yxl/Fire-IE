@@ -19,8 +19,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "resource.h"
 #include "IECtrl.h"
 #include "UserMessage.h"
+#include "PointerHash.h"
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 namespace Plugin
 {
@@ -319,6 +321,10 @@ protected:
 	CCriticalSection m_csLoadingUrl;
 
 protected:
+	class ICallable;
+	// Keep track of callable instances, make sure the calling is safe as it's converted from a (untrusted) raw pointer
+	std::unordered_set<ICallable*, Utils::PointerHasher<ICallable>, Utils::PointerEqualTo<ICallable> > m_setCallables;
+
 	// Asynchronous function calling, replaces original PostMessage approach
 	// This makes code more readable by putting caller code and callee code together
 
@@ -346,6 +352,7 @@ public:
 	void RunAsync(const Func& func)
 	{
 		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
+		m_setCallables.insert(wrapper);
 		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, reinterpret_cast<LPARAM>(wrapper));
 	}
 };

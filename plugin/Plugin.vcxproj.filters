@@ -102,6 +102,9 @@
     <ClCompile Include="test\test.cpp">
       <Filter>test</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\PointerHash.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -237,6 +240,9 @@
     </ClInclude>
     <ClInclude Include="test\test.h">
       <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\PointerHash.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

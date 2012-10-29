@@ -317,8 +317,12 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	case WPARAM_RUN_ASYNC_CALL:
 		{
 			ICallable* callable = reinterpret_cast<ICallable*>(lParam);
-			callable->call();
-			delete callable;
+			if (m_setCallables.find(callable) != m_setCallables.end())
+			{
+				m_setCallables.erase(callable);
+				callable->call();
+				delete callable;
+			}
 			break;
 		}
 	case WPARAM_ABP_FILTER_LOADED:

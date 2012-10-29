@@ -380,6 +380,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="Plugin\ScriptablePluginObjectBase.cpp" />
     <ClCompile Include="test\test.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
+    <ClCompile Include="Utils\PointerHash.cpp" />
     <ClCompile Include="Utils\TLD.cpp" />
     <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
@@ -432,6 +433,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="test\test.h" />
     <ClInclude Include="UserMessage.h" />
     <ClInclude Include="Utils\OS.h" />
+    <ClInclude Include="Utils\PointerHash.h" />
     <ClInclude Include="Utils\TLD.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>

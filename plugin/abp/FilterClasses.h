@@ -24,6 +24,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "re/RegExp.h"
 #include "TriBool.h"
 #include "FilterContentType.h"
+#include "PointerHash.h"
 #include <unordered_map>
 #include <map>
 #include <vector>
@@ -69,24 +70,8 @@ namespace abp {
 			getKnownFilters() { return knownFilters; }
 		static void clearKnownFilters();
 
-		// Hash function based on Filter* or a derived class pointer
-		template <class FC>
-		class HasherTemplate : public std::unary_function<FC*, size_t> {
-		public:
-			size_t operator()(FC* filter) const { return hasher(reinterpret_cast<size_t>(filter)); }
-		private:
-			static const std::hash<size_t> hasher;
-		};
-
-		// Equality function based on Filter* or a derived class pointer
-		template <class FC>
-		class EqualToTemplate : public std::binary_function<FC*, FC*, bool> {
-		public:
-			bool operator()(FC* filterLeft, FC* filterRight) const { return filterLeft == filterRight; }
-		};
-
-		typedef HasherTemplate<Filter> Hasher;
-		typedef EqualToTemplate<Filter> EqualTo;
+		typedef Utils::PointerHasher<Filter> Hasher;
+		typedef Utils::PointerEqualTo<Filter> EqualTo;
 	private:
 		std::wstring text;
 
@@ -97,9 +82,6 @@ namespace abp {
 		} knownFiltersHolder;
 		static std::unordered_map<std::wstring, Filter*>& knownFilters;
 	};
-
-	template <class FC>
-	const std::hash<size_t> Filter::HasherTemplate<FC>::hasher;
 
 	/**
 	 * Class for invalid filters
@@ -150,8 +132,8 @@ namespace abp {
 		virtual ActiveFilter* toActiveFilter() { return this; }
 		virtual const ActiveFilter* toActiveFilter() const { return this; }
 
-		typedef HasherTemplate<ActiveFilter> Hasher;
-		typedef EqualToTemplate<ActiveFilter> EqualTo;
+		typedef Utils::PointerHasher<ActiveFilter> Hasher;
+		typedef Utils::PointerEqualTo<ActiveFilter> EqualTo;
 	protected:
 		/*
 		 * @param {String} text see Filter()
