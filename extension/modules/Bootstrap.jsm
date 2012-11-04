@@ -210,6 +210,7 @@ var Bootstrap = {
    */
   doLazyLoadModules: function()
   {
+    Services.obs.removeObserver(BootstrapLazyLoadPrivate, "fireie-lazy-init");
     lazyLoadModulesOrdered.forEach(function(url)
     {
       let obj = lazyLoadModules[url];
