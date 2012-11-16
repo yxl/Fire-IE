@@ -355,6 +355,7 @@ buildxpi64.bat</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="PluginApp.cpp" />
+    <ClCompile Include="Plugin\comfix.cpp" />
     <ClCompile Include="Plugin\PluginGlobal.cpp" />
     <ClCompile Include="regdom-libs\dkim-regdom.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -407,6 +408,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="jscre\stdint.h" />
     <ClInclude Include="jscre\ucpinternal.h" />
     <ClInclude Include="PluginApp.h" />
+    <ClInclude Include="Plugin\comfix.h" />
     <ClInclude Include="Plugin\PluginGlobal.h" />
     <ClInclude Include="regdom-libs\dkim-regdom.h" />
     <ClInclude Include="regdom-libs\tld-canon.h" />

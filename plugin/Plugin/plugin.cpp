@@ -48,6 +48,7 @@
 #include "ScriptablePluginObject.h"
 #include "json/json.h"
 #include "OS.h"
+#include "comfix.h"
 
 #ifdef DEBUG
 #include "test/test.h"
@@ -702,6 +703,8 @@ namespace Plugin
 #ifdef DEBUG
 		test::doTest();
 #endif
+		COMFix::doFix();
+
 		CString strEventType = _T("IEUtilsPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
