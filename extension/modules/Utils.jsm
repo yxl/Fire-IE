@@ -256,7 +256,7 @@ var Utils = {
     if (url && url.length > 0)
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
-      if (!/^[\w-]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
@@ -264,7 +264,7 @@ var Utils = {
       if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
       {
         url = decodeURI(url.substring(Utils.containerUrl.length));
-        if (!/^[\w-]+:/.test(url))
+        if (!/^[\w\-]+:/.test(url))
         {
           url = "http://" + url;
         }
@@ -456,7 +456,7 @@ var Utils = {
     try
     {
       url = url.trim();
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
@@ -487,7 +487,7 @@ var Utils = {
     try
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
