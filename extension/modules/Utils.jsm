@@ -256,7 +256,7 @@ var Utils = {
     if (url && url.length > 0)
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w-]+:/.test(url))
       {
         url = "http://" + url;
       }
@@ -264,7 +264,7 @@ var Utils = {
       if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
       {
         url = decodeURI(url.substring(Utils.containerUrl.length));
-        if (!/^[\w]+:/.test(url))
+        if (!/^[\w-]+:/.test(url))
         {
           url = "http://" + url;
         }
@@ -428,6 +428,8 @@ var Utils = {
     return (url && (url.length > 0) &&
       (
        Utils.startsWith(url, 'about:') ||
+       Utils.startsWith(url, 'view-source:') ||
+       Utils.startsWith(url, 'jar:') ||
        Utils.startsWith(url, 'chrome://') ||
        Utils.startsWith(url, 'resource://')
       ));
