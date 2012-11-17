@@ -316,7 +316,6 @@ var gFireIE = null;
       initializeAiOGHooks();
       initializeUCMGHooks();
       GesturePrefObserver.onGestureDetectionEnd();
-      GesturePrefObserver.setEnabledGestures();
     }, this, []);
 
   }

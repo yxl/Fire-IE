@@ -357,6 +357,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="PluginApp.cpp" />
     <ClCompile Include="Plugin\comfix.cpp" />
     <ClCompile Include="Plugin\PluginGlobal.cpp" />
+    <ClCompile Include="PrefManager.cpp" />
     <ClCompile Include="regdom-libs\dkim-regdom.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -397,6 +398,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\GestureHandler.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
+    <ClInclude Include="PrefManager.h" />
     <ClInclude Include="HttpMonitor\ContentType.h" />
     <ClInclude Include="IEControlSite.h" />
     <ClInclude Include="IECtrl.h" />

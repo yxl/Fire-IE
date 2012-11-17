@@ -108,6 +108,7 @@
     <ClCompile Include="Plugin\comfix.cpp">
       <Filter>Plugin</Filter>
     </ClCompile>
+    <ClCompile Include="PrefManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -250,6 +251,7 @@
     <ClInclude Include="Plugin\comfix.h">
       <Filter>Plugin</Filter>
     </ClInclude>
+    <ClInclude Include="PrefManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />

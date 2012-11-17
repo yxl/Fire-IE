@@ -106,6 +106,7 @@ var Prefs =
       // an update.
       try {
         branch.clearUserPref("currentVersion");
+        branch.clearUserPref("subscriptions_defaultAdded");
       } catch(e) {}
     }
   },

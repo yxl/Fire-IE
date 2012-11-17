@@ -32,6 +32,7 @@ pref("extensions.fireie.currentTheme", "");
 pref("extensions.fireie.allowedThemeHosts", "[\"fireie.org\"]");
 
 pref("extensions.fireie.abpSupportEnabled", true);
+pref("extensions.fireie.cookieSyncEnabled", true);
 
 // History & Privacy control
 pref("privacy.cpd.extensions-fireie", true);

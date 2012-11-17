@@ -33,6 +33,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "IECookieManager.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
 
 let UtilsPluginManager = {
   /**
@@ -44,6 +45,11 @@ let UtilsPluginManager = {
    * Whether init() has been called
    */
   _isInitCalled: false,
+  
+  /**
+   * Keep a list of pref setters, which will be called upon plugin initialization
+   */
+  _prefSetters: [],
   
   lazyStartup: function()
   {
@@ -110,6 +116,17 @@ let UtilsPluginManager = {
       window.addEventListener("IEUtilsPluginInitialized", handler, false);
     }
   },
+  
+  /**
+   * Add a function that sets pref to the plugin instance
+   * Setter is called immediately if plugin is already initialized
+   */
+  addPrefSetter: function(setter)
+  {
+    this._prefSetters.push(setter);
+    if (this.isPluginInitialized)
+      setter();
+  },
 
   _handlePluginEvents: function()
   {
@@ -149,6 +166,7 @@ let UtilsPluginManager = {
     Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
     {
       this.isPluginInitialized = true;
+      this._setPluginPrefs();
     }.bind(this), false);
 
     let doc = Utils.getHiddenWindow().document;
@@ -165,6 +183,9 @@ let UtilsPluginManager = {
       if (!this.isPluginInitialized)
         loadFailureSubHandler();
     }, this, 30000);
+    
+    // Pref setter for cookie sync
+    this.addPrefSetter(setCookieSyncPref);
   },
   
   _registerHandlers: function()
@@ -173,6 +194,7 @@ let UtilsPluginManager = {
     window.addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
     window.addEventListener("IESetCookie", onIESetCookie, false);
     window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+    Prefs.addListener(onPrefChanged);
   },
   
   _unregisterHandlers: function()
@@ -181,7 +203,17 @@ let UtilsPluginManager = {
     window.removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
     window.removeEventListener("IESetCookie", onIESetCookie, false);
     window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+    Prefs.removeListener(onPrefChanged);
   },
+  
+  _setPluginPrefs: function()
+  {
+    let plugin = this.getPlugin();
+    this._prefSetters.forEach(function(setter)
+    {
+      setter(plugin);
+    });
+  }
 };
 
 /** handle click to play event in the hidden window */
@@ -286,4 +318,18 @@ function onIEBatchSetCookie(event)
   let topic = "fireie-batch-set-cookie";
   let data = event.detail;
   Services.obs.notifyObservers(subject, topic, data);
+}
+
+/**
+ * Listener for cookie sync pref change
+ */
+function onPrefChanged(pref)
+{
+  if (pref == "cookieSyncEnabled")
+    setCookieSyncPref(UtilsPluginManager.getPlugin());
+}
+
+function setCookieSyncPref(plugin)
+{
+  plugin.SetCookieSyncEnabled(Prefs.cookieSyncEnabled);
 }

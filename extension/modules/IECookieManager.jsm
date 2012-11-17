@@ -32,6 +32,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
 
 /**
  * BOOL InternetSetCookie(
@@ -354,6 +355,8 @@ let CookieObserver = {
 
   onFirefoxCookieChanged: function(subject, data)
   {
+    if (!Prefs.cookieSyncEnabled) return;
+    
     let cookie = (subject instanceof Ci.nsICookie2) ? subject.QueryInterface(Ci.nsICookie2) : null;
     let cookieArray = (subject instanceof Ci.nsIArray) ? subject.QueryInterface(Ci.nsIArray) : null;
     switch (data)

@@ -19,6 +19,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IEHostWindow.h"
 #include "plugin.h"
 #include "GestureHandler.h"
+#include "PrefManager.h"
 
 namespace Plugin
 {
@@ -589,6 +590,22 @@ namespace Plugin
 					}
 				}
 			}
+		}
+		// void SetCookieSyncEnabled({Boolean} value)
+		else if (name == NPI_ID(SetCookieSyncEnabled))
+		{
+			TRACE ("SetCookieSyncEnabled called!\n");
+			if (argCount < 1) return false;
+
+			bool enabled;
+
+			if (NPVARIANT_IS_BOOLEAN(args[0]))
+				enabled = NPVARIANT_TO_BOOLEAN(args[0]);
+			else
+				return false;
+
+			PrefManager::instance().setCookieSyncEnabled(enabled);
+			return true;
 		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))

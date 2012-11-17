@@ -10,6 +10,7 @@
 #include "ScriptablePluginObject.h"
 #include "abp/AdBlockPlus.h"
 #include "URL.h"
+#include "PrefManager.h"
 
 namespace HttpMonitor
 {
@@ -215,7 +216,7 @@ namespace HttpMonitor
 
 		if ((dwResponseCode >= 200 ) && (dwResponseCode < 300))
 		{
-			bool bExportCookies = true;
+			bool bExportCookies = PrefManager::instance().isCookieSyncEnabled();
 
 			if (abp::AdBlockPlus::isEnabled())
 			{
