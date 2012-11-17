@@ -1,1 +1,2 @@
-<!ENTITY itemClearFireieHistory.label "解雇IE历史记录">
+<!ENTITY itemClearFireieCache.label "解雇IE 临时文件">
+<!ENTITY itemClearFireieCookies.label "解雇IE Cookie">

@@ -20,8 +20,10 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <prefwindow id="SanitizeDialog">
     <prefpane id="SanitizeDialogPane">
       <preferences>
-        <preference id="privacy.clearOnShutdown.extensions-fireie"
-        name="privacy.clearOnShutdown.extensions-fireie" type="bool" />
+        <preference id="privacy.clearOnShutdown.extensions-fireie-cache"
+        name="privacy.clearOnShutdown.extensions-fireie-cache" type="bool" />
+        <preference id="privacy.clearOnShutdown.extensions-fireie-cookies"
+        name="privacy.clearOnShutdown.extensions-fireie-cookies" type="bool" />
       </preferences>
       <groupbox id="firieGroup" orient="horizontal">
         <caption label="&fireieSection.label;" />
@@ -32,8 +34,10 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
           </columns>
           <rows>
             <row>
-              <checkbox label="&itemFireieHistory.label;"
-              preference="privacy.clearOnShutdown.extensions-fireie" />
+              <checkbox label="&itemFireieCache.label;"
+              preference="privacy.clearOnShutdown.extensions-fireie-cache" />
+              <checkbox label="&itemFireieCookies.label;"
+              preference="privacy.clearOnShutdown.extensions-fireie-cookies" />
             </row>
           </rows>
         </grid>

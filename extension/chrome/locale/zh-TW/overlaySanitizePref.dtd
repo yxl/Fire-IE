@@ -1,2 +1,3 @@
 <!ENTITY fireieSection.label "解雇IE">
-<!ENTITY itemFireieHistory.label "歷史記錄">
+<!ENTITY itemFireieCache.label "暫存檔案">
+<!ENTITY itemFireieCookies.label "Cookie">

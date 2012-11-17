@@ -35,5 +35,7 @@ pref("extensions.fireie.abpSupportEnabled", true);
 pref("extensions.fireie.cookieSyncEnabled", true);
 
 // History & Privacy control
-pref("privacy.cpd.extensions-fireie", true);
-pref("privacy.clearOnShutdown.extensions-fireie", true);
+pref("privacy.cpd.extensions-fireie-cache", true);
+pref("privacy.cpd.extensions-fireie-cookies", true);
+pref("privacy.clearOnShutdown.extensions-fireie-cache", true);
+pref("privacy.clearOnShutdown.extensions-fireie-cookies", true);
