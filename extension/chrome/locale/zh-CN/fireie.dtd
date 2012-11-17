@@ -37,7 +37,7 @@
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
-<!ENTITY fireie.options.integration.mgDescr "通常，解雇IE会检测您的鼠标手势扩展和脚本，并且自动启用相应的支持。如果您的鼠标手势扩展或脚本无法在IE引擎下使用，请尝试启用这个选项。">
+<!ENTITY fireie.options.integration.mgDescr "解雇IE会自动检测您的鼠标手势扩展和脚本。如果您的鼠标手势扩展或脚本没有被检测到，请尝试启用这个选项。">
 <!ENTITY fireie.options.integration.forceMGSupport "强制启用IE引擎鼠标手势支持">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已启用鼠标手势支持。">
 <!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支持">
@@ -49,14 +49,8 @@
 <!ENTITY fireie.options.integration.abpStatusDisabled "已禁用">
 <!ENTITY fireie.options.integration.abpStatusLoading "正在载入过滤规则...">
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "载入过滤规则失败">
-
-<!ENTITY fireie.options.rule.label "网址过滤">
-<!ENTITY fireie.options.rule.enabled "总是使用 IE Tab 浏览以下网址">
-<!ENTITY fireie.options.rule.column.rule "规则">
-<!ENTITY fireie.options.rule.column.enabled "激活">
-<!ENTITY fireie.options.rule.url.label "加入网址:">
-<!ENTITY fireie.options.rule.button.add "添加">
-<!ENTITY fireie.options.rule.button.delete "删除">
+<!ENTITY fireie.options.integration.otherOptions "其他选项">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之间同步 Cookie">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE引擎选项">
 <!ENTITY fireie.options.ieoptions.pane "IE引擎选项">

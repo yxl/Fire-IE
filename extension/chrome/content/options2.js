@@ -100,6 +100,7 @@ Options.apply = function(quiet)
   Prefs.showStatusText = E("showStatusText").checked;
   Prefs.forceMGSupport = E("forceMGSupport").checked;
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
+  Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -363,7 +364,8 @@ Options.initDialog = function()
   E("showStatusText").checked = Prefs.showStatusText;
   E("forceMGSupport").checked = Prefs.forceMGSupport;
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
-
+  E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
+  
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
   E("statusBarGroup").hidden = ifHide;

@@ -165,6 +165,10 @@
           <label id="abpStatusLoadFailed" style="color: red">&fireie.options.integration.abpStatusLoadFailed;</label>
         </hbox>
       </groupbox>
+      <groupbox>
+        <caption label="&fireie.options.integration.otherOptions;" />
+        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;" />
+      </groupbox>
     </vbox>
   </prefpane>
 

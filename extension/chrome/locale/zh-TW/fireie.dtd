@@ -37,7 +37,7 @@
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">
-<!ENTITY fireie.options.integration.mgDescr "通常，解雇IE會檢測您的滑鼠手勢擴展和腳本，並且自動啟用相應的支持。如果您的滑鼠手勢擴展或腳本無法在IE引擎下使用，請嘗試啟用這個選項。">
+<!ENTITY fireie.options.integration.mgDescr "解雇IE會自動檢測您的滑鼠手勢擴充套件和腳本。如果您的滑鼠手勢擴充套件或腳本沒有被檢測到，請嘗試啟用這個選項。">
 <!ENTITY fireie.options.integration.forceMGSupport "強制啟用IE引擎滑鼠手勢支援">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已啟用滑鼠手勢支援。">
 <!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支援">
@@ -49,14 +49,8 @@
 <!ENTITY fireie.options.integration.abpStatusDisabled "已停用">
 <!ENTITY fireie.options.integration.abpStatusLoading "正在載入過濾規則...">
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "載入過濾規則失敗">
-
-<!ENTITY fireie.options.rule.label "網址過濾">
-<!ENTITY fireie.options.rule.enabled "總是使用 IE Tab 瀏覽以下網址">
-<!ENTITY fireie.options.rule.column.rule "規則">
-<!ENTITY fireie.options.rule.column.enabled "啟動">
-<!ENTITY fireie.options.rule.url.label "加入網址:">
-<!ENTITY fireie.options.rule.button.add "新增">
-<!ENTITY fireie.options.rule.button.delete "刪除">
+<!ENTITY fireie.options.integration.otherOptions "其他選項">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之間同步 Cookie">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE引擎選項">
 <!ENTITY fireie.options.ieoptions.pane "IE引擎選項">
