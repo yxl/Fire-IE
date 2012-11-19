@@ -40,6 +40,17 @@ Initializer.prototype = {
       observerService.addObserver(this, "profile-after-change", true);
       break;
     case "profile-after-change":
+      // Clear the history if need sanitize on startup, since there may be some leftovers.
+      // Only clear the folders, do not trigger observer events which may load up wininet.dll,
+      // forcing IE engine to use the default cache/cookies folders
+      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
+      {
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+          this._clearCache();
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+          this._clearCookies();
+      }
+
       observerService.addObserver(this, "quit-application", true);
       observerService.addObserver(this, "fireie-clear-cache", true);
       observerService.addObserver(this, "fireie-clear-cookies", true);
@@ -49,18 +60,18 @@ Initializer.prototype = {
 
       break;
     case "quit-application":
+      // Clear the history if need sanitize on shutdown
+      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
+      {
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+          observerService.notifyObservers(null, "fireie-clear-cache", null);
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+          observerService.notifyObservers(null, "fireie-clear-cookies", null);
+      }
+
       observerService.removeObserver(this, "quit-application");
       observerService.removeObserver(this, "fireie-clear-cache");
       observerService.removeObserver(this, "fireie-clear-cookies");
-
-      // Clear the history if need sanitize on shutdown
-      if (prefs.getBoolPref('privacy.sanitize.sanitizeOnShutdown'))
-      {
-        if (prefs.getBoolPref('privacy.clearOnShutdown.extensions-fireie-cache'))
-          this._clearCache();
-        if (prefs.getBoolPref('privacy.clearOnShutdown.extensions-fireie-cookies'))
-          this._clearCookies();
-      }
 
       if ("@fireie.org/fireie/private;1" in Cc)
       {
@@ -68,7 +79,6 @@ Initializer.prototype = {
         Cu.import(baseURL.spec + "Bootstrap.jsm");
         Bootstrap.shutdown(false);
       }
-
       break;
     case "fireie-clear-cache":
       this._clearCache();

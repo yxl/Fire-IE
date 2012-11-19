@@ -54,10 +54,21 @@ let InternetSetCookieW = null;
  */
 let InternetSetCookieExW = null;
 
+/**
+ * BOOL InternetSetOptionW(
+ * in  HINTERNET hInternet,
+ * in  DWORD dwOption,
+ * in  LPVOID lpBuffer,
+ * in  DWORD dwBufferLength
+ * );
+ */
+ let InternetSetOptionW = null;
+
 // NULL pointer
 const NULL = 0;
 
 const INTERNET_COOKIE_HTTPONLY = 0x00002000;
+const INTERNET_OPTION_END_BROWSER_SESSION = 42;
 
 const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
 const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
@@ -187,10 +198,10 @@ let IECookieManager = {
     {
       cookieData +="; httponly";
     }
-    let ret = InternetSetCookieW(url, NULL, cookieData); 
+    let ret = InternetSetCookieW(url, null, cookieData); 
     if (!ret)
     {
-      let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
+      let ret = InternetSetCookieExW(url, null, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
       if (!ret)
       {
         let errCode = ctypes.winLastError || 0;
@@ -213,7 +224,14 @@ let IECookieManager = {
 
   clearAllIECookies: function()
   {
-    // @todo 
+    // Clear session cookies by ending the current browser session
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
+    let ret = InternetSetOptionW(null, INTERNET_OPTION_END_BROWSER_SESSION, null, 0);
+    if (!ret)
+    {
+      let errCode = ctypes.winLastError || 0;
+      Utils.LOG("InternetSetOptionW failed with ERROR " + errCode);
+    }
   },
   
   _loadInternetSetCookieW: function()
@@ -231,7 +249,7 @@ let IECookieManager = {
     {
       CallBackABI = ctypes.default_abi;
       WinABI = ctypes.default_abi;
-    }    
+    }
     try
     {
       this.wininetDll = ctypes.open("Wininet.dll");
@@ -239,15 +257,21 @@ let IECookieManager = {
       {
         InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
         ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
-        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
+        ctypes.jschar.ptr, /*LPCTSTR lpszCookieName*/
+        ctypes.jschar.ptr  /*LPCTSTR lpszCookieData*/ );
         
         InternetSetCookieExW = this.wininetDll.declare('InternetSetCookieExW', WinABI, ctypes.int32_t, /*BOOL*/
         ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszCookieName*/
         ctypes.jschar.ptr, /*LPCTSTR lpszCookieData*/
-        ctypes.uint32_t,    /*DWORD dwFlags*/
-        ctypes.int32_t    /*DWORD_PTR dwReserved*/);
+        ctypes.uint32_t,   /*DWORD dwFlags*/
+        ctypes.int32_t     /*DWORD_PTR dwReserved*/);
+        
+        InternetSetOptionW = this.wininetDll.declare('InternetSetOptionW', WinABI, ctypes.int32_t, /*BOOL*/
+        ctypes.voidptr_t,  /*HINTERNET hInternet*/
+        ctypes.uint32_t,   /*DWORD dwOption*/
+        ctypes.voidptr_t,  /*LPVOID lpBuffer*/
+        ctypes.uint32_t    /*DWORD dwBufferLength*/);
       }
     }
     catch (e)
@@ -325,6 +349,7 @@ let CookieObserver = {
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "fireie-clear-cookies", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
   },
@@ -332,6 +357,7 @@ let CookieObserver = {
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "fireie-clear-cookies");
     Services.obs.removeObserver(this, "fireie-set-cookie");
     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
   },
@@ -343,6 +369,9 @@ let CookieObserver = {
     {
     case 'cookie-changed':
       this.onFirefoxCookieChanged(subject, data);
+      break;
+    case 'fireie-clear-cookies':
+      IECookieManager.clearAllIECookies();
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
