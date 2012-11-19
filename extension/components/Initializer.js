@@ -40,6 +40,22 @@ Initializer.prototype = {
       observerService.addObserver(this, "profile-after-change", true);
       break;
     case "profile-after-change":
+      // Backwards compatibility, use previous version's clearOnShutdown user pref to set new prefs
+      if (prefs.getPrefType("privacy.clearOnShutdown.extensions-fireie") == Ci.nsIPrefBranch.PREF_BOOL)
+      {
+        let value = prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie");
+        prefs.setBoolPref("privacy.clearOnShutdown.extensions-fireie-cache", value);
+        prefs.setBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies", value);
+        prefs.clearUserPref("privacy.clearOnShutdown.extensions-fireie");
+      }
+      if (prefs.getPrefType("privacy.cpd.extensions-fireie") == Ci.nsIPrefBranch.PREF_BOOL)
+      {
+        let value = prefs.getBoolPref("privacy.cpd.extensions-fireie");
+        prefs.setBoolPref("privacy.cpd.extensions-fireie-cache", value);
+        prefs.setBoolPref("privacy.cpd.extensions-fireie-cookies", value);
+        prefs.clearUserPref("privacy.cpd.extensions-fireie");
+      }
+      
       // Clear the history if need sanitize on startup, since there may be some leftovers.
       // Only clear the folders, do not trigger observer events which may load up wininet.dll,
       // forcing IE engine to use the default cache/cookies folders

@@ -114,12 +114,7 @@ var Bootstrap = {
 
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-added", true);
     Services.obs.addObserver(BootstrapPrivate, "xpcom-category-entry-removed", true);
-    
-    if (lazyLoadModulesOrdered.length)
-    {
-      // add lazy init observer if there's any such modules
-      Services.obs.addObserver(BootstrapLazyLoadPrivate, "fireie-lazy-init", true);
-    }
+    Services.obs.addObserver(BootstrapLazyLoadPrivate, "fireie-lazy-init", true);
   },
 
   /**
