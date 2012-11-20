@@ -148,11 +148,11 @@ var gFireIE = null;
           dt.setData("text/plain", value);
           dt.setData("text/html", htmlString);
         }
-      });
+      }, false);
     }
-    catch (e)
+    catch (ex)
     {
-      Utils.ERROR("Failed to add event listener on #identity-box");
+      Utils.ERROR("Failed to add event listener on #identity-box: " + ex);
     }
 
     gFireIE.gIdentityHandler = gIdentityHandler;
