@@ -145,7 +145,10 @@ var Utils = {
   
   get ieTempDir()
   {
-    return Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+    let dir = Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+    
+    Utils.__defineGetter__("ieTempDir", function() dir);
+    return dir;
   },
 
   /**
