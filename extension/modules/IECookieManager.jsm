@@ -294,20 +294,22 @@ let IECookieManager = {
     // safe guard: do not attempt to change after already changed
     if (this._bTmpDirChanged) return;
     
-    let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    let ieTempDir = Utils.ieTempDir;
+    let cookiesDir = ieTempDir + "\\cookies";
+    let cacheDir = ieTempDir + "\\cache";
 
     let originalCookies = getIECtrlRegString("Cookies");
     // Backup the cookie directory setting if needed.
     if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
     {
-      setIECtrlRegString("Cookies", profileDir + "\\fireie\\cookies");
+      setIECtrlRegString("Cookies", cookiesDir);
     }
 
     let originalCache = getIECtrlRegString("Cache");
     // Backup the cache directory setting if needed.
     if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
     {
-      setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
+      setIECtrlRegString("Cache", cacheDir);
     }
     
     this._bTmpDirChanged = true;

@@ -142,6 +142,11 @@ var Utils = {
     Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
     return this.esrUserAgent;
   },
+  
+  get ieTempDir()
+  {
+    return Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+  },
 
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.

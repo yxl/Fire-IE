@@ -118,8 +118,8 @@ Initializer.prototype = {
 
   _clearHistoryDir: function(dir)
   {
-    let file = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
-    file.append("fireie");
+    Cu.import("resource://fireie/Utils.jsm");
+    let file = Utils.resolveFilePath(Utils.ieTempDir);
     file.append(dir);
     try
     {
