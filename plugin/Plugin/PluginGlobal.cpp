@@ -51,7 +51,8 @@ namespace Plugin
 			FEATURE_SECURITYBAND,				// 下载和安装插件时提示
 			FEATURE_LOCALMACHINE_LOCKDOWN,		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
 			FEATURE_SAFE_BINDTOOBJECT,			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
-			FEATURE_TABBED_BROWSING			// 启用多标签浏览
+			FEATURE_TABBED_BROWSING,			// 启用多标签浏览
+			FEATURE_SSLUX						// 用SSL警告页面代替模态对话框
 		};
 		int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
 		for (int i=0; i<n; i++)
