@@ -295,7 +295,7 @@ var Utils = {
   {
     return "xp-status-bar";
   },
-
+  
   convertToUTF8: function(data)
   {
     try

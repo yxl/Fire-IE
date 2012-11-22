@@ -68,10 +68,14 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText" || name == "shortcut_key" 
-     || name == "shortcut_modifiers" || name == "currentTheme")
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
+      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme")
     {
       reloadPrefs();
+    }
+    if (name == "showSiteFavicon")
+    {
+      updateFavicons();
     }
     if (name == "showStatusText")
     {
@@ -399,6 +403,36 @@ WindowWrapper.prototype = {
   },
   
   /**
+   * Update favicon for the specified tab
+   */
+  _updateFaviconForTab: function(tab)
+  {
+    let pluginObject = this.getContainerPlugin(tab);
+    if (pluginObject)
+    {
+      // udpate current tab's favicon
+      let faviconURL = Prefs.showSiteFavicon ?
+        pluginObject.FaviconURL : LightweightTheme.ieIconUrl;
+      if (faviconURL && faviconURL != "")
+      {
+        let browser = tab ? tab.linkedBrowser : this.window.gBrowser;
+        Favicon.setIcon(browser.contentDocument, faviconURL);
+      }
+    }
+  },
+  
+  /**
+   * Update favicons for every tab
+   */
+  updateFavicons: function()
+  {
+    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
+    for (let i = 0; i < mTabs.length; i++)
+      if (mTabs[i].localName == "tab")
+        this._updateFaviconForTab(mTabs[i]);
+  },
+  
+  /**
    * Run the delayed update UI action if there's any
    */
   _delayUpdateInterface: function()
@@ -461,11 +495,7 @@ WindowWrapper.prototype = {
       if (pluginObject)
       {
         // udpate current tab's favicon
-        let faviconURL = pluginObject.FaviconURL;
-        if (faviconURL && faviconURL != "")
-        {
-          Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
-        }
+        this._updateFaviconForTab();
         // update current tab's secure lock info
         this.checkIdentity();
         // update status text
@@ -488,8 +518,8 @@ WindowWrapper.prototype = {
       urlbarButton = this.E("fireie-urlbar-switch");
       urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
       urlbarButton.style.visibility = "visible";
-      let fxURL = urlbarButton.getAttribute("fx-icon-url");
-      let ieURL = urlbarButton.getAttribute("ie-icon-url");
+      let fxURL = LightweightTheme.fxIconUrl;
+      let ieURL = LightweightTheme.ieIconUrl;
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
@@ -1179,22 +1209,26 @@ WindowWrapper.prototype = {
    */
   _applyTheme: function(themeData)
   {
+    if (themeData.id == LightweightTheme.appliedThemeId)
+      return;
+      
     // Style URL bar engie button
     let urlbarButton = this.E("fireie-urlbar-switch");
 
-    // First try to obtain the images from the cache
-    let images = LightweightTheme.getCachedThemeImages(themeData);
+    // Cache theme icon URLs to URL bar button attributes
+    let images = LightweightTheme.getThemeImages(themeData);
     if (images && images.fxURL && images.ieURL)
     {
       urlbarButton.setAttribute("fx-icon-url", images.fxURL);
       urlbarButton.setAttribute("ie-icon-url", images.ieURL);
     }
-    // Else set them from their original source
-    else
-    {
-      urlbarButton.setAttribute("fx-icon-url", themeData.fxURL);
-      urlbarButton.setAttribute("ie-icon-url", themeData.ieURL);
-    }
+    
+    LightweightTheme.setAppliedTheme({
+      id: themeData.id,
+      fxURL: images.fxURL,
+      ieURL: images.ieURL,
+      textcolor: themeData.textcolor
+    });
 
     // Style the text color.
     let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
@@ -1208,6 +1242,7 @@ WindowWrapper.prototype = {
     }
 
     this._updateInterface();
+    this.updateFavicons();
   },
 
   // whether we should handle textbox commands, e.g. cmd_paste
@@ -2005,7 +2040,16 @@ WindowWrapper.prototype = {
 function reloadPrefs()
 {
   for each(let wrapper in wrappers)
-  wrapper.updateState();
+    wrapper.updateState();
+}
+
+/**
+ * Updates favicons for all application windows
+ */
+function updateFavicons()
+{
+  for each (let wrapper in wrappers)
+    wrapper.updateFavicons();
 }
 
 /**

@@ -28,10 +28,11 @@ let FireIEContainer = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Cu.import(baseURL.spec + "Favicon.jsm", jsm);
+  Cu.import(baseURL.spec + "LightweightTheme.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
   let
   {
-    Utils, Prefs, Favicon, Services
+    Utils, Prefs, Favicon, LightweightTheme, Services
   } = jsm;
 
   /**
@@ -229,7 +230,7 @@ let FireIEContainer = {};
     let po = E(Utils.containerPluginId);
     if (po)
     {
-      let faviconURL = po.FaviconURL;
+      let faviconURL = Prefs.showSiteFavicon ? po.FaviconURL : LightweightTheme.ieIconUrl;
       if (faviconURL && faviconURL != "")
       {
         Favicon.setIcon(document, faviconURL);
