@@ -27,13 +27,16 @@
 <!ENTITY fireie.options.ui.urlBarButtonCaption "URL Bar Button">
 <!ENTITY fireie.options.ui.iconDisplayLabel "Display style:">
 <!ENTITY fireie.options.ui.iconHidden "Hidden">
-<!ENTITY fireie.options.ui.iconOnly "Show Icon">
-<!ENTITY fireie.options.ui.iconAndText "Show Icon and Text">
+<!ENTITY fireie.options.ui.iconOnly "Show icon">
+<!ENTITY fireie.options.ui.iconAndText "Show icon and text">
 <!ENTITY fireie.options.ui.tooltipLabel "Tooltip:">
 <!ENTITY fireie.options.ui.showTooltipText "Show engine status when hovering URL bar button">
 <!ENTITY fireie.options.ui.statusBarCaption "Floating Status Bar">
 <!ENTITY fireie.options.ui.showStatusText "Show IE engine's status in the floating status bar">
 <!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
+<!ENTITY fireie.options.ui.faviconCaption "Tab Icon">
+<!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
+<!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
 <!ENTITY fireie.options.integration.tab "Integration">
 <!ENTITY fireie.options.integration.pane "Integration">
 <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">

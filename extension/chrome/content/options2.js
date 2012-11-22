@@ -101,6 +101,7 @@ Options.apply = function(quiet)
   Prefs.forceMGSupport = E("forceMGSupport").checked;
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
+  Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -365,6 +366,7 @@ Options.initDialog = function()
   E("forceMGSupport").checked = Prefs.forceMGSupport;
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
   E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
+  E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
   
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();

@@ -105,6 +105,17 @@
   <prefpane id="UIPane" label="&fireie.options.ui.pane;" image="chrome://fireie/skin/pane-ui.png" flex="1">
     <preferences></preferences>
     <vbox flex="1">
+      <groupbox id="faviconGroup">
+        <caption label="&fireie.options.ui.faviconCaption;" />
+        <vbox>
+          <radiogroup id="favicon">
+            <hbox>
+              <radio id="faviconSite-radio" label="&fireie.options.ui.faviconSite;" value="faviconSite" />
+              <radio id="faviconIE-radio" label="&fireie.options.ui.faviconIE;" value="faviconIE" />
+            </hbox>
+          </radiogroup>
+        </vbox>
+      </groupbox>
       <groupbox>
         <caption label="&fireie.options.ui.urlBarButtonCaption;" />
         <vbox>
