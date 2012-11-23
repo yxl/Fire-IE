@@ -28,7 +28,7 @@
 <!ENTITY fireie.options.ui.iconDisplayLabel "顯示方式：">
 <!ENTITY fireie.options.ui.iconHidden "隱藏">
 <!ENTITY fireie.options.ui.iconOnly "顯示圖示">
-<!ENTITY fireie.options.ui.iconAndText "顯示圖示和文字">
+<!ENTITY fireie.options.ui.iconAndText "顯示圖示和標籤">
 <!ENTITY fireie.options.ui.tooltipLabel "懸停提示：">
 <!ENTITY fireie.options.ui.showTooltipText "滑鼠懸停時顯示引擎狀態資訊">
 <!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
@@ -37,6 +37,7 @@
 <!ENTITY fireie.options.ui.faviconCaption "分頁圖示">
 <!ENTITY fireie.options.ui.faviconSite "使用網站圖示">
 <!ENTITY fireie.options.ui.faviconIE "使用IE引擎圖示">
+<!ENTITY fireie.options.ui.customLabelLabel "自訂標籤：">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">

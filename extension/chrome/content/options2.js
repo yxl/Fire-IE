@@ -102,6 +102,8 @@ Options.apply = function(quiet)
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
   Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
+  Prefs.fxLabel = E("fxLabel").value;
+  Prefs.ieLabel = E("ieLabel").value;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -351,6 +353,13 @@ Options.updateABPStatus = function()
   E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
 };
 
+// Hide customLabels UI if icon display mode is not iconAndText
+Options.updateCustomLabelsUI = function()
+{
+  E("customLabels").hidden = (E("iconDisplay").value != "iconAndText");
+  Options.sizeToContent();
+};
+
 Options.initDialog = function()
 {
   // options for general features
@@ -367,6 +376,8 @@ Options.initDialog = function()
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
   E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
   E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
+  E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
+  E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
   
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
@@ -383,6 +394,8 @@ Options.initDialog = function()
     E("alreadyEnabledMGSupportLabel").hidden = true;
   }
   
+  Options.updateCustomLabelsUI();
+  
   Options.updateABPStatus();
 
   // updateStatus
@@ -396,7 +409,8 @@ Options.initDialog = function()
 Options.setIconDisplayValue = function(value)
 {
   E("iconDisplay").value = value;
-  this.updateApplyButton(true);
+  Options.updateCustomLabelsUI();
+  Options.updateApplyButton(true);
 };
 
 Options.updateApplyButton = function(e)
@@ -412,6 +426,18 @@ Options.handleShortcutEnabled = function(e)
   E("shortcut-key").disabled = disable;
 };
 
+Options.sizeToContent = function()
+{
+  // for multi-line label sizing problem
+  window.sizeToContent();
+  let vboxes = document.querySelectorAll("prefpane > vbox");
+  Array.prototype.forEach.call(vboxes, function(vbox)
+  {
+    vbox.height = vbox.boxObject.height;
+  });
+  window.sizeToContent();
+};
+
 Options.init = function()
 {
   function addEventListenerByTagName(tag, type, listener)
@@ -424,20 +450,16 @@ Options.init = function()
   }
   
   Options.initDialog();
-  
-  // for multi-line label sizing problem
-  window.sizeToContent();
-  let vboxes = document.querySelectorAll("prefpane > vbox");
-  Array.prototype.forEach.call(vboxes, function(vbox)
-  {
-    vbox.height = vbox.boxObject.height;
-  });
-  window.sizeToContent();
+  Options.sizeToContent();
   
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
   addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
+  addEventListenerByTagName("html:input", "input", Options.updateApplyButton);
+  addEventListenerByTagName("html:input", "focus", function() { this.select(); });
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
+  
+  E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
   
   ABPObserver.addListener(Options.updateABPStatus);
   window.addEventListener("unload", function()

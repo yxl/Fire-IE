@@ -28,7 +28,7 @@
 <!ENTITY fireie.options.ui.iconDisplayLabel "Display style:">
 <!ENTITY fireie.options.ui.iconHidden "Hidden">
 <!ENTITY fireie.options.ui.iconOnly "Show icon">
-<!ENTITY fireie.options.ui.iconAndText "Show icon and text">
+<!ENTITY fireie.options.ui.iconAndText "Show icon and label">
 <!ENTITY fireie.options.ui.tooltipLabel "Tooltip:">
 <!ENTITY fireie.options.ui.showTooltipText "Show engine status when hovering URL bar button">
 <!ENTITY fireie.options.ui.statusBarCaption "Floating Status Bar">
@@ -37,6 +37,7 @@
 <!ENTITY fireie.options.ui.faviconCaption "Tab Icon">
 <!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
+<!ENTITY fireie.options.ui.customLabelLabel "Customize labels:">
 <!ENTITY fireie.options.integration.tab "Integration">
 <!ENTITY fireie.options.integration.pane "Integration">
 <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">
