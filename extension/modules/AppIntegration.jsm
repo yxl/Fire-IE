@@ -69,7 +69,8 @@ function init()
   Prefs.addListener(function(name)
   {
     if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
-      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme")
+      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme"
+      || name == "fxLabel" || name == "ieLabel")
     {
       reloadPrefs();
     }
@@ -523,7 +524,8 @@ WindowWrapper.prototype = {
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-      urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+      urlbarButtonLabel.value = isIEEngine ? (Prefs.ieLabel || Utils.getString("fireie.urlbar.switch.label.ie"))
+                                           : (Prefs.fxLabel || Utils.getString("fireie.urlbar.switch.label.fx"));
       let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
       urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
 
