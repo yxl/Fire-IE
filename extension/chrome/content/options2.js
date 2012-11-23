@@ -62,7 +62,7 @@ Options.restoreDefaultSettings = function()
   let aOld = Options._getAllOptions(false);
   let aDefault = Options._getAllOptions(true);
   Options._setAllOptions(aDefault);
-  Options.initDialog();
+  Options.initDialog(true);
   Options._setAllOptions(aOld);
   Options.updateApplyButton(true);
 };
@@ -303,7 +303,7 @@ Options.getIEMainVersion = function()
   return version;
 };
 
-Options.updateIEModeTab = function()
+Options.updateIEModeTab = function(restore)
 {
   let mainIEVersion = Options.getIEMainVersion();
   // IE7 or lower does not support compatible modes and GPU rendering
@@ -332,11 +332,14 @@ Options.updateIEModeTab = function()
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
   
-  Options.getIECompatMode();
+  // do not attempt to get values from registry if we are restoring default
+  if (!restore)
+    Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
   
-  Options.getGPURenderingState();
+  if (!restore)
+    Options.getGPURenderingState();
   E("gpuRendering").checked = Prefs.gpuRendering;
 };
 
@@ -360,7 +363,7 @@ Options.updateCustomLabelsUI = function()
   Options.sizeToContent();
 };
 
-Options.initDialog = function()
+Options.initDialog = function(restore)
 {
   // options for general features
   E("handleurl").checked = Prefs.handleUrlBar;
@@ -403,7 +406,7 @@ Options.initDialog = function()
   Options.handleShortcutEnabled();
 
   // IE Compatibility Mode
-  Options.updateIEModeTab();
+  Options.updateIEModeTab(restore);
 };
 
 Options.setIconDisplayValue = function(value)
