@@ -30,6 +30,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "URL.h"
 #include "abp/AdBlockPlus.h"
 #include "re/strutils.h"
+#include "OS.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -1481,6 +1482,10 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 void CIEHostWindow::ProcessElemHideStyles()
 {
 	if (!AdBlockPlus::isEnabled()) return;
+
+	// Don't apply elemhide styles for IE6 -- they break pages badly
+	if (OS::GetIEVersion() <= 6)
+		return;
 
 	if (m_ie.GetSafeHwnd())
 	{
