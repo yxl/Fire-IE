@@ -324,6 +324,7 @@ Options.updateIEModeTab = function()
   E("ie8mode-radio").hidden = false;
   E("ie8forced-radio").hidden = false;
   E("ie7mode-radio").hidden = false;
+  E("iecompat").hidden = false;
   
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
