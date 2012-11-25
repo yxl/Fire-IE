@@ -60,7 +60,7 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 	if (size = m_vMessages.size())
 	{
 		MSG* msg = &m_vMessages[size - 1];
-		::PostMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
+		::SendMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
 	}
 	m_vMessages.clear();
 }
@@ -74,7 +74,7 @@ void GestureHandler::forwardAllTarget(HWND hOrigin, HWND hTarget)
 		CPoint pt(iter->lParam);
 		ClientToScreen(hOrigin, &pt);
 		ScreenToClient(hTarget, &pt);
-		::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
+		::SendMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
 	}
 	m_vMessages.clear();
 }
@@ -110,7 +110,7 @@ MessageHandleResult GestureHandler::handleMessage(MSG* msg)
 
 void GestureHandler::forwardOrigin(MSG* pMsg)
 {
-	::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+	::SendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
 }
 
 void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
@@ -118,7 +118,7 @@ void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
 	CPoint pt(pMsg->lParam);
 	ClientToScreen(pMsg->hwnd, &pt);
 	ScreenToClient(hTarget, &pt);
-	::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+	::SendMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
 }
 
 void GestureHandler::setEnabled(bool bEnabled)
