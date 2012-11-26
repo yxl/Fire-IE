@@ -43,7 +43,7 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils);
+	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils);
 
 	/** Get CIEHostWindow object by its window handle */
 	static CIEHostWindow* GetInstance(HWND hwnd);
@@ -100,7 +100,7 @@ protected:
 	static CCriticalSection s_csIEWindowMap;
 
 	/** Map used to search the CIEHostWindow object by its ID */
-	static CSimpleMap<DWORD, CIEHostWindow *> s_NewIEWindowMap;
+	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
 
 	/** Ensure the operations on s_NewIEWindowMap are thread safe. */
 	static CCriticalSection s_csNewIEWindowMap;

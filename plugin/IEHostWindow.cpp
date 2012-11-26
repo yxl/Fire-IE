@@ -41,7 +41,7 @@ using namespace re::strutils;
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CCriticalSection CIEHostWindow::s_csIEWindowMap; 
-CSimpleMap<DWORD, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
+CSimpleMap<ULONG_PTR, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
 CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
@@ -102,7 +102,7 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 	}
 
 	// 从Window Long中取出CIEHostWindow对象指针 
-	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	return pInstance;
 }
 
@@ -120,25 +120,25 @@ CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
 			continue;
 
 		// 从Window Long中取出CIEHostWindow对象指针 
-		CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+		CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		return pInstance;
 	}
 	return NULL;
 }
 
-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils)
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
 
-	if (dwId != 0)
+	if (ulId != 0)
 	{
 		// The CIEHostWindow has been created that we needn't recreate it.
 		s_csNewIEWindowMap.Lock();
-		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(dwId);
+		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(ulId);
 		if (pIEHostWindow)
 		{
 			pIEHostWindow->m_bUtils = isUtils;
-			CIEHostWindow::s_NewIEWindowMap.Remove(dwId);
+			CIEHostWindow::s_NewIEWindowMap.Remove(ulId);
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
@@ -184,7 +184,7 @@ CIEHostWindow* CIEHostWindow::GetAnyUtilsWindow()
 	HWND hwnd = GetAnyUtilsHWND();
 	if (hwnd)
 	{
-		pWindow = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+		pWindow = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	}
 	return pWindow;
 }
@@ -254,7 +254,7 @@ BOOL CIEHostWindow::OnInitDialog()
 	InitIE();
 
 	// 保存CIEHostWindow对象指针，让BrowserHook::WindowMessageHook可以通过Window handle找到对应的CIEHostWindow对象
-	::SetWindowLongPtr(GetSafeHwnd(), GWLP_USERDATA, reinterpret_cast<LONG>(this)); 
+	::SetWindowLongPtr(GetSafeHwnd(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this)); 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 }
@@ -1464,10 +1464,10 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
-			DWORD id = reinterpret_cast<DWORD>(pIEHostWindow);
-			s_NewIEWindowMap.Add(id, pIEHostWindow);
+			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
+			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
-			m_pPlugin->IENewTab(id, bstrUrl);
+			m_pPlugin->IENewTab(ulId, bstrUrl);
 		}
 		else
 		{

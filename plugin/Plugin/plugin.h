@@ -66,7 +66,7 @@ namespace Plugin
 
 		CIEHostWindow* GetIEHostWindow() {return m_pIEHostWindow;}
 	private: 
-		CIEHostWindow* CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils);
+		CIEHostWindow* CreateIEHostWindow(HWND hParent, ULONG_PTR ulId, bool isUtils);
 		
 		// Get the URL of the page where the plugin is hosted
 		CString GetHostURL() const;
@@ -74,7 +74,7 @@ namespace Plugin
 		CString GetNavigateParam(const NPUTF8* name) const;
 
 		// Get CIEHostWindow ID
-		DWORD GetNavigateWindowId() const;
+		ULONG_PTR GetNavigateWindowId() const;
 
 		// Get Http headers paramter for IECtrl::Navigate
 		CString GetNavigateHeaders() const;
@@ -137,10 +137,10 @@ namespace Plugin
 
 		/** 
 		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
-		 * @param id The ID of the CIEHostWindow object.
+		 * @param ulId The ID of the CIEHostWindow object.
 		 * @param strURL The page URL to be loaded in the new tab.
 		 */
-		void IENewTab(DWORD id, const CString& strURL);
+		void IENewTab(ULONG_PTR ulId, const CString& strURL);
 
 		/** Close current IE engie tab. */
 		void CloseIETab();

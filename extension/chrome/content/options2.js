@@ -284,12 +284,12 @@ Options.getIEMainVersion = function()
   {
     wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
     let versionString = wrk.readStringValue("version");
-    version = parseInt(versionString);
+    version = parseInt(versionString, 10);
     // for IE 10, version equals to "9.10.*.*", which should be handled specially
     if (version == 9)
     {
       versionString = wrk.readStringValue("svcVersion");
-      version = parseInt(versionString);
+      version = parseInt(versionString, 10);
     }
   }
   catch (e)

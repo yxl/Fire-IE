@@ -971,7 +971,7 @@ WindowWrapper.prototype = {
   {
     if (!this._checkEventOrigin(event)) return;
     
-    let progress = parseInt(event.detail);
+    let progress = parseInt(event.detail, 10);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this._updateProgressStatus();
     if (progress >= 100)
