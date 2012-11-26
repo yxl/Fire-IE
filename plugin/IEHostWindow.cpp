@@ -989,14 +989,17 @@ void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
-	m_strStatusText = message;
-	RunAsync([=]
+	if (m_strStatusText != message)
 	{
-		if (m_pPlugin)
+		m_strStatusText = message;
+		RunAsync([=]
 		{
-			m_pPlugin->SetStatus(m_strStatusText);
-		}
-	});
+			if (m_pPlugin)
+			{
+				m_pPlugin->SetStatus(m_strStatusText);
+			}
+		});
+	}
 }
 
 void CIEHostWindow::OnCloseIETab()

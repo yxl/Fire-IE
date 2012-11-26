@@ -186,8 +186,8 @@ MessageHandleResult RockerHandler::handleMessageInternal(MSG* pMsg)
 
 bool RockerHandler::shouldSwallow(MessageHandleResult res) const
 {
-	// don't swallow anything related to left->right gesture
-	if (m_bLeft) return false;
+	// don't swallow anything related to left->right gesture except for the triggering message
+	if (m_bLeft && res != MHR_Triggered) return false;
 	return GestureHandler::shouldSwallow(res);
 }
 
