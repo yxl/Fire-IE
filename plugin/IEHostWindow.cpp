@@ -31,6 +31,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "abp/AdBlockPlus.h"
 #include "re/strutils.h"
 #include "OS.h"
+#include "App.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -1406,15 +1407,7 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 
 CString CIEHostWindow::GetProcessName()
 {
-	TCHAR szPathName[MAX_PATH];
-	GetModuleFileName(NULL, szPathName, MAX_PATH);
-	TCHAR szFileName[MAX_PATH];
-	TCHAR szFileExt[MAX_PATH];
-	if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
-	{
-		return CString(szFileName) + szFileExt;
-	}
-	return _T("");
+	return App::GetProcessName();
 }
 
 BOOL CIEHostWindow::GetABPIsEnabled()
