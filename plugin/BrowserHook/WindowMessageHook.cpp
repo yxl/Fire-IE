@@ -143,6 +143,8 @@ namespace BrowserHook
 				bShouldSwallow = bShouldSwallow || ForwardFirefoxMouseMessage(hwndFirefox, pMsg);
 			}
 
+			// Check if we should handle Ctrl+Wheel zooming
+			bShouldSwallow = bShouldSwallow || ForwardZoomMessage(hwndFirefox, pMsg);
 
 			if (bShouldSwallow)
 			{
@@ -251,6 +253,18 @@ Exit:
 			GestureHandler::forwardTarget(pMsg, hwndFirefox);
 		}
 		return bShouldSwallow;
+	}
+
+	BOOL WindowMessageHook::ForwardZoomMessage(HWND hwndFirefox, MSG* pMsg)
+	{
+		bool bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
+		bool bShouldForward = bCtrlPressed && pMsg->message == WM_MOUSEWHEEL;
+		if (bShouldForward)
+		{
+			TRACE(_T("Ctrl+Wheel forwarded.\n"));
+			GestureHandler::forwardTarget(pMsg, hwndFirefox);
+		}
+		return bShouldForward;
 	}
 
 	BOOL WindowMessageHook::FilterFirefoxKey(int keyCode, BOOL bAltPressed, BOOL bCtrlPressed, BOOL bShiftPressed)
