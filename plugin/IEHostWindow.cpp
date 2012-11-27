@@ -30,6 +30,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "URL.h"
 #include "abp/AdBlockPlus.h"
 #include "re/strutils.h"
+#include "OS.h"
+#include "App.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -1408,15 +1410,7 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 
 CString CIEHostWindow::GetProcessName()
 {
-	TCHAR szPathName[MAX_PATH];
-	GetModuleFileName(NULL, szPathName, MAX_PATH);
-	TCHAR szFileName[MAX_PATH];
-	TCHAR szFileExt[MAX_PATH];
-	if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
-	{
-		return CString(szFileName) + szFileExt;
-	}
-	return _T("");
+	return App::GetProcessName();
 }
 
 BOOL CIEHostWindow::GetABPIsEnabled()
@@ -1484,6 +1478,10 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 void CIEHostWindow::ProcessElemHideStyles()
 {
 	if (!AdBlockPlus::isEnabled()) return;
+
+	// Don't apply elemhide styles for IE6 -- they break pages badly
+	if (OS::GetIEVersion() <= 6)
+		return;
 
 	if (m_ie.GetSafeHwnd())
 	{

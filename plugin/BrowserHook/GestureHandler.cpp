@@ -17,8 +17,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 #include "GestureHandler.h"
+#include "App.h"
 
 using namespace BrowserHook;
+using namespace Utils;
 
 GestureHandler::Handlers GestureHandler::s_handlers;
 std::vector<GestureHandler*>& GestureHandler::s_vHandlers = s_handlers.m_vHandlers;
@@ -60,7 +62,7 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 	if (size = m_vMessages.size())
 	{
 		MSG* msg = &m_vMessages[size - 1];
-		::PostMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
+		::SendMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
 	}
 	m_vMessages.clear();
 }
@@ -68,13 +70,17 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 void GestureHandler::forwardAllTarget(HWND hOrigin, HWND hTarget)
 {
 	_ASSERT(hOrigin != NULL && hTarget != NULL);
+	bool oopp = App::GetApplication() == App::OOPP;
 	for (std::vector<MSG>::iterator iter = m_vMessages.begin();
 		iter != m_vMessages.end(); ++iter)
 	{
 		CPoint pt(iter->lParam);
 		ClientToScreen(hOrigin, &pt);
 		ScreenToClient(hTarget, &pt);
-		::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
+		if (oopp) // When OOPP is on, forwarding to firefox must use PostMessage to avoid deadlocks
+			::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
+		else
+			::SendMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
 	}
 	m_vMessages.clear();
 }
@@ -110,7 +116,7 @@ MessageHandleResult GestureHandler::handleMessage(MSG* msg)
 
 void GestureHandler::forwardOrigin(MSG* pMsg)
 {
-	::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
+	::SendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam);
 }
 
 void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
@@ -118,7 +124,10 @@ void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
 	CPoint pt(pMsg->lParam);
 	ClientToScreen(pMsg->hwnd, &pt);
 	ScreenToClient(hTarget, &pt);
-	::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+	if (App::GetApplication() == App::OOPP)
+		::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
+	else
+		::SendMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
 }
 
 void GestureHandler::setEnabled(bool bEnabled)

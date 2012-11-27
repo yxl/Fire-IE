@@ -149,7 +149,7 @@ Options.getIECompatMode = function()
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.LOG("Failed to get IE Compat Mode from registry: " + e);
   }
   finally
   {
@@ -228,7 +228,7 @@ Options.applyIECompatMode = function()
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.ERROR("Failed to write IE Compat Mode into registry: " + e);
   }
   finally
   {
@@ -247,7 +247,7 @@ Options.getGPURenderingState = function()
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.LOG("Failed to get GPU Rendering State from registry: " + e);
   }
   finally
   {
@@ -267,7 +267,7 @@ Options.applyGPURenderingState = function()
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.ERROR("Failed to write GPU Rendering State into registry: " + e);
   }
   finally
   {
@@ -294,7 +294,7 @@ Options.getIEMainVersion = function()
   }
   catch (e)
   {
-    Utils.ERROR(e);
+    Utils.LOG("Failed to get IE version from registry: " + e);
   }
   finally
   {
@@ -328,6 +328,7 @@ Options.updateIEModeTab = function(restore)
   E("ie8mode-radio").hidden = false;
   E("ie8forced-radio").hidden = false;
   E("ie7mode-radio").hidden = false;
+  E("iecompat").hidden = false;
   
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;

@@ -963,7 +963,7 @@ WindowWrapper.prototype = {
     let progress = parseInt(event.detail, 10);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this._updateProgressStatus();
-    if (progress >= 100)
+    if (progress >= 100 || progress == -1)
       this._updateInterface();
   },
 

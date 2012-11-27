@@ -199,7 +199,7 @@
     <vbox flex="1">
       <label id="iemodeNotSupported" class="descr" style="margin-top:20px;">
         &fireie.options.iecompat.notSupported;</label>
-      <groupbox>
+      <groupbox id="iecompat" hidden="true">
         <caption label="&fireie.options.iecompat.group;" />
         <radiogroup id="iemode">
           <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"

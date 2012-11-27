@@ -109,6 +109,9 @@
       <Filter>Plugin</Filter>
     </ClCompile>
     <ClCompile Include="PrefManager.cpp" />
+    <ClCompile Include="Utils\App.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -252,6 +255,9 @@
       <Filter>Plugin</Filter>
     </ClInclude>
     <ClInclude Include="PrefManager.h" />
+    <ClInclude Include="Utils\App.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
