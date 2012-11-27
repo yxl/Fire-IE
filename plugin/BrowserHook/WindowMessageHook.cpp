@@ -275,7 +275,7 @@ Exit:
 			case VK_CONTROL: // Only Ctrl is pressed
 				return FALSE;
 
-				// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
+			// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
 			case 'C': // Ctrl+C, Copy
 			case 'V': // Ctrl+V, Paste
@@ -308,8 +308,12 @@ Exit:
 				return TRUE;
 			case VK_F4: // Shift-F4 opens Scratchpad which is very handy
 				return bShiftPressed;
+			case VK_F6: // Locate the address bar
+				return !bShiftPressed;
 			case VK_F7: // Style Editor, although not very useful
 				return bShiftPressed;
+			case VK_F10: // Locate the menu bar
+				return !bShiftPressed;
 			case VK_F11: // full screen
 				return !bShiftPressed;
 			case VK_F12: // Firebug, although not really useful
