@@ -35,6 +35,9 @@ Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "IECookieManager.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
+const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+const SUB_KEY = "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\";
+
 let UtilsPluginManager = {
   /**
    * Whether the utils plugin is initialized
@@ -67,6 +70,7 @@ let UtilsPluginManager = {
     this._isInitCalled = true;
     
     this._handlePluginEvents();
+    this._handleIEFeatures();
     this._install();
     this._registerHandlers();
   },
@@ -94,6 +98,13 @@ let UtilsPluginManager = {
   getWindow: function()
   {
     return Utils.getHiddenWindow();
+  },
+  
+  getPluginProcessName: function()
+  {
+    let plugin = this.getPlugin();
+    // falls back to firefox.exe
+    return (plugin && plugin.ProcessName) || "firefox.exe";
   },
   
   /**
@@ -154,6 +165,74 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
   },
   
+  _getFeatureReg: function(feature)
+  {
+    let processName = this.getPluginProcessName();
+    try
+    {
+      wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY + feature, wrk.ACCESS_READ);
+      if (!wrk.hasValue(processName)) return null;
+      let value = wrk.readIntValue(processName);
+      return value;
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to get " + feature + " from registry: " + e);
+      return null;
+    }
+    finally
+    {
+      wrk.close();
+    }
+  },
+
+  _setFeatureReg: function(feature, value)
+  {
+    try
+    {
+      wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY + feature, wrk.ACCESS_ALL);
+      wrk.writeIntValue(this.getPluginProcessName(), value);
+      return true;
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to set " + feature + " = " + value + " to registry: " + e);
+      return false;
+    }
+    finally
+    {
+      wrk.close();
+    }
+  },
+  
+  _ensureFeatureValue: function(feature, value)
+  {
+    if (this._getFeatureReg(feature) != value)
+      this._setFeatureReg(feature, value);
+  },
+
+  _handleIEFeatures: function()
+  {
+    this.fireAfterInit(function()
+    {
+      // For compatibility, allow the href attribute of a objects to support the javascript prototcol.
+      this._ensureFeatureValue("FEATURE_SCRIPTURL_MITIGATION", 1);
+      
+      // Use confirmation dialog boxes when opening content from potentially untrusted sources
+      this._ensureFeatureValue("FEATURE_SHOW_APP_PROTOCOL_WARN_DIALOG", 1);
+            
+      // Security-related features
+      this._ensureFeatureValue("FEATURE_LOCALMACHINE_LOCKDOWN", 1);
+      this._ensureFeatureValue("FEATURE_RESTRICT_ABOUT_PROTOCOL_IE7", 1);
+      this._ensureFeatureValue("FEATURE_ENABLE_SCRIPT_PASTE_URLACTION_IF_PROMPT", 0);
+      this._ensureFeatureValue("FEATURE_BLOCK_CROSS_PROTOCOL_FILE_NAVIGATION", 1);
+      this._ensureFeatureValue("FEATURE_VIEWLINKEDWEBOC_IS_UNSAFE", 1);
+      this._ensureFeatureValue("FEATURE_IFRAME_MAILTO_THRESHOLD", 1);
+      this._ensureFeatureValue("FEATURE_RESTRICT_RES_TO_LMZ", 1);
+      this._ensureFeatureValue("FEATURE_SHIM_MSHELP_COMBINE", 0);
+    }, this, []);
+  },
+  
   /**
    * Install the plugin used to do utility things like sync cookie
    */
@@ -163,11 +242,11 @@ let UtilsPluginManager = {
     // be restored when the utils plugin is loaded.
     IECookieManager.changeIETempDirectorySetting();
 
-    Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
+    this.fireAfterInit(function()
     {
       this.isPluginInitialized = true;
       this._setPluginPrefs();
-    }.bind(this), false);
+    }, this, []);
 
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");

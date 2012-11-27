@@ -157,6 +157,8 @@ let ABPObserver = {
       this._registerListeners();
       
       this._detectABP();
+      
+      UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
     }, this, []);
   },
   

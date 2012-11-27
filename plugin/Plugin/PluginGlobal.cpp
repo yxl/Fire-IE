@@ -52,10 +52,16 @@ namespace Plugin
 			FEATURE_LOCALMACHINE_LOCKDOWN,		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
 			FEATURE_SAFE_BINDTOOBJECT,			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
 			FEATURE_TABBED_BROWSING,			// 启用多标签浏览
-			FEATURE_SSLUX						// 用SSL警告页面代替模态对话框
+			FEATURE_SSLUX,						// 用SSL警告页面代替模态对话框
+			FEATURE_VALIDATE_NAVIGATE_URL,		// 防止访问badly-formed URL
+			FEATURE_DISABLE_NAVIGATION_SOUNDS,	// 关闭页面切换时的点击声，使之更像Firefox
+			FEATURE_BLOCK_INPUT_PROMPTS,		// 允许弹窗阻止程序拦截javascript prompt
+			FEATURE_MIME_HANDLING,				// MIME Type 处理
+			FEATURE_UNC_SAVEDFILECHECK,			// UNC路径MotW处理
+			FEATURE_HTTP_USERNAME_PASSWORD_DISABLE // 禁止在http协议的URL中包含用户名密码
 		};
 		int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
-		for (int i=0; i<n; i++)
+		for (int i = 0; i < n; i++)
 		{
 			CoInternetSetFeatureEnabled(features[i], SET_FEATURE_ON_PROCESS, TRUE);
 		}
