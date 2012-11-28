@@ -4,6 +4,8 @@
 #include "WindowMessageHook.h"
 #include "AtlDepHook.h"
 #include "OS.h"
+#include "App.h"
+#include "comfix.h"
 
 namespace Plugin
 {
@@ -15,9 +17,66 @@ namespace Plugin
 
 	typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
 
+	/** Features that can only be enabled through registry */
+	static const struct { TCHAR* feature; DWORD value; } g_RegOnlyFeatures[] = {
+		// For compatibility, allow the href attribute of a objects to support the javascript prototcol.
+		{ _T("FEATURE_SCRIPTURL_MITIGATION"), 1 },
+
+		// Use confirmation dialog boxes when opening content from potentially untrusted sources
+		{ _T("FEATURE_SHOW_APP_PROTOCOL_WARN_DIALOG"), 1 },
+
+		// Security-related features
+		{ _T("FEATURE_LOCALMACHINE_LOCKDOWN"), 1 },
+		{ _T("FEATURE_RESTRICT_ABOUT_PROTOCOL_IE7"), 1 },
+		{ _T("FEATURE_ENABLE_SCRIPT_PASTE_URLACTION_IF_PROMPT"), 0 },
+		{ _T("FEATURE_BLOCK_CROSS_PROTOCOL_FILE_NAVIGATION"), 1 },
+		{ _T("FEATURE_VIEWLINKEDWEBOC_IS_UNSAFE"), 1 },
+		{ _T("FEATURE_IFRAME_MAILTO_THRESHOLD"), 1 },
+		{ _T("FEATURE_RESTRICT_RES_TO_LMZ"), 1 },
+		{ _T("FEATURE_SHIM_MSHELP_COMBINE"), 0 }
+	};
+	static const int g_nRegOnlyFeatures = sizeof(g_RegOnlyFeatures) / sizeof(g_RegOnlyFeatures[0]);
+	static const CString g_strSubkey = _T("SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\");
+
+	/** Retrieve feature value from registry */
+	bool getFeatureReg(const TCHAR* feature, DWORD* value)
+	{
+		HKEY hKey;
+		if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_CURRENT_USER, g_strSubkey + feature, 0, KEY_QUERY_VALUE, &hKey))
+			return false;
+		DWORD dwType;
+		DWORD cbData = sizeof(*value);
+		bool ret = (ERROR_SUCCESS == RegQueryValueEx(hKey, App::GetProcessName(), NULL, &dwType, (LPBYTE)value, &cbData)
+					&& dwType == REG_DWORD);
+		RegCloseKey(hKey);
+		return ret;
+	}
+
+	/** Write feature value into registry */
+	bool setFeatureReg(const TCHAR* feature, DWORD value)
+	{
+		HKEY hKey;
+		if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_CURRENT_USER, g_strSubkey + feature, 0, NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL))
+			return false;
+		bool ret = (ERROR_SUCCESS == RegSetValueEx(hKey, App::GetProcessName(), 0, REG_DWORD, (LPBYTE)&value, sizeof(value)));
+		RegCloseKey(hKey);
+		return ret;
+	}
+
+	/** Ensures feature is set to the given value */
+	bool ensureFeatureReg(const TCHAR* feature, DWORD value)
+	{
+		DWORD origValue;
+		if (getFeatureReg(feature, &origValue) && origValue == value)
+			return true;
+		return setFeatureReg(feature, value);
+	}
+
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
+		COMFix::doFix();
+
 		// 监视http和https请求，同步cookie，过滤广告
 		CComPtr<IInternetSession> spSession;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )
@@ -43,6 +102,13 @@ namespace Plugin
 		if (!BrowserHook::WindowMessageHook::s_instance.Install())
 		{
 			return NPERR_GENERIC_ERROR;
+		}
+
+		// Enable registry-only features
+		for (int i = 0; i < g_nRegOnlyFeatures; i++)
+		{
+			auto& rof = g_RegOnlyFeatures[i];
+			ensureFeatureReg(rof.feature, rof.value);
 		}
 
 		// Enable some new features of IE. Refer to CoInternetSetFeatureEnabled Function on MSDN for more information.
