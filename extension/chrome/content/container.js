@@ -159,6 +159,19 @@ let FireIEContainer = {};
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
     // support focus on plain DOMMouseScroll
     E("container").addEventListener("DOMMouseScroll", onDOMMouseScroll, false);
+    // Use the following code to check mouse events
+    /*
+    window.addEventListener("mousedown", function(e)
+    {
+      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mousedown " +
+        "from " + e.originalTarget.toString());
+    }, false);
+    window.addEventListener("mouseup", function(e)
+    {
+      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mouseup " +
+        "from " + e.originalTarget.toString());
+    }, false);
+    */
   }
 
   function unregisterEventHandler()

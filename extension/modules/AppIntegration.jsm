@@ -364,7 +364,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("resize", this._bindMethod(this._onResize), false);
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this._onTabSelected), false);
     this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this._updateEditMenuItems), false);
-    this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), false);
+    this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
@@ -1966,15 +1966,17 @@ WindowWrapper.prototype = {
   _onMouseDown: function(event)
   {
     // Simulate mousedown events to support gesture extensions like FireGuestures
-    if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
+    if (event.originalTarget.id == Utils.containerPluginId)
     {
       if (!this._checkEventOrigin(event)) return;
-      
+
       let evt = this.window.document.createEvent("MouseEvents");
-      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
+      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
       let pluginObject = this.getContainerPlugin();
       if (pluginObject)
       {
+        event.preventDefault();
+        event.stopPropagation();
         let container = pluginObject.parentNode;
         container.dispatchEvent(evt);
       }
