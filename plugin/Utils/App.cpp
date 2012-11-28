@@ -49,12 +49,14 @@ CString App::GetProcessName()
 	if (s_strProcessName.GetLength()) return s_strProcessName;
 
 	TCHAR szPathName[MAX_PATH];
-	GetModuleFileName(NULL, szPathName, MAX_PATH);
-	TCHAR szFileName[MAX_PATH];
-	TCHAR szFileExt[MAX_PATH];
-	if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
+	if (GetModuleFileName(NULL, szPathName, MAX_PATH))
 	{
-		return s_strProcessName = CString(szFileName) + szFileExt;
+		TCHAR szFileName[MAX_PATH];
+		TCHAR szFileExt[MAX_PATH];
+		if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
+		{
+			return s_strProcessName = CString(szFileName) + szFileExt;
+		}
 	}
 	return s_strProcessName = _T("firefox.exe");
 }
