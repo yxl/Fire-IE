@@ -5,7 +5,6 @@
 #include "AtlDepHook.h"
 #include "OS.h"
 #include "App.h"
-#include "comfix.h"
 
 namespace Plugin
 {
@@ -39,7 +38,7 @@ namespace Plugin
 	static const CString g_strSubkey = _T("SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\");
 
 	/** Retrieve feature value from registry */
-	bool getFeatureReg(const TCHAR* feature, DWORD* value)
+	static bool getFeatureReg(const TCHAR* feature, DWORD* value)
 	{
 		HKEY hKey;
 		if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_CURRENT_USER, g_strSubkey + feature, 0, KEY_QUERY_VALUE, &hKey))
@@ -53,7 +52,7 @@ namespace Plugin
 	}
 
 	/** Write feature value into registry */
-	bool setFeatureReg(const TCHAR* feature, DWORD value)
+	static bool setFeatureReg(const TCHAR* feature, DWORD value)
 	{
 		HKEY hKey;
 		if (ERROR_SUCCESS != RegCreateKeyEx(HKEY_CURRENT_USER, g_strSubkey + feature, 0, NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL))
@@ -64,7 +63,7 @@ namespace Plugin
 	}
 
 	/** Ensures feature is set to the given value */
-	bool ensureFeatureReg(const TCHAR* feature, DWORD value)
+	static bool ensureFeatureReg(const TCHAR* feature, DWORD value)
 	{
 		DWORD origValue;
 		if (getFeatureReg(feature, &origValue) && origValue == value)
@@ -75,8 +74,6 @@ namespace Plugin
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
-		COMFix::doFix();
-
 		// 监视http和https请求，同步cookie，过滤广告
 		CComPtr<IInternetSession> spSession;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )

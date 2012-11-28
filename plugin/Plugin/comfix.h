@@ -24,12 +24,16 @@ namespace Plugin
 {
 	class COMFix {
 	private:
-		static const CString s_astrCLSID[];
+		static const TCHAR* s_astrCLSID[];
 		static const int s_cntCLSID;
 
-		static void doFixForCLSID(const CString& clsid);
-		static void setValueForSubkey(const CString& subkey);
+		static bool ifNeedFixForCLSID(const TCHAR* clsid);
+		static void doFixForCLSID(const TCHAR* clsid);
+
+		static bool queryValueForSubkey(const TCHAR* subkey);
+		static void setValueForSubkey(const TCHAR* subkey);
 	public:
+		static bool ifNeedFix();
 		static void doFix();
 	};
 
