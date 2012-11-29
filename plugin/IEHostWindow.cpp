@@ -726,6 +726,8 @@ CString CIEHostWindow::GetURL()
 
 CString CIEHostWindow::GetTitle()
 {
+	if (m_strTitle.GetLength()) return m_strTitle;
+
 	CString title;
 	try
 	{
@@ -973,6 +975,8 @@ void CIEHostWindow::OnABPLoadFailure()
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
 {
+	m_strTitle = title;
+
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnIETitleChanged(title);
@@ -1126,6 +1130,8 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 
 	// 设置正在载入的Url
 	SetLoadingURL(CString(szUrl));
+	// Clear cached title
+	m_strTitle = _T("");
 }
 
 
