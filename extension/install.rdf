@@ -9,7 +9,7 @@
    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
    <em:creator>Yuan Xulei</em:creator>
    <em:contributor>Wei Deng</em:contributor>
-   <em:contributor>Yifan Wu</em:contributor>   
+   <em:contributor>Yifan Wu</em:contributor>
    <em:homepageURL>http://fireie.org/</em:homepageURL>
    <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
@@ -24,26 +24,28 @@
        <em:maxVersion>20.0a1</em:maxVersion>
      </Description>
    </em:targetApplication>
-   
+
    <em:localized>
      <Description>
        <em:locale>en</em:locale>
        <em:name>Fire IE</em:name>
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>
-       <em:contributor>Yifan Wu</em:contributor>         
+       <em:contributor>Yifan Wu</em:contributor>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:homepageURL>http://fireie.org/en</em:homepageURL>
        <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
      </Description>
-   </em:localized>   
-   
+   </em:localized>
+
    <em:localized>
      <Description>
        <em:locale>zh-CN</em:locale>
        <em:name>解雇IE</em:name>
        <em:creator>袁徐磊</em:creator>
        <em:contributor>邓威</em:contributor>
-       <em:contributor>吴一帆</em:contributor>         
+       <em:contributor>吴一帆</em:contributor>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>一键切换IE内核, 让你彻底抛弃IE。</em:description>
      </Description>
@@ -55,9 +57,23 @@
        <em:name>解雇IE</em:name>
        <em:creator>袁徐磊</em:creator>
        <em:contributor>邓威</em:contributor>
-       <em:contributor>吴一帆</em:contributor>         
+       <em:contributor>吴一帆</em:contributor>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>一鍵切換IE內核, 讓你徹底拋棄IE</em:description>
+     </Description>
+   </em:localized>
+
+   <em:localized>
+     <Description>
+       <em:locale></em:locale>
+       <em:name>Fire IE</em:name>
+       <em:creator>Yuan Xulei</em:creator>
+       <em:contributor>Wei Deng</em:contributor>
+       <em:contributor>Yifan Wu</em:contributor>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:homepageURL>http://fireie.org/en</em:homepageURL>
+       <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
      </Description>
    </em:localized>
 

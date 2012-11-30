@@ -1,0 +1,6 @@
+<!ENTITY dialog.title               "Fire IE плагин не загружен">
+<!ENTITY pluginNotFound1            "Fire IE обнаружил, что плагин &quot;Fire IE DLL&quot; не был успешно загружен.">
+<!ENTITY pluginNotFound2            "Возможно вы установили не правильную версию Fire IE.">
+<!ENTITY correctVersion             "Согласно вашей конфигурации, вы должны использовать [bit]-bit версию.">
+<!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
+<!ENTITY visitHomepage              "Для скачивания и установки, пожалуйста, посетите [link][host][/link].">
