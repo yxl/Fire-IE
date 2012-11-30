@@ -1,0 +1,5 @@
+<!ENTITY privatebrowsingwarning.title "Движок IE не поддерживает приватный просмотр">
+<!ENTITY privatebrowsingwarning.intro1 "Вы включили режим приватного просмотра для &brandShortName;, но движок не поддерживает данный режим.">
+<!ENTITY privatebrowsingwarning.intro2 "Если вы включаете IE-режим, ваши история, история поиска, история загрузок, истрия заполнения форм, cookies, и temporary internet files будут записаны в историю IE.">
+<!ENTITY privatewarning.whatShouldIDo.content "Если вы не хотите чтобы ваши личные данные были записаны, пожалуйста, переключите обратно на &brandShortName; движок.">
+<!ENTITY privatewarning.expert.content "Если вы все равно хотите включить IE-режим для просмотра вэб-страниц, пожалуйста, нажмите 'Продолжить'. Важно: Другие &brandShortName; вкладки, не использующие IE движок, находятся в режиме приватного просмотра.">
