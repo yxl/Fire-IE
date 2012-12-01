@@ -1,0 +1,452 @@
+diff --git a/extension/chrome.manifest b/extension/chrome.manifest
+index e917422..82184d1 100644
+--- a/extension/chrome.manifest
++++ b/extension/chrome.manifest
+@@ -17,4 +17,4 @@ category profile-after-change @fireie.org/fireie/startup;1 @fireie.org/fireie/st
+ locale  fireie  en  chrome/locale/en/
+ locale  fireie  zh-CN  chrome/locale/zh-CN/
+ locale  fireie  zh-TW  chrome/locale/zh-TW/
+-
++locale  fireie  ru-RU  chrome/locale/ru-RU/
+diff --git a/extension/chrome/locale/ru-RU/fireie.dtd b/extension/chrome/locale/ru-RU/fireie.dtd
+new file mode 100644
+index 0000000..8ef000c
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/fireie.dtd
+@@ -0,0 +1,80 @@
++<!ENTITY fireie.switchButton.label "Fire IE">
++
++<!ENTITY fireie.urlbar.switch.tooltip1 "Переключить движок">
++<!ENTITY fireie.urlbar.switch.tooltip1.disabled "Не возможно переключить на данной странице">
++<!ENTITY fireie.urlbar.switch.tooltip3 "Правый клик - Настройки Fire IE">
++<!ENTITY urlbar.switchRules.label "Правила переключения">
++<!ENTITY internetProperties.lable "Свойства обозревателя IE">
++<!ENTITY fireie.autoswitch.disable "Отключить авто-переключение">
++<!ENTITY skin.label "Скины">
++<!ENTITY default.lable "По умолчанию">
++<!ENTITY skin.more.lable "Другие...">
++
++<!ENTITY fireie.options.title "Настройки Fire IE">
++
++<!ENTITY fireie.options.general.tab "Основные">
++<!ENTITY fireie.options.general.pane "Основные">
++<!ENTITY fireie.options.switch.caption "Переключение режима движка:">
++<!ENTITY fireie.options.switch.handleurl "Всегда использовать текущий движок для открытия новых ссылок">
++<!ENTITY fireie.options.switch.disableAutoSwitch "Отключить авто-переключение">
++<!ENTITY fireie.options.shorcut.caption "Горячая клавиша">
++<!ENTITY fireie.options.shorcut.enable "Вкл.">
++<!ENTITY fireie.options.private.caption "Приватный просмотр">
++<!ENTITY fireie.options.private.privatebrowsingwarning "Показывать страницу предупреждения приватного просмотра">
++<!ENTITY fireie.options.private.descr "Вкладки в режиме IE не поддерживают приватный просмотр. Вы можете выбрать показывать ли страницу предупреждения об этой ситуации.">
++<!ENTITY fireie.options.ui.tab "UI">
++<!ENTITY fireie.options.ui.pane "UI">
++<!ENTITY fireie.options.ui.urlBarButtonCaption "Кнопка в строке адреса">
++<!ENTITY fireie.options.ui.iconDisplayLabel "Стиль отображения:">
++<!ENTITY fireie.options.ui.iconHidden "Скрыта">
++<!ENTITY fireie.options.ui.iconOnly "Только значек">
++<!ENTITY fireie.options.ui.iconAndText "Значек и текст">
++<!ENTITY fireie.options.ui.tooltipLabel "Подсказка:">
++<!ENTITY fireie.options.ui.showTooltipText "Показывать статус движка при наведении курсора на кнопку">
++<!ENTITY fireie.options.ui.statusBarCaption "Всплывающая строка статуса">
++<!ENTITY fireie.options.ui.showStatusText "Показывать статус во всплывающей строке статуса при активном IE движке">
++<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
++<!ENTITY fireie.options.integration.tab "Интеграция">
++<!ENTITY fireie.options.integration.pane "Интеграция">
++<!ENTITY fireie.options.integration.mgCaption "Поддержка жестов мышью">
++<!ENTITY fireie.options.integration.mgDescr "Обычно Fire-IE самостоятельно обнаружит ваше расширение для управления с помощью жестов мыши и автоматически включит поддержку жестов. Если у вас установлено расширение для управления жестами, но вы не можете пользоваться ими в IE-режиме, вы можете попробовать включить данную опцию.">
++<!ENTITY fireie.options.integration.forceMGSupport "Форсировать поддержку жестов мышью в IE-режиме">
++<!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Поддержка жестов мышью сейчас активирована.">
++<!ENTITY fireie.options.integration.abpCaption "Поддержка Adblock Plus">
++<!ENTITY fireie.options.integration.abpDescr "Использовать фильтры Adblock Plus для блокировки рекламы в режиме IE движка.">
++<!ENTITY fireie.options.integration.abpSupportEnabled "Включить поддержку Adblock Plus">
++<!ENTITY fireie.options.integration.abpStatusLabel "Текущий статус: ">
++<!ENTITY fireie.options.integration.abpStatusNotDetected "Adblock Plus не обнаружен">
++<!ENTITY fireie.options.integration.abpStatusEnabled "Включено">
++<!ENTITY fireie.options.integration.abpStatusDisabled "Выключено">
++<!ENTITY fireie.options.integration.abpStatusLoading "Загрузка фильтров...">
++<!ENTITY fireie.options.integration.abpStatusLoadFailed "Сбой при загрузке фильтров">
++
++<!ENTITY fireie.options.rule.label "Правила для сайтов">
++<!ENTITY fireie.options.rule.enabled "Включить правила для сайтов">
++<!ENTITY fireie.options.rule.column.rule "Правило">
++<!ENTITY fireie.options.rule.column.enabled "Включено">
++<!ENTITY fireie.options.rule.url.label "URL:">
++<!ENTITY fireie.options.rule.button.add "Добавить">
++<!ENTITY fireie.options.rule.button.delete "Удалить">
++
++<!ENTITY fireie.options.ieoptions.tab  "Настройки IE">
++<!ENTITY fireie.options.ieoptions.pane "Навтройки IE">
++<!ENTITY fireie.options.iecompat.group "Режим совсметимости IE">
++<!ENTITY fireie.options.iecompat.ie7 "Режим IE7 Standards">
++<!ENTITY fireie.options.iecompat.ie8 "Режим IE8 Standards">
++<!ENTITY fireie.options.iecompat.ie8f  "Форсированный режим IE8 Standards">
++<!ENTITY fireie.options.iecompat.ie9 "Режим IE9 Standards">
++<!ENTITY fireie.options.iecompat.ie9f  "Форсированный режим IE9 Standards">
++<!ENTITY fireie.options.iecompat.ie10  "Режим IE10 Standards">
++<!ENTITY fireie.options.iecompat.ie10f "Форсированный режим IE10 Standards">
++<!ENTITY fireie.options.iecompat.notSupported "Ваша версия IE не подерживает режим совместимости.">
++<!ENTITY fireie.options.iefeat.group   "Дополнительные настройки">
++<!ENTITY fireie.options.iefeat.gpuRendering "Включить режим аппартного ускорения">
++
++<!ENTITY fireie.options.apply "Применить">
++<!ENTITY fireie.options.manager "Менеджер настроек">
++<!ENTITY fireie.options.default "Восстановить умолчания">
++<!ENTITY fireie.options.import "Импортировать настройки из файла">
++<!ENTITY fireie.options.export "Экспортирвоать настройки в файл">
++<!ENTITY fireie.options.restart.descr "Для применения настроек необходим перезапуск Firefox.">
+diff --git a/extension/chrome/locale/ru-RU/firstRun.dtd b/extension/chrome/locale/ru-RU/firstRun.dtd
+new file mode 100644
+index 0000000..10f1f7d
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/firstRun.dtd
+@@ -0,0 +1,7 @@
++<!ENTITY dialog.title               "Установка Fire IE завершена">
++<!ENTITY confirmation               "Спасибо за установку Fire IE. Движок IE теперь интегрирован. Наслаждайтесь!">
++<!ENTITY advancedSection            "Дополнительные настройки">
++<!ENTITY listSelection1             "Следующий список правил был сконфигурирован для автоматического переключения режима движка:">
++<!ENTITY noList                     "Список без правил">
++<!ENTITY visitHomepage.label        "Посетить домашнюю страницу списка">
++<!ENTITY listSelection2             "Вы можете изменить данный выбор в любое время в [link]Настройках правил[/link].">
+diff --git a/extension/chrome/locale/ru-RU/global.properties b/extension/chrome/locale/ru-RU/global.properties
+new file mode 100644
+index 0000000..b3a4f30
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/global.properties
+@@ -0,0 +1,44 @@
++fireie.urlbar.switch.label.fx=Fast
++fireie.urlbar.switch.label.ie=Compatible
++fireie.urlbar.switch.tooltip2.fx=Текущий движок: Firefox
++fireie.urlbar.switch.tooltip2.ie=Текущий движок: IE
++fireie.erc.enableOnPage=Разрешить авто-переключение на этой странице
++fireie.erc.enableOnSite=Разрешить авто-переключение на --
++fireie.erc.enableOnUrl=Разрешить авто-переключение для --
++fireie.erc.disableOnPage=Запретить авто-переключение на этой странице
++fireie.erc.disableOnSite=Запретить авто-переключение на --
++fireie.erc.disableOnUrl=Запретить авто-переключение для --
++fireie.erc.uaRules=Настройки User-agent
++fireie.erc.uaOnSite=Использовать IE UA для этого сайта
++fireie.erc.uaESROnSite=Использовать ESR UA на этом сайте
++fireie.erc.uaOnPage=Использовать IE UA для --
++fireie.erc.uaESROnPage=Использовать ESR UA для --
++fireie.erc.uaDefaultOnSite=Использовать UA по умолчанию для этого сайта
++fireie.erc.uaDefaultOnPage=Использовать UA по умолчанию для --
++fireie.options.import.error=Ошибка при импорте.
++fireie.options.alert.title=Настройки Fire IE
++fireie.options.alert.restart=Необходим перезапуск Firefox для вступления изменений в силу.
++fireie.options.alert.modified=Настройки были изменены. Сохранить изменения?
++fireie.security.notEntrypted=Ваше соединение с этим сайтом не зашифровано
++fireie.security.partiallyEncrypted=Ваше соединение с этим сайтом зашифровано только частично
++fireie.security.encrypted=Ваше соединение с этим сайтом зашифровано\nУровень шифрования: 
++fireie.security.encryption.bit=бит
++fireie.security.encryption.unknown=Неизвестно
++fireie.pbw.title=Предупреждение: Движое IE не поддерживает режим приватного просмотра
++Synchronizer.invalidUrl=Неверный URL
++Synchronizer.connectionError=Ошибка соединения
++Synchronizer.invalidData=Неверные данные правила
++Synchronizer.checksumMismatch=Несовпадение контрольной суммы
++newGroup.title=Новая группа правил
++switchGroup.title=Переключить группу правил
++exceptionalGroup.title=Группа правил исключений
++customGroup.title=Группа правил пользователя
++uaExceptionalGroup.title=Группа исключений из правил для user-agent
++uaGroup.title=Группа правил User-agent
++remove_subscription_warning=Вы действительно хотите удалить эту подписку?
++rule_regexp_tooltip=Это правило либо регулярное выражение, либо слишком короткое для оптимизации. Слишком много таких правил могут замедлить работу браузера.
++default_dialog_title=Fire IE
++
++
++
++
+diff --git a/extension/chrome/locale/ru-RU/overlaySanitize.dtd b/extension/chrome/locale/ru-RU/overlaySanitize.dtd
+new file mode 100644
+index 0000000..f616d5d
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/overlaySanitize.dtd
+@@ -0,0 +1 @@
++<!ENTITY itemClearFireieHistory.label "История Fire IE">
+\ No newline at end of file
+diff --git a/extension/chrome/locale/ru-RU/overlaySanitizePref.dtd b/extension/chrome/locale/ru-RU/overlaySanitizePref.dtd
+new file mode 100644
+index 0000000..32fd768
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/overlaySanitizePref.dtd
+@@ -0,0 +1,3 @@
++<!ENTITY fireieSection.label "Fire IE">
++<!ENTITY itemFireieHistory.label "История">
++
+diff --git a/extension/chrome/locale/ru-RU/pluginNotFound.dtd b/extension/chrome/locale/ru-RU/pluginNotFound.dtd
+new file mode 100644
+index 0000000..7b86c02
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/pluginNotFound.dtd
+@@ -0,0 +1,6 @@
++<!ENTITY dialog.title               "Fire IE плагин не загружен">
++<!ENTITY pluginNotFound1            "Fire IE обнаружил, что плагин &quot;Fire IE DLL&quot; не был успешно загружен.">
++<!ENTITY pluginNotFound2            "Возможно вы установили не правильную версию Fire IE.">
++<!ENTITY correctVersion             "Согласно вашей конфигурации, вы должны использовать [bit]-bit версию.">
++<!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
++<!ENTITY visitHomepage              "Для скачивания и установки, пожалуйста, посетите [link][host][/link].">
+diff --git a/extension/chrome/locale/ru-RU/private.dtd b/extension/chrome/locale/ru-RU/private.dtd
+new file mode 100644
+index 0000000..beaf20b
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/private.dtd
+@@ -0,0 +1,5 @@
++<!ENTITY privatebrowsingwarning.title "Движок IE не поддерживает приватный просмотр">
++<!ENTITY privatebrowsingwarning.intro1 "Вы включили режим приватного просмотра для &brandShortName;, но движок не поддерживает данный режим.">
++<!ENTITY privatebrowsingwarning.intro2 "Если вы включаете IE-режим, ваши история, история поиска, история загрузок, истрия заполнения форм, cookies, и temporary internet files будут записаны в историю IE.">
++<!ENTITY privatewarning.whatShouldIDo.content "Если вы не хотите чтобы ваши личные данные были записаны, пожалуйста, переключите обратно на &brandShortName; движок.">
++<!ENTITY privatewarning.expert.content "Если вы все равно хотите включить IE-режим для просмотра вэб-страниц, пожалуйста, нажмите 'Продолжить'. Важно: Другие &brandShortName; вкладки, не использующие IE движок, находятся в режиме приватного просмотра.">
+diff --git a/extension/chrome/locale/ru-RU/rules.dtd b/extension/chrome/locale/ru-RU/rules.dtd
+new file mode 100644
+index 0000000..e869962
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/rules.dtd
+@@ -0,0 +1,106 @@
++<!ENTITY dialog.title                         "Настройки провил переключения для Fire-IE">
++
++<!ENTITY subscriptions.tab.label              "Подписки на правила">
++<!ENTITY rules.tab.label                    "Правила пользователя">
++
++<!ENTITY subscription.autoupdate              "Обновлять автоматически">
++<!ENTITY addSubscription.label                "Побавить подписку">
++<!ENTITY addSubscription.accesskey            "f">
++
++<!ENTITY addSubscriptionAdd.label             "Добавить">
++<!ENTITY addSubscriptionCancel.label          "Отмена">
++<!ENTITY addSubscriptionOther.label           "Добавить другую подписку">
++
++<!ENTITY noSubscriptions.text                 "Вы еще не добавили не одну подписку. Без правил Fire IE не будет автоматически переключать движок и синхронизировать cookie, пожалуйста, используйте &quot;Добавить подписку&quot; для добавления подписок на правила.">
++<!ENTITY subscription.homepage.label          "Домашняя страница">
++<!ENTITY subscription.external.label          "Обновлено другим расширением">
++<!ENTITY subscription.source.label            "Список подписок">
++<!ENTITY subscription.enabled.label           "Включено">
++<!ENTITY subscription.lastDownload.label      "Последняя загрузка:">
++<!ENTITY subscription.lastDownload.inProgress "Загружается…">
++<!ENTITY subscription.lastDownload.unknown    "N/A">
++<!ENTITY subscription.lastDownload.invalidURL "Ошибка, не верный адрес">
++<!ENTITY subscription.lastDownload.connectionError "Ошибка загрузки">
++<!ENTITY subscription.lastDownload.invalidData "Ошибка, не верный список правил">
++<!ENTITY subscription.lastDownload.checksumMismatch "Ошибка, несовпадение контрольной суммы">
++<!ENTITY subscription.lastDownload.success    "Успешно">
++<!ENTITY subscription.minVersion.warning      "Эта подписка требует более новой версии Fire IE, вы должны обновится до последней версии Fire IE.">
++<!ENTITY subscription.disabledRules.warning "Некоторые правила в этой подписке отключены.">
++<!ENTITY subscription.disabledRules.enable  "Включить отключенные правила">
++
++<!ENTITY subscription.actions.label           "Действия">
++<!ENTITY subscription.update.label            "Обновить правила">
++<!ENTITY subscription.editTitle.label         "Редактировать название">
++<!ENTITY subscription.delete.label            "Удалить">
++<!ENTITY subscription.showHideRules.label   "Показать/Скрыть детали">
++<!ENTITY subscription.moveUp.label            "Вверх">
++<!ENTITY subscription.moveDown.label          "Вниз">
++
++<!ENTITY viewList.label                       "Просмотр списка">
++
++<!ENTITY addGroup.label                       "Добавить группу правил">
++<!ENTITY addGroup.accesskey                   "g">
++
++<!ENTITY noRules.text                       "У вас еще нет ни одного пользовательского правила.">
++
++<!ENTITY addRule.label                      "Добавить правило">
++<!ENTITY addRule.accesskey                  "d">
++
++<!ENTITY rule.actions.label                 "Действия">
++<!ENTITY rule.edit.label                    "Изменить">
++<!ENTITY rule.cut.label                     "Вырезать">
++<!ENTITY rule.copy.label                    "Копировать">
++<!ENTITY rule.paste.label                   "Вставить">
++<!ENTITY rule.delete.label                  "Удалить">
++<!ENTITY rule.selectAll.label               "Выбрать все">
++<!ENTITY rule.resetHitCounts.label          "Сбросить статистику срабатывания">
++<!ENTITY rule.moveUp.label                  "Вверх">
++<!ENTITY rule.moveDown.label                "Вниз">
++<!ENTITY viewMenu.label                       "Просмотр">
++
++<!ENTITY rule.column                        "Переключить правило">
++<!ENTITY rule.accesskey                     "F">
++<!ENTITY slow.column                          "Медленные правила">
++<!ENTITY slow.accesskey                       "w">
++<!ENTITY enabled.column                       "Включено">
++<!ENTITY enabled.accesskey                    "n">
++<!ENTITY hitcount.column                      "Срабатывания">
++<!ENTITY hitcount.accesskey                   "H">
++<!ENTITY lasthit.column                       "Последнее срабатывание">
++<!ENTITY lasthit.accesskey                    "L">
++
++<!ENTITY sort.label                           "Сортировать">
++<!ENTITY sort.accesskey                       "S">
++<!ENTITY sort.none.label                      "Без сортировки">
++<!ENTITY sort.none.accesskey                  "U">
++<!ENTITY sort.ascending.label                 "По убыванию">
++<!ENTITY sort.ascending.accesskey             "A">
++<!ENTITY sort.descending.label                "По возрастанию">
++<!ENTITY sort.descending.accesskey            "Z">
++
++<!ENTITY noGroupSelected.text                 "Для просмотра правил вы должны сначала выбрать группу правил.">
++<!ENTITY noRulesInGroup.text                "Выбраная группа пуста.">
++
++<!ENTITY rules.remove.warning               "Вы действительно хотите удалить все выбранные правила?">
++
++<!ENTITY backupButton.label                   "Резервное копирование и восстановление">
++<!ENTITY backupButton.accesskey               "B">
++
++<!ENTITY backup.label                         "Создать резервную копию">
++<!-- Note: the placeholder ?1? will be replaced by date/time of the automatic backup -->
++<!ENTITY restore.default.label                "Восстановить резервную копию из ?1?">
++<!ENTITY restore.own.label                    "Восстановить свою резервную копию">
++
++<!ENTITY backup.complete.title                "Все правила и подписки">
++<!ENTITY backup.custom.title                  "Только пользовательские правила">
++
++<!ENTITY backup.error                         "При записи правил в файл возникла ошибка. Убедитесь что файл не защищен от записи или не занят другим приложением.">
++<!ENTITY restore.error                        "Данные из файла не могут быть обработаны, возможно это не файл резервной копии Fire IE?">
++<!ENTITY restore.complete.warning             "Все ваши правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
++<!ENTITY restore.custom.warning               "Все ваши пользовательские правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
++<!ENTITY restore.minVersion.warning           "Предупреждение: файл был создан посредством боле новой версии Fire IE. Перед восстановлением из этого файла вы должны обновиться до последней версии Fire IE.">
++
++<!ENTITY find.label                           "Найти">
++<!ENTITY find.accesskey                       "n">
++
++<!ENTITY close.label                          "Закрыть">
+diff --git a/extension/chrome/locale/ru-RU/subscriptionSelection.dtd b/extension/chrome/locale/ru-RU/subscriptionSelection.dtd
+new file mode 100644
+index 0000000..e1c2bab
+--- /dev/null
++++ b/extension/chrome/locale/ru-RU/subscriptionSelection.dtd
+@@ -0,0 +1,25 @@
++<!ENTITY dialog.title               "Подписки">
++
++<!ENTITY subscriptionSelector.label "Пожалуйста, выбирите подписку из списка:">
++
++<!ENTITY viewList.label             "Просмотр правил">
++<!ENTITY visitHomepage.label        "Посетить домашнюю страницу">
++
++<!ENTITY addSubscription.label      "Добавить подписку">
++
++<!ENTITY list.download.failed       "Ошибка запроса списка подписок.">
++<!ENTITY list.download.retry        "Попробуйте еще раз">
++<!ENTITY list.download.website      "Просморт сайта">
++
++<!ENTITY fromWeb.description        "Пожалуйста, подтвердите добавление этой подписки. Перед добавлением вы можете изменить название и адрес подписки.">
++
++<!ENTITY title.label                "Название подписки:">
++<!ENTITY title.accesskey            "t">
++<!ENTITY location.label             "Адрес подписки:">
++<!ENTITY location.accesskey         "l">
++
++<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
++<!ENTITY supplementMessage          "Предполагается что эта подписка должна использоваться с другой подпиской &quot;?1?&quot; которую вы еще не используете.">
++<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
++<!ENTITY addMain.label              "Добавить также подписку &quot;?1?&quot;">
++<!ENTITY addMain.accesskey          "s">
+diff --git a/extension/install.rdf b/extension/install.rdf
+index 70486c3..38ff925 100644
+--- a/extension/install.rdf
++++ b/extension/install.rdf
+@@ -5,11 +5,11 @@
+ 
+    <em:id>fireie@fireie.org</em:id>
+    <em:name>Fire IE</em:name>
+-   <em:version>0.3.1</em:version>
++   <em:version>0.3.1.1</em:version>
+    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+    <em:creator>Yuan Xulei</em:creator>
+    <em:contributor>Wei Deng</em:contributor>
+-   <em:contributor>Yifan Wu</em:contributor>   
++   <em:contributor>Yifan Wu</em:contributor>
+    <em:homepageURL>http://fireie.org/</em:homepageURL>
+    <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
+    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
+@@ -24,26 +24,28 @@
+        <em:maxVersion>20.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+-   
++
+    <em:localized>
+      <Description>
+        <em:locale>en</em:locale>
+        <em:name>Fire IE</em:name>
+        <em:creator>Yuan Xulei</em:creator>
+        <em:contributor>Wei Deng</em:contributor>
+-       <em:contributor>Yifan Wu</em:contributor>         
++       <em:contributor>Yifan Wu</em:contributor>
++       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+        <em:homepageURL>http://fireie.org/en</em:homepageURL>
+        <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+      </Description>
+-   </em:localized>   
+-   
++   </em:localized>
++
+    <em:localized>
+      <Description>
+        <em:locale>zh-CN</em:locale>
+        <em:name>解雇IE</em:name>
+        <em:creator>袁徐磊</em:creator>
+        <em:contributor>邓威</em:contributor>
+-       <em:contributor>吴一帆</em:contributor>         
++       <em:contributor>吴一帆</em:contributor>
++       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
+        <em:description>一键切换IE内核, 让你彻底抛弃IE。</em:description>
+      </Description>
+@@ -55,11 +57,25 @@
+        <em:name>解雇IE</em:name>
+        <em:creator>袁徐磊</em:creator>
+        <em:contributor>邓威</em:contributor>
+-       <em:contributor>吴一帆</em:contributor>         
++       <em:contributor>吴一帆</em:contributor>
++       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
+        <em:description>一鍵切換IE內核, 讓你徹底拋棄IE</em:description>
+      </Description>
+    </em:localized>
+ 
++   <em:localized>
++     <Description>
++       <em:locale>ru-RU</em:locale>
++       <em:name>Fire IE</em:name>
++       <em:creator>Yuan Xulei</em:creator>
++       <em:contributor>Wei Deng</em:contributor>
++       <em:contributor>Yifan Wu</em:contributor>
++       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
++       <em:homepageURL>http://fireie.org/en</em:homepageURL>
++       <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
++     </Description>
++   </em:localized>
++
+  </Description>
+ </RDF>
+diff --git a/plugin/plugin.rc b/plugin/plugin.rc
+index e5b7231..61d69cd 100644
+--- a/plugin/plugin.rc
++++ b/plugin/plugin.rc
+@@ -131,8 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+ //
+ 
+ VS_VERSION_INFO VERSIONINFO
+- FILEVERSION 1,3,1,1
+- PRODUCTVERSION 1,3,1,1
++ FILEVERSION 1,3,1,2
++ PRODUCTVERSION 1,3,1,2
+  FILEFLAGSMASK 0x3fL
+ #ifdef _DEBUG
+  FILEFLAGS 0x1L
+@@ -150,13 +150,13 @@ BEGIN
+             VALUE "CompanyName", "fireie@fireie.org"
+             VALUE "FileDescription", "Fire IE DLL"
+             VALUE "FileExtents", "*"
+-            VALUE "FileVersion", "1.3.1.1"
++            VALUE "FileVersion", "1.3.1.2"
+             VALUE "InternalName", "npfireie.dll"
+             VALUE "LegalCopyright", "Copyright (C) 2012 fireie.org"
+             VALUE "MIMEType", "application/fireie"
+             VALUE "OriginalFilename", "npfireie.dll"
+             VALUE "ProductName", "Fire IE DLL"
+-            VALUE "ProductVersion", "1.3.1.1"
++            VALUE "ProductVersion", "1.3.1.2"
+         END
+     END
+     BLOCK "VarFileInfo"
