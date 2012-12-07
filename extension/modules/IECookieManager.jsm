@@ -33,6 +33,7 @@ Cu.import("resource://gre/modules/ctypes.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
+Cu.import(baseURL.spec + "WinMutex.jsm");
 
 /**
  * BOOL InternetSetCookie(
@@ -74,7 +75,11 @@ const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindo
 const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
 
 const cookieSvc = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-                  
+
+// use a system-wide mutex to protect the process of changing IE temp dir
+let mutex = null;
+const MUTEX_TIMEOUT = 10000;
+
 function getIECtrlRegString(regName)
 {
   try
@@ -82,13 +87,16 @@ function getIECtrlRegString(regName)
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     if (!wrk.hasValue(regName)) return null;
     let value = wrk.readStringValue(regName);
-    wrk.close();
     return value;
   }
   catch (e)
   {
     Utils.ERROR(e);
     return null;
+  }
+  finally
+  {
+    wrk.close();
   }
 }
 
@@ -98,13 +106,35 @@ function setIECtrlRegString(regName, value)
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     wrk.writeStringValue(regName, value);
-    wrk.close();
     return true;
   }
   catch (e)
   {
     Utils.ERROR(e);
     return false;
+  }
+  finally
+  {
+    wrk.close();
+  }
+}
+
+function removeIECtrlRegString(regName)
+{
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
+    wrk.removeValue(regName);
+    return true;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+    return false;
+  }
+  finally
+  {
+    wrk.close();
   }
 }
 
@@ -140,6 +170,15 @@ let IECookieManager = {
    */
   startup: function()
   {
+    try
+    {
+      mutex = new WinMutex("fireie@fireie.org::IECookieManager");
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to create mutex: " + ex);
+    }
+    
     // User jsctypes to load the window api of InternetSetCookieW
     this._loadInternetSetCookieW();
 
@@ -150,6 +189,8 @@ let IECookieManager = {
   {
     this._unloadInternetSetCookieW();
     CookieObserver.unregister();
+    
+    mutex.close();
   },
   
   saveFirefoxCookie: function(url, cookieHeader)
@@ -289,10 +330,41 @@ let IECookieManager = {
     }
   },
 
+  acquireMutex: function()
+  {
+    try
+    {
+      let ret = mutex.acquire(MUTEX_TIMEOUT);
+      if (!ret)
+        throw "timed out";
+      return ret;
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to acquire mutex: " + ex);
+      return false;
+    }
+  },
+  
+  releaseMutex: function()
+  {
+    try
+    {
+      mutex.release();
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to release mutex: " + ex);
+    }
+  },
+  
   changeIETempDirectorySetting: function()
   {
     // safe guard: do not attempt to change after already changed
     if (this._bTmpDirChanged) return;
+    
+    // do not attempt to do anything if mutex is not acquired
+    if (!this.acquireMutex()) return;
     
     let ieTempDir = Utils.ieTempDir;
     let cookiesDir = ieTempDir + "\\cookies";
@@ -324,16 +396,20 @@ let IECookieManager = {
     let cookies = getIECtrlRegString("Cookies_fireie");
     if (cookies)
     {
+    // Remove backup values to allow user change IE browser's cache directory settings
       setIECtrlRegString("Cookies", cookies);
+      removeIECtrlRegString("Cookies_fireie");
     }
     let cache = getIECtrlRegString("Cache_fireie");
     if (cache)
     {
       setIECtrlRegString("Cache", cache);
+      removeIECtrlRegString("Cache_fireie");
     }
 
     this._bTmpDirChanged = false;
-
+    this.releaseMutex();
+    
     Utils.LOG("IE Temp dir restored.");
   },
 
