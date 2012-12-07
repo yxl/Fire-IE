@@ -146,6 +146,9 @@ let UtilsPluginManager = {
     window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
+    
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
+    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
   
   _cancelPluginEvents: function()
@@ -159,6 +162,8 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
+
+    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
 
   /**
@@ -220,8 +225,70 @@ let UtilsPluginManager = {
     {
       setter(plugin);
     });
+  },
+  
+  getPluginBindingType: function(plugin)
+  {
+    switch (plugin.pluginFallbackType) {
+    case Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED:
+      return "PluginNotFound";
+    case Ci.nsIObjectLoadingContent.PLUGIN_DISABLED:
+      return "PluginDisabled";
+    case Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED:
+      return "PluginBlocklisted";
+    case Ci.nsIObjectLoadingContent.PLUGIN_OUTDATED:
+      return "PluginOutdated";
+    case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
+      return "PluginClickToPlay";
+    case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
+      return "PluginVulnerableUpdatable";
+    case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE:
+      return "PluginVulnerableNoUpdate";
+    case Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW:
+      return "PluginPlayPreview";
+    default:
+      // Not all states map to a handler
+      return null;
+    }
   }
 };
+
+function onPluginBindingAttached(event)
+{
+  let plugin = event.target;
+
+  // We're expecting the target to be a plugin.
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  // The plugin binding fires this event when it is created.
+  // As an untrusted event, ensure that this object actually has a binding
+  // and make sure we don't handle it twice
+  let doc = plugin.ownerDocument;
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  if (!overlay || overlay.FireIE_UPMBindingHandled) {
+    return;
+  }
+  overlay.FireIE_UPMBindingHandled = true;
+
+  let eventType = UtilsPluginManager.getPluginBindingType(plugin);
+  if (!eventType) return;
+  
+  switch (eventType)
+  {
+  case "PluginClickToPlay":
+    return onPluginClickToPlay(event);
+  case "PluginNotFound":
+  case "PluginBlockListed":
+  case "PluginOutdated":
+  case "PluginVulnerableUpdatable":
+  case "PluginVulnerableNoUpdate":
+  case "PluginDisabled":
+    return onPluginLoadFailure(event);
+  default:
+    return;
+  }
+}
 
 /** handle click to play event in the hidden window */
 function onPluginClickToPlay(event)
