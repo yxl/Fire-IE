@@ -135,7 +135,7 @@ bool File::readUTF8(CFile& file, wstring& content, bool skipBOM)
 
 	// We need a code page convertion here
 	// Calculate the size of buffer needed
-	int newContentLength = MultiByteToWideChar(CP_UTF8, 0, 
+	int newContentLength = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, 
 		buffer, (int)contentLength, NULL, 0);
 	if (!newContentLength)
 	{
