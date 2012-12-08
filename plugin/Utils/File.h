@@ -17,30 +17,23 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// App.h : App related information
+// File.h : file reading utilities
+//
 
-namespace Utils
-{
-	class App {
+#include <string>
+
+namespace Utils {
+	// file reading utilities
+	class File {
 	public:
-		enum Application {
-			UNKNOWN,
-			FIREFOX,
-			PALEMOON,
-			WATERFOX,
-			OOPP,
-			UNRECOGNIZED_APP
-		};
+		static bool readFile(CFile& file, std::wstring& content);
 
-		static Application GetApplication();
-		static CString GetProcessName();
-		static CString GetModulePath();
-	private:
-		static Application s_app;
-		static CString s_strProcessName;
-		static CString s_strModulePath;
+		static bool readUTF8OrANSI(CFile& file, std::wstring& content);
+		static bool readANSI(CFile& file, std::wstring& content);
+		static bool readUTF8(CFile& file, std::wstring& content, bool skipBOM = true);
+		static bool readUnicode(CFile& file, std::wstring& content);
+		static bool readUnicodeBigEndian(CFile& file, std::wstring& content);
 
-		static HMODULE WINAPI ModuleFromAddress(PVOID pv);
-		static HMODULE GetThisModule();
+		static const ULONGLONG FILE_SIZE_LIMIT;
 	};
 } // namespace Utils

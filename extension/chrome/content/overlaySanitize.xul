@@ -11,36 +11,49 @@
 <!DOCTYPE overlay SYSTEM "chrome://fireie/locale/overlaySanitize.dtd">
 <overlay id="fireieSanitize" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <preferences id="sanitizePreferences">
-        <preference id="privacy.cpd.extensions-fireie" name="privacy.cpd.extensions-fireie" type="bool"/>
+        <preference id="privacy.cpd.extensions-fireie-cache" name="privacy.cpd.extensions-fireie-cache" type="bool"/>
+        <preference id="privacy.cpd.extensions-fireie-cookies" name="privacy.cpd.extensions-fireie-cookies" type="bool"/>
     </preferences>
     <listbox id="itemList">
         <listitem
-            id="fireieSanitizeItem"
+            id="fireieCacheSanitizeItem"
             type="checkbox"
-            label="&itemClearFireieHistory.label;"
+            label="&itemClearFireieCache.label;"
             checked="true"
-            preference="privacy.cpd.extensions-fireie"
+            preference="privacy.cpd.extensions-fireie-cache"
+            onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"
+            />
+        <listitem
+            id="fireieCookiesSanitizeItem"
+            type="checkbox"
+            label="&itemClearFireieCookies.label;"
+            checked="true"
+            preference="privacy.cpd.extensions-fireie-cookies"
             onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"
             />
     </listbox>
     <script type="text/javascript"><![CDATA[
-
-        if ('Sanitizer' in this) {
-            Sanitizer.prototype.items['extensions-fireie'] = {
-                clear: function() {
-                    let subject = null;
-                    let topic = "fireie-clear-history";
-                    let data = null;
-                    Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService)
-                        .notifyObservers(subject, topic, data);
-                },
-                get canClear() {
-                    return true;
-                }
-            };
+        function createSanitizeItem(topic)
+        {
+          return {
+            clear: function() {
+                let subject = null;
+                let data = null;
+                Components.classes["@mozilla.org/observer-service;1"]
+                    .getService(Components.interfaces.nsIObserverService)
+                    .notifyObservers(subject, topic, data);
+            },
+            get canClear() {
+                return true;
+            }
+          };
         }
-        
+        if ("Sanitizer" in this)
+        {
+            let items = Sanitizer.prototype.items;
+            items["extensions-fireie-cache"] = createSanitizeItem("fireie-clear-cache");
+            items["extensions-fireie-cookies"] = createSanitizeItem("fireie-clear-cookies");
+        }
     ]]>
     </script>
 </overlay>

@@ -17,6 +17,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 #include "GestureHandler.h"
+#include "OS.h"
 #include "App.h"
 
 using namespace BrowserHook;
@@ -50,6 +51,14 @@ GestureState GestureHandler::getState() const
 	return m_state;
 }
 
+bool GestureHandler::shouldUsePost()
+{
+	// When OOPP is on, forwarding to firefox must use PostMessage to avoid deadlocks
+	// IE8 or higher does not suffer from issue #80
+	static bool bUsePost = App::GetApplication() == App::OOPP || OS::GetIEVersion() >= 8;
+	return bUsePost;
+}
+
 void GestureHandler::forwardAllOrigin(HWND hOrigin)
 {
 	_ASSERT(hOrigin != NULL);
@@ -62,7 +71,7 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 	if (size = m_vMessages.size())
 	{
 		MSG* msg = &m_vMessages[size - 1];
-		::SendMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
+		::PostMessage(hOrigin, msg->message, msg->wParam, msg->lParam);
 	}
 	m_vMessages.clear();
 }
@@ -70,14 +79,13 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 void GestureHandler::forwardAllTarget(HWND hOrigin, HWND hTarget)
 {
 	_ASSERT(hOrigin != NULL && hTarget != NULL);
-	bool oopp = App::GetApplication() == App::OOPP;
 	for (std::vector<MSG>::iterator iter = m_vMessages.begin();
 		iter != m_vMessages.end(); ++iter)
 	{
 		CPoint pt(iter->lParam);
 		ClientToScreen(hOrigin, &pt);
 		ScreenToClient(hTarget, &pt);
-		if (oopp) // When OOPP is on, forwarding to firefox must use PostMessage to avoid deadlocks
+		if (shouldUsePost())
 			::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
 		else
 			::SendMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
@@ -124,7 +132,7 @@ void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
 	CPoint pt(pMsg->lParam);
 	ClientToScreen(pMsg->hwnd, &pt);
 	ScreenToClient(hTarget, &pt);
-	if (App::GetApplication() == App::OOPP)
+	if (shouldUsePost())
 		::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
 	else
 		::SendMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));

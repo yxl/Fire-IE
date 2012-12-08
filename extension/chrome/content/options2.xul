@@ -9,6 +9,7 @@
 
 <prefwindow id="fireie-options"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:html="http://www.w3.org/1999/xhtml"
             autosize="true" resizable="no" persist="screenX screenY"
             buttons="accept,cancel,extra1"
             onload="Options.init();"
@@ -105,6 +106,17 @@
   <prefpane id="UIPane" label="&fireie.options.ui.pane;" image="chrome://fireie/skin/pane-ui.png" flex="1">
     <preferences></preferences>
     <vbox flex="1">
+      <groupbox id="faviconGroup">
+        <caption label="&fireie.options.ui.faviconCaption;" />
+        <vbox>
+          <radiogroup id="favicon">
+            <hbox>
+              <radio id="faviconSite-radio" label="&fireie.options.ui.faviconSite;" value="faviconSite" />
+              <radio id="faviconIE-radio" label="&fireie.options.ui.faviconIE;" value="faviconIE" />
+            </hbox>
+          </radiogroup>
+        </vbox>
+      </groupbox>
       <groupbox>
         <caption label="&fireie.options.ui.urlBarButtonCaption;" />
         <vbox>
@@ -127,6 +139,16 @@
                 <image class="icon-and-text" width="150" height="24" onclick="event.button == 0 &amp;&amp; Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
               </hbox>
             </radiogroup>
+          </vbox>
+          <vbox id="customLabels">
+            <label>&fireie.options.ui.customLabelLabel;</label>
+            <hbox class="indent" align="center">
+              <image src="chrome://fireie/skin/engine-fx.png" width="16" height="16" />
+              <html:input id="fxLabel" type="text" size="12" maxlength="20"/>
+              <separator orient="vertical" />
+              <image src="chrome://fireie/skin/engine-ie.png" width="16" height="16" />
+              <html:input id="ieLabel" type="text" size="12" maxlength="20"/>
+            </hbox>
           </vbox>
           <vbox>
             <label id="tooltipLabel" style="margin-top:10px;">&fireie.options.ui.tooltipLabel;</label>
@@ -164,6 +186,10 @@
           <label id="abpStatusLoading" style="color: green">&fireie.options.integration.abpStatusLoading;</label>
           <label id="abpStatusLoadFailed" style="color: red">&fireie.options.integration.abpStatusLoadFailed;</label>
         </hbox>
+      </groupbox>
+      <groupbox>
+        <caption label="&fireie.options.integration.otherOptions;" />
+        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;" />
       </groupbox>
     </vbox>
   </prefpane>

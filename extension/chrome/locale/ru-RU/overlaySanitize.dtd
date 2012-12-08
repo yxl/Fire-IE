@@ -1,1 +1,2 @@
-<!ENTITY itemClearFireieHistory.label "История Fire IE">
+<!ENTITY itemClearFireieCache.label "Fire IE Temporary Files">
+<!ENTITY itemClearFireieCookies.label "Fire IE Cookies">

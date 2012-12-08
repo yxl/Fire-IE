@@ -17,30 +17,24 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// App.h : App related information
+// comfix.h : Work around browser hang issues related to QQ ActiveX controls
+//
 
-namespace Utils
+namespace Plugin
 {
-	class App {
-	public:
-		enum Application {
-			UNKNOWN,
-			FIREFOX,
-			PALEMOON,
-			WATERFOX,
-			OOPP,
-			UNRECOGNIZED_APP
-		};
-
-		static Application GetApplication();
-		static CString GetProcessName();
-		static CString GetModulePath();
+	class COMFix {
 	private:
-		static Application s_app;
-		static CString s_strProcessName;
-		static CString s_strModulePath;
+		static const TCHAR* s_astrCLSID[];
+		static const int s_cntCLSID;
 
-		static HMODULE WINAPI ModuleFromAddress(PVOID pv);
-		static HMODULE GetThisModule();
+		static bool ifNeedFixForCLSID(const TCHAR* clsid);
+		static void doFixForCLSID(const TCHAR* clsid);
+
+		static bool queryValueForSubkey(const TCHAR* subkey);
+		static void setValueForSubkey(const TCHAR* subkey);
+	public:
+		static bool ifNeedFix();
+		static void doFix();
 	};
-} // namespace Utils
+
+} // namespace Plugin

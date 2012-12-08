@@ -62,7 +62,6 @@ let GesturePrefObserver = {
    */
   _getUtilsPlugin: function()
   {
-    // since we don't have any window handles, we'll ask for one
     return UtilsPluginManager.getPlugin();
   },
 
@@ -154,10 +153,13 @@ let GesturePrefObserver = {
    */
   onGestureDetectionEnd: function()
   {
-    if (this.mainGestureExtension)
-      return;
     // if still no extension detected, do the default behavior
-    this.setGestureExtension("NotDetected");
+    if (!this.mainGestureExtension)
+      this.setGestureExtension("NotDetected");
+    UtilsPluginManager.addPrefSetter(function()
+    {
+      this.setEnabledGestures();
+    }.bind(this));
   },
   /**
    * Notify underlying plugin to set gesture handler states

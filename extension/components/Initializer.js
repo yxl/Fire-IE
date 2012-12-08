@@ -40,22 +40,54 @@ Initializer.prototype = {
       observerService.addObserver(this, "profile-after-change", true);
       break;
     case "profile-after-change":
+      // Backwards compatibility, use previous version's clearOnShutdown user pref to set new prefs
+      if (prefs.getPrefType("privacy.clearOnShutdown.extensions-fireie") == Ci.nsIPrefBranch.PREF_BOOL)
+      {
+        let value = prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie");
+        prefs.setBoolPref("privacy.clearOnShutdown.extensions-fireie-cache", value);
+        prefs.setBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies", value);
+        prefs.clearUserPref("privacy.clearOnShutdown.extensions-fireie");
+      }
+      if (prefs.getPrefType("privacy.cpd.extensions-fireie") == Ci.nsIPrefBranch.PREF_BOOL)
+      {
+        let value = prefs.getBoolPref("privacy.cpd.extensions-fireie");
+        prefs.setBoolPref("privacy.cpd.extensions-fireie-cache", value);
+        prefs.setBoolPref("privacy.cpd.extensions-fireie-cookies", value);
+        prefs.clearUserPref("privacy.cpd.extensions-fireie");
+      }
+      
+      // Clear the history if need sanitize on startup, since there may be some leftovers.
+      // Only clear the folders, do not trigger observer events which may load up wininet.dll,
+      // forcing IE engine to use the default cache/cookies folders
+      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
+      {
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+          this._clearCache();
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+          this._clearCookies();
+      }
+
       observerService.addObserver(this, "quit-application", true);
-      observerService.addObserver(this, "fireie-clear-history", true);
+      observerService.addObserver(this, "fireie-clear-cache", true);
+      observerService.addObserver(this, "fireie-clear-cookies", true);
 
       Cu.import("resource://fireie/Bootstrap.jsm");
       Bootstrap.startup();
 
       break;
     case "quit-application":
-      observerService.removeObserver(this, "quit-application");
-      observerService.removeObserver(this, "fireie-clear-history");
-
       // Clear the history if need sanitize on shutdown
-      if (prefs.getBoolPref('privacy.sanitize.sanitizeOnShutdown') && prefs.getBoolPref('privacy.clearOnShutdown.extensions-fireie'))
+      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
       {
-        this._clearHistory();
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+          observerService.notifyObservers(null, "fireie-clear-cache", null);
+        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+          observerService.notifyObservers(null, "fireie-clear-cookies", null);
       }
+
+      observerService.removeObserver(this, "quit-application");
+      observerService.removeObserver(this, "fireie-clear-cache");
+      observerService.removeObserver(this, "fireie-clear-cookies");
 
       if ("@fireie.org/fireie/private;1" in Cc)
       {
@@ -63,10 +95,12 @@ Initializer.prototype = {
         Cu.import(baseURL.spec + "Bootstrap.jsm");
         Bootstrap.shutdown(false);
       }
-
       break;
-    case "fireie-clear-history":
-      this._clearHistory();
+    case "fireie-clear-cache":
+      this._clearCache();
+      break;
+    case "fireie-clear-cookies":
+      this._clearCookies();
       break;
     }
   },
@@ -78,23 +112,41 @@ Initializer.prototype = {
    */
   _clearHistory: function()
   {
-    let rootDir = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
-    rootDir.append('fireie');
-    for each(let e in ['cache', 'cookies'])
+    this._clearCache();
+    this._clearCookies();
+  },
+
+  _clearHistoryDir: function(dir)
+  {
+    Cu.import("resource://fireie/Utils.jsm");
+    let file = Utils.resolveFilePath(Utils.ieTempDir);
+    file.append(dir);
+    try
     {
-      try
+      if (file.exists())
       {
-        let file = rootDir.clone();
-        file.append(e);
-        if (file.exists())
-        {
-          // Also clear the sub-directories
-          file.remove(true);
-        }
+        // Also clear the sub-directories
+        file.remove(true);
       }
-      catch (ex)
-      {}
-    }
+    } catch (ex) { }
+  },
+  
+  /**
+   * Clear the IE engine cache files. The cache files are stored under the directory
+   * [profile]/fireie/cache
+   */
+  _clearCache: function()
+  {
+    this._clearHistoryDir("cache");
+  },
+
+  /**
+   * Clear the IE engine cookies. The cookies are stored under the directory
+   * [profile]/fireie/cookies
+   */
+  _clearCookies: function()
+  {
+    this._clearHistoryDir("cookies");
   }
 };
 

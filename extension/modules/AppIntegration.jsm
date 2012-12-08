@@ -68,10 +68,15 @@ function init()
   // Listen for pref and rules changes
   Prefs.addListener(function(name)
   {
-    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText" || name == "shortcut_key" 
-     || name == "shortcut_modifiers" || name == "currentTheme")
+    if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
+      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme"
+      || name == "fxLabel" || name == "ieLabel")
     {
       reloadPrefs();
+    }
+    if (name == "showSiteFavicon")
+    {
+      updateFavicons();
     }
     if (name == "showStatusText")
     {
@@ -201,18 +206,7 @@ let AppIntegration = {
    */
   getPluginProcessName: function()
   {
-    let plugin = this.getAnyUtilsPlugin();
-    if (plugin)
-    {
-      let ret = plugin.ProcessName;
-      if (typeof(ret) != "undefined") // in case utility plugin not fully loaded yet
-      {
-        this.getPluginProcessName = function() ret;
-        return ret;
-      }
-    }
-    // falls back to firefox.exe
-    return "firefox.exe";
+    return UtilsPluginManager.getPluginProcessName();
   }
 };
 
@@ -370,7 +364,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("resize", this._bindMethod(this._onResize), false);
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this._onTabSelected), false);
     this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this._updateEditMenuItems), false);
-    this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), false);
+    this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
@@ -396,6 +390,36 @@ WindowWrapper.prototype = {
     let allow = Utils.startsWith(doc.location.href, Utils.containerUrl);
     if (!allow) Utils.LOG("Blocked content event: " + event.type);
     return allow;
+  },
+  
+  /**
+   * Update favicon for the specified tab
+   */
+  _updateFaviconForTab: function(tab)
+  {
+    let pluginObject = this.getContainerPlugin(tab);
+    if (pluginObject)
+    {
+      // udpate current tab's favicon
+      let faviconURL = Prefs.showSiteFavicon ?
+        pluginObject.FaviconURL : LightweightTheme.ieIconUrl;
+      if (faviconURL && faviconURL != "")
+      {
+        let browser = tab ? tab.linkedBrowser : this.window.gBrowser;
+        Favicon.setIcon(browser.contentDocument, faviconURL);
+      }
+    }
+  },
+  
+  /**
+   * Update favicons for every tab
+   */
+  updateFavicons: function()
+  {
+    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
+    for (let i = 0; i < mTabs.length; i++)
+      if (mTabs[i].localName == "tab")
+        this._updateFaviconForTab(mTabs[i]);
   },
   
   /**
@@ -461,11 +485,7 @@ WindowWrapper.prototype = {
       if (pluginObject)
       {
         // udpate current tab's favicon
-        let faviconURL = pluginObject.FaviconURL;
-        if (faviconURL && faviconURL != "")
-        {
-          Favicon.setIcon(this.window.gBrowser.contentDocument, faviconURL);
-        }
+        this._updateFaviconForTab();
         // update current tab's secure lock info
         this.checkIdentity();
         // update status text
@@ -488,12 +508,13 @@ WindowWrapper.prototype = {
       urlbarButton = this.E("fireie-urlbar-switch");
       urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
       urlbarButton.style.visibility = "visible";
-      let fxURL = urlbarButton.getAttribute("fx-icon-url");
-      let ieURL = urlbarButton.getAttribute("ie-icon-url");
+      let fxURL = LightweightTheme.fxIconUrl;
+      let ieURL = LightweightTheme.ieIconUrl;
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-      urlbarButtonLabel.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.label.ie" : "fireie.urlbar.switch.label.fx");
+      urlbarButtonLabel.value = isIEEngine ? (Prefs.ieLabel || Utils.getString("fireie.urlbar.switch.label.ie"))
+                                           : (Prefs.fxLabel || Utils.getString("fireie.urlbar.switch.label.fx"));
       let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
       urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
 
@@ -939,7 +960,7 @@ WindowWrapper.prototype = {
   {
     if (!this._checkEventOrigin(event)) return;
     
-    let progress = parseInt(event.detail);
+    let progress = parseInt(event.detail, 10);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
     this._updateProgressStatus();
     if (progress >= 100 || progress == -1)
@@ -1179,22 +1200,26 @@ WindowWrapper.prototype = {
    */
   _applyTheme: function(themeData)
   {
+    if (themeData.id == LightweightTheme.appliedThemeId)
+      return;
+      
     // Style URL bar engie button
     let urlbarButton = this.E("fireie-urlbar-switch");
 
-    // First try to obtain the images from the cache
-    let images = LightweightTheme.getCachedThemeImages(themeData);
+    // Cache theme icon URLs to URL bar button attributes
+    let images = LightweightTheme.getThemeImages(themeData);
     if (images && images.fxURL && images.ieURL)
     {
       urlbarButton.setAttribute("fx-icon-url", images.fxURL);
       urlbarButton.setAttribute("ie-icon-url", images.ieURL);
     }
-    // Else set them from their original source
-    else
-    {
-      urlbarButton.setAttribute("fx-icon-url", themeData.fxURL);
-      urlbarButton.setAttribute("ie-icon-url", themeData.ieURL);
-    }
+    
+    LightweightTheme.setAppliedTheme({
+      id: themeData.id,
+      fxURL: images.fxURL,
+      ieURL: images.ieURL,
+      textcolor: themeData.textcolor
+    });
 
     // Style the text color.
     let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
@@ -1208,6 +1233,7 @@ WindowWrapper.prototype = {
     }
 
     this._updateInterface();
+    this.updateFavicons();
   },
 
   // whether we should handle textbox commands, e.g. cmd_paste
@@ -1940,15 +1966,17 @@ WindowWrapper.prototype = {
   _onMouseDown: function(event)
   {
     // Simulate mousedown events to support gesture extensions like FireGuestures
-    if (event.originalTarget.id == Utils.containerPluginId && event.button == 2)
+    if (event.originalTarget.id == Utils.containerPluginId)
     {
       if (!this._checkEventOrigin(event)) return;
-      
+
       let evt = this.window.document.createEvent("MouseEvents");
-      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, 2, null);
+      evt.initMouseEvent("mousedown", true, true, event.view, event.detail, event.screenX, event.screenY, event.clientX, event.clientY, false, false, false, false, event.button, null);
       let pluginObject = this.getContainerPlugin();
       if (pluginObject)
       {
+        event.preventDefault();
+        event.stopPropagation();
         let container = pluginObject.parentNode;
         container.dispatchEvent(evt);
       }
@@ -2005,7 +2033,16 @@ WindowWrapper.prototype = {
 function reloadPrefs()
 {
   for each(let wrapper in wrappers)
-  wrapper.updateState();
+    wrapper.updateState();
+}
+
+/**
+ * Updates favicons for all application windows
+ */
+function updateFavicons()
+{
+  for each (let wrapper in wrappers)
+    wrapper.updateFavicons();
 }
 
 /**

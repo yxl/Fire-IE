@@ -32,6 +32,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
+Cu.import(baseURL.spec + "WinMutex.jsm");
 
 /**
  * BOOL InternetSetCookie(
@@ -53,16 +55,31 @@ let InternetSetCookieW = null;
  */
 let InternetSetCookieExW = null;
 
+/**
+ * BOOL InternetSetOptionW(
+ * in  HINTERNET hInternet,
+ * in  DWORD dwOption,
+ * in  LPVOID lpBuffer,
+ * in  DWORD dwBufferLength
+ * );
+ */
+ let InternetSetOptionW = null;
+
 // NULL pointer
 const NULL = 0;
 
 const INTERNET_COOKIE_HTTPONLY = 0x00002000;
+const INTERNET_OPTION_END_BROWSER_SESSION = 42;
 
 const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
 const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
 
 const cookieSvc = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
-                  
+
+// use a system-wide mutex to protect the process of changing IE temp dir
+let mutex = null;
+const MUTEX_TIMEOUT = 10000;
+
 function getIECtrlRegString(regName)
 {
   try
@@ -70,13 +87,16 @@ function getIECtrlRegString(regName)
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     if (!wrk.hasValue(regName)) return null;
     let value = wrk.readStringValue(regName);
-    wrk.close();
     return value;
   }
   catch (e)
   {
     Utils.ERROR(e);
     return null;
+  }
+  finally
+  {
+    wrk.close();
   }
 }
 
@@ -86,13 +106,35 @@ function setIECtrlRegString(regName, value)
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
     wrk.writeStringValue(regName, value);
-    wrk.close();
     return true;
   }
   catch (e)
   {
     Utils.ERROR(e);
     return false;
+  }
+  finally
+  {
+    wrk.close();
+  }
+}
+
+function removeIECtrlRegString(regName)
+{
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_CURRENT_USER, SUB_KEY, wrk.ACCESS_ALL);
+    wrk.removeValue(regName);
+    return true;
+  }
+  catch (e)
+  {
+    Utils.ERROR(e);
+    return false;
+  }
+  finally
+  {
+    wrk.close();
   }
 }
 
@@ -128,6 +170,15 @@ let IECookieManager = {
    */
   startup: function()
   {
+    try
+    {
+      mutex = new WinMutex("fireie@fireie.org::IECookieManager");
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to create mutex: " + ex);
+    }
+    
     // User jsctypes to load the window api of InternetSetCookieW
     this._loadInternetSetCookieW();
 
@@ -138,6 +189,8 @@ let IECookieManager = {
   {
     this._unloadInternetSetCookieW();
     CookieObserver.unregister();
+    
+    mutex.close();
   },
   
   saveFirefoxCookie: function(url, cookieHeader)
@@ -186,10 +239,10 @@ let IECookieManager = {
     {
       cookieData +="; httponly";
     }
-    let ret = InternetSetCookieW(url, NULL, cookieData); 
+    let ret = InternetSetCookieW(url, null, cookieData); 
     if (!ret)
     {
-      let ret = InternetSetCookieExW(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
+      let ret = InternetSetCookieExW(url, null, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
       if (!ret)
       {
         let errCode = ctypes.winLastError || 0;
@@ -212,7 +265,14 @@ let IECookieManager = {
 
   clearAllIECookies: function()
   {
-    // @todo 
+    // Clear session cookies by ending the current browser session
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
+    let ret = InternetSetOptionW(null, INTERNET_OPTION_END_BROWSER_SESSION, null, 0);
+    if (!ret)
+    {
+      let errCode = ctypes.winLastError || 0;
+      Utils.LOG("InternetSetOptionW failed with ERROR " + errCode);
+    }
   },
   
   _loadInternetSetCookieW: function()
@@ -230,7 +290,7 @@ let IECookieManager = {
     {
       CallBackABI = ctypes.default_abi;
       WinABI = ctypes.default_abi;
-    }    
+    }
     try
     {
       this.wininetDll = ctypes.open("Wininet.dll");
@@ -238,15 +298,21 @@ let IECookieManager = {
       {
         InternetSetCookieW = this.wininetDll.declare('InternetSetCookieW', WinABI, ctypes.int32_t, /*BOOL*/
         ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
-        ctypes.jschar.ptr /*LPCTSTR lpszCookieData*/ );
+        ctypes.jschar.ptr, /*LPCTSTR lpszCookieName*/
+        ctypes.jschar.ptr  /*LPCTSTR lpszCookieData*/ );
         
         InternetSetCookieExW = this.wininetDll.declare('InternetSetCookieExW', WinABI, ctypes.int32_t, /*BOOL*/
         ctypes.jschar.ptr, /*LPCTSTR lpszUrl*/
-        ctypes.int32_t, /*LPCTSTR lpszCookieName. As we need pass NULL to this parameter, we use type int32_t instead*/
+        ctypes.jschar.ptr, /*LPCTSTR lpszCookieName*/
         ctypes.jschar.ptr, /*LPCTSTR lpszCookieData*/
-        ctypes.uint32_t,    /*DWORD dwFlags*/
-        ctypes.int32_t    /*DWORD_PTR dwReserved*/);
+        ctypes.uint32_t,   /*DWORD dwFlags*/
+        ctypes.int32_t     /*DWORD_PTR dwReserved*/);
+        
+        InternetSetOptionW = this.wininetDll.declare('InternetSetOptionW', WinABI, ctypes.int32_t, /*BOOL*/
+        ctypes.voidptr_t,  /*HINTERNET hInternet*/
+        ctypes.uint32_t,   /*DWORD dwOption*/
+        ctypes.voidptr_t,  /*LPVOID lpBuffer*/
+        ctypes.uint32_t    /*DWORD dwBufferLength*/);
       }
     }
     catch (e)
@@ -264,25 +330,58 @@ let IECookieManager = {
     }
   },
 
+  acquireMutex: function()
+  {
+    try
+    {
+      let ret = mutex.acquire(MUTEX_TIMEOUT);
+      if (!ret)
+        throw "timed out";
+      return ret;
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to acquire mutex: " + ex);
+      return false;
+    }
+  },
+  
+  releaseMutex: function()
+  {
+    try
+    {
+      mutex.release();
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to release mutex: " + ex);
+    }
+  },
+  
   changeIETempDirectorySetting: function()
   {
     // safe guard: do not attempt to change after already changed
     if (this._bTmpDirChanged) return;
     
-    let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    // do not attempt to do anything if mutex is not acquired
+    if (!this.acquireMutex()) return;
+    
+    let ieTempDir = Utils.ieTempDir;
+    let cookiesDir = ieTempDir + "\\cookies";
+    let cacheDir = ieTempDir + "\\cache";
 
     let originalCookies = getIECtrlRegString("Cookies");
     // Backup the cookie directory setting if needed.
     if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
     {
-      setIECtrlRegString("Cookies", profileDir + "\\fireie\\cookies");
+      setIECtrlRegString("Cookies", cookiesDir);
     }
 
     let originalCache = getIECtrlRegString("Cache");
     // Backup the cache directory setting if needed.
     if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
     {
-      setIECtrlRegString("Cache", profileDir + "\\fireie\\cache");
+      setIECtrlRegString("Cache", cacheDir);
     }
     
     this._bTmpDirChanged = true;
@@ -297,16 +396,20 @@ let IECookieManager = {
     let cookies = getIECtrlRegString("Cookies_fireie");
     if (cookies)
     {
+    // Remove backup values to allow user change IE browser's cache directory settings
       setIECtrlRegString("Cookies", cookies);
+      removeIECtrlRegString("Cookies_fireie");
     }
     let cache = getIECtrlRegString("Cache_fireie");
     if (cache)
     {
       setIECtrlRegString("Cache", cache);
+      removeIECtrlRegString("Cache_fireie");
     }
 
     this._bTmpDirChanged = false;
-
+    this.releaseMutex();
+    
     Utils.LOG("IE Temp dir restored.");
   },
 
@@ -324,6 +427,7 @@ let CookieObserver = {
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "fireie-clear-cookies", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
   },
@@ -331,6 +435,7 @@ let CookieObserver = {
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "fireie-clear-cookies");
     Services.obs.removeObserver(this, "fireie-set-cookie");
     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
   },
@@ -343,6 +448,9 @@ let CookieObserver = {
     case 'cookie-changed':
       this.onFirefoxCookieChanged(subject, data);
       break;
+    case 'fireie-clear-cookies':
+      IECookieManager.clearAllIECookies();
+      break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
       break;
@@ -354,6 +462,8 @@ let CookieObserver = {
 
   onFirefoxCookieChanged: function(subject, data)
   {
+    if (!Prefs.cookieSyncEnabled) return;
+    
     let cookie = (subject instanceof Ci.nsICookie2) ? subject.QueryInterface(Ci.nsICookie2) : null;
     let cookieArray = (subject instanceof Ci.nsIArray) ? subject.QueryInterface(Ci.nsIArray) : null;
     switch (data)

@@ -78,6 +78,7 @@ namespace Plugin
 
 		// util methods
 		NPI_DEF(SetEnabledGestures);
+		NPI_DEF(SetCookieSyncEnabled);
 		// ABP methods
 		NPI_DEF(ABPEnable);
 		NPI_DEF(ABPDisable);
@@ -155,6 +156,7 @@ namespace Plugin
 			NPN_GSI_M(FBToggleCase);
 			NPN_GSI_M(FBSetFindText);
 			NPN_GSI_M(SetEnabledGestures);
+			NPN_GSI_M(SetCookieSyncEnabled);
 			NPN_GSI_M(ABPEnable);
 			NPN_GSI_M(ABPDisable);
 			NPN_GSI_M(ABPLoad);

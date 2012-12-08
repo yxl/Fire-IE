@@ -25,6 +25,7 @@ using namespace Utils;
 
 App::Application App::s_app = UNKNOWN;
 CString App::s_strProcessName = _T("");
+CString App::s_strModulePath = _T("");
 
 App::Application App::GetApplication()
 {
@@ -48,13 +49,55 @@ CString App::GetProcessName()
 {
 	if (s_strProcessName.GetLength()) return s_strProcessName;
 
-	TCHAR szPathName[MAX_PATH];
-	GetModuleFileName(NULL, szPathName, MAX_PATH);
-	TCHAR szFileName[MAX_PATH];
-	TCHAR szFileExt[MAX_PATH];
-	if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, MAX_PATH, szFileExt, MAX_PATH))
+	const size_t BUFLEN = 1024;
+	TCHAR szPathName[BUFLEN];
+	if (GetModuleFileName(NULL, szPathName, BUFLEN))
 	{
-		return s_strProcessName = CString(szFileName) + szFileExt;
+		TCHAR szFileName[BUFLEN];
+		TCHAR szFileExt[BUFLEN];
+		if (0 == _tsplitpath_s(szPathName, NULL, 0, NULL, 0, szFileName, BUFLEN, szFileExt, BUFLEN))
+		{
+			return s_strProcessName = CString(szFileName) + szFileExt;
+		}
 	}
 	return s_strProcessName = _T("firefox.exe");
+}
+
+
+HMODULE WINAPI App::ModuleFromAddress(PVOID pv)
+{
+	MEMORY_BASIC_INFORMATION mbi;
+	if(::VirtualQuery(pv, &mbi, sizeof(mbi)) != 0)
+	{
+		return (HMODULE)mbi.AllocationBase;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+HMODULE App::GetThisModule()
+{
+	return ModuleFromAddress(GetThisModule);
+}
+
+CString App::GetModulePath()
+{
+	if (s_strModulePath.GetLength()) return s_strModulePath;
+
+	const size_t BUFLEN = 1024;
+	HMODULE hThisModule = GetThisModule();
+	TCHAR szPathName[BUFLEN];
+	if (GetModuleFileName(hThisModule, szPathName, BUFLEN))
+	{
+		TCHAR drive[10];
+		TCHAR path[BUFLEN];
+		if (0 == _tsplitpath_s(szPathName, drive, 10, path, BUFLEN, NULL, 0, NULL, 0))
+		{
+			return s_strModulePath = CString(drive) + path;
+		}
+	}
+	// fall back to current working directory
+	return s_strModulePath = _T(".\\");
 }

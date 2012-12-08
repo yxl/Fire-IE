@@ -33,6 +33,15 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
+let _defaultTheme = {
+  id: "hi@fireie.org/default",
+  fxURL: "chrome://fireie/skin/engine-fx.png",
+  ieURL: "chrome://fireie/skin/engine-ie.png",
+  textcolor: "",
+};
+
+let _appliedTheme = _defaultTheme;
+
 let LightweightTheme = {
 
   /**
@@ -41,12 +50,6 @@ let LightweightTheme = {
    */
   get currentTheme()
   {
-    let defaultValue = {
-      id: "hi@fireie.org/default",
-      fxURL: "chrome://fireie/skin/engine-fx.png",
-      ieURL: "chrome://fireie/skin/engine-ie.png",
-      textcolor: "",
-    };
     if (Prefs.currentTheme)
     {
       try
@@ -58,7 +61,7 @@ let LightweightTheme = {
         Utils.ERROR("Error getting current theme: " + e);
       }
     }
-    return defaultValue;
+    return _defaultTheme;
   },
 
   /**
@@ -70,11 +73,50 @@ let LightweightTheme = {
     {
       Prefs.currentTheme = JSON.stringify(themeData);
       this._cacheThemeImages(themeData);
+      // Use local cached version 3 sec later
+      Utils.runAsyncTimeout(function(data)
+      {
+        if (themeData.id == _appliedTheme.id)
+        {
+          let images = this.getCachedThemeImages(themeData);
+          if (images)
+          {
+            _appliedTheme.fxURL = images.fxURL;
+            _appliedTheme.ieURL = images.ieURL;
+          }
+        }
+      }, this, 3000);
     }
     catch (e)
     {
       Utils.ERROR("Error setting current theme: " + e);
     }
+  },
+  
+  /**
+   * Saves information of applied theme
+   */
+  setAppliedTheme: function(themeData)
+  {
+    _appliedTheme = themeData;
+  },
+  
+  /** ID of the applied theme */
+  get appliedThemeId()
+  {
+    return _appliedTheme.id;
+  },
+  
+  /** Get the URL of IE icon for applied theme */
+  get ieIconUrl()
+  {
+    return _appliedTheme.ieURL;
+  },
+
+  /** Get the URL of Firefox icon for applied theme */
+  get fxIconUrl()
+  {
+    return _appliedTheme.fxURL;
   },
 
   /**
@@ -104,7 +146,7 @@ let LightweightTheme = {
   /**
    * Obtains the cached images of the given theme. This are stored in the
    * _cacheThemeImages method under the directory
-   * [profile]/fireie/theme/[btoa(themeData.id)].
+   * [profile]/fireie/theme/[FileUtils.getBase64Name(themeData.id)].
    * @param themeData The data of the theme for which to look the cached images.
    *    Refers to the installTheme method for details about this paramter.
    * @return An object with "fxURL" and "ieURL" properties, each containing
@@ -118,7 +160,7 @@ let LightweightTheme = {
       return null;
     }
     
-    let themeDir = FileUtils.getDirectory(cacheDirectory, btoa(themeData.id), true);
+    let themeDir = FileUtils.getDirectory(cacheDirectory, FileUtils.getBase64Name(themeData.id), true);
     if (themeDir && themeDir.exists())
     {
 
@@ -143,10 +185,28 @@ let LightweightTheme = {
     }
     return null;
   },
+  
+  /**
+   * Obtains the cached images of the given theme if possible. If there's no cached version,
+   * online version will be returned.
+   * @param themeData The data of the theme for which to look the cached images.
+   *    Refers to the installTheme method for details about this paramter.
+   * @return An object with "fxURL" and "ieURL" properties, each containing
+   * the file URL of the image. Null otherwise.
+   */
+  getThemeImages: function(themeData)
+  {
+    let images = this.getCachedThemeImages(themeData);
+    if (images) return images;
+    return {
+      fxURL: themeData.fxURL,
+      ieURL: themeData.ieURL
+    };
+  },
 
   /**
    * Caches images of the given theme inside the
-   * directory [profile]/fireie/theme/[btoa(themeData.id)]. It removes all other
+   * directory [profile]/fireie/theme/[FileUtils.getBase64Name(themeData.id)]. It removes all other
    * existing themes directories before doing so.
    * @param themeData The data of the theme for which to cache the images.
    */
@@ -168,7 +228,7 @@ let LightweightTheme = {
     }
 
     // Create directory for the given theme
-    let themeDir = FileUtils.getDirectory(cacheDirectory, btoa(themeData.id), false);
+    let themeDir = FileUtils.getDirectory(cacheDirectory, FileUtils.getBase64Name(themeData.id), false);
 
     let downloads = [
     {
@@ -195,6 +255,16 @@ let LightweightTheme = {
 };
 
 let FileUtils = {
+  /** 
+   * Generate a base64-based name for the theme id, safe to use as a file name
+   * @param id The theme ids
+   * @return The dir name used to cache theme images
+   */
+  getBase64Name: function(id)
+  {
+    return btoa(unescape(encodeURIComponent(id))).replace(/\//g, "-");
+  },
+  
   /**
    * Gets the [profile]/fireie/theme directory.
    * @return The reference to the theme cache directory (nsIFile).

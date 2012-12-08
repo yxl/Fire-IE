@@ -34,10 +34,14 @@
 <!ENTITY fireie.options.ui.statusBarCaption "Всплывающая строка статуса">
 <!ENTITY fireie.options.ui.showStatusText "Показывать статус во всплывающей строке статуса при активном IE движке">
 <!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
+<!ENTITY fireie.options.ui.faviconCaption "Tab Icon">
+<!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
+<!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
+<!ENTITY fireie.options.ui.customLabelLabel "Customize labels:">
 <!ENTITY fireie.options.integration.tab "Интеграция">
 <!ENTITY fireie.options.integration.pane "Интеграция">
 <!ENTITY fireie.options.integration.mgCaption "Поддержка жестов мышью">
-<!ENTITY fireie.options.integration.mgDescr "Обычно Fire-IE самостоятельно обнаружит ваше расширение для управления с помощью жестов мыши и автоматически включит поддержку жестов. Если у вас установлено расширение для управления жестами, но вы не можете пользоваться ими в IE-режиме, вы можете попробовать включить данную опцию.">
+<!ENTITY fireie.options.integration.mgDescr "Gesture extensions and scripts are detected automatically. If your mouse gesture extension or script is not detected, you can try enable this option.">
 <!ENTITY fireie.options.integration.forceMGSupport "Форсировать поддержку жестов мышью в IE-режиме">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Поддержка жестов мышью сейчас активирована.">
 <!ENTITY fireie.options.integration.abpCaption "Поддержка Adblock Plus">
@@ -49,14 +53,8 @@
 <!ENTITY fireie.options.integration.abpStatusDisabled "Выключено">
 <!ENTITY fireie.options.integration.abpStatusLoading "Загрузка фильтров...">
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "Сбой при загрузке фильтров">
-
-<!ENTITY fireie.options.rule.label "Правила для сайтов">
-<!ENTITY fireie.options.rule.enabled "Включить правила для сайтов">
-<!ENTITY fireie.options.rule.column.rule "Правило">
-<!ENTITY fireie.options.rule.column.enabled "Включено">
-<!ENTITY fireie.options.rule.url.label "URL:">
-<!ENTITY fireie.options.rule.button.add "Добавить">
-<!ENTITY fireie.options.rule.button.delete "Удалить">
+<!ENTITY fireie.options.integration.otherOptions "Other Options">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "Sync cookies between IE and Firefox engines">
 
 <!ENTITY fireie.options.ieoptions.tab  "Настройки IE">
 <!ENTITY fireie.options.ieoptions.pane "Навтройки IE">

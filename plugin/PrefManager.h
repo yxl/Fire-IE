@@ -17,30 +17,20 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// App.h : App related information
+// PrefManager.h : Manages preferences set by extension part
+//
 
-namespace Utils
-{
-	class App {
-	public:
-		enum Application {
-			UNKNOWN,
-			FIREFOX,
-			PALEMOON,
-			WATERFOX,
-			OOPP,
-			UNRECOGNIZED_APP
-		};
+class PrefManager {
+private:
+	bool m_bCookieSyncEnabled;
 
-		static Application GetApplication();
-		static CString GetProcessName();
-		static CString GetModulePath();
-	private:
-		static Application s_app;
-		static CString s_strProcessName;
-		static CString s_strModulePath;
+	PrefManager() { m_bCookieSyncEnabled = true; }
+	PrefManager(const PrefManager&);
 
-		static HMODULE WINAPI ModuleFromAddress(PVOID pv);
-		static HMODULE GetThisModule();
-	};
-} // namespace Utils
+	static PrefManager s_instance;
+public:
+	bool isCookieSyncEnabled() const { return m_bCookieSyncEnabled; }
+	void setCookieSyncEnabled(bool value) { m_bCookieSyncEnabled = value; }
+
+	static PrefManager& instance() { return s_instance; }
+};

@@ -28,10 +28,11 @@ let FireIEContainer = {};
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Cu.import(baseURL.spec + "Favicon.jsm", jsm);
+  Cu.import(baseURL.spec + "LightweightTheme.jsm", jsm);
   Components.utils.import("resource://gre/modules/Services.jsm", jsm);
   let
   {
-    Utils, Prefs, Favicon, Services
+    Utils, Prefs, Favicon, LightweightTheme, Services
   } = jsm;
 
   /**
@@ -158,6 +159,19 @@ let FireIEContainer = {};
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
     // support focus on plain DOMMouseScroll
     E("container").addEventListener("DOMMouseScroll", onDOMMouseScroll, false);
+    // Use the following code to check mouse events
+    /*
+    window.addEventListener("mousedown", function(e)
+    {
+      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mousedown " +
+        "from " + e.originalTarget.toString());
+    }, false);
+    window.addEventListener("mouseup", function(e)
+    {
+      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mouseup " +
+        "from " + e.originalTarget.toString());
+    }, false);
+    */
   }
 
   function unregisterEventHandler()
@@ -229,7 +243,7 @@ let FireIEContainer = {};
     let po = E(Utils.containerPluginId);
     if (po)
     {
-      let faviconURL = po.FaviconURL;
+      let faviconURL = Prefs.showSiteFavicon ? po.FaviconURL : LightweightTheme.ieIconUrl;
       if (faviconURL && faviconURL != "")
       {
         Favicon.setIcon(document, faviconURL);

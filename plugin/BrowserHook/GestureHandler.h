@@ -36,6 +36,7 @@ namespace BrowserHook
 	{
 	private:
 		bool shouldKeepTrack(MessageHandleResult res) const;
+		static bool shouldUsePost();
 
 		static struct Handlers {
 			~Handlers();

@@ -1,4 +1,5 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 .descr {
   width: 300px;
@@ -16,6 +17,11 @@ image.icon-only {
 image.icon-hidden {
   list-style-image: url("chrome://fireie/skin/url-button-styles.png");
   -moz-image-region: rect(96px, 150px, 120px, 0px);
+}
+
+html|input {
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .indent {

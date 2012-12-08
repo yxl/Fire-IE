@@ -22,7 +22,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "PointerHash.h"
 #include <vector>
 #include <string>
-#include <unordered_set>
+#include <deque>
 
 namespace Plugin
 {
@@ -43,7 +43,7 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, DWORD dwId, bool isUtils);
+	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils);
 
 	/** Get CIEHostWindow object by its window handle */
 	static CIEHostWindow* GetInstance(HWND hwnd);
@@ -100,7 +100,7 @@ protected:
 	static CCriticalSection s_csIEWindowMap;
 
 	/** Map used to search the CIEHostWindow object by its ID */
-	static CSimpleMap<DWORD, CIEHostWindow *> s_NewIEWindowMap;
+	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
 
 	/** Ensure the operations on s_NewIEWindowMap are thread safe. */
 	static CCriticalSection s_csNewIEWindowMap;
@@ -272,6 +272,9 @@ protected:
 	// Cache recent status text
 	CString m_strStatusText;
 
+	// Cache recent page title
+	CString m_strTitle;
+
 	// Find Bar states
 	bool m_bFBInProgress;
 	bool m_bFBHighlight;
@@ -322,14 +325,14 @@ protected:
 
 protected:
 	class ICallable;
-	// Keep track of callable instances, make sure the calling is safe as it's converted from a (untrusted) raw pointer
-	std::unordered_set<ICallable*, Utils::PointerHasher<ICallable>, Utils::PointerEqualTo<ICallable> > m_setCallables;
+	// Keep track of callable instances, make sure the calling is safe.
+	std::deque<ICallable*> m_qCallables;
+	CCriticalSection m_csCallables;
 
 	// Asynchronous function calling, replaces original PostMessage approach
 	// This makes code more readable by putting caller code and callee code together
 
-	// After message is sent the type info is lost (the handler only sees LPARAM),
-	// Our only hope is a vtable that dispatches to different functions
+	// Callable interface for async function calling
 	class ICallable {
 	public:
 		virtual void call() const = 0;
@@ -352,7 +355,11 @@ public:
 	void RunAsync(const Func& func)
 	{
 		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
-		m_setCallables.insert(wrapper);
-		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, reinterpret_cast<LPARAM>(wrapper));
+		
+		m_csCallables.Lock();
+		m_qCallables.push_back(wrapper);
+		m_csCallables.Unlock();
+
+		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
 	}
 };

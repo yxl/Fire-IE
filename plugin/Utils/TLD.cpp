@@ -22,19 +22,31 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TLD.h"
 #include "regdom-libs/dkim-regdom.h"
-#include "regdom-libs/tld-canon.h"
+#include "App.h"
+#include "File.h"
 
 namespace Utils {
 	const regdom::tldnode* rootTLDNode = NULL;
 }
 
+using namespace std;
 using namespace Utils;
 
 TLD::TLDInit TLD::init;
 
 TLD::TLDInit::TLDInit()
 {
-	rootTLDNode = regdom::readTldTree(tldString);
+	CFile file;
+	if (file.Open(App::GetModulePath() + _T("tldstring.txt"), CFile::modeRead | CFile::shareDenyWrite))
+	{
+		wstring tldString;
+		bool success = File::readFile(file, tldString);
+		file.Close();
+		if (success)
+		{
+			rootTLDNode = regdom::readTldTree(tldString.c_str());
+		}
+	}
 }
 
 TLD::TLDInit::~TLDInit()

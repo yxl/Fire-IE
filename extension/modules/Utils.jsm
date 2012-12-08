@@ -142,6 +142,14 @@ var Utils = {
     Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
     return this.esrUserAgent;
   },
+  
+  get ieTempDir()
+  {
+    let dir = Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+    
+    Utils.__defineGetter__("ieTempDir", function() dir);
+    return dir;
+  },
 
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.
@@ -256,7 +264,7 @@ var Utils = {
     if (url && url.length > 0)
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
@@ -264,7 +272,7 @@ var Utils = {
       if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
       {
         url = decodeURI(url.substring(Utils.containerUrl.length));
-        if (!/^[\w]+:/.test(url))
+        if (!/^[\w\-]+:/.test(url))
         {
           url = "http://" + url;
         }
@@ -287,7 +295,7 @@ var Utils = {
   {
     return "xp-status-bar";
   },
-
+  
   convertToUTF8: function(data)
   {
     try
@@ -428,6 +436,8 @@ var Utils = {
     return (url && (url.length > 0) &&
       (
        Utils.startsWith(url, 'about:') ||
+       Utils.startsWith(url, 'view-source:') ||
+       Utils.startsWith(url, 'jar:') ||
        Utils.startsWith(url, 'chrome://') ||
        Utils.startsWith(url, 'resource://')
       ));
@@ -454,7 +464,7 @@ var Utils = {
     try
     {
       url = url.trim();
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
@@ -485,7 +495,7 @@ var Utils = {
     try
     {
       url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
-      if (!/^[\w]+:/.test(url))
+      if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }

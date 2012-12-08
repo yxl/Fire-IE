@@ -33,6 +33,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "IECookieManager.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
 
 let UtilsPluginManager = {
   /**
@@ -44,6 +45,11 @@ let UtilsPluginManager = {
    * Whether init() has been called
    */
   _isInitCalled: false,
+  
+  /**
+   * Keep a list of pref setters, which will be called upon plugin initialization
+   */
+  _prefSetters: [],
   
   lazyStartup: function()
   {
@@ -90,6 +96,13 @@ let UtilsPluginManager = {
     return Utils.getHiddenWindow();
   },
   
+  getPluginProcessName: function()
+  {
+    let plugin = this.getPlugin();
+    // falls back to firefox.exe
+    return (plugin && plugin.ProcessName) || "firefox.exe";
+  },
+  
   /**
    * Ensures that the plugin is initialized before calling the callback
    */
@@ -110,6 +123,17 @@ let UtilsPluginManager = {
       window.addEventListener("IEUtilsPluginInitialized", handler, false);
     }
   },
+  
+  /**
+   * Add a function that sets pref to the plugin instance
+   * Setter is called immediately if plugin is already initialized
+   */
+  addPrefSetter: function(setter)
+  {
+    this._prefSetters.push(setter);
+    if (this.isPluginInitialized)
+      setter();
+  },
 
   _handlePluginEvents: function()
   {
@@ -122,6 +146,9 @@ let UtilsPluginManager = {
     window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
+    
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
+    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
   
   _cancelPluginEvents: function()
@@ -135,8 +162,10 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
+
+    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
-  
+
   /**
    * Install the plugin used to do utility things like sync cookie
    */
@@ -146,10 +175,11 @@ let UtilsPluginManager = {
     // be restored when the utils plugin is loaded.
     IECookieManager.changeIETempDirectorySetting();
 
-    Utils.getHiddenWindow().addEventListener("IEUtilsPluginInitialized", function(e)
+    this.fireAfterInit(function()
     {
       this.isPluginInitialized = true;
-    }.bind(this), false);
+      this._setPluginPrefs();
+    }, this, []);
 
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
@@ -165,6 +195,9 @@ let UtilsPluginManager = {
       if (!this.isPluginInitialized)
         loadFailureSubHandler();
     }, this, 30000);
+    
+    // Pref setter for cookie sync
+    this.addPrefSetter(setCookieSyncPref);
   },
   
   _registerHandlers: function()
@@ -173,6 +206,7 @@ let UtilsPluginManager = {
     window.addEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
     window.addEventListener("IESetCookie", onIESetCookie, false);
     window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+    Prefs.addListener(onPrefChanged);
   },
   
   _unregisterHandlers: function()
@@ -181,8 +215,80 @@ let UtilsPluginManager = {
     window.removeEventListener("IEUserAgentReceived", onIEUserAgentReceived, false);
     window.removeEventListener("IESetCookie", onIESetCookie, false);
     window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+    Prefs.removeListener(onPrefChanged);
   },
+  
+  _setPluginPrefs: function()
+  {
+    let plugin = this.getPlugin();
+    this._prefSetters.forEach(function(setter)
+    {
+      setter(plugin);
+    });
+  },
+  
+  getPluginBindingType: function(plugin)
+  {
+    switch (plugin.pluginFallbackType) {
+    case Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED:
+      return "PluginNotFound";
+    case Ci.nsIObjectLoadingContent.PLUGIN_DISABLED:
+      return "PluginDisabled";
+    case Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED:
+      return "PluginBlocklisted";
+    case Ci.nsIObjectLoadingContent.PLUGIN_OUTDATED:
+      return "PluginOutdated";
+    case Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY:
+      return "PluginClickToPlay";
+    case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE:
+      return "PluginVulnerableUpdatable";
+    case Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE:
+      return "PluginVulnerableNoUpdate";
+    case Ci.nsIObjectLoadingContent.PLUGIN_PLAY_PREVIEW:
+      return "PluginPlayPreview";
+    default:
+      // Not all states map to a handler
+      return null;
+    }
+  }
 };
+
+function onPluginBindingAttached(event)
+{
+  let plugin = event.target;
+
+  // We're expecting the target to be a plugin.
+  if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+    return;
+  
+  // The plugin binding fires this event when it is created.
+  // As an untrusted event, ensure that this object actually has a binding
+  // and make sure we don't handle it twice
+  let doc = plugin.ownerDocument;
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  if (!overlay || overlay.FireIE_UPMBindingHandled) {
+    return;
+  }
+  overlay.FireIE_UPMBindingHandled = true;
+
+  let eventType = UtilsPluginManager.getPluginBindingType(plugin);
+  if (!eventType) return;
+  
+  switch (eventType)
+  {
+  case "PluginClickToPlay":
+    return onPluginClickToPlay(event);
+  case "PluginNotFound":
+  case "PluginBlockListed":
+  case "PluginOutdated":
+  case "PluginVulnerableUpdatable":
+  case "PluginVulnerableNoUpdate":
+  case "PluginDisabled":
+    return onPluginLoadFailure(event);
+  default:
+    return;
+  }
+}
 
 /** handle click to play event in the hidden window */
 function onPluginClickToPlay(event)
@@ -286,4 +392,18 @@ function onIEBatchSetCookie(event)
   let topic = "fireie-batch-set-cookie";
   let data = event.detail;
   Services.obs.notifyObservers(subject, topic, data);
+}
+
+/**
+ * Listener for cookie sync pref change
+ */
+function onPrefChanged(pref)
+{
+  if (pref == "cookieSyncEnabled")
+    setCookieSyncPref(UtilsPluginManager.getPlugin());
+}
+
+function setCookieSyncPref(plugin)
+{
+  plugin.SetCookieSyncEnabled(Prefs.cookieSyncEnabled);
 }

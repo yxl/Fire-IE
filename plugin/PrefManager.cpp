@@ -15,32 +15,10 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+// PrefManager.cpp : Manages preferences set by extension part
+//
 
-// App.h : App related information
+#include "StdAfx.h"
+#include "PrefManager.h"
 
-namespace Utils
-{
-	class App {
-	public:
-		enum Application {
-			UNKNOWN,
-			FIREFOX,
-			PALEMOON,
-			WATERFOX,
-			OOPP,
-			UNRECOGNIZED_APP
-		};
-
-		static Application GetApplication();
-		static CString GetProcessName();
-		static CString GetModulePath();
-	private:
-		static Application s_app;
-		static CString s_strProcessName;
-		static CString s_strModulePath;
-
-		static HMODULE WINAPI ModuleFromAddress(PVOID pv);
-		static HMODULE GetThisModule();
-	};
-} // namespace Utils
+PrefManager PrefManager::s_instance;

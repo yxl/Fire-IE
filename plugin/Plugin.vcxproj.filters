@@ -105,7 +105,14 @@
     <ClCompile Include="Utils\PointerHash.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Plugin\comfix.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="PrefManager.cpp" />
     <ClCompile Include="Utils\App.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\File.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -235,9 +242,6 @@
     <ClInclude Include="regdom-libs\dkim-regdom.h">
       <Filter>regdom-libs</Filter>
     </ClInclude>
-    <ClInclude Include="regdom-libs\tld-canon.h">
-      <Filter>regdom-libs</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\TLD.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -247,7 +251,14 @@
     <ClInclude Include="Utils\PointerHash.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Plugin\comfix.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="PrefManager.h" />
     <ClInclude Include="Utils\App.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\File.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>

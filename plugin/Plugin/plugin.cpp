@@ -48,6 +48,7 @@
 #include "ScriptablePluginObject.h"
 #include "json/json.h"
 #include "OS.h"
+#include "comfix.h"
 
 #ifdef DEBUG
 #include "test/test.h"
@@ -108,7 +109,7 @@ namespace Plugin
 		if (!IsWindow(m_hWnd))
 			return FALSE;
 
-		DWORD navId = 0;
+		ULONG_PTR ulId = 0;
 		CString url;
 		CString post;
 		CString headers;
@@ -128,7 +129,7 @@ namespace Plugin
 			url = strHostUrl.Mid(PREFIX.GetLength());
 
 			// 获取从Firefox传入的其他参数
-			navId = GetNavigateWindowId();
+			ulId = GetNavigateWindowId();
 			post = GetNavigatePostData();
 			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
@@ -143,7 +144,7 @@ namespace Plugin
 		}
 		else return FALSE;
 
-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, navId, m_strId == RES_UTILS_OBJECT_T);
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, ulId, m_strId == RES_UTILS_OBJECT_T);
 		if (m_pIEHostWindow == NULL)
 		{
 			return FALSE;
@@ -155,7 +156,7 @@ namespace Plugin
 		}
 
 		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
-		if (navId == 0)
+		if (ulId == 0)
 		{
 			m_pIEHostWindow->Navigate(url, post, headers);
 		}
@@ -184,7 +185,7 @@ namespace Plugin
 		return TRUE;
 	}
 
-	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, DWORD dwId, bool isUtils)
+	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, ULONG_PTR ulId, bool isUtils)
 	{
 		CIEHostWindow *pIEHostWindow = NULL;
 		CWnd parent;
@@ -194,7 +195,7 @@ namespace Plugin
 		}
 		try
 		{
-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, dwId, isUtils);
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, ulId, isUtils);
 			if (pIEHostWindow == NULL)
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));
@@ -398,10 +399,14 @@ namespace Plugin
 	}
 
 	// Get CIEHostWindow ID
-	DWORD CPlugin::GetNavigateWindowId() const
+	ULONG_PTR CPlugin::GetNavigateWindowId() const
 	{
 		CString strID = GetNavigateParam("getNavigateWindowId");
+#ifdef _M_X64
+		return _tcstoui64(strID, NULL, 10);
+#else
 		return _tcstoul(strID, NULL, 10);
+#endif
 	}
 
 	// Get Http headers paramter for IECtrl::Navigate
@@ -653,11 +658,11 @@ namespace Plugin
 		NPN_MemFree(url);
 	}
 
-	void CPlugin::IENewTab(DWORD id, const CString& strURL)
+	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL)
 	{
 		CString strEventType = _T("IENewTab");
 		CString strDetail;
-		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\"}"), id, strURL);
+		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\"}"), ulId, strURL);
 		FireEvent(strEventType, strDetail);
 	}
 
@@ -702,6 +707,9 @@ namespace Plugin
 #ifdef DEBUG
 		test::doTest();
 #endif
+		if (COMFix::ifNeedFix())
+			COMFix::doFix();
+
 		CString strEventType = _T("IEUtilsPluginInitialized");
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);

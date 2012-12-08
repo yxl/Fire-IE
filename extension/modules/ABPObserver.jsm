@@ -146,6 +146,11 @@ let ABPObserver = {
     
     UtilsPluginManager.fireAfterInit(function()
     {
+      // Apply a retry sequence to avoid the reported "Not Detected" bug
+      this._detectABP();
+      Utils.runAsyncTimeout(this._detectABP, this, 5000);
+      Utils.runAsyncTimeout(this._detectABP, this, 30000);
+      
       this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
       
       if (this._abpBranch)
@@ -156,7 +161,7 @@ let ABPObserver = {
       
       this._registerListeners();
       
-      this._detectABP();
+      UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
     }, this, []);
   },
   
@@ -202,6 +207,8 @@ let ABPObserver = {
   
   _onABPEnable: function()
   {
+    if (this._abpInstalled) return;
+    
     this._abpInstalled = true;
     Utils.LOG("[ABP] Adblock Plus detected.");
     
@@ -224,6 +231,8 @@ let ABPObserver = {
   
   _onABPDisable: function()
   {
+    if (!this._abpInstalled) return;
+
     this._abpInstalled = false;
     Utils.LOG("[ABP] Adblock Plus not installed or disabled.");
 
@@ -241,6 +250,9 @@ let ABPObserver = {
   
   _detectABP: function()
   {
+    if (this._abpInstalled) return;
+    
+    Utils.LOG("[ABP] Detecting Adblock Plus...");
     AddonManager.getAddonByID(abpId, function(addon)
     {
       let installed = (addon != null && addon.isActive);

@@ -83,16 +83,6 @@ private:
 	// should be called on main thread
 	static void filterLoadedCallback(bool loaded);
 
-	// file reading utilities
-	static bool readFile(CFile& file, std::wstring& content);
-	static bool readUTF8OrANSI(CFile& file, std::wstring& content);
-	static bool readANSI(CFile& file, std::wstring& content);
-	static bool readUTF8(CFile& file, std::wstring& content, bool skipBOM = true);
-	static bool readUnicode(CFile& file, std::wstring& content);
-	static bool readUnicodeBigEndian(CFile& file, std::wstring& content);
-
-	static const ULONGLONG FILE_SIZE_LIMIT;
-
 	// used internally for synchronization
 	static ReaderWriterMutex s_mutex;
 

@@ -30,10 +30,11 @@ var gFireIE = null;
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "GesturePrefObserver.jsm", jsm);
   Cu.import(baseURL.spec + "HookManager.jsm", jsm);
+  Cu.import(baseURL.spec + "UtilsPluginManager.jsm", jsm);
   
   let
   {
-    AppIntegration, Utils, GesturePrefObserver, HookManager
+    AppIntegration, Utils, GesturePrefObserver, HookManager, UtilsPluginManager
   } = jsm;
   
   let HM = new HookManager(window, "gFireIE._hookManager");
@@ -43,7 +44,7 @@ var gFireIE = null;
   let clickToPlayHandler = function(event)
   {
     // Only handle click_to_play events
-    if (event.type != "PluginClickToPlay")
+    if (event.type != "PluginClickToPlay" && event.type != "PluginBindingAttached")
       return;
     
     let plugin = event.target;
@@ -51,7 +52,26 @@ var gFireIE = null;
     // We're expecting the target to be a plugin.
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
-      
+
+    // The plugin binding fires this event when it is created.
+    // As an untrusted event, ensure that this object actually has a binding
+    // and make sure we don't handle it twice
+    let eventType = event.type;
+    if (eventType == "PluginBindingAttached")
+    {
+      let doc = plugin.ownerDocument;
+      let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+      if (!overlay || overlay.FireIE_OverlayBindingHandled) {
+        return;
+      }
+      overlay.FireIE_OverlayBindingHandled = true;
+
+      eventType = UtilsPluginManager.getPluginBindingType(plugin);
+    }
+    
+    if (eventType != "PluginClickToPlay")
+      return;
+    
     // used to check whether the plugin is already activated
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     
@@ -76,6 +96,8 @@ var gFireIE = null;
     }
   };
   this.window.addEventListener("PluginClickToPlay", clickToPlayHandler, true);
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
+  this.window.addEventListener("PluginBindingAttached", clickToPlayHandler, true);
   // still we have to hook gPluginHandler.handleEvent
   // in case they start listening on the window object
   if (typeof(gPluginHandler) == "object" && typeof(gPluginHandler.handleEvent) == "function")
@@ -316,7 +338,6 @@ var gFireIE = null;
       initializeAiOGHooks();
       initializeUCMGHooks();
       GesturePrefObserver.onGestureDetectionEnd();
-      GesturePrefObserver.setEnabledGestures();
     }, this, []);
 
   }

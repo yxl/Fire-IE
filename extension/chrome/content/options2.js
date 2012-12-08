@@ -62,7 +62,7 @@ Options.restoreDefaultSettings = function()
   let aOld = Options._getAllOptions(false);
   let aDefault = Options._getAllOptions(true);
   Options._setAllOptions(aDefault);
-  Options.initDialog();
+  Options.initDialog(true);
   Options._setAllOptions(aOld);
   Options.updateApplyButton(true);
 };
@@ -100,6 +100,10 @@ Options.apply = function(quiet)
   Prefs.showStatusText = E("showStatusText").checked;
   Prefs.forceMGSupport = E("forceMGSupport").checked;
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
+  Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
+  Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
+  Prefs.fxLabel = E("fxLabel").value;
+  Prefs.ieLabel = E("ieLabel").value;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -280,12 +284,12 @@ Options.getIEMainVersion = function()
   {
     wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
     let versionString = wrk.readStringValue("version");
-    version = parseInt(versionString);
+    version = parseInt(versionString, 10);
     // for IE 10, version equals to "9.10.*.*", which should be handled specially
     if (version == 9)
     {
       versionString = wrk.readStringValue("svcVersion");
-      version = parseInt(versionString);
+      version = parseInt(versionString, 10);
     }
   }
   catch (e)
@@ -299,7 +303,7 @@ Options.getIEMainVersion = function()
   return version;
 };
 
-Options.updateIEModeTab = function()
+Options.updateIEModeTab = function(restore)
 {
   let mainIEVersion = Options.getIEMainVersion();
   // IE7 or lower does not support compatible modes and GPU rendering
@@ -329,11 +333,14 @@ Options.updateIEModeTab = function()
   E("iemodeNotSupported").hidden = true;
   E("iemodeDescr").hidden = false;
   
-  Options.getIECompatMode();
+  // do not attempt to get values from registry if we are restoring default
+  if (!restore)
+    Options.getIECompatMode();
   let mode = Prefs.compatMode;
   E("iemode").value = mode;
   
-  Options.getGPURenderingState();
+  if (!restore)
+    Options.getGPURenderingState();
   E("gpuRendering").checked = Prefs.gpuRendering;
 };
 
@@ -350,7 +357,14 @@ Options.updateABPStatus = function()
   E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
 };
 
-Options.initDialog = function()
+// Hide customLabels UI if icon display mode is not iconAndText
+Options.updateCustomLabelsUI = function()
+{
+  E("customLabels").hidden = (E("iconDisplay").value != "iconAndText");
+  Options.sizeToContent();
+};
+
+Options.initDialog = function(restore)
 {
   // options for general features
   E("handleurl").checked = Prefs.handleUrlBar;
@@ -364,7 +378,11 @@ Options.initDialog = function()
   E("showStatusText").checked = Prefs.showStatusText;
   E("forceMGSupport").checked = Prefs.forceMGSupport;
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
-
+  E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
+  E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
+  E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
+  E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
+  
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
   E("statusBarGroup").hidden = ifHide;
@@ -380,6 +398,8 @@ Options.initDialog = function()
     E("alreadyEnabledMGSupportLabel").hidden = true;
   }
   
+  Options.updateCustomLabelsUI();
+  
   Options.updateABPStatus();
 
   // updateStatus
@@ -387,13 +407,14 @@ Options.initDialog = function()
   Options.handleShortcutEnabled();
 
   // IE Compatibility Mode
-  Options.updateIEModeTab();
+  Options.updateIEModeTab(restore);
 };
 
 Options.setIconDisplayValue = function(value)
 {
   E("iconDisplay").value = value;
-  this.updateApplyButton(true);
+  Options.updateCustomLabelsUI();
+  Options.updateApplyButton(true);
 };
 
 Options.updateApplyButton = function(e)
@@ -409,6 +430,18 @@ Options.handleShortcutEnabled = function(e)
   E("shortcut-key").disabled = disable;
 };
 
+Options.sizeToContent = function()
+{
+  // for multi-line label sizing problem
+  window.sizeToContent();
+  let vboxes = document.querySelectorAll("prefpane > vbox");
+  Array.prototype.forEach.call(vboxes, function(vbox)
+  {
+    vbox.height = vbox.boxObject.height;
+  });
+  window.sizeToContent();
+};
+
 Options.init = function()
 {
   function addEventListenerByTagName(tag, type, listener)
@@ -421,20 +454,16 @@ Options.init = function()
   }
   
   Options.initDialog();
-  
-  // for multi-line label sizing problem
-  window.sizeToContent();
-  let vboxes = document.querySelectorAll("prefpane > vbox");
-  Array.prototype.forEach.call(vboxes, function(vbox)
-  {
-    vbox.height = vbox.boxObject.height;
-  });
-  window.sizeToContent();
+  Options.sizeToContent();
   
   addEventListenerByTagName("checkbox", "command", Options.updateApplyButton);
   addEventListenerByTagName("radio", "command", Options.updateApplyButton);
   addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
+  addEventListenerByTagName("html:input", "input", Options.updateApplyButton);
+  addEventListenerByTagName("html:input", "focus", function() { this.select(); });
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
+  
+  E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
   
   ABPObserver.addListener(Options.updateABPStatus);
   window.addEventListener("unload", function()
