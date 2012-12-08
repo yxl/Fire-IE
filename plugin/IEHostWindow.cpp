@@ -80,6 +80,12 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 CIEHostWindow::~CIEHostWindow()
 {
 	SAFE_DELETE(m_pNavigateParams);
+
+	m_csCallables.Lock();
+	for (auto iter = m_qCallables.begin(); iter != m_qCallables.end(); ++iter)
+		delete *iter;
+	m_qCallables.clear();
+	m_csCallables.Unlock();
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
@@ -318,10 +324,17 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	{
 	case WPARAM_RUN_ASYNC_CALL:
 		{
-			ICallable* callable = reinterpret_cast<ICallable*>(lParam);
-			if (m_setCallables.find(callable) != m_setCallables.end())
+			ICallable* callable = NULL;
+			m_csCallables.Lock();
+			if (!m_qCallables.empty())
 			{
-				m_setCallables.erase(callable);
+				callable = m_qCallables.front();
+				m_qCallables.pop_front();
+			}
+			m_csCallables.Unlock();
+
+			if (callable)
+			{
 				callable->call();
 				delete callable;
 			}
@@ -1015,17 +1028,16 @@ void CIEHostWindow::OnCloseIETab()
 		m_pPlugin->CloseIETab();
 	}
 }
+
 void CIEHostWindow::OnStatusTextChange(LPCTSTR Text)
 {
 	OnStatusChanged(Text);
 }
 
-
 void CIEHostWindow::OnTitleChange(LPCTSTR Text)
 {
 	OnTitleChanged(Text);
 }
-
 
 void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 {
@@ -1046,7 +1058,6 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 		}
 	}
 }
-
 
 static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 {
@@ -1133,7 +1144,6 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	// Clear cached title
 	m_strTitle = _T("");
 }
-
 
 void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 {
