@@ -112,6 +112,9 @@
     <ClCompile Include="Utils\App.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\File.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IECtrl.h" />
@@ -239,9 +242,6 @@
     <ClInclude Include="regdom-libs\dkim-regdom.h">
       <Filter>regdom-libs</Filter>
     </ClInclude>
-    <ClInclude Include="regdom-libs\tld-canon.h">
-      <Filter>regdom-libs</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\TLD.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -256,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="PrefManager.h" />
     <ClInclude Include="Utils\App.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\File.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>

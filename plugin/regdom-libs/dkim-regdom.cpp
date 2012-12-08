@@ -148,6 +148,7 @@ void printTldTree(const tldnode* node, const wchar_t * spacer) {
 #endif /* DEBUG */
 
 void freeTldTree(const tldnode* node) {
+	if (!node) return;
 
 	if (node->num_children != 0) {
 		int i;
@@ -182,6 +183,8 @@ const tldnode* findTldNode(const tldnode* parent, const wchar_t* subdom, int len
 }
 
 const wchar_t* getRegisteredDomain(const wchar_t* signingDomain, const tldnode* tree) {
+	if (!tree) return NULL;
+
 	// split domain by . separator, and find tld simutaneously
 	const wchar_t* sDbegin = signingDomain;
 	const wchar_t* sDend = signingDomain + wcslen(signingDomain);
