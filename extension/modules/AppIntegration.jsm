@@ -1943,6 +1943,12 @@ WindowWrapper.prototype = {
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
 
+    if (doc.defaultView.location.href == "about:blank")
+    {
+      // might be the switch jumper from IE to FF, ignore zooming on this page
+      return;
+    }
+    
     //
     // Check if we have to set ZoomLevel
     //  
@@ -1950,7 +1956,7 @@ WindowWrapper.prototype = {
     if (zoomLevelParams)
     {
       this._setZoomLevel(zoomLevelParams.zoomLevel);
-      tab.removeAttribute(tab, 'zoom');
+      tab.removeAttribute('zoom');
     }
   },
 
