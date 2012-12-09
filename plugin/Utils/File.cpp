@@ -70,7 +70,7 @@ try
 }
 catch (...)
 {
-	TRACE(L"Failed to load filter file.\n");
+	TRACE(L"Failed to read the file.\n");
 	return false;
 }
 

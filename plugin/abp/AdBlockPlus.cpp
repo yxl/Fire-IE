@@ -28,6 +28,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "URL.h"
 #include "File.h"
 #include "IEHostWindow.h"
+#include "PrefManager.h"
 #include <map>
 #include <unordered_set>
 
@@ -132,7 +133,7 @@ bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 	ReaderLock rl(s_mutex);
 
 	RegExpFilter* filter = regexpMatcher.matchesAny(location, DONOTTRACK, L"", false);
-	return filter && !filter->isException();
+	return filter ? (!filter->isException()) : (PrefManager::instance().isDNTEnabled());
 }
 
 int AdBlockPlus::getNumberOfFilters()
