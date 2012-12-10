@@ -44,6 +44,7 @@ public:
 	~RegExp();
 
 	RegExp& operator=(const RegExp&);
+	RegExp& operator=(const std::wstring& strFullPattern);
 
 	// Compiles the regular expression
 	void compile();

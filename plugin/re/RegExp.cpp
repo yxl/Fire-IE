@@ -83,6 +83,12 @@ RegExp& RegExp::operator=(const RegExp& other)
 	return *this;
 }
 
+RegExp& RegExp::operator=(const wstring& strFullPattern)
+{
+	compile(strFullPattern);
+	return *this;
+}
+
 RegExp::~RegExp()
 {
 	if (m_re) jsRegExpFree(m_re, jscre_free);
