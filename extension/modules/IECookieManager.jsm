@@ -265,6 +265,11 @@ let IECookieManager = {
 
   clearAllIECookies: function()
   {
+    Services.obs.notifyObservers(null, "fireie-clear-cookies", null);
+  },
+
+  clearIESessionCookies: function()
+  {
     // Clear session cookies by ending the current browser session
     // http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
     let ret = InternetSetOptionW(null, INTERNET_OPTION_END_BROWSER_SESSION, null, 0);
@@ -449,7 +454,7 @@ let CookieObserver = {
       this.onFirefoxCookieChanged(subject, data);
       break;
     case 'fireie-clear-cookies':
-      IECookieManager.clearAllIECookies();
+      IECookieManager.clearIESessionCookies();
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(data);
