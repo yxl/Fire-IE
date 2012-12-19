@@ -128,12 +128,13 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
 
 bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 {
+	if (PrefManager::instance().isDNTEnabled()) return true;
 	if (!s_bEnabled) return false;
 
 	ReaderLock rl(s_mutex);
 
 	RegExpFilter* filter = regexpMatcher.matchesAny(location, DONOTTRACK, L"", false);
-	return filter ? (!filter->isException()) : (PrefManager::instance().isDNTEnabled());
+	return filter && !filter->isException();
 }
 
 int AdBlockPlus::getNumberOfFilters()
