@@ -44,6 +44,16 @@ let _appliedTheme = _defaultTheme;
 
 let LightweightTheme = {
 
+  lazyStartup: function()
+  {
+    // Try to cache theme images if not already cached
+    this.tryCacheThemeImages(this.currentTheme);
+  },
+  
+  shutdown: function()
+  {
+  },
+  
   /**
    * Gets current theme from preferences.
    * @returns {object} JSON object of current theme. If no theme data is set, returns the default value.
@@ -72,20 +82,7 @@ let LightweightTheme = {
     try
     {
       Prefs.currentTheme = JSON.stringify(themeData);
-      this._cacheThemeImages(themeData);
-      // Use local cached version 3 sec later
-      Utils.runAsyncTimeout(function(data)
-      {
-        if (themeData.id == _appliedTheme.id)
-        {
-          let images = this.getCachedThemeImages(themeData);
-          if (images)
-          {
-            _appliedTheme.fxURL = images.fxURL;
-            _appliedTheme.ieURL = images.ieURL;
-          }
-        }
-      }, this, 3000);
+      this.tryCacheThemeImages(themeData);
     }
     catch (e)
     {
@@ -146,7 +143,7 @@ let LightweightTheme = {
   /**
    * Obtains the cached images of the given theme. This are stored in the
    * _cacheThemeImages method under the directory
-   * [profile]/fireie/theme/[FileUtils.getBase64Name(themeData.id)].
+   * [profile]/fireie/theme/[FileUtils.getSHA1Name(themeData.id)].
    * @param themeData The data of the theme for which to look the cached images.
    *    Refers to the installTheme method for details about this paramter.
    * @return An object with "fxURL" and "ieURL" properties, each containing
@@ -160,7 +157,7 @@ let LightweightTheme = {
       return null;
     }
     
-    let themeDir = FileUtils.getDirectory(cacheDirectory, FileUtils.getBase64Name(themeData.id), true);
+    let themeDir = FileUtils.getDirectory(cacheDirectory, FileUtils.getSHA1Name(themeData.id), true);
     if (themeDir && themeDir.exists())
     {
 
@@ -203,10 +200,42 @@ let LightweightTheme = {
       ieURL: themeData.ieURL
     };
   },
+  
+  /**
+   * Tries to cache theme images if they are not yet cached. Does nothing if they are cached already.
+   * @param themeData The data of the theme for which to cache the images.
+   *    Refers to the installTheme method for details about this paramter.
+   */
+  tryCacheThemeImages: function(themeData)
+  {
+    if (this.getCachedThemeImages(themeData))
+    {
+      Utils.LOG("[Theme] Theme images already cached.");
+      return;
+    }
+    Utils.LOG("[Theme] Caching theme images...");
+    this._cacheThemeImages(themeData);
+
+    // Use local cached version 3 sec later
+    Utils.runAsyncTimeout(function()
+    {
+      if (themeData.id == _appliedTheme.id)
+      {
+        let images = this.getCachedThemeImages(themeData);
+        if (images)
+        {
+          _appliedTheme.fxURL = images.fxURL;
+          _appliedTheme.ieURL = images.ieURL;
+          // notify windows (AppIntegration.jsm::WindowWrapper) to update theme image URLs
+          Services.obs.notifyObservers(null, "fireie-reload-prefs", null);
+        }
+      }
+    }, this, 3000);
+  },
 
   /**
    * Caches images of the given theme inside the
-   * directory [profile]/fireie/theme/[FileUtils.getBase64Name(themeData.id)]. It removes all other
+   * directory [profile]/fireie/theme/[FileUtils.getSHA1Name(themeData.id)]. It removes all other
    * existing themes directories before doing so.
    * @param themeData The data of the theme for which to cache the images.
    */
@@ -222,13 +251,14 @@ let LightweightTheme = {
 
     // Remove all other subdirectories in the cache directory
     let subdirs = FileUtils.getDirectoryEntries(cacheDirectory);
+    let subdirName = FileUtils.getSHA1Name(themeData.id);
     for (let i = 0; i < subdirs.length; i++)
     {
-      if (subdirs[i].isDirectory()) subdirs[i].remove(true);
+      if (subdirs[i].isDirectory() && subdirs[i].leafName != subdirName) subdirs[i].remove(true);
     }
 
     // Create directory for the given theme
-    let themeDir = FileUtils.getDirectory(cacheDirectory, FileUtils.getBase64Name(themeData.id), false);
+    let themeDir = FileUtils.getDirectory(cacheDirectory, subdirName, false);
 
     let downloads = [
     {
@@ -249,13 +279,16 @@ let LightweightTheme = {
         FileUtils.saveFileFromURL(uri, themeDir, downloads[i].baseName + "." + uri.fileExtension);
       }
       catch (e)
-      {}
+      {
+        Utils.ERROR("Failed to cache \"" + downloads[i].url + "\": " + e);
+      }
     }
   },
 };
 
 let FileUtils = {
   /** 
+   * DEPRECATED: base64 does not ensure unique names on Windows! Use getSHA1Name instead.
    * Generate a base64-based name for the theme id, safe to use as a file name
    * @param id The theme ids
    * @return The dir name used to cache theme images
@@ -263,6 +296,40 @@ let FileUtils = {
   getBase64Name: function(id)
   {
     return btoa(unescape(encodeURIComponent(id))).replace(/\//g, "-");
+  },
+  
+  _converter: Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                .createInstance(Ci.nsIScriptableUnicodeConverter),
+  
+  _cryptoHash: Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash),
+  
+  /** 
+   * Generate a SHA1-based name for the theme id, safe to use as a file name
+   * The collision rate should be very very low.
+   * @param id The theme ids
+   * @return The dir name used to cache theme images
+   */
+  getSHA1Name: function(id)
+  {
+    this._converter.charset = "UTF-8";
+    // result is an out parameter,
+    // result.value will contain the array length
+    var result = {};
+    // data is an array of bytes
+    var data = this._converter.convertToByteArray(id, result);
+    this._cryptoHash.init(this._cryptoHash.SHA1);
+    this._cryptoHash.update(data, data.length);
+    var hash = this._cryptoHash.finish(false);
+     
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode)
+    {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+     
+    // convert the binary hash data to a hex string.
+    return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
   },
   
   /**
@@ -352,6 +419,6 @@ let FileUtils = {
     persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
     // do the save  
-    persist.saveURI(uri, null, null, null, "", file);
+    persist.saveURI(uri, null, null, null, "", file, null);
   }
 };
