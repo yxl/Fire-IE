@@ -208,6 +208,11 @@ let LightweightTheme = {
    */
   tryCacheThemeImages: function(themeData)
   {
+    if (themeData.id == _defaultTheme.id)
+    {
+      Utils.LOG("[Theme] Default theme, no need to cache.");
+      return;
+    }
     if (this.getCachedThemeImages(themeData))
     {
       Utils.LOG("[Theme] Theme images already cached.");
