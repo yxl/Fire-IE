@@ -90,6 +90,19 @@ function init()
   {
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
+  
+  // observer to listen to the "fireie-reload-prefs" notification
+  let reloadObserver = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+    
+    observe: function(subject, topic, data)
+    {
+      if (topic == "fireie-reload-prefs")
+        reloadPrefs();
+    }
+  };
+  
+  Services.obs.addObserver(reloadObserver, "fireie-reload-prefs", false);
 }
 
 /**
