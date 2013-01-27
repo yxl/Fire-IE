@@ -26,17 +26,17 @@ xmlns:html="http://www.w3.org/1999/xhtml">
     ie-icon-url="chrome://fireie/skin/engine-ie.png">
       <image id="fireie-urlbar-switch-image" />
       <label id="fireie-urlbar-switch-label" />
-      <!-- tooltips -->
-      <tooltip id="fireie-urlbar-switch-tooltip" noautohide="true"
-      orient="vertical" position="before_start" style="padding:2px;">
-        <vbox>
-          <label id="fireie-urlbar-switch-tooltip1" value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;" />
-          <label id="fireie-urlbar-switch-tooltip1-disabled" value="&fireie.urlbar.switch.tooltip1.disabled;" style="margin:2px;" />
-          <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;" />
-          <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;" />
-        </vbox>
-      </tooltip>
     </toolbarbutton>
+    <!-- tooltips -->
+    <tooltip id="fireie-urlbar-switch-tooltip" noautohide="true"
+    orient="vertical" position="before_start" style="padding:2px;">
+      <vbox>
+        <label id="fireie-urlbar-switch-tooltip1" value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;" />
+        <label id="fireie-urlbar-switch-tooltip1-disabled" value="&fireie.urlbar.switch.tooltip1.disabled;" style="margin:2px;" />
+        <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;" />
+        <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;" />
+      </vbox>
+    </tooltip>
   </textbox>
   <!-- Toolbar button-->
   <toolbarpalette id="BrowserToolbarPalette">
