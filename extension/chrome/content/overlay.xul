@@ -57,6 +57,7 @@ xmlns:html="http://www.w3.org/1999/xhtml">
       oncommand="gFireIE.openRulesDialog();" />
       <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
       <menuseparator id="fireie-erc-start" />
+      <menuitem id="fireie-menu-item-open-in-ie" label="&openInIE.label;" oncommand="gFireIE.openInIE();" />
       <menuitem label="&internetProperties.lable;..."
       oncommand="gFireIE.openInternetPropertiesDialog();" />
       <!-- Theme sub-menu -->

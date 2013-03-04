@@ -912,6 +912,25 @@ WindowWrapper.prototype = {
       Utils.ERROR(e);
     }
   },
+  
+  openInIE: function()
+  {
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(Utils.iePath);
+    if (!file.exists()) {
+      Utils.ERROR("Cannot launch IE, file not found: " + Utils.iePath);
+      return;
+    }
+    var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    try {
+      var args = [this.getURL()];
+      process.init(file);
+      process.run(false, args, args.length);
+    }
+    catch (ex) {
+      Utils.ERROR("Cannot launch IE, process creation failed: " + Utils.iePath);
+    }
+  },
 
   getHandledURL: function(url, isModeIE)
   {
@@ -2041,6 +2060,8 @@ WindowWrapper.prototype = {
       this.E("fireie-switch-button-context-menu"),
       this.getURL()
     );
+    // Hide "open-in-ie" button for firefox-only urls
+    this.E("fireie-menu-item-open-in-ie").hidden = Utils.isFirefoxOnly(this.getURL());
   }
 
 };
