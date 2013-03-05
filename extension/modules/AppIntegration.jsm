@@ -312,6 +312,11 @@ WindowWrapper.prototype = {
   _progressListener: null,
 
   /**
+   * Resuming from private browsing warning
+   */
+  _pbwResume: false,
+  
+  /**
    * Binds a function to the object, ensuring that "this" pointer is always set
    * correctly.
    */
@@ -1981,6 +1986,13 @@ WindowWrapper.prototype = {
       return;
     }
     
+    if (this.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !this.isResumeFromPBW()
+      && this.isIEEngine(tab) && !this.getContainerPlugin(tab))
+    {
+      // should be the private browsing warning page, ignore zooming
+      return;
+    }
+    
     //
     // Check if we have to set ZoomLevel
     //  
@@ -2062,8 +2074,56 @@ WindowWrapper.prototype = {
     );
     // Hide "open-in-ie" button for firefox-only urls
     this.E("fireie-menu-item-open-in-ie").hidden = Utils.isFirefoxOnly(this.getURL());
-  }
+  },
 
+  /**
+   * Firefox 20 introduced per-window private browsing mode, in which private information that
+   * should be stored is accessible concurrently with public information.
+   * https://developer.mozilla.org/en-US/docs/Supporting_per-window_private_browsing
+   */
+  isPrivateBrowsing: function()
+  {
+    let pbutils = null;
+    try
+    {
+      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+      pbutils = PrivateBrowsingUtils;
+    }
+    catch (ex)
+    {
+      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
+    }
+    this.isPrivateBrowsing = function()
+    {
+      return pbutils ? pbutils.isWindowPrivate(this.window) : Prefs.privateBrowsing;
+    };
+    return this.isPrivateBrowsing();
+  },
+  
+  /**
+   * Sets the pbwResume flag
+   */
+  setResumeFromPBW: function()
+  {
+    this._pbwResume = true;
+  },
+  
+  /**
+   * Returns the pbwResume flag
+   */
+  isResumeFromPBW: function()
+  {
+    return this._pbwResume;
+  },
+  
+  /**
+   * Clears the pbwResume flag
+   */
+  clearResumeFromPBW: function()
+  {
+    this._pbwResume = false;
+  }
+  
 };
 
 /**
