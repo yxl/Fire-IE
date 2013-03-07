@@ -186,7 +186,6 @@ let UtilsPluginManager = {
 
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.hidden = true;
     embed.setAttribute("id", Utils.utilsPluginId);
     embed.setAttribute("type", "application/fireie");
     embed.style.visibility = "collapse";
