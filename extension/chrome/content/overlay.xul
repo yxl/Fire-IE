@@ -60,6 +60,7 @@ xmlns:html="http://www.w3.org/1999/xhtml">
       <menuitem id="fireie-menu-item-open-in-ie" label="&openInIE.label;" oncommand="gFireIE.openInIE();" />
       <menuitem label="&internetProperties.lable;..."
       oncommand="gFireIE.openInternetPropertiesDialog();" />
+      <menuseparator />
       <!-- Theme sub-menu -->
       <menu id="fireie-skin-menu" label="&skin.label;">
         <menupopup id="fireie-skin-menu-popup">
