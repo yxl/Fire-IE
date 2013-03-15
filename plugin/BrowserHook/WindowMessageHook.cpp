@@ -288,6 +288,10 @@ Exit:
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
 				return FALSE;
+			case VK_SHIFT: // Issue #90: Ctrl-Shift switching IME, should not lose focus
+			case VK_PROCESSKEY:
+				TRACE(_T("[WindowMessageHook] VK_SHIFT or VK_PROCESSKEY\n"));
+				return FALSE;
 
 			// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
@@ -305,6 +309,7 @@ Exit:
 			case VK_DOWN:
 				return FALSE;
 			default:
+				TRACE(_T("[WindowMessageHook] Forwarded firefox key with keyCode = %d\n"), keyCode);
 				return TRUE;
 			}
 		}
