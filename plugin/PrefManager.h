@@ -23,14 +23,22 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 class PrefManager {
 private:
 	bool m_bCookieSyncEnabled;
+	bool m_bDNTEnabled;
 
-	PrefManager() { m_bCookieSyncEnabled = true; }
+	PrefManager()
+	{
+		m_bCookieSyncEnabled = true;
+		m_bDNTEnabled = false;
+	}
 	PrefManager(const PrefManager&);
 
 	static PrefManager s_instance;
 public:
 	bool isCookieSyncEnabled() const { return m_bCookieSyncEnabled; }
 	void setCookieSyncEnabled(bool value) { m_bCookieSyncEnabled = value; }
+
+	bool isDNTEnabled() const { return m_bDNTEnabled; }
+	void setDNTEnabled(bool value) { m_bDNTEnabled = value; }
 
 	static PrefManager& instance() { return s_instance; }
 };

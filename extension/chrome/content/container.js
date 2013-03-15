@@ -34,7 +34,12 @@ let FireIEContainer = {};
   {
     Utils, Prefs, Favicon, LightweightTheme, Services
   } = jsm;
-
+  let gFireIE = (function()
+  {
+    let win = Utils.getChromeWindowFrom(window);
+    return win && win.gFireIE;
+  })();
+  
   /**
    * Shortcut for document.getElementById(id)
    */
@@ -64,6 +69,7 @@ let FireIEContainer = {};
     }
     else
     {
+      gFireIE.clearResumeFromPBW();
       container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
       registerEventHandler();
     }
@@ -71,26 +77,7 @@ let FireIEContainer = {};
 
   function needPrivateBrowsingWarning()
   {
-    let needed = false;
-    if (Prefs.privateBrowsing && Prefs.privatebrowsingwarning)
-    {
-      needed = true;
-      let cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
-      let cookieManager = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager);
-      try
-      {
-        let pbwFlag = cookieService.getCookieString(Utils.makeURI("http://fireie/", null, null), null);
-        if (pbwFlag)
-        {
-          needed = pbwFlag.indexOf("privatebrowsingwarning=no") < 0;
-          cookieManager.remove("fireie", "privatebrowsingwarning", "/", false);
-        }
-      }
-      catch (e)
-      {}
-    }
-
-    return needed;
+    return gFireIE && gFireIE.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !gFireIE.isResumeFromPBW();
   }
 
   function destory()
@@ -395,14 +382,6 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
-    let win = Utils.getChromeWindowFrom(window);
-    if (win && win.gFireIE)
-    {
-      return win.gFireIE.getZoomLevel();
-    }
-    else
-    {
-      return 1;
-    }
+    return gFireIE ? gFireIE.getZoomLevel() : 1;
   }
 })();

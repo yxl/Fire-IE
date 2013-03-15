@@ -153,12 +153,6 @@ let ABPObserver = {
       
       this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
       
-      if (this._abpBranch)
-      {
-        this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
-        this._abpBranch.addObserver("", ABPObserverPrivate, false);
-      }
-      
       this._registerListeners();
       
       UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
@@ -493,6 +487,12 @@ let ABPObserver = {
   
   _registerListeners: function()
   {
+    if (this._abpBranch)
+    {
+      this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
+      this._abpBranch.addObserver("", ABPObserverPrivate, false);
+    }
+
     let window = UtilsPluginManager.getWindow();
     window.addEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
     window.addEventListener("IEABPLoadFailure", onABPLoadFailure, false);
@@ -502,6 +502,11 @@ let ABPObserver = {
   
   _unregisterListeners: function()
   {
+    if (this._abpBranch)
+    {
+      this._abpBranch.removeObserver("", ABPObserverPrivate);
+    }
+
     let window = UtilsPluginManager.getWindow();
     window.removeEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
     window.removeEventListener("IEABPLoadFailure", onABPLoadFailure, false);

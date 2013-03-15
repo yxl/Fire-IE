@@ -235,16 +235,18 @@
         var baseURL =Components.classes["@fireie.org/fireie/private;1"].getService(Components.interfaces.nsIURI);
         var jsm = {};
         Components.utils.import(baseURL.spec + "Prefs.jsm", jsm);
+        Components.utils.import(baseURL.spec + "Utils.jsm", jsm);
 
-        var cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        try {
-          jsm.Prefs.privatebrowsingwarning = document.getElementById("chkWarning").checked;
-          cookieService.setCookieString(ioService.newURI("http://fireie/", null, null), null, "privatebrowsingwarning=no", null);
-          parent.location.reload();
+        var win = jsm.Utils.getChromeWindowFrom(window);
+        var gFireIE = win && win.gFireIE;
+        if (gFireIE)
+        {
+          gFireIE.setResumeFromPBW();
         }
-        catch (e) { }
-    }
+        
+        jsm.Prefs.privatebrowsingwarning = document.getElementById("chkWarning").checked;
+        parent.location.reload();
+      }
     ]]></script>
   </head>
 

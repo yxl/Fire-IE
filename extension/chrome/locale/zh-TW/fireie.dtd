@@ -6,6 +6,7 @@
 <!ENTITY urlbar.switchRules.label "切換規則">
 <!ENTITY internetProperties.lable "IE的Internet 選項">
 <!ENTITY fireie.autoswitch.disable "全局禁用自動切換">
+<!ENTITY openInIE.label "使用IE瀏覽當前頁面">
 <!ENTITY skin.label "面板">
 <!ENTITY default.lable "預設">
 <!ENTITY skin.more.lable "更多...">

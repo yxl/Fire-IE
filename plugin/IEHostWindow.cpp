@@ -700,26 +700,6 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 	}
 }
 
-void CIEHostWindow::ABPEnable()
-{
-	AdBlockPlus::enable();
-}
-
-void CIEHostWindow::ABPDisable()
-{
-	AdBlockPlus::disable();
-}
-
-void CIEHostWindow::ABPLoad(const CString& pathname)
-{
-	AdBlockPlus::loadFilterFile(pathname.GetString());
-}
-
-void CIEHostWindow::ABPClear()
-{
-	AdBlockPlus::clearFilters();
-}
-
 CString CIEHostWindow::GetURL()
 {
 	CString url;
@@ -1422,26 +1402,6 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 	if (m_pPlugin)
 		return (BOOL)(m_pPlugin->ShouldPreventStatusFlash());
 	return false;
-}
-
-CString CIEHostWindow::GetProcessName()
-{
-	return App::GetProcessName();
-}
-
-BOOL CIEHostWindow::GetABPIsEnabled()
-{
-	return AdBlockPlus::isEnabled();
-}
-
-BOOL CIEHostWindow::GetABPIsLoading()
-{
-	return AdBlockPlus::isLoading();
-}
-
-CString CIEHostWindow::GetABPLoadedFile()
-{
-	return AdBlockPlus::getLoadedFile().c_str();
 }
 
 BOOL CIEHostWindow::DestroyWindow()

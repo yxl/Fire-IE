@@ -20,6 +20,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugin.h"
 #include "GestureHandler.h"
 #include "PrefManager.h"
+#include "App.h"
+#include "abp/AdBlockPlus.h"
 
 namespace Plugin
 {
@@ -181,28 +183,28 @@ namespace Plugin
 		// readonly property {bool} ProcessName
 		else if (name == NPI_ID(ProcessName))
 		{
-			CString name = pMainWindow->GetProcessName();
+			CString name = Utils::App::GetProcessName();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
 			return true;
 		}
 		// readonly property {bool} ABPIsEnabled
 		else if (name == NPI_ID(ABPIsEnabled))
 		{
-			BOOL value = pMainWindow->GetABPIsEnabled();
+			BOOL value = abp::AdBlockPlus::isEnabled();
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
 		// readonly property {bool} ABPIsLoading
 		else if (name == NPI_ID(ABPIsLoading))
 		{
-			BOOL value = pMainWindow->GetABPIsLoading();
+			BOOL value = abp::AdBlockPlus::isLoading();
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
 		// readonly property {String} ABPLoadedFile
 		else if (name == NPI_ID(ABPLoadedFile))
 		{
-			CString file = pMainWindow->GetABPLoadedFile();
+			CString file = abp::AdBlockPlus::getLoadedFile().c_str();
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(file), *result);
 			return true;
 		}
@@ -607,12 +609,28 @@ namespace Plugin
 			PrefManager::instance().setCookieSyncEnabled(enabled);
 			return true;
 		}
+		// void SetDNTEnabled({Boolean} value)
+		else if (name == NPI_ID(SetDNTEnabled))
+		{
+			TRACE ("SetDNTEnabled called!\n");
+			if (argCount < 1) return false;
+
+			bool enabled;
+
+			if (NPVARIANT_IS_BOOLEAN(args[0]))
+				enabled = NPVARIANT_TO_BOOLEAN(args[0]);
+			else
+				return false;
+
+			PrefManager::instance().setDNTEnabled(enabled);
+			return true;
+		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))
 		{
 			TRACE ("ABPEnable called!\n");
 			
-			pMainWindow->ABPEnable();
+			abp::AdBlockPlus::enable();
 			return true;
 		}
 		// void ABPDisable()
@@ -620,7 +638,7 @@ namespace Plugin
 		{
 			TRACE ("ABPDisable called!\n");
 			
-			pMainWindow->ABPDisable();
+			abp::AdBlockPlus::disable();
 			return true;
 		}
 		// void ABPLoad({String} pathname)
@@ -636,7 +654,7 @@ namespace Plugin
 			else
 				return false;
 
-			pMainWindow->ABPLoad(pathname);
+			abp::AdBlockPlus::loadFilterFile(pathname.GetString());
 			return true;
 		}
 		// void ABPClear()
@@ -644,7 +662,7 @@ namespace Plugin
 		{
 			TRACE ("ABPClear called!\n");
 			
-			pMainWindow->ABPClear();
+			abp::AdBlockPlus::clearFilters();
 			return true;
 		}
 		return false;
