@@ -28,6 +28,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "URL.h"
 #include "File.h"
 #include "IEHostWindow.h"
+#include "PrefManager.h"
 #include <map>
 #include <unordered_set>
 
@@ -127,6 +128,7 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
 
 bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 {
+	if (PrefManager::instance().isDNTEnabled()) return true;
 	if (!s_bEnabled) return false;
 
 	ReaderLock rl(s_mutex);

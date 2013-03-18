@@ -35,6 +35,9 @@ Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "IECookieManager.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
+let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
+let dntBranch = prefs.getBranch("privacy.donottrackheader.").QueryInterface(Ci.nsIPrefBranch2);
+
 let UtilsPluginManager = {
   /**
    * Whether the utils plugin is initialized
@@ -106,7 +109,7 @@ let UtilsPluginManager = {
   /**
    * Ensures that the plugin is initialized before calling the callback
    */
-  fireAfterInit: function(callback, self, args)
+  fireAfterInit: function(callback, self, args, useCapture)
   {
     if (this.isPluginInitialized)
     {
@@ -117,10 +120,10 @@ let UtilsPluginManager = {
       let window = Utils.getHiddenWindow();
       let handler = function(e)
       {
-        window.removeEventListener("IEUtilsPluginInitialized", handler, false);
+        window.removeEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
         callback.apply(self, args);
       };
-      window.addEventListener("IEUtilsPluginInitialized", handler, false);
+      window.addEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
     }
   },
   
@@ -179,11 +182,10 @@ let UtilsPluginManager = {
     {
       this.isPluginInitialized = true;
       this._setPluginPrefs();
-    }, this, []);
+    }, this, [], true);
 
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.hidden = true;
     embed.setAttribute("id", Utils.utilsPluginId);
     embed.setAttribute("type", "application/fireie");
     embed.style.visibility = "collapse";
@@ -196,8 +198,9 @@ let UtilsPluginManager = {
         loadFailureSubHandler();
     }, this, 30000);
     
-    // Pref setter for cookie sync
+    // Pref setter for cookie sync and DNT
     this.addPrefSetter(setCookieSyncPref);
+    this.addPrefSetter(setDNTPref);
   },
   
   _registerHandlers: function()
@@ -207,6 +210,7 @@ let UtilsPluginManager = {
     window.addEventListener("IESetCookie", onIESetCookie, false);
     window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
     Prefs.addListener(onPrefChanged);
+    dntBranch.addObserver("", DNTObserverPrivate, false);
   },
   
   _unregisterHandlers: function()
@@ -216,6 +220,7 @@ let UtilsPluginManager = {
     window.removeEventListener("IESetCookie", onIESetCookie, false);
     window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
     Prefs.removeListener(onPrefChanged);
+    dntBranch.removeObserver("", DNTObserverPrivate);
   },
   
   _setPluginPrefs: function()
@@ -223,7 +228,14 @@ let UtilsPluginManager = {
     let plugin = this.getPlugin();
     this._prefSetters.forEach(function(setter)
     {
-      setter(plugin);
+      try
+      {
+        setter(plugin);
+      }
+      catch (ex)
+      {
+        Utils.ERROR("Failed calling pref setter: " + ex);
+      }
     });
   },
   
@@ -407,3 +419,36 @@ function setCookieSyncPref(plugin)
 {
   plugin.SetCookieSyncEnabled(Prefs.cookieSyncEnabled);
 }
+
+function setDNTPref(plugin)
+{
+  try
+  {
+    let enabled = dntBranch.getBoolPref("enabled");
+    plugin.SetDNTEnabled(enabled);
+    Utils.LOG("DNT enabled: " + enabled);
+  }
+  catch (ex)
+  {
+    Utils.ERROR("Failed to set DNT pref: " + ex);
+  }
+}
+
+/**
+ * Observer for DNT pref change
+ */
+let DNTObserverPrivate = {
+  /**
+   * nsIObserver implementation
+   */
+  observe: function(subject, topic, data)
+  {
+    if (topic == "nsPref:changed" && data == "enabled")
+    {
+      setDNTPref(UtilsPluginManager.getPlugin());
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
+
+};

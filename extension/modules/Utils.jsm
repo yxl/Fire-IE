@@ -150,6 +150,43 @@ var Utils = {
     Utils.__defineGetter__("ieTempDir", function() dir);
     return dir;
   },
+  
+  /**
+   * From http://stackoverflow.com/questions/194157/c-sharp-how-to-get-program-files-x86-on-windows-vista-64-bit
+   * The function below will return the x86 Program Files directory in all of these three Windows configurations:
+   * * 32 bit Windows
+   * * 32 bit program running on 64 bit Windows
+   * * 64 bit program running on 64 bit windows
+   * (C# code)
+    static string ProgramFilesx86()
+    {
+        if( 8 == IntPtr.Size 
+            || (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))))
+        {
+            return Environment.GetEnvironmentVariable("ProgramFiles(x86)");
+        }
+
+        return Environment.GetEnvironmentVariable("ProgramFiles");
+    }
+   */
+  /**
+   * Returns the full path of x86 IE on all windows platforms
+   */
+  get iePath()
+  {
+    function getProgFx86()
+    {
+      let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+      let progf = env.get(Utils.is64bit ? "ProgramFiles(x86)" : "ProgramFiles");
+      if (progf) return progf;
+      // fallback to mozilla solution
+      return Services.dirsvc.get("ProgF", Ci.nsIFile).path;
+    }
+    let path = getProgFx86() + "\\Internet Explorer\\iexplore.exe";
+    
+    Utils.__defineGetter__("iePath", function() path);
+    return path;
+  },
 
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.

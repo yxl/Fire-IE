@@ -6,6 +6,7 @@
 <!ENTITY urlbar.switchRules.label "Правила переключения">
 <!ENTITY internetProperties.lable "Свойства обозревателя IE">
 <!ENTITY fireie.autoswitch.disable "Отключить авто-переключение">
+<!ENTITY openInIE.label "Open Current Page in IE">
 <!ENTITY skin.label "Скины">
 <!ENTITY default.lable "По умолчанию">
 <!ENTITY skin.more.lable "Другие...">

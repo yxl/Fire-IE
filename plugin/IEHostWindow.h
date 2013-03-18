@@ -218,12 +218,6 @@ public:
 	void FBToggleCase(bool bCase);
 	CString FBGetLastFindStatus();
 
-	// ABP methods
-	void ABPEnable();
-	void ABPDisable();
-	void ABPLoad(const CString& pathname);
-	void ABPClear();
-
 	// read only plugin properties
 	CString GetURL();
 	CString GetTitle();
@@ -245,10 +239,6 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
-	CString GetProcessName();
-	BOOL GetABPIsEnabled();
-	BOOL GetABPIsLoading();
-	CString GetABPLoadedFile();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
