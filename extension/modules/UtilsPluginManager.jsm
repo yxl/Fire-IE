@@ -357,9 +357,14 @@ function genPluginEventHandler(subHandler)
     }
   }
 }
-  
+
+let loadFailureHandled = false;
+
 function loadFailureSubHandler()
 {
+  if (loadFailureHandled) return;
+  loadFailureHandled = true;
+  
   // we have trouble with the plugin now
   IECookieManager.restoreIETempDirectorySetting();
   // notify user about that
