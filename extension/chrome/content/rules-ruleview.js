@@ -7,6 +7,25 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
+ * Simulates nsISupportsArray to be used in place of getColumnProperties, getRowProperties
+ * and getCellProperties
+ * @class
+ */
+function StrPropContainer()
+{
+  this._strArray = [];
+}
+
+StrPropContainer.prototype = {
+  AppendElement: function(atom)
+  {
+    this._strArray.push(atom.toString());
+  },
+  
+  GetString: function() this._strArray.join(" ")
+};
+
+/**
  * nsITreeView implementation to display rules of a particular rule
  * subscription.
  * @class
@@ -612,7 +631,7 @@ var RuleView =
       this.editDummy = {rule: {text: ""}};
 
       let atomService = Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
-      let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-elemhide", "type-invalid"];
+      let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-useragent", "type-useragentexceptional", "type-invalid"];
       let boolAtoms = ["selected", "dummy", "slow", "disabled"];
 
       this.atoms = {};
@@ -663,8 +682,10 @@ var RuleView =
     else
       return null;
   },
-
-  getColumnProperties: function(col, properties)
+  
+  // Interface changed in Nightly 22.0a1, see https://bugzilla.mozilla.org/show_bug.cgi?id=407956
+  // for more information
+  getColumnProperties_legacy: function(col, properties)
   {
     col = col.id;
 
@@ -672,7 +693,7 @@ var RuleView =
       properties.AppendElement(this.atoms[col]);
   },
 
-  getRowProperties: function(row, properties)
+  getRowProperties_legacy: function(row, properties)
   {
     if (row < 0 || row >= this.data.length)
       return;
@@ -698,10 +719,34 @@ var RuleView =
       properties.AppendElement(this.atoms["type-invalid"]);
   },
 
-  getCellProperties: function(row, col, properties)
+  getCellProperties_legacy: function(row, col, properties)
   {
-    this.getColumnProperties(col, properties);
-    this.getRowProperties(row, properties);
+    this.getColumnProperties_legacy(col, properties);
+    this.getRowProperties_legacy(row, properties);
+  },
+  
+  getColumnProperties: function(col, props)
+  {
+    if (props) return this.getColumnProperties_legacy(col, props);
+    var cont = new StrPropContainer();
+    this.getColumnProperties_legacy(col, cont);
+    return cont.GetString();
+  },
+  
+  getRowProperties: function(row, props)
+  {
+    if (props) return this.getRowProperties_legacy(row, props);
+    var cont = new StrPropContainer();
+    this.getRowProperties_legacy(row, cont);
+    return cont.GetString();
+  },
+  
+  getCellProperties: function(row, col, props)
+  {
+    if (props) return this.getCellProperties_legacy(row, col, props);
+    var cont = new StrPropContainer();
+    this.getCellProperties_legacy(row, col, cont);
+    return cont.GetString();
   },
 
   cycleHeader: function(col)
