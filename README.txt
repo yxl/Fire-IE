@@ -17,9 +17,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     Yifan Wu <patwonder@163.com>
 ------------------- END LICENSE BLOCK -------------------------
  
-A Firefox add-on let you switch to IE engine in one click and give up your Internet Explorer.
+A Firefox add-on that lets you switch to IE engine in one click and give up your Internet Explorer.
 
 Build
 ==================
-Open plugin.sln with Visual Studio 2010 and build the solution.
-After successful building, you will get the add-on file of the name fireie.xpi.
+Open plugin.sln with Visual Studio 2012 and build the solution.
+After successful building, you will get the add-on file of the name fireie32(64).xpi.
+To build a unified xpi containing both x86 and x64 binaries, run tools/buildxpi-unified.bat after both builds are done.
