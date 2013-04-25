@@ -260,7 +260,7 @@ var gFireIE = null;
 
       // Show bookmark state (the star icon in URL bar) when using IE engine
       if (typeof(PlacesStarButton) != "undefined" && typeof(PlacesStarButton.updateState) == "function")
-      HM.hookCodeHeadTail("PlacesStarButton.updateState",
+        HM.hookCodeHeadTail("PlacesStarButton.updateState",
                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
 
