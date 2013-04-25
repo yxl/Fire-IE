@@ -515,7 +515,10 @@ WindowWrapper.prototype = {
       }
 
       // Update the star button indicating whether current page is bookmarked.
-      this.window.PlacesStarButton.updateState();
+      if (this.window.PlacesStarButton && this.window.PlacesStarButton.updateState)
+        this.window.PlacesStarButton.updateState();
+      else if (this.window.BookmarksMenuButton && this.window.BookmarksMenuButton.updateStarState)
+        this.window.BookmarksMenuButton.updateStarState();
 
       function escapeURLForCSS(url)
       {
