@@ -287,12 +287,11 @@ Exit:
 			switch (keyCode)
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
-				return FALSE;
 			case VK_SHIFT: // Issue #90: Ctrl-Shift switching IME, should not lose focus
+			case VK_SPACE:
 			case VK_PROCESSKEY:
 				TRACE(_T("[WindowMessageHook] VK_SHIFT or VK_PROCESSKEY\n"));
-				return FALSE;
-
+			case VK_RETURN: // Ctrl-Return, fast post on Baidu Tieba & potentially other places
 			// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
 			case 'P': // Ctrl+P, Print
 			case 'C': // Ctrl+C, Copy
