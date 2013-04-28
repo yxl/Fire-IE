@@ -1,0 +1,1256 @@
+diff --git a/README.txt b/README.txt
+index 6ccbe33..d43ad03 100644
+--- a/README.txt
++++ b/README.txt
+@@ -17,9 +17,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+     Yifan Wu <patwonder@163.com>
+ ------------------- END LICENSE BLOCK -------------------------
+  
+-A Firefox add-on let you switch to IE engine in one click and give up your Internet Explorer.
++A Firefox add-on that lets you switch to IE engine in one click and give up your Internet Explorer.
+ 
+ Build
+ ==================
+-Open plugin.sln with Visual Studio 2010 and build the solution.
+-After successful building, you will get the add-on file of the name fireie.xpi.
++Open plugin.sln with Visual Studio 2012 and build the solution.
++After successful building, you will get the add-on file of the name fireie32(64).xpi.
++To build a unified xpi containing both x86 and x64 binaries, run tools/buildxpi-unified.bat after both builds are done.
+diff --git a/extension/chrome/content/PrivateBrowsingWarning.xhtml b/extension/chrome/content/PrivateBrowsingWarning.xhtml
+index f209c74..2ce04f5 100644
+--- a/extension/chrome/content/PrivateBrowsingWarning.xhtml
++++ b/extension/chrome/content/PrivateBrowsingWarning.xhtml
+@@ -235,16 +235,18 @@
+         var baseURL =Components.classes["@fireie.org/fireie/private;1"].getService(Components.interfaces.nsIURI);
+         var jsm = {};
+         Components.utils.import(baseURL.spec + "Prefs.jsm", jsm);
++        Components.utils.import(baseURL.spec + "Utils.jsm", jsm);
+ 
+-        var cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
+-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+-        try {
+-          jsm.Prefs.privatebrowsingwarning = document.getElementById("chkWarning").checked;
+-          cookieService.setCookieString(ioService.newURI("http://fireie/", null, null), null, "privatebrowsingwarning=no", null);
+-          parent.location.reload();
++        var win = jsm.Utils.getChromeWindowFrom(window);
++        var gFireIE = win && win.gFireIE;
++        if (gFireIE)
++        {
++          gFireIE.setResumeFromPBW();
+         }
+-        catch (e) { }
+-    }
++        
++        jsm.Prefs.privatebrowsingwarning = document.getElementById("chkWarning").checked;
++        parent.location.reload();
++      }
+     ]]></script>
+   </head>
+ 
+diff --git a/extension/chrome/content/container.js b/extension/chrome/content/container.js
+index 29a3189..ca0357e 100644
+--- a/extension/chrome/content/container.js
++++ b/extension/chrome/content/container.js
+@@ -34,7 +34,12 @@ let FireIEContainer = {};
+   {
+     Utils, Prefs, Favicon, LightweightTheme, Services
+   } = jsm;
+-
++  let gFireIE = (function()
++  {
++    let win = Utils.getChromeWindowFrom(window);
++    return win && win.gFireIE;
++  })();
++  
+   /**
+    * Shortcut for document.getElementById(id)
+    */
+@@ -64,6 +69,7 @@ let FireIEContainer = {};
+     }
+     else
+     {
++      gFireIE.clearResumeFromPBW();
+       container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
+       registerEventHandler();
+     }
+@@ -71,26 +77,7 @@ let FireIEContainer = {};
+ 
+   function needPrivateBrowsingWarning()
+   {
+-    let needed = false;
+-    if (Prefs.privateBrowsing && Prefs.privatebrowsingwarning)
+-    {
+-      needed = true;
+-      let cookieService = Components.classes["@mozilla.org/cookieService;1"].getService(Components.interfaces.nsICookieService);
+-      let cookieManager = Components.classes["@mozilla.org/cookiemanager;1"].getService(Components.interfaces.nsICookieManager);
+-      try
+-      {
+-        let pbwFlag = cookieService.getCookieString(Utils.makeURI("http://fireie/", null, null), null);
+-        if (pbwFlag)
+-        {
+-          needed = pbwFlag.indexOf("privatebrowsingwarning=no") < 0;
+-          cookieManager.remove("fireie", "privatebrowsingwarning", "/", false);
+-        }
+-      }
+-      catch (e)
+-      {}
+-    }
+-
+-    return needed;
++    return gFireIE && gFireIE.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !gFireIE.isResumeFromPBW();
+   }
+ 
+   function destory()
+@@ -395,14 +382,6 @@ let FireIEContainer = {};
+   FireIEContainer.removeNavigateParams = removeNavigateParams;
+   FireIEContainer.getZoomLevel = function()
+   {
+-    let win = Utils.getChromeWindowFrom(window);
+-    if (win && win.gFireIE)
+-    {
+-      return win.gFireIE.getZoomLevel();
+-    }
+-    else
+-    {
+-      return 1;
+-    }
++    return gFireIE ? gFireIE.getZoomLevel() : 1;
+   }
+ })();
+diff --git a/extension/chrome/content/overlay.js b/extension/chrome/content/overlay.js
+index 4cded06..4fdd0e0 100644
+--- a/extension/chrome/content/overlay.js
++++ b/extension/chrome/content/overlay.js
+@@ -259,10 +259,17 @@ var gFireIE = null;
+       }
+ 
+       // Show bookmark state (the star icon in URL bar) when using IE engine
+-      HM.hookCodeHeadTail("PlacesStarButton.updateState",
++      if (typeof(PlacesStarButton) != "undefined" && typeof(PlacesStarButton.updateState) == "function")
++        HM.hookCodeHeadTail("PlacesStarButton.updateState",
+                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+ 
++      // Firefox 23 : PlacesStarButton has been changed to BookmarksMenuButton
++      if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
++        HM.hookCodeHeadTail("BookmarksMenuButton.updateStarState",
++                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
++                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
++      
+       // Show number of bookmarks in the overlay editing panel when using IE engine
+       HM.hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
+                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+diff --git a/extension/chrome/content/overlay.xul b/extension/chrome/content/overlay.xul
+index 9481712..e116f2c 100644
+--- a/extension/chrome/content/overlay.xul
++++ b/extension/chrome/content/overlay.xul
+@@ -26,17 +26,17 @@ xmlns:html="http://www.w3.org/1999/xhtml">
+     ie-icon-url="chrome://fireie/skin/engine-ie.png">
+       <image id="fireie-urlbar-switch-image" />
+       <label id="fireie-urlbar-switch-label" />
+-      <!-- tooltips -->
+-      <tooltip id="fireie-urlbar-switch-tooltip" noautohide="true"
+-      orient="vertical" position="before_start" style="padding:2px;">
+-        <vbox>
+-          <label id="fireie-urlbar-switch-tooltip1" value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;" />
+-          <label id="fireie-urlbar-switch-tooltip1-disabled" value="&fireie.urlbar.switch.tooltip1.disabled;" style="margin:2px;" />
+-          <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;" />
+-          <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;" />
+-        </vbox>
+-      </tooltip>
+     </toolbarbutton>
++    <!-- tooltips -->
++    <tooltip id="fireie-urlbar-switch-tooltip" noautohide="true"
++    orient="vertical" position="before_start" style="padding:2px;">
++      <vbox>
++        <label id="fireie-urlbar-switch-tooltip1" value="&fireie.urlbar.switch.tooltip1;" style="margin:2px;" />
++        <label id="fireie-urlbar-switch-tooltip1-disabled" value="&fireie.urlbar.switch.tooltip1.disabled;" style="margin:2px;" />
++        <label id="fireie-urlbar-switch-tooltip2" style="margin:2px;" />
++        <label value="&fireie.urlbar.switch.tooltip3;" style="margin:2px;" />
++      </vbox>
++    </tooltip>
+   </textbox>
+   <!-- Toolbar button-->
+   <toolbarpalette id="BrowserToolbarPalette">
+@@ -57,8 +57,10 @@ xmlns:html="http://www.w3.org/1999/xhtml">
+       oncommand="gFireIE.openRulesDialog();" />
+       <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
+       <menuseparator id="fireie-erc-start" />
++      <menuitem id="fireie-menu-item-open-in-ie" label="&openInIE.label;" oncommand="gFireIE.openInIE();" />
+       <menuitem label="&internetProperties.lable;..."
+       oncommand="gFireIE.openInternetPropertiesDialog();" />
++      <menuseparator />
+       <!-- Theme sub-menu -->
+       <menu id="fireie-skin-menu" label="&skin.label;">
+         <menupopup id="fireie-skin-menu-popup">
+diff --git a/extension/chrome/content/rules-ruleview.js b/extension/chrome/content/rules-ruleview.js
+index ccbf32a..5a1cfab 100644
+--- a/extension/chrome/content/rules-ruleview.js
++++ b/extension/chrome/content/rules-ruleview.js
+@@ -7,6 +7,25 @@
+ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ 
+ /**
++ * Simulates nsISupportsArray to be used in place of getColumnProperties, getRowProperties
++ * and getCellProperties
++ * @class
++ */
++function StrPropContainer()
++{
++  this._strArray = [];
++}
++
++StrPropContainer.prototype = {
++  AppendElement: function(atom)
++  {
++    this._strArray.push(atom.toString());
++  },
++  
++  GetString: function() this._strArray.join(" ")
++};
++
++/**
+  * nsITreeView implementation to display rules of a particular rule
+  * subscription.
+  * @class
+@@ -612,7 +631,7 @@ var RuleView =
+       this.editDummy = {rule: {text: ""}};
+ 
+       let atomService = Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
+-      let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-elemhide", "type-invalid"];
++      let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-useragent", "type-useragentexceptional", "type-invalid"];
+       let boolAtoms = ["selected", "dummy", "slow", "disabled"];
+ 
+       this.atoms = {};
+@@ -663,8 +682,10 @@ var RuleView =
+     else
+       return null;
+   },
+-
+-  getColumnProperties: function(col, properties)
++  
++  // Interface changed in Nightly 22.0a1, see https://bugzilla.mozilla.org/show_bug.cgi?id=407956
++  // for more information
++  getColumnProperties_legacy: function(col, properties)
+   {
+     col = col.id;
+ 
+@@ -672,7 +693,7 @@ var RuleView =
+       properties.AppendElement(this.atoms[col]);
+   },
+ 
+-  getRowProperties: function(row, properties)
++  getRowProperties_legacy: function(row, properties)
+   {
+     if (row < 0 || row >= this.data.length)
+       return;
+@@ -698,10 +719,34 @@ var RuleView =
+       properties.AppendElement(this.atoms["type-invalid"]);
+   },
+ 
+-  getCellProperties: function(row, col, properties)
++  getCellProperties_legacy: function(row, col, properties)
++  {
++    this.getColumnProperties_legacy(col, properties);
++    this.getRowProperties_legacy(row, properties);
++  },
++  
++  getColumnProperties: function(col, props)
++  {
++    if (props) return this.getColumnProperties_legacy(col, props);
++    var cont = new StrPropContainer();
++    this.getColumnProperties_legacy(col, cont);
++    return cont.GetString();
++  },
++  
++  getRowProperties: function(row, props)
++  {
++    if (props) return this.getRowProperties_legacy(row, props);
++    var cont = new StrPropContainer();
++    this.getRowProperties_legacy(row, cont);
++    return cont.GetString();
++  },
++  
++  getCellProperties: function(row, col, props)
+   {
+-    this.getColumnProperties(col, properties);
+-    this.getRowProperties(row, properties);
++    if (props) return this.getCellProperties_legacy(row, col, props);
++    var cont = new StrPropContainer();
++    this.getCellProperties_legacy(row, col, cont);
++    return cont.GetString();
+   },
+ 
+   cycleHeader: function(col)
+diff --git a/extension/chrome/locale/en/fireie.dtd b/extension/chrome/locale/en/fireie.dtd
+index bb1cd4e..316688b 100644
+--- a/extension/chrome/locale/en/fireie.dtd
++++ b/extension/chrome/locale/en/fireie.dtd
+@@ -6,6 +6,7 @@
+ <!ENTITY urlbar.switchRules.label "Switch Rules">
+ <!ENTITY internetProperties.lable "IE's Internet Properties">
+ <!ENTITY fireie.autoswitch.disable "Disable Auto-switch Everywhere">
++<!ENTITY openInIE.label "Open Current Page in IE">
+ <!ENTITY skin.label "Skins">
+ <!ENTITY default.lable "Default">
+ <!ENTITY skin.more.lable "More...">
+diff --git a/extension/chrome/locale/ru-RU/fireie.dtd b/extension/chrome/locale/ru-RU/fireie.dtd
+index 988e885..4da6028 100644
+--- a/extension/chrome/locale/ru-RU/fireie.dtd
++++ b/extension/chrome/locale/ru-RU/fireie.dtd
+@@ -6,6 +6,7 @@
+ <!ENTITY urlbar.switchRules.label "Правила переключения">
+ <!ENTITY internetProperties.lable "Свойства обозревателя IE">
+ <!ENTITY fireie.autoswitch.disable "Отключить авто-переключение">
++<!ENTITY openInIE.label "Open Current Page in IE">
+ <!ENTITY skin.label "Скины">
+ <!ENTITY default.lable "По умолчанию">
+ <!ENTITY skin.more.lable "Другие...">
+diff --git a/extension/chrome/locale/zh-CN/fireie.dtd b/extension/chrome/locale/zh-CN/fireie.dtd
+index 31e9ed0..7dfd933 100644
+--- a/extension/chrome/locale/zh-CN/fireie.dtd
++++ b/extension/chrome/locale/zh-CN/fireie.dtd
+@@ -6,6 +6,7 @@
+ <!ENTITY urlbar.switchRules.label "切换规则">
+ <!ENTITY internetProperties.lable "IE的Internet 选项">
+ <!ENTITY fireie.autoswitch.disable "全局禁用自动切换">
++<!ENTITY openInIE.label "使用IE浏览当前页面">
+ <!ENTITY skin.label "皮肤">
+ <!ENTITY default.lable "默认">
+ <!ENTITY skin.more.lable "更多...">
+diff --git a/extension/chrome/locale/zh-TW/fireie.dtd b/extension/chrome/locale/zh-TW/fireie.dtd
+index 9fca269..cb7c783 100644
+--- a/extension/chrome/locale/zh-TW/fireie.dtd
++++ b/extension/chrome/locale/zh-TW/fireie.dtd
+@@ -6,6 +6,7 @@
+ <!ENTITY urlbar.switchRules.label "切換規則">
+ <!ENTITY internetProperties.lable "IE的Internet 選項">
+ <!ENTITY fireie.autoswitch.disable "全局禁用自動切換">
++<!ENTITY openInIE.label "使用IE瀏覽當前頁面">
+ <!ENTITY skin.label "面板">
+ <!ENTITY default.lable "預設">
+ <!ENTITY skin.more.lable "更多...">
+diff --git a/extension/chrome/skin/rules.css b/extension/chrome/skin/rules.css
+index 5d7b20e..4bbe1c8 100644
+--- a/extension/chrome/skin/rules.css
++++ b/extension/chrome/skin/rules.css
+@@ -114,7 +114,8 @@ tree
+ treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-invalid),
+ treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-whitelist),
+ treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-rulelist),
+-treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-elemhide)
++treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-useragent),
++treechildren:-moz-locale-dir(rtl)::-moz-tree-cell(col-rule, type-useragentexceptional)
+ {
+   direction: ltr;
+   text-align: end;
+@@ -130,7 +131,8 @@ treechildren::-moz-tree-cell-text(col-rule, type-whitelist, selected-false)
+   color: #008000;
+ }
+ 
+-treechildren::-moz-tree-cell-text(col-rule, type-elemhide, selected-false)
++treechildren::-moz-tree-cell-text(col-rule, type-useragent, selected-false),
++treechildren::-moz-tree-cell-text(col-rule, type-useragentexceptional, selected-false)
+ {
+   color: #000080;
+ }
+diff --git a/extension/install.rdf b/extension/install.rdf
+index 57b03ee..bf6d811 100644
+--- a/extension/install.rdf
++++ b/extension/install.rdf
+@@ -5,7 +5,7 @@
+ 
+    <em:id>fireie@fireie.org</em:id>
+    <em:name>Fire IE</em:name>
+-   <em:version>0.3.2</em:version>
++   <em:version>0.3.3</em:version>
+    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+    <em:creator>Yuan Xulei</em:creator>
+    <em:contributor>Wei Deng</em:contributor>
+@@ -21,7 +21,7 @@
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>6.0</em:minVersion>
+-       <em:maxVersion>21.0a1</em:maxVersion>
++       <em:maxVersion>23.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+ 
+diff --git a/extension/modules/ABPObserver.jsm b/extension/modules/ABPObserver.jsm
+index 9bdec9d..064e2dd 100644
+--- a/extension/modules/ABPObserver.jsm
++++ b/extension/modules/ABPObserver.jsm
+@@ -153,12 +153,6 @@ let ABPObserver = {
+       
+       this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
+       
+-      if (this._abpBranch)
+-      {
+-        this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
+-        this._abpBranch.addObserver("", ABPObserverPrivate, false);
+-      }
+-      
+       this._registerListeners();
+       
+       UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
+@@ -493,6 +487,12 @@ let ABPObserver = {
+   
+   _registerListeners: function()
+   {
++    if (this._abpBranch)
++    {
++      this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
++      this._abpBranch.addObserver("", ABPObserverPrivate, false);
++    }
++
+     let window = UtilsPluginManager.getWindow();
+     window.addEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
+     window.addEventListener("IEABPLoadFailure", onABPLoadFailure, false);
+@@ -502,6 +502,11 @@ let ABPObserver = {
+   
+   _unregisterListeners: function()
+   {
++    if (this._abpBranch)
++    {
++      this._abpBranch.removeObserver("", ABPObserverPrivate);
++    }
++
+     let window = UtilsPluginManager.getWindow();
+     window.removeEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
+     window.removeEventListener("IEABPLoadFailure", onABPLoadFailure, false);
+diff --git a/extension/modules/AppIntegration.jsm b/extension/modules/AppIntegration.jsm
+index 0a8d7df..2f7dbc5 100644
+--- a/extension/modules/AppIntegration.jsm
++++ b/extension/modules/AppIntegration.jsm
+@@ -312,6 +312,11 @@ WindowWrapper.prototype = {
+   _progressListener: null,
+ 
+   /**
++   * Resuming from private browsing warning
++   */
++  _pbwResume: false,
++  
++  /**
+    * Binds a function to the object, ensuring that "this" pointer is always set
+    * correctly.
+    */
+@@ -510,7 +515,10 @@ WindowWrapper.prototype = {
+       }
+ 
+       // Update the star button indicating whether current page is bookmarked.
+-      this.window.PlacesStarButton.updateState();
++      if (this.window.PlacesStarButton && this.window.PlacesStarButton.updateState)
++        this.window.PlacesStarButton.updateState();
++      else if (this.window.BookmarksMenuButton && this.window.BookmarksMenuButton.updateStarState)
++        this.window.BookmarksMenuButton.updateStarState();
+ 
+       function escapeURLForCSS(url)
+       {
+@@ -912,6 +920,25 @@ WindowWrapper.prototype = {
+       Utils.ERROR(e);
+     }
+   },
++  
++  openInIE: function()
++  {
++    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
++    file.initWithPath(Utils.iePath);
++    if (!file.exists()) {
++      Utils.ERROR("Cannot launch IE, file not found: " + Utils.iePath);
++      return;
++    }
++    var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
++    try {
++      var args = [this.getURL()];
++      process.init(file);
++      process.run(false, args, args.length);
++    }
++    catch (ex) {
++      Utils.ERROR("Cannot launch IE, process creation failed: " + Utils.iePath);
++    }
++  },
+ 
+   getHandledURL: function(url, isModeIE)
+   {
+@@ -1956,6 +1983,19 @@ WindowWrapper.prototype = {
+     let tab = Utils.getTabFromDocument(doc);
+     if (!tab) return;
+ 
++    if (doc.defaultView.location.href == "about:blank")
++    {
++      // might be the switch jumper from IE to FF, ignore zooming on this page
++      return;
++    }
++    
++    if (this.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !this.isResumeFromPBW()
++      && this.isIEEngine(tab) && !this.getContainerPlugin(tab))
++    {
++      // should be the private browsing warning page, ignore zooming
++      return;
++    }
++    
+     //
+     // Check if we have to set ZoomLevel
+     //  
+@@ -1963,7 +2003,7 @@ WindowWrapper.prototype = {
+     if (zoomLevelParams)
+     {
+       this._setZoomLevel(zoomLevelParams.zoomLevel);
+-      tab.removeAttribute(tab, 'zoom');
++      tab.removeAttribute('zoom');
+     }
+   },
+ 
+@@ -2035,8 +2075,58 @@ WindowWrapper.prototype = {
+       this.E("fireie-switch-button-context-menu"),
+       this.getURL()
+     );
+-  }
++    // Hide "open-in-ie" button for firefox-only urls
++    this.E("fireie-menu-item-open-in-ie").hidden = Utils.isFirefoxOnly(this.getURL());
++  },
+ 
++  /**
++   * Firefox 20 introduced per-window private browsing mode, in which private information that
++   * should be stored is accessible concurrently with public information.
++   * https://developer.mozilla.org/en-US/docs/Supporting_per-window_private_browsing
++   */
++  isPrivateBrowsing: function()
++  {
++    let pbutils = null;
++    try
++    {
++      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
++      pbutils = PrivateBrowsingUtils;
++    }
++    catch (ex)
++    {
++      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
++    }
++    this.isPrivateBrowsing = function()
++    {
++      return pbutils ? pbutils.isWindowPrivate(this.window) : Prefs.privateBrowsing;
++    };
++    return this.isPrivateBrowsing();
++  },
++  
++  /**
++   * Sets the pbwResume flag
++   */
++  setResumeFromPBW: function()
++  {
++    this._pbwResume = true;
++  },
++  
++  /**
++   * Returns the pbwResume flag
++   */
++  isResumeFromPBW: function()
++  {
++    return this._pbwResume;
++  },
++  
++  /**
++   * Clears the pbwResume flag
++   */
++  clearResumeFromPBW: function()
++  {
++    this._pbwResume = false;
++  }
++  
+ };
+ 
+ /**
+diff --git a/extension/modules/Prefs.jsm b/extension/modules/Prefs.jsm
+index a6fea3a..2c7beec 100644
+--- a/extension/modules/Prefs.jsm
++++ b/extension/modules/Prefs.jsm
+@@ -177,7 +177,7 @@ function registerObservers()
+   // Observe preferences changes
+   try
+   {
+-    branch.QueryInterface(Ci.nsIPrefBranchInternal)
++    branch.QueryInterface(Ci.nsIPrefBranch2)
+           .addObserver("", PrefsPrivate, true);
+   }
+   catch (e)
+diff --git a/extension/modules/Utils.jsm b/extension/modules/Utils.jsm
+index 3be16b9..99cfaf6 100644
+--- a/extension/modules/Utils.jsm
++++ b/extension/modules/Utils.jsm
+@@ -150,6 +150,43 @@ var Utils = {
+     Utils.__defineGetter__("ieTempDir", function() dir);
+     return dir;
+   },
++  
++  /**
++   * From http://stackoverflow.com/questions/194157/c-sharp-how-to-get-program-files-x86-on-windows-vista-64-bit
++   * The function below will return the x86 Program Files directory in all of these three Windows configurations:
++   * * 32 bit Windows
++   * * 32 bit program running on 64 bit Windows
++   * * 64 bit program running on 64 bit windows
++   * (C# code)
++    static string ProgramFilesx86()
++    {
++        if( 8 == IntPtr.Size 
++            || (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432"))))
++        {
++            return Environment.GetEnvironmentVariable("ProgramFiles(x86)");
++        }
++
++        return Environment.GetEnvironmentVariable("ProgramFiles");
++    }
++   */
++  /**
++   * Returns the full path of x86 IE on all windows platforms
++   */
++  get iePath()
++  {
++    function getProgFx86()
++    {
++      let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
++      let progf = env.get(Utils.is64bit ? "ProgramFiles(x86)" : "ProgramFiles");
++      if (progf) return progf;
++      // fallback to mozilla solution
++      return Services.dirsvc.get("ProgF", Ci.nsIFile).path;
++    }
++    let path = getProgFx86() + "\\Internet Explorer\\iexplore.exe";
++    
++    Utils.__defineGetter__("iePath", function() path);
++    return path;
++  },
+ 
+   /**
+    * Retrieves a string from global.properties string bundle, will throw if string isn't found.
+diff --git a/extension/modules/UtilsPluginManager.jsm b/extension/modules/UtilsPluginManager.jsm
+index 4158649..de4c66e 100644
+--- a/extension/modules/UtilsPluginManager.jsm
++++ b/extension/modules/UtilsPluginManager.jsm
+@@ -35,6 +35,9 @@ Cu.import(baseURL.spec + "Utils.jsm");
+ Cu.import(baseURL.spec + "IECookieManager.jsm");
+ Cu.import(baseURL.spec + "Prefs.jsm");
+ 
++let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
++let dntBranch = prefs.getBranch("privacy.donottrackheader.").QueryInterface(Ci.nsIPrefBranch2);
++
+ let UtilsPluginManager = {
+   /**
+    * Whether the utils plugin is initialized
+@@ -106,7 +109,7 @@ let UtilsPluginManager = {
+   /**
+    * Ensures that the plugin is initialized before calling the callback
+    */
+-  fireAfterInit: function(callback, self, args)
++  fireAfterInit: function(callback, self, args, useCapture)
+   {
+     if (this.isPluginInitialized)
+     {
+@@ -117,10 +120,10 @@ let UtilsPluginManager = {
+       let window = Utils.getHiddenWindow();
+       let handler = function(e)
+       {
+-        window.removeEventListener("IEUtilsPluginInitialized", handler, false);
++        window.removeEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+         callback.apply(self, args);
+       };
+-      window.addEventListener("IEUtilsPluginInitialized", handler, false);
++      window.addEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+     }
+   },
+   
+@@ -179,11 +182,10 @@ let UtilsPluginManager = {
+     {
+       this.isPluginInitialized = true;
+       this._setPluginPrefs();
+-    }, this, []);
++    }, this, [], true);
+ 
+     let doc = Utils.getHiddenWindow().document;
+     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
+-    embed.hidden = true;
+     embed.setAttribute("id", Utils.utilsPluginId);
+     embed.setAttribute("type", "application/fireie");
+     embed.style.visibility = "collapse";
+@@ -196,8 +198,9 @@ let UtilsPluginManager = {
+         loadFailureSubHandler();
+     }, this, 30000);
+     
+-    // Pref setter for cookie sync
++    // Pref setter for cookie sync and DNT
+     this.addPrefSetter(setCookieSyncPref);
++    this.addPrefSetter(setDNTPref);
+   },
+   
+   _registerHandlers: function()
+@@ -207,6 +210,7 @@ let UtilsPluginManager = {
+     window.addEventListener("IESetCookie", onIESetCookie, false);
+     window.addEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+     Prefs.addListener(onPrefChanged);
++    dntBranch.addObserver("", DNTObserverPrivate, false);
+   },
+   
+   _unregisterHandlers: function()
+@@ -216,6 +220,7 @@ let UtilsPluginManager = {
+     window.removeEventListener("IESetCookie", onIESetCookie, false);
+     window.removeEventListener("IEBatchSetCookie", onIEBatchSetCookie, false);
+     Prefs.removeListener(onPrefChanged);
++    dntBranch.removeObserver("", DNTObserverPrivate);
+   },
+   
+   _setPluginPrefs: function()
+@@ -223,7 +228,14 @@ let UtilsPluginManager = {
+     let plugin = this.getPlugin();
+     this._prefSetters.forEach(function(setter)
+     {
+-      setter(plugin);
++      try
++      {
++        setter(plugin);
++      }
++      catch (ex)
++      {
++        Utils.ERROR("Failed calling pref setter: " + ex);
++      }
+     });
+   },
+   
+@@ -345,9 +357,14 @@ function genPluginEventHandler(subHandler)
+     }
+   }
+ }
+-  
++
++let loadFailureHandled = false;
++
+ function loadFailureSubHandler()
+ {
++  if (loadFailureHandled) return;
++  loadFailureHandled = true;
++  
+   // we have trouble with the plugin now
+   IECookieManager.restoreIETempDirectorySetting();
+   // notify user about that
+@@ -407,3 +424,36 @@ function setCookieSyncPref(plugin)
+ {
+   plugin.SetCookieSyncEnabled(Prefs.cookieSyncEnabled);
+ }
++
++function setDNTPref(plugin)
++{
++  try
++  {
++    let enabled = dntBranch.getBoolPref("enabled");
++    plugin.SetDNTEnabled(enabled);
++    Utils.LOG("DNT enabled: " + enabled);
++  }
++  catch (ex)
++  {
++    Utils.ERROR("Failed to set DNT pref: " + ex);
++  }
++}
++
++/**
++ * Observer for DNT pref change
++ */
++let DNTObserverPrivate = {
++  /**
++   * nsIObserver implementation
++   */
++  observe: function(subject, topic, data)
++  {
++    if (topic == "nsPref:changed" && data == "enabled")
++    {
++      setDNTPref(UtilsPluginManager.getPlugin());
++    }
++  },
++
++  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
++
++};
+diff --git a/plugin/BrowserHook/WindowMessageHook.cpp b/plugin/BrowserHook/WindowMessageHook.cpp
+index 03865d3..8ce81b0 100644
+--- a/plugin/BrowserHook/WindowMessageHook.cpp
++++ b/plugin/BrowserHook/WindowMessageHook.cpp
+@@ -288,6 +288,11 @@ Exit:
+ 			{
+ 			case VK_CONTROL: // Only Ctrl is pressed
+ 				return FALSE;
++			case VK_SHIFT: // Issue #90: Ctrl-Shift switching IME, should not lose focus
++			case VK_SPACE:
++			case VK_PROCESSKEY:
++				TRACE(_T("[WindowMessageHook] VK_SHIFT, VK_SPACE or VK_PROCESSKEY\n"));
++				return FALSE;
+ 
+ 			// The following shortcut keys will be handle by IE control only and won't be sent to Firefox
+ 			case 'P': // Ctrl+P, Print
+@@ -303,8 +308,10 @@ Exit:
+ 			case VK_RIGHT:
+ 			case VK_UP: // Ctrl+U/D, identical to Up/Down
+ 			case VK_DOWN:
++			case VK_RETURN: // Ctrl-Return, fast post on Baidu Tieba & potentially other places
+ 				return FALSE;
+ 			default:
++				TRACE(_T("[WindowMessageHook] Forwarded firefox key with keyCode = %d\n"), keyCode);
+ 				return TRUE;
+ 			}
+ 		}
+diff --git a/plugin/IEHostWindow.cpp b/plugin/IEHostWindow.cpp
+index 477b47b..e6d86a0 100644
+--- a/plugin/IEHostWindow.cpp
++++ b/plugin/IEHostWindow.cpp
+@@ -700,26 +700,6 @@ void CIEHostWindow::ScrollWheelLine(bool up)
+ 	}
+ }
+ 
+-void CIEHostWindow::ABPEnable()
+-{
+-	AdBlockPlus::enable();
+-}
+-
+-void CIEHostWindow::ABPDisable()
+-{
+-	AdBlockPlus::disable();
+-}
+-
+-void CIEHostWindow::ABPLoad(const CString& pathname)
+-{
+-	AdBlockPlus::loadFilterFile(pathname.GetString());
+-}
+-
+-void CIEHostWindow::ABPClear()
+-{
+-	AdBlockPlus::clearFilters();
+-}
+-
+ CString CIEHostWindow::GetURL()
+ {
+ 	CString url;
+@@ -1424,26 +1404,6 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
+ 	return false;
+ }
+ 
+-CString CIEHostWindow::GetProcessName()
+-{
+-	return App::GetProcessName();
+-}
+-
+-BOOL CIEHostWindow::GetABPIsEnabled()
+-{
+-	return AdBlockPlus::isEnabled();
+-}
+-
+-BOOL CIEHostWindow::GetABPIsLoading()
+-{
+-	return AdBlockPlus::isLoading();
+-}
+-
+-CString CIEHostWindow::GetABPLoadedFile()
+-{
+-	return AdBlockPlus::getLoadedFile().c_str();
+-}
+-
+ BOOL CIEHostWindow::DestroyWindow()
+ {
+ 	UninitIE();
+diff --git a/plugin/IEHostWindow.h b/plugin/IEHostWindow.h
+index bfcfec6..9b8c4f8 100644
+--- a/plugin/IEHostWindow.h
++++ b/plugin/IEHostWindow.h
+@@ -218,12 +218,6 @@ public:
+ 	void FBToggleCase(bool bCase);
+ 	CString FBGetLastFindStatus();
+ 
+-	// ABP methods
+-	void ABPEnable();
+-	void ABPDisable();
+-	void ABPLoad(const CString& pathname);
+-	void ABPClear();
+-
+ 	// read only plugin properties
+ 	CString GetURL();
+ 	CString GetTitle();
+@@ -245,10 +239,6 @@ public:
+ 	CString GetStatusText();
+ 	BOOL ShouldShowStatusOurselves();
+ 	BOOL ShouldPreventStatusFlash();
+-	CString GetProcessName();
+-	BOOL GetABPIsEnabled();
+-	BOOL GetABPIsLoading();
+-	CString GetABPLoadedFile();
+ 
+ 	// plugin events
+ 	void OnTitleChanged(const CString& title);
+diff --git a/plugin/Plugin.vcxproj b/plugin/Plugin.vcxproj
+index 90415c7..c57bb67 100644
+--- a/plugin/Plugin.vcxproj
++++ b/plugin/Plugin.vcxproj
+@@ -38,24 +38,34 @@
+     <UseOfMfc>Static</UseOfMfc>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>Static</UseOfMfc>
+     <CharacterSet>Unicode</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>Static</UseOfMfc>
+     <UseOfAtl>false</UseOfAtl>
+     <CharacterSet>Unicode</CharacterSet>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>Static</UseOfMfc>
+     <UseOfAtl>false</UseOfAtl>
+     <CharacterSet>Unicode</CharacterSet>
++    <PlatformToolset>v110_xp</PlatformToolset>
++  </PropertyGroup>
++  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
++    <PlatformToolset>v110_xp</PlatformToolset>
++  </PropertyGroup>
++  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <ImportGroup Label="ExtensionSettings">
+diff --git a/plugin/Plugin/ScriptablePluginObject.cpp b/plugin/Plugin/ScriptablePluginObject.cpp
+index c0b67b9..05f701e 100644
+--- a/plugin/Plugin/ScriptablePluginObject.cpp
++++ b/plugin/Plugin/ScriptablePluginObject.cpp
+@@ -20,6 +20,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+ #include "plugin.h"
+ #include "GestureHandler.h"
+ #include "PrefManager.h"
++#include "App.h"
++#include "abp/AdBlockPlus.h"
+ 
+ namespace Plugin
+ {
+@@ -181,28 +183,28 @@ namespace Plugin
+ 		// readonly property {bool} ProcessName
+ 		else if (name == NPI_ID(ProcessName))
+ 		{
+-			CString name = pMainWindow->GetProcessName();
++			CString name = Utils::App::GetProcessName();
+ 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
+ 			return true;
+ 		}
+ 		// readonly property {bool} ABPIsEnabled
+ 		else if (name == NPI_ID(ABPIsEnabled))
+ 		{
+-			BOOL value = pMainWindow->GetABPIsEnabled();
++			BOOL value = abp::AdBlockPlus::isEnabled();
+ 			BOOLEAN_TO_NPVARIANT(value, *result);
+ 			return true;
+ 		}
+ 		// readonly property {bool} ABPIsLoading
+ 		else if (name == NPI_ID(ABPIsLoading))
+ 		{
+-			BOOL value = pMainWindow->GetABPIsLoading();
++			BOOL value = abp::AdBlockPlus::isLoading();
+ 			BOOLEAN_TO_NPVARIANT(value, *result);
+ 			return true;
+ 		}
+ 		// readonly property {String} ABPLoadedFile
+ 		else if (name == NPI_ID(ABPLoadedFile))
+ 		{
+-			CString file = pMainWindow->GetABPLoadedFile();
++			CString file = abp::AdBlockPlus::getLoadedFile().c_str();
+ 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(file), *result);
+ 			return true;
+ 		}
+@@ -607,12 +609,28 @@ namespace Plugin
+ 			PrefManager::instance().setCookieSyncEnabled(enabled);
+ 			return true;
+ 		}
++		// void SetDNTEnabled({Boolean} value)
++		else if (name == NPI_ID(SetDNTEnabled))
++		{
++			TRACE ("SetDNTEnabled called!\n");
++			if (argCount < 1) return false;
++
++			bool enabled;
++
++			if (NPVARIANT_IS_BOOLEAN(args[0]))
++				enabled = NPVARIANT_TO_BOOLEAN(args[0]);
++			else
++				return false;
++
++			PrefManager::instance().setDNTEnabled(enabled);
++			return true;
++		}
+ 		// void ABPEnable()
+ 		else if (name == NPI_ID(ABPEnable))
+ 		{
+ 			TRACE ("ABPEnable called!\n");
+ 			
+-			pMainWindow->ABPEnable();
++			abp::AdBlockPlus::enable();
+ 			return true;
+ 		}
+ 		// void ABPDisable()
+@@ -620,7 +638,7 @@ namespace Plugin
+ 		{
+ 			TRACE ("ABPDisable called!\n");
+ 			
+-			pMainWindow->ABPDisable();
++			abp::AdBlockPlus::disable();
+ 			return true;
+ 		}
+ 		// void ABPLoad({String} pathname)
+@@ -636,7 +654,7 @@ namespace Plugin
+ 			else
+ 				return false;
+ 
+-			pMainWindow->ABPLoad(pathname);
++			abp::AdBlockPlus::loadFilterFile(pathname.GetString());
+ 			return true;
+ 		}
+ 		// void ABPClear()
+@@ -644,7 +662,7 @@ namespace Plugin
+ 		{
+ 			TRACE ("ABPClear called!\n");
+ 			
+-			pMainWindow->ABPClear();
++			abp::AdBlockPlus::clearFilters();
+ 			return true;
+ 		}
+ 		return false;
+diff --git a/plugin/Plugin/ScriptablePluginObject.h b/plugin/Plugin/ScriptablePluginObject.h
+index c68b61a..ff7224e 100644
+--- a/plugin/Plugin/ScriptablePluginObject.h
++++ b/plugin/Plugin/ScriptablePluginObject.h
+@@ -79,6 +79,7 @@ namespace Plugin
+ 		// util methods
+ 		NPI_DEF(SetEnabledGestures);
+ 		NPI_DEF(SetCookieSyncEnabled);
++		NPI_DEF(SetDNTEnabled);
+ 		// ABP methods
+ 		NPI_DEF(ABPEnable);
+ 		NPI_DEF(ABPDisable);
+@@ -157,6 +158,7 @@ namespace Plugin
+ 			NPN_GSI_M(FBSetFindText);
+ 			NPN_GSI_M(SetEnabledGestures);
+ 			NPN_GSI_M(SetCookieSyncEnabled);
++			NPN_GSI_M(SetDNTEnabled);
+ 			NPN_GSI_M(ABPEnable);
+ 			NPN_GSI_M(ABPDisable);
+ 			NPN_GSI_M(ABPLoad);
+diff --git a/plugin/PrefManager.h b/plugin/PrefManager.h
+index ee8e788..3517271 100644
+--- a/plugin/PrefManager.h
++++ b/plugin/PrefManager.h
+@@ -23,8 +23,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+ class PrefManager {
+ private:
+ 	bool m_bCookieSyncEnabled;
++	bool m_bDNTEnabled;
+ 
+-	PrefManager() { m_bCookieSyncEnabled = true; }
++	PrefManager()
++	{
++		m_bCookieSyncEnabled = true;
++		m_bDNTEnabled = false;
++	}
+ 	PrefManager(const PrefManager&);
+ 
+ 	static PrefManager s_instance;
+@@ -32,5 +37,8 @@ public:
+ 	bool isCookieSyncEnabled() const { return m_bCookieSyncEnabled; }
+ 	void setCookieSyncEnabled(bool value) { m_bCookieSyncEnabled = value; }
+ 
++	bool isDNTEnabled() const { return m_bDNTEnabled; }
++	void setDNTEnabled(bool value) { m_bDNTEnabled = value; }
++
+ 	static PrefManager& instance() { return s_instance; }
+ };
+diff --git a/plugin/Utils/File.cpp b/plugin/Utils/File.cpp
+index 550c3bd..69d3ae9 100644
+--- a/plugin/Utils/File.cpp
++++ b/plugin/Utils/File.cpp
+@@ -70,7 +70,7 @@ try
+ }
+ catch (...)
+ {
+-	TRACE(L"Failed to load filter file.\n");
++	TRACE(L"Failed to read the file.\n");
+ 	return false;
+ }
+ 
+diff --git a/plugin/abp/AdBlockPlus.cpp b/plugin/abp/AdBlockPlus.cpp
+index 9d8b393..7a17fac 100644
+--- a/plugin/abp/AdBlockPlus.cpp
++++ b/plugin/abp/AdBlockPlus.cpp
+@@ -28,6 +28,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+ #include "URL.h"
+ #include "File.h"
+ #include "IEHostWindow.h"
++#include "PrefManager.h"
+ #include <map>
+ #include <unordered_set>
+ 
+@@ -127,6 +128,7 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
+ 
+ bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
+ {
++	if (PrefManager::instance().isDNTEnabled()) return true;
+ 	if (!s_bEnabled) return false;
+ 
+ 	ReaderLock rl(s_mutex);
+diff --git a/plugin/jsoncpp/lib/lib_json.lib b/plugin/jsoncpp/lib/lib_json.lib
+index 66e06a6..2baed20 100644
+Binary files a/plugin/jsoncpp/lib/lib_json.lib and b/plugin/jsoncpp/lib/lib_json.lib differ
+diff --git a/plugin/jsoncpp/lib/lib_jsond.lib b/plugin/jsoncpp/lib/lib_jsond.lib
+index a0a8d91..33a9a4a 100644
+Binary files a/plugin/jsoncpp/lib/lib_jsond.lib and b/plugin/jsoncpp/lib/lib_jsond.lib differ
+diff --git a/plugin/jsoncpp/lib64/lib_json.lib b/plugin/jsoncpp/lib64/lib_json.lib
+index 95c39f4..783ec58 100644
+Binary files a/plugin/jsoncpp/lib64/lib_json.lib and b/plugin/jsoncpp/lib64/lib_json.lib differ
+diff --git a/plugin/jsoncpp/lib64/lib_jsond.lib b/plugin/jsoncpp/lib64/lib_jsond.lib
+index 20a51db..e54ce71 100644
+Binary files a/plugin/jsoncpp/lib64/lib_jsond.lib and b/plugin/jsoncpp/lib64/lib_jsond.lib differ
+diff --git a/plugin/jsoncpp/lib_json.vcxproj b/plugin/jsoncpp/lib_json.vcxproj
+index 31d02af..15e04c3 100644
+--- a/plugin/jsoncpp/lib_json.vcxproj
++++ b/plugin/jsoncpp/lib_json.vcxproj
+@@ -35,29 +35,35 @@
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='dummy|x64'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+     <CharacterSet>MultiByte</CharacterSet>
++    <PlatformToolset>v110_xp</PlatformToolset>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+   <ImportGroup Label="ExtensionSettings">
+diff --git a/plugin/plugin.rc b/plugin/plugin.rc
+index b575a38..8e07120 100644
+--- a/plugin/plugin.rc
++++ b/plugin/plugin.rc
+@@ -131,8 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+ //
+ 
+ VS_VERSION_INFO VERSIONINFO
+- FILEVERSION 1,3,2,1
+- PRODUCTVERSION 1,3,2,1
++ FILEVERSION 1,3,3,1
++ PRODUCTVERSION 1,3,3,1
+  FILEFLAGSMASK 0x3fL
+ #ifdef _DEBUG
+  FILEFLAGS 0x1L
+@@ -150,13 +150,13 @@ BEGIN
+             VALUE "CompanyName", "fireie@fireie.org"
+             VALUE "FileDescription", "Fire IE DLL"
+             VALUE "FileExtents", "*"
+-            VALUE "FileVersion", "1.3.2.1"
++            VALUE "FileVersion", "1.3.3.1"
+             VALUE "InternalName", "npfireie.dll"
+-            VALUE "LegalCopyright", "Copyright (C) 2012 fireie.org"
++            VALUE "LegalCopyright", "Copyright (C) 2012-2013 fireie.org"
+             VALUE "MIMEType", "application/fireie"
+             VALUE "OriginalFilename", "npfireie.dll"
+             VALUE "ProductName", "Fire IE DLL"
+-            VALUE "ProductVersion", "1.3.2.1"
++            VALUE "ProductVersion", "1.3.3.1"
+         END
+     END
+     BLOCK "VarFileInfo"
+diff --git a/plugin/re/RegExp.cpp b/plugin/re/RegExp.cpp
+index ade96d6..0ab35e4 100644
+--- a/plugin/re/RegExp.cpp
++++ b/plugin/re/RegExp.cpp
+@@ -83,6 +83,12 @@ RegExp& RegExp::operator=(const RegExp& other)
+ 	return *this;
+ }
+ 
++RegExp& RegExp::operator=(const wstring& strFullPattern)
++{
++	compile(strFullPattern);
++	return *this;
++}
++
+ RegExp::~RegExp()
+ {
+ 	if (m_re) jsRegExpFree(m_re, jscre_free);
+diff --git a/plugin/re/RegExp.h b/plugin/re/RegExp.h
+index 351cc7b..ebf1b36 100644
+--- a/plugin/re/RegExp.h
++++ b/plugin/re/RegExp.h
+@@ -44,6 +44,7 @@ public:
+ 	~RegExp();
+ 
+ 	RegExp& operator=(const RegExp&);
++	RegExp& operator=(const std::wstring& strFullPattern);
+ 
+ 	// Compiles the regular expression
+ 	void compile();
+diff --git a/plugin/stdafx.h b/plugin/stdafx.h
+index 8d54c48..c797d88 100644
+--- a/plugin/stdafx.h
++++ b/plugin/stdafx.h
+@@ -11,9 +11,11 @@
+ #include "targetver.h"
+ 
+ #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
++#define _AFX_NO_MFC_CONTROLS_IN_DIALOGS
+ 
+ #include <afxwin.h>         // MFC core and standard components
+ #include <afxext.h>         // MFC extensions
++#include <comdef.h>
+ 
+ #ifndef _AFX_NO_OLE_SUPPORT
+ #include <afxole.h>         // MFC OLE classes
+@@ -21,21 +23,6 @@
+ #include <afxdisp.h>        // MFC Automation classes
+ #endif // _AFX_NO_OLE_SUPPORT
+ 
+-#ifndef _AFX_NO_DB_SUPPORT
+-#include <afxdb.h>                      // MFC ODBC database classes
+-#endif // _AFX_NO_DB_SUPPORT
+-
+-#ifndef _AFX_NO_DAO_SUPPORT
+-#include <afxdao.h>                     // MFC DAO database classes
+-#endif // _AFX_NO_DAO_SUPPORT
+-
+-#ifndef _AFX_NO_OLE_SUPPORT
+-#include <afxdtctl.h>           // MFC support for Internet Explorer 4 Common Controls
+-#endif
+-#ifndef _AFX_NO_AFXCMN_SUPPORT
+-#include <afxcmn.h>                     // MFC support for Windows Common Controls
+-#endif // _AFX_NO_AFXCMN_SUPPORT
+-
+ #include <afxmt.h>
+ 
+ #include <atlbase.h>
