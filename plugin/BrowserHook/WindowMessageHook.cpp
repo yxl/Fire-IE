@@ -26,6 +26,7 @@ namespace BrowserHook
 	HHOOK WindowMessageHook::s_hhookGetMessage = NULL;
 	HHOOK WindowMessageHook::s_hhookCallWndProcRet = NULL;
 	WindowMessageHook WindowMessageHook::s_instance;
+	UINT64 WindowMessageHook::s_nLastMiddleClickTick = 0;
 
 	WindowMessageHook::WindowMessageHook(void)
 	{
@@ -64,6 +65,10 @@ namespace BrowserHook
 			s_hhookCallWndProcRet= NULL;
 		}
 		return TRUE;
+	}
+
+	BOOL WindowMessageHook::IsMiddleButtonClicked() {
+		return GetTickCount64() - s_nLastMiddleClickTick < 200;
 	}
 
 	// The message loop of Mozilla does not handle accelertor keys.
@@ -124,6 +129,8 @@ namespace BrowserHook
 			{
 				goto Exit;
 			}
+
+			RecordMiddleClick(pMsg);
 
 			bool bShouldSwallow = false;
 
@@ -369,5 +376,11 @@ Exit:
 		}
 
 		return CallNextHookEx(s_hhookCallWndProcRet, nCode, wParam, lParam);
+	}
+
+	void WindowMessageHook::RecordMiddleClick(MSG* pMsg) {
+		if (pMsg->message == WM_MBUTTONUP) {
+			s_nLastMiddleClickTick = GetTickCount64();
+		}
 	}
 }

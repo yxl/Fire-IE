@@ -32,6 +32,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "re/strutils.h"
 #include "OS.h"
 #include "App.h"
+#include "WindowMessageHook.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -1437,7 +1438,20 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
-			m_pPlugin->IENewTab(ulId, bstrUrl);
+
+			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
+			bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
+			if (dwFlags & NWMF_FORCEWINDOW)
+			{
+				// ignore current key states, always open in new window
+				bShift = true;
+				bCtrl = false;
+			}
+			else if (dwFlags & NWMF_FORCETAB)
+			{
+				bCtrl = true;
+			}
+			m_pPlugin->IENewTab(ulId, bstrUrl, bShift, bCtrl);
 		}
 		else
 		{

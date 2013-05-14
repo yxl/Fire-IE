@@ -1012,8 +1012,38 @@ WindowWrapper.prototype = {
     let data = JSON.parse(event.detail);
     let url = data.url;
     let id = data.id;
-    let newTab = this.window.gBrowser.addTab(Utils.toContainerUrl(url));
-    this.window.gBrowser.selectedTab = newTab;
+    var gBrowser = this.window.gBrowser;
+    let newTab = gBrowser.addTab(Utils.toContainerUrl(url));
+
+    let shift = data.shift;
+    let ctrl = data.ctrl;
+    // shift  ctrl  value  where
+    //    0     0     0   current
+    //    0     1     1   tab
+    //    1     0     2   window
+    //    1     1     3   tabshifted
+    let where = shift ? (ctrl ? "tabshifted" : "window") : (ctrl ? "tab" : "current");
+    let loadInBackground = Utils.shouldLoadInBackground();
+
+    switch (where)
+    {
+    case "window":
+      gBrowser.hideTab(newTab);
+      gBrowser.replaceTabWithWindow(newTab);
+      break;
+    case "current":
+      gBrowser.selectedTab = newTab;
+      break;
+    case "tabshifted":
+      loadInBackground = !loadInBackground;
+      // fall through
+    case "tab":
+    default:
+      if (!loadInBackground)
+        gBrowser.selectedTab = newTab;
+      // otherwise, A background tab has been opened, nothing else to do here.
+      break;
+    }
 
     let param = {
       id: id
@@ -1894,7 +1924,8 @@ WindowWrapper.prototype = {
     {
       // switch behavior similar to the reload button
       let where = this.window.whereToOpenLink(e, false, true);
-
+      let loadInBackground = Utils.shouldLoadInBackground();
+      
       if (where == "current")
         this.switchEngine();
       else
@@ -1918,10 +1949,12 @@ WindowWrapper.prototype = {
             gBrowser.replaceTabWithWindow(newTab);
             break;
           case "tabshifted":
-            // A background tab has been opened, nothing else to do here.
-            break;
+            loadInBackground = !loadInBackground;
+            // fall through
           case "tab":
-            gBrowser.selectedTab = newTab;
+            if (!loadInBackground)
+              gBrowser.selectedTab = newTab;
+            // otherwise, A background tab has been opened, nothing else to do here.
             break;
           }
         }

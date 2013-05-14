@@ -933,6 +933,14 @@ var Utils = {
       idx = arr.indexOf(item);
     }
   },
+  
+  shouldLoadInBackground: function() {
+    try {
+      return Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+    } catch (ex) {
+      return true;
+    }
+  }
 };
 
 /**

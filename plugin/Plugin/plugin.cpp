@@ -658,11 +658,16 @@ namespace Plugin
 		NPN_MemFree(url);
 	}
 
-	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL)
+	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL, bool bShift, bool bCtrl)
 	{
 		CString strEventType = _T("IENewTab");
 		CString strDetail;
-		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\"}"), ulId, strURL);
+		
+		// Retrieve additional info for cursor & keyboard state
+		CString strShift = bShift ? _T("true") : _T("false");
+		CString strCtrl = bCtrl ? _T("true") : _T("false");
+		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
+			ulId, strURL, strShift, strCtrl);
 		FireEvent(strEventType, strDetail);
 	}
 
