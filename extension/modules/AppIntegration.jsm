@@ -526,9 +526,11 @@ WindowWrapper.prototype = {
       }
 
       // Update the engine button on the URL bar
-      urlbarButton = this.E("fireie-urlbar-switch");
+      let urlbarButton = this.E("fireie-urlbar-switch");
       urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
       urlbarButton.style.visibility = "visible";
+      let tooltip = this.E("fireie-urlbar-switch-tooltip");
+      tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
       let fxURL = LightweightTheme.fxIconUrl;
       let ieURL = LightweightTheme.ieIconUrl;
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
