@@ -80,6 +80,8 @@ namespace Plugin
 		NPI_DEF(SetEnabledGestures);
 		NPI_DEF(SetCookieSyncEnabled);
 		NPI_DEF(SetDNTEnabled);
+		NPI_DEF(SetDNTValue);
+
 		// ABP methods
 		NPI_DEF(ABPEnable);
 		NPI_DEF(ABPDisable);
@@ -159,6 +161,7 @@ namespace Plugin
 			NPN_GSI_M(SetEnabledGestures);
 			NPN_GSI_M(SetCookieSyncEnabled);
 			NPN_GSI_M(SetDNTEnabled);
+			NPN_GSI_M(SetDNTValue);
 			NPN_GSI_M(ABPEnable);
 			NPN_GSI_M(ABPDisable);
 			NPN_GSI_M(ABPLoad);

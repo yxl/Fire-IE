@@ -128,7 +128,7 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
 
 bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 {
-	if (PrefManager::instance().isDNTEnabled()) return true;
+	if (PrefManager::instance().isDNTEnabled() && PrefManager::instance().getDNTValue() == 1) return true;
 	if (!s_bEnabled) return false;
 
 	ReaderLock rl(s_mutex);

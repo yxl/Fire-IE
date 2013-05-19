@@ -435,7 +435,17 @@ function setDNTPref(plugin)
   }
   catch (ex)
   {
-    Utils.ERROR("Failed to set DNT pref: " + ex);
+    Utils.LOG("Failed to set DNT pref: " + ex);
+  }
+  try
+  {
+    let value = dntBranch.getIntPref("value");
+    plugin.SetDNTValue(value);
+    Utils.LOG("DNT value: " + value);
+  }
+  catch (ex)
+  {
+    Utils.LOG("Failed to set DNT value: " + ex);
   }
 }
 
@@ -448,9 +458,12 @@ let DNTObserverPrivate = {
    */
   observe: function(subject, topic, data)
   {
-    if (topic == "nsPref:changed" && data == "enabled")
+    if (topic == "nsPref:changed")
     {
-      setDNTPref(UtilsPluginManager.getPlugin());
+      if (data == "enabled" || data == "value")
+      {
+        setDNTPref(UtilsPluginManager.getPlugin());
+      }
     }
   },
 

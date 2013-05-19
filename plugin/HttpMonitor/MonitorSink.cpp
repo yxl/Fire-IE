@@ -426,14 +426,18 @@ namespace HttpMonitor
 			CStringW strHeaders(*pszAdditionalHeaders);
 			size_t nOrigLen = strHeaders.GetLength();
 
-			if (abp::AdBlockPlus::shouldSendDNTHeader(m_strURL.GetString()))
+			bool bSendDNT1 = abp::AdBlockPlus::shouldSendDNTHeader(m_strURL.GetString());
+			bool bSendDNT0 = PrefManager::instance().isDNTEnabled() && PrefManager::instance().getDNTValue() == 0;
+			bool bSendDNT = bSendDNT1 || bSendDNT0;
+			int nDNTValue = bSendDNT1 ? 1 : 0;
+			if (bSendDNT)
 			{
 				LPWSTR lpDNT = NULL;
 				size_t nDNTLen = 0;
 				bool hasDNT = false;
 				if (ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
 				{
-					if (nDNTLen && lpDNT[0] == L'1')
+					if (nDNTLen)
 					{
 						// 已经有DNT头了，不用再加
 						hasDNT = true;
@@ -442,7 +446,7 @@ namespace HttpMonitor
 				}
 				// 增加 DoNotTrack (DNT) 头
 				if (!hasDNT)
-					strHeaders.Append(L"DNT: 1\r\n");
+					strHeaders.AppendFormat(L"DNT: %d\r\n", nDNTValue);
 			}
 
 			if (strHeaders.GetLength() == nOrigLen)

@@ -625,6 +625,22 @@ namespace Plugin
 			PrefManager::instance().setDNTEnabled(enabled);
 			return true;
 		}
+		// void SetDNTValue({int} value)
+		else if (name == NPI_ID(SetDNTValue))
+		{
+			TRACE ("SetDNTValue called!\n");
+			if (argCount < 1) return false;
+
+			int value;
+
+			if (NPVARIANT_IS_INT32(args[0]))
+				value = NPVARIANT_TO_INT32(args[0]);
+			else
+				return false;
+
+			PrefManager::instance().setDNTValue(value);
+			return true;
+		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))
 		{
