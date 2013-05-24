@@ -51,7 +51,6 @@
 #include "ProtocolCF.h"
 
 #include <math.h>
-#include <ctype.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -62,5 +61,7 @@
 #include <deque>
 #include <xhash>
 #include <algorithm>
+// std::function
+#include <functional>
 
 using namespace std;

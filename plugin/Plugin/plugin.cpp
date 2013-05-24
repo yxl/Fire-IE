@@ -168,7 +168,7 @@ namespace Plugin
 		{
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([=] { OnUtilsPluginInit(); });
+			m_pIEHostWindow->RunAsync([this] { OnUtilsPluginInit(); });
 		}
 		else
 		{
@@ -176,7 +176,7 @@ namespace Plugin
 
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([=] { OnContentPluginInit(); });
+			m_pIEHostWindow->RunAsync([this] { OnContentPluginInit(); });
 		}
 
 		return TRUE;
