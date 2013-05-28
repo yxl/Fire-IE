@@ -270,6 +270,13 @@ var gFireIE = null;
                             function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
                             function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
       
+      // Firefox 24 : BookmarksMenuButton is again changed into BookmarkingUI...
+      //  WTF... I mean, Welcome To Firefox!!
+      if (typeof(BookmarkingUI) != "undefined" && typeof(BookmarkingUI.updateStarState) == "function")
+        HM.hookCodeHeadTail("BookmarkingUI.updateStarState",
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+      
       // Show number of bookmarks in the overlay editing panel when using IE engine
       HM.hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
                           function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
@@ -511,7 +518,7 @@ var gFireIE = null;
         let pluginURL = pluginObject.URL;
         if (pluginURL)
         {
-          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
+          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));     
           return RET.modifyValue(Utils.makeURI(url));
         }
       }

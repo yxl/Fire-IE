@@ -385,6 +385,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
@@ -519,6 +520,8 @@ WindowWrapper.prototype = {
         this.window.PlacesStarButton.updateState();
       else if (this.window.BookmarksMenuButton && this.window.BookmarksMenuButton.updateStarState)
         this.window.BookmarksMenuButton.updateStarState();
+      else if (this.window.BookmarkingUI && this.window.BookmarkingUI.updateStarState)
+        this.window.BookmarkingUI.updateStarState();
 
       function escapeURLForCSS(url)
       {
