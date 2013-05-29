@@ -34,6 +34,7 @@
        <em:contributor>Yifan Wu</em:contributor>
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
        <em:homepageURL>http://fireie.org/en</em:homepageURL>
        <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
      </Description>
@@ -48,6 +49,7 @@
        <em:contributor>吴一帆</em:contributor>
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>一键切换IE内核, 让你彻底抛弃IE。</em:description>
      </Description>
@@ -62,6 +64,7 @@
        <em:contributor>吴一帆</em:contributor>
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>一鍵切換IE內核, 讓你徹底拋棄IE</em:description>
      </Description>
@@ -76,8 +79,24 @@
        <em:contributor>Yifan Wu</em:contributor>
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
        <em:homepageURL>http://fireie.org/en</em:homepageURL>
        <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+     </Description>
+   </em:localized>
+   
+   <em:localized>
+     <Description>
+       <em:locale>pl</em:locale>
+       <em:name>Fire IE</em:name>
+       <em:creator>Yuan Xulei</em:creator>
+       <em:contributor>Wei Deng</em:contributor>
+       <em:contributor>Yifan Wu</em:contributor>
+       <em:translator>cck168 (zh-TW)</em:translator>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:homepageURL>http://fireie.org/en</em:homepageURL>
+       <em:description>Zmieniaj jednym kliknięciem silnik na IE i skończ z Internet Explorerem.</em:description>
      </Description>
    </em:localized>
 

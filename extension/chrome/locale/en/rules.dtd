@@ -11,7 +11,7 @@
 <!ENTITY addSubscriptionCancel.label          "Cancel">
 <!ENTITY addSubscriptionOther.label           "Add a different subscription">
 
-<!ENTITY noSubscriptions.text                 "You haven't added any rule subscriptions yet. Fire IE won't automatically switch browser engine and synchronize cookie without rules, please use &quot;Add rule subscription&quot; toadd some.">
+<!ENTITY noSubscriptions.text                 "You haven't added any rule subscriptions yet. Fire IE won't automatically switch browser engine and synchronize cookie without rules, please use &quot;Add rule subscription&quot; to add some.">
 <!ENTITY subscription.homepage.label          "Homepage">
 <!ENTITY subscription.external.label          "Updated by another extension">
 <!ENTITY subscription.source.label            "Rule list">
@@ -96,8 +96,8 @@
 
 <!ENTITY backup.error                         "There was an error writing rules to the file. Make sure that the file isn't write protected or in use by another application.">
 <!ENTITY restore.error                        "The file's data could not be processed, maybe this isn't a Fire IE backup file?">
-<!ENTITY restore.complete.warning             "All your rule preferences will be replaced by the contents of the selected file. Do you want to proceeed?">
-<!ENTITY restore.custom.warning               "All your custom rules will be replaced by the contents of the selected file. Do you want to proceeed?">
+<!ENTITY restore.complete.warning             "All your rule preferences will be replaced by the contents of the selected file. Do you want to proceed?">
+<!ENTITY restore.custom.warning               "All your custom rules will be replaced by the contents of the selected file. Do you want to proceed?">
 <!ENTITY restore.minVersion.warning           "Warning: the file has been created with a newer Fire IE version. You should update to the latest Fire IE version before restoring from this file.">
 
 <!ENTITY find.label                           "Find">
