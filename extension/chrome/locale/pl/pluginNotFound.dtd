@@ -1,0 +1,10 @@
+<!ENTITY dialog.title               "Nie wczytano wtyczki Fire IE">
+<!ENTITY pluginNotFound1            "Fire IE wykrył, że plik wtyczki &quot;Fire IE DLL&quot; nie został poprawnie załadowany.">
+<!ENTITY pluginNotFound2            "Być może masz zainstalowaną nieodpowiednią wersję Fire IE.">
+<!ENTITY correctVersion             "Zgodnie z Twoją przeglądarką powinieneś używać wersji [bit]-bitowej.">
+<!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
+<!ENTITY visitHomepage              "Odwiedź  [link][host][/link], żeby pobrać i zainstalować.">
+
+<!ENTITY pluginNotFound3            "Być może masz zainstalowaną nieodpowiednią wersję Fire IE; Wtyczka mogła zostać usunięta w menedżerze dodatków.">
+<!ENTITY makeSure                   "Upewnij się, czy wtyczka &quot;Fire IE DLL&quot; jest włączona w [link]menedżerze dodatków[/link].">
+<!ENTITY reinstall                  "Możesz też spróbować zreinstalować Fire IE z [link][host][/link]">
