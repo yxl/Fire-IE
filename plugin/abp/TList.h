@@ -22,9 +22,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 //          It is designed merely for primitive types (including pointers).
 //
 
-#include <vector>
-#include <algorithm>
-
 namespace abp {
 
 	template<class T>

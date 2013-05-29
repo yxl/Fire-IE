@@ -40,8 +40,6 @@
 // CPlugin class implementation
 //
 #include "stdafx.h"
-#include <windows.h>
-#include <windowsx.h>
 #include "IEHostWindow.h"
 #include "plugin.h"
 #include "npfunctions.h"
@@ -54,7 +52,6 @@
 #include "test/test.h"
 #endif
 
-using namespace std;
 using namespace UserMessage;
 
 namespace Plugin

@@ -27,7 +27,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 using namespace abp;
 using namespace re;
 using namespace re::strutils;
-using namespace std;
 
 static const wstring strEmpty = L"";
 

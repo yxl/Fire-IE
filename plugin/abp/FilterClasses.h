@@ -25,9 +25,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "TriBool.h"
 #include "FilterContentType.h"
 #include "PointerHash.h"
-#include <unordered_map>
-#include <map>
-#include <vector>
 
 namespace abp {
 	// Forward declaration

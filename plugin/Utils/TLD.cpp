@@ -29,7 +29,6 @@ namespace Utils {
 	const regdom::tldnode* rootTLDNode = NULL;
 }
 
-using namespace std;
 using namespace Utils;
 
 TLD::TLDInit TLD::init;

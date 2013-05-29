@@ -20,8 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // URL.h : URL utilities
 //
 
-#include <string>
-
 namespace re {
 	class RegExp;
 }

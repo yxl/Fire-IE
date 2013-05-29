@@ -23,12 +23,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "TLD.h"
 #include "re/RegExp.h"
 #include "re/strutils.h"
-#include <algorithm>
 
 using namespace Utils;
 using namespace re;
 using namespace re::strutils;
-using namespace std;
 
 namespace Utils {
 

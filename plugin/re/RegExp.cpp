@@ -26,7 +26,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace re;
 using namespace jscre;
-using namespace std;
 using namespace strutils;
 
 static void* (*jscre_malloc)(size_t size) = malloc;

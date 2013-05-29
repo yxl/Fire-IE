@@ -20,10 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 
-#include <ctype.h>
 #include "RegExp.h"
-
-using namespace std;
 
 namespace re { namespace strutils {
 

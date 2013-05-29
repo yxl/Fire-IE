@@ -42,7 +42,6 @@
 #include "PluginApp.h"
 #include "pluginbase.h"
 #include "UserMessage.h"
-#include <vector>
 
 class CIEHostWindow;
 

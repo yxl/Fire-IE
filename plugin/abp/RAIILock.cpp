@@ -21,7 +21,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "StdAfx.h"
 
 #include "RAIILock.h"
-#include <deque>
 
 using namespace abp;
 

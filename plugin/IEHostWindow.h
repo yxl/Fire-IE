@@ -20,9 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IECtrl.h"
 #include "UserMessage.h"
 #include "PointerHash.h"
-#include <vector>
-#include <string>
-#include <deque>
 
 namespace Plugin
 {

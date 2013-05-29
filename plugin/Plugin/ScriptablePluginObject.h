@@ -17,7 +17,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "ScriptablePluginObjectBase.h"
-#include <set>
 
 #define NPI_ID(id) m_##id##ID
 #define NPI_DEF(id) NPIdentifier NPI_ID(id)

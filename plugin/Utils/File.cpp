@@ -22,7 +22,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "File.h"
 
-using namespace std;
 using namespace Utils;
 
 // do not process files larger than 20MB

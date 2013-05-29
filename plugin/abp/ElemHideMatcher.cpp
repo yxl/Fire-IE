@@ -25,7 +25,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "re/strutils.h"
 
 using namespace abp;
-using namespace std;
 using namespace re::strutils;
 
 const size_t ElemHideMatcher::maxCacheEntries = 1000;

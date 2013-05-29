@@ -19,9 +19,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "stdafx.h"
-#include <mshtml.h>
-#include <exdispid.h>
-#include <comutil.h>
 #include "IEControlSite.h"
 #include "PluginApp.h"
 #include "HttpMonitorApp.h"
@@ -37,7 +34,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 using namespace UserMessage;
 using namespace Utils;
 using namespace abp;
-using namespace std;
 using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow

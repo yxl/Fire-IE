@@ -20,9 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // strutils.h : wstring utilities
 //
 
-#include <string>
-#include <vector>
-
 namespace re {
 	class RegExp;
 	struct RegExpMatch;

@@ -29,11 +29,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "File.h"
 #include "IEHostWindow.h"
 #include "PrefManager.h"
-#include <map>
-#include <unordered_set>
 
 using namespace abp;
-using namespace std;
 using namespace re;
 using namespace strutils;
 

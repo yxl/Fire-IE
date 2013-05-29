@@ -20,10 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // RegExp.h : regular expression matching engine
 //
 
-#include <string>
-#include <vector>
-#include <stdexcept>
-
 namespace jscre {
 	struct JSRegExp;
 }

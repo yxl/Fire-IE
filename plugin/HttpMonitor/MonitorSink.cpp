@@ -1,7 +1,4 @@
 #include "StdAfx.h"
-#include <Wininet.h>
-#include <string>
-#pragma comment(lib, "Wininet.lib")
 
 #include "plugin.h"
 #include "IEHostWindow.h"
