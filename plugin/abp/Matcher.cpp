@@ -87,22 +87,20 @@ wstring Matcher::findKeyword(RegExpFilter* filter) const
 		return defaultResult;
 
 	// Remove options
-	RegExpMatch* match = Filter::optionsRegExp.exec(text);
-	if (match)
+	RegExpMatch match;
+	if (Filter::optionsRegExp.exec(match, text))
 	{
-		text = match->input.substr(0, match->index);
-		delete match;
+		text = match.input.substr(0, match.index);
 	}
 
 	// Remove whitelist marker
 	if (startsWith(text, strAtAt))
 		text = text.substr(2);
 
-	RegExpMatch* candidateMatch = strutils::match(toLowerCase(text), re1);
-	if (!candidateMatch)
+	if (!strutils::match(match, toLowerCase(text), re1))
 		return defaultResult;
 
-	const std::vector<wstring>& candidates = candidateMatch->substrings;
+	const std::vector<wstring>& candidates = match.substrings;
 	const unordered_map<wstring, FList>& hash = filterByKeyword;
 	wstring result = defaultResult;
 	int resultCount = 0xFFFFFF;
@@ -119,7 +117,6 @@ wstring Matcher::findKeyword(RegExpFilter* filter) const
 			resultLength = (int)candidate.length();
 		}
 	}
-	delete candidateMatch;
 
 	return result;
 }
@@ -178,10 +175,10 @@ RegExpFilter* Matcher::matchesAny(const wstring& location, ContentType_T content
 {
 	using namespace funcStatic::Matcher_matchesAny;
 
-	RegExpMatch* candidateMatch = match(toLowerCase(location), re1);
+	RegExpMatch candidateMatch;
+	bool ret = match(candidateMatch, toLowerCase(location), re1);
 	vector<wstring> candidates;
-	if (candidateMatch) candidates = std::move(candidateMatch->substrings);
-	delete candidateMatch;
+	if (ret) candidates = std::move(candidateMatch.substrings);
 
 	RegExpFilter* res = NULL;
 	if (contentType & DONOTTRACK)
@@ -338,10 +335,10 @@ RegExpFilter* CombinedMatcher::matchesAnyInternal(const wstring& location, Conte
 {
 	using namespace funcStatic::CombinedMatcher_matchesAnyInternal;
 
-	RegExpMatch* candidateMatch = match(toLowerCase(location), re1);
+	RegExpMatch candidateMatch;
+	bool ret = match(candidateMatch, toLowerCase(location), re1);
 	vector<wstring> candidates;
-	if (candidateMatch) candidates = std::move(candidateMatch->substrings);
-	delete candidateMatch;
+	if (ret) candidates = std::move(candidateMatch.substrings);
 
 	RegExpFilter* blacklistHit = NULL;
 	RegExpFilter* result = NULL;

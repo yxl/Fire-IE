@@ -47,7 +47,7 @@ namespace re {
 
 		std::wstring replace(const std::wstring& base, const RegExp& re, const std::wstring& str);
 		std::vector<std::wstring> split(const std::wstring& base, const std::wstring& separator);
-		RegExpMatch* match(const std::wstring& base, const RegExp& re);
+		bool match(RegExpMatch& match, const std::wstring& base, const RegExp& re);
 		std::wstring toUpperCase(std::wstring str);
 		std::wstring toLowerCase(std::wstring str);
 	}

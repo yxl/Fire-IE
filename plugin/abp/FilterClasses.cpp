@@ -71,13 +71,12 @@ Filter* Filter::fromText(const wstring& text)
 		return iter->second;
 
 	Filter* ret = NULL;
-	RegExpMatch* match = (text.find(L'#') != wstring::npos ? elemhideRegExp.exec(text) : NULL);
-	if (match)
+	RegExpMatch match;
+	if (text.find(L'#') != wstring::npos && elemhideRegExp.exec(match, text))
 	{
-		const vector<wstring>& substrings = match->substrings;
+		const vector<wstring>& substrings = match.substrings;
 		ret = ElemHideBase::fromText(text, substrings[1], 0 != substrings[2].length(), substrings[3],
 			substrings[4], substrings[5]);
-		delete match;
 	}
 	else if (startsWithChar(text, L'!'))
 	{
@@ -149,15 +148,14 @@ wstring Filter::normalize(const wstring& text)
 	else if (elemhideRegExp.test(res))
 	{
 		// Special treatment for element hiding filters, right side is allowed to contain spaces
-		RegExpMatch* match = re5.exec(res);
-		if (match)
+		RegExpMatch match;
+		if (re5.exec(match, res))
 		{
-			const wstring& domain = match->substrings[1];
-			const wstring& separator = match->substrings[2];
-			const wstring& selector = match->substrings[3];
+			const wstring& domain = match.substrings[1];
+			const wstring& separator = match.substrings[2];
+			const wstring& selector = match.substrings[3];
 			res = replace(domain, re6, strEmpty) + separator
 				+ replace(replace(selector, re3, strEmpty), re4, strEmpty);
-			delete match;
 		}
 		return res;
 	}
@@ -446,12 +444,11 @@ Filter* RegExpFilter::fromText(const wstring& text)
 	TriBool thirdParty = TriNull;
 	TriBool collapse = TriNull;
 	vector<wstring> options;
-	RegExpMatch* match = regexpSource.find(L'$') != wstring::npos ? Filter::optionsRegExp.exec(regexpSource) : NULL;
-	if (match)
+	RegExpMatch match;
+	if (regexpSource.find(L'$') != wstring::npos && Filter::optionsRegExp.exec(match, regexpSource))
 	{
-		options = split(toUpperCase(match->substrings[1]), strComma);
-		regexpSource = match->input.substr(0, match->index);
-		delete match;
+		options = split(toUpperCase(match.substrings[1]), strComma);
+		regexpSource = match.input.substr(0, match.index);
 
 		for (size_t i = 0; i < options.size(); i++)
 		{
@@ -587,10 +584,11 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 		wstring additional = strEmpty;
 		if (attrRules.length())
 		{
-			RegExpMatch* match = strutils::match(attrRules, re1);
-			for (size_t i = 0; i < match->substrings.size(); i++)
+			RegExpMatch match;
+			strutils::match(match, attrRules, re1);
+			for (size_t i = 0; i < match.substrings.size(); i++)
 			{
-				wstring rule = match->substrings[i];
+				wstring rule = match.substrings[i];
 				size_t separatorPos = rule.find(L'=');
 				if (separatorPos != wstring::npos && separatorPos > 0)
 				{
@@ -604,14 +602,12 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 				{
 					if (id.length())
 					{
-						delete match;
 						return new InvalidFilter(text, L"Duplicate ID");
 					}
 					else
 						id = rule;
 				}
 			}
-			delete match;
 		}
 
 		if (id.length())

@@ -58,11 +58,11 @@ public:
 	std::wstring getSource() const { return m_strFullPattern; }
 
 	// do regexp matching, caller is responsible to free RegExpMatch*
-	RegExpMatch* exec(const std::wstring& str);
-	RegExpMatch* exec(const std::wstring& str, int lastPos);
+	bool exec(RegExpMatch& match, const std::wstring& str);
+	bool exec(RegExpMatch& match, const std::wstring& str, int lastPos);
 	// should use const version in multi-threading environment
-	RegExpMatch* exec(const std::wstring& str) const; 
-	RegExpMatch* exec(const std::wstring& str, int lastPos) const;
+	bool exec(RegExpMatch& match, const std::wstring& str) const; 
+	bool exec(RegExpMatch& match, const std::wstring& str, int lastPos) const;
 	// do regexp testing
 	bool test(const std::wstring& str);
 	bool test(const std::wstring& str) const; // should use const version in multi-threading environment
@@ -88,7 +88,7 @@ private:
 	void setAttributes();
 	void setAttributes(const std::wstring& strAttributes);
 
-	RegExpMatch* execCore(const std::wstring& str, int lastPos) const;
+	bool execCore(RegExpMatch& match, const std::wstring& str, int lastPos) const;
 	bool testCore(const std::wstring& str) const;
 };
 

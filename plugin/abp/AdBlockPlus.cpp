@@ -235,19 +235,18 @@ namespace abp {
 		static const wstring strTrue = L"true";
 		static const wstring strLeftBracket = L"[";
 
-		RegExpMatch* match = NULL;
-		if (wantObj && (match = re1.exec(line)))
+		RegExpMatch match;
+		bool ret = false;
+		if (wantObj && re1.exec(match, line))
 		{
-			curObj[match->substrings[1]] = match->substrings[2];
-			delete match;
+			curObj[match.substrings[1]] = match.substrings[2];
 		}
-		else if (eof || (match = re2.exec(line)))
+		else if (eof || (ret = re2.exec(match, line)))
 		{
 			wstring strSection;
-			if (match)
+			if (ret)
 			{
-				strSection = toLowerCase(match->substrings[1]);
-				delete match;
+				strSection = toLowerCase(match.substrings[1]);
 			}
 			if (wantObj ? curObj.size() : curList.size())
 			{
