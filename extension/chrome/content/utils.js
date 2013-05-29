@@ -30,3 +30,17 @@ function E(id)
 {
   return document.getElementById(id);
 }
+
+/**
+ * for multi-line label sizing problem
+ */
+function doSizeToContent(window, document)
+{
+  window.sizeToContent();
+  let vboxes = document.querySelectorAll("prefpane > vbox");
+  Array.prototype.forEach.call(vboxes, function(vbox)
+  {
+    vbox.height = vbox.boxObject.height;
+  });
+  window.sizeToContent();
+}

@@ -4,3 +4,7 @@
 <!ENTITY correctVersion             "根据您的配置，您应该使用[bit]位版本。">
 <!ENTITY homepage                   "http://fireie.org/zh-CN">
 <!ENTITY visitHomepage              "请至 [link][host][/link] 下载安装。">
+
+<!ENTITY pluginNotFound3            "您可能安装了错误版本的解雇IE；插件可能被移除，或者在附加组件管理器中被禁用。">
+<!ENTITY makeSure                   "请确认在 [link]附加组件管理器[/link] 中已启用了 &quot;Fire IE DLL&quot; 。">
+<!ENTITY reinstall                  "或者，您也可尝试从 [link][host][/link] 重新安装解雇IE。">

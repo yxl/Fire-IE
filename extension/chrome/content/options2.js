@@ -432,14 +432,7 @@ Options.handleShortcutEnabled = function(e)
 
 Options.sizeToContent = function()
 {
-  // for multi-line label sizing problem
-  window.sizeToContent();
-  let vboxes = document.querySelectorAll("prefpane > vbox");
-  Array.prototype.forEach.call(vboxes, function(vbox)
-  {
-    vbox.height = vbox.boxObject.height;
-  });
-  window.sizeToContent();
+  doSizeToContent(window, document);
 };
 
 Options.init = function()

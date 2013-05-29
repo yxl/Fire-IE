@@ -4,3 +4,7 @@
 <!ENTITY correctVersion             "According to your configuration, you should use the [bit]-bit version.">
 <!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
 <!ENTITY visitHomepage              "Please visit [link][host][/link] to download and install.">
+
+<!ENTITY pluginNotFound3            "You may have installed a wrong version of Fire IE; The plugin may have been removed or disabled in Add-ons Manager.">
+<!ENTITY makeSure                   "Make sure &quot;Fire IE DLL&quot; is enabled in the [link]Add-ons Manager[/link].">
+<!ENTITY reinstall                  "You can also try re-install Fire IE from [link][host][/link]">

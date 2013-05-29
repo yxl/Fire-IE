@@ -369,8 +369,11 @@ function loadFailureSubHandler()
   IECookieManager.restoreIETempDirectorySetting();
   // notify user about that
   Utils.ERROR("Plugin failed to load. Possibly due to wrong Fire-IE version.");
-  Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
-    "_blank", "chrome,centerscreen,dialog", null);
+  Utils.runAsync(function()
+  {
+    Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
+      "_blank", "chrome,centerscreen,dialog", null);
+  }, null);
 }
 
 /** handle the plugin load failure events and inform user about that */
