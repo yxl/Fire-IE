@@ -81,9 +81,11 @@ CIEHostWindow::~CIEHostWindow()
 {
 	SAFE_DELETE(m_pNavigateParams);
 
-	m_csFuncs.Lock();
-	m_qFuncs.clear();
-	m_csFuncs.Unlock();
+	m_csCallables.Lock();
+	for (auto iter = m_qCallables.begin(); iter != m_qCallables.end(); ++iter)
+		delete *iter;
+	m_qCallables.clear();
+	m_csCallables.Unlock();
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
@@ -214,7 +216,7 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	{
 		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
 			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
-		pWindow->RunAsync([pWindow, pvParams]
+		pWindow->RunAsync([=]
 		{
 			if (pWindow->m_pPlugin)
 			{
@@ -321,8 +323,23 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	switch(wParam)
 	{
 	case WPARAM_RUN_ASYNC_CALL:
-		OnRunAsyncCall();
-		break;
+		{
+			ICallable* callable = NULL;
+			m_csCallables.Lock();
+			if (!m_qCallables.empty())
+			{
+				callable = m_qCallables.front();
+				m_qCallables.pop_front();
+			}
+			m_csCallables.Unlock();
+
+			if (callable)
+			{
+				callable->call();
+				delete callable;
+			}
+			break;
+		}
 	case WPARAM_ABP_FILTER_LOADED:
 		OnABPFilterLoaded();
 		break;
@@ -402,6 +419,7 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	m_pNavigateParams->strHeaders = strHeaders;
 	m_csNavigateParams.Unlock();
 
+	//RunAsync([=] { OnNavigate(); });
 	OnNavigate();
 }
 
@@ -2225,16 +2243,4 @@ bool CIEHostWindow::FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const C
 	}
 	// the comparison magically fails = =||
 	return false;
-}
-
-void CIEHostWindow::OnRunAsyncCall()
-{
-	m_csFuncs.Lock();
-	if (!m_qFuncs.empty())
-	{
-		MainThreadFunc& func = m_qFuncs.front();
-		func();
-		m_qFuncs.pop_front();
-	}
-	m_csFuncs.Unlock();
 }

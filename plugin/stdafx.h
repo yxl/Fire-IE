@@ -38,6 +38,3 @@
 
 #include <math.h>
 #include <WinInet.h>
-
-// std::function
-#include <functional>

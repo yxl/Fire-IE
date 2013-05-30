@@ -313,20 +313,43 @@ protected:
 	/** Ensure the operations on m_strLoadingUrl are thread safe. */
 	CCriticalSection m_csLoadingUrl;
 
-public:
-	typedef std::function<void()> MainThreadFunc;
+protected:
+	class ICallable;
+	// Keep track of callable instances, make sure the calling is safe.
+	std::deque<ICallable*> m_qCallables;
+	CCriticalSection m_csCallables;
 
-	// Asynchronously run the specified function on at next message loop
-	void RunAsync(const MainThreadFunc& func)
-	{		
-		m_csFuncs.Lock();
-		m_qFuncs.push_back(func);
-		m_csFuncs.Unlock();
+	// Asynchronous function calling, replaces original PostMessage approach
+	// This makes code more readable by putting caller code and callee code together
+
+	// Callable interface for async function calling
+	class ICallable {
+	public:
+		virtual void call() const = 0;
+		virtual ~ICallable() { }
+	};
+
+	// Wraps callable function (typically a lambda expression) into ICallable
+	template<class Func>
+	class CallableFuncWrapper : public ICallable {
+	public:
+		CallableFuncWrapper(const Func& func) : func(func) { }
+		virtual void call() const { func(); }
+	private:
+		Func func;
+	};
+
+public:
+	// Asynchronously run the specified function at next message loop
+	template <class Func>
+	void RunAsync(const Func& func)
+	{
+		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
+		
+		m_csCallables.Lock();
+		m_qCallables.push_back(wrapper);
+		m_csCallables.Unlock();
 
 		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
 	}
-private:
-	void OnRunAsyncCall();
-	std::deque<MainThreadFunc> m_qFuncs;
-	CCriticalSection m_csFuncs;
 };
