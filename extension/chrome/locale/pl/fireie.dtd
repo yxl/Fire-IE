@@ -3,7 +3,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Zmień silnik renderujący">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Nie można zmienić na tej stronie">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Prawy: Pokaż ustawienia Fire IE">
-<!ENTITY urlbar.switchRules.label "Zmien reguły">
+<!ENTITY urlbar.switchRules.label "Reguły zmieniające silnik">
 <!ENTITY internetProperties.lable "Opcje internetowe IE">
 <!ENTITY fireie.autoswitch.disable "Nie zmieniaj automatycznie nigdzie">
 <!ENTITY openInIE.label "Otwórz tę stronę w IE">
@@ -17,7 +17,7 @@
 <!ENTITY fireie.options.general.pane "Ogólne">
 <!ENTITY fireie.options.switch.caption "Kiedy zmieniać silnik renderujący:">
 <!ENTITY fireie.options.switch.handleurl "Zawsze używaj tego samego silnika przy otwieraniu linku">
-<!ENTITY fireie.options.switch.disableAutoSwitch "Wyłącz automatyczne zmienianie silnika">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Wyłącz automatyczne zmiany silnika">
 <!ENTITY fireie.options.shorcut.caption "Skrót klawiszowy">
 <!ENTITY fireie.options.shorcut.enable "Włącz">
 <!ENTITY fireie.options.private.caption "Przeglądanie prywatne">

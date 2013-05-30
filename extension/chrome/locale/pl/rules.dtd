@@ -1,6 +1,6 @@
 <!ENTITY dialog.title                         "Fire-IE - Ustawienia reguł">
 
-<!ENTITY subscriptions.tab.label              "Zestawy reguł">
+<!ENTITY subscriptions.tab.label              "Subskrypcje reguł">
 <!ENTITY rules.tab.label                    "Własne reguły">
 
 <!ENTITY subscription.autoupdate              "Aktualizuj automatycznie">
