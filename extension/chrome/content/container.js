@@ -205,22 +205,35 @@ let FireIEContainer = {};
     syncURL();
   }
   
+  let bSwitchEngineInitiated = false;
+
   /** sync recorded url when IE engine navigates to another location */
   function syncURL()
   {
+    if (bSwitchEngineInitiated)
+      return;
+      
     let po = E(Utils.containerPluginId);
     if (!po) return;
     
     let url = po.URL;
     if (!url) return;
     
-    url = Utils.toContainerUrl(url);
-    if (window.location.href != url)
+    let containerUrl = Utils.toContainerUrl(url);
+    if (window.location.href != containerUrl)
     {
+      // Issue #51: check if we need to switch back to Firefox engine
+      if (gFireIE && gFireIE.shouldSwitchBack(url))
+      {
+        bSwitchEngineInitiated = true;
+        gFireIE.switchEngine(Utils.getTabFromWindow(window), true);
+        return;
+      }
+      
       // HTML5 history manipulation,
       // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
       if (window.history)
-        window.history.replaceState("", document.title, url);
+        window.history.replaceState("", document.title, containerUrl);
     }
   }
   

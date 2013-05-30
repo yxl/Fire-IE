@@ -277,7 +277,13 @@ var Utils = {
   {
     return "resource://gre-resources/hiddenWindow.html";
   },
-
+  
+  /** Whether url is IE engine container url */
+  isIEEngine: function(url)
+  {
+    return Utils.startsWith(url, Utils.containerUrl);
+  },
+  
   /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
   {

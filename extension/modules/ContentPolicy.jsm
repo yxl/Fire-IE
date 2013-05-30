@@ -100,6 +100,23 @@ var Policy = {
   },
 
   /**
+   * Checks whether the page should be loaded in Firefox engine. 
+   * @param {String} url
+   * @return {Boolean} true if Firefox engine should be used.
+   */
+  checkEngineExceptionalRule: function(url)
+  {
+    if (Utils.isFirefoxOnly(url)) return true;
+    let docDomain = Utils.getHostname(url);
+    let match = EngineMatcher.matchesAny(url, docDomain);
+    if (match)
+    {
+      RuleStorage.increaseHitCount(match);
+    }
+    return match && match instanceof EngineExceptionalRule;
+  },
+
+  /**
    * Checks whether IE user agent should be used. 
    * @param {String} url
    * @return {UserAgentRule} the rule if there's any match
@@ -163,9 +180,9 @@ var PolicyPrivate = {
     catch (ex) { }
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
-    // User has manually switched to Firefox engine
-    let hostName = Utils.getHostname(location.spec);
-    if (hostName && browserNode.getAttribute('manuallySwitchToFirefox') == hostName) return Ci.nsIContentPolicy.ACCEPT;
+    // User has manually switched engine
+    let hostName = Utils.getEffectiveHost(location.spec);
+    if (hostName && browserNode.getAttribute('manuallySwitched') == hostName) return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
     if (Policy.checkEngineRule(location.spec))
@@ -176,7 +193,22 @@ var PolicyPrivate = {
       }, this);
       return Ci.nsIContentPolicy.REJECT_OTHER;
     }
-
+    // Check engine switch back list
+    if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(location.spec))
+    {
+      let url = Utils.fromContainerUrl(location.spec);
+      let hostName = Utils.getEffectiveHost(url);
+      if (hostName && browserNode.getAttribute('manuallySwitched') == hostName) return Ci.nsIContentPolicy.ACCEPT;
+      if (Policy.checkEngineExceptionalRule(url))
+      {
+        Utils.runAsync(function()
+        {
+          browserNode.loadURI(url);
+        }, this);
+        return Ci.nsIContentPolicy.REJECT_OTHER;
+      }
+    }
+    
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
@@ -229,8 +261,8 @@ var PolicyPrivate = {
             if (browserNode)
             {
               // User has manually switched to Firefox engine
-              let hostName = Utils.getHostname(url);
-              let manualSwitch = hostName && browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(url);
+              let hostName = Utils.getEffectiveHost(url);
+              let manualSwitch = hostName && browserNode.getAttribute('manuallySwitched') == hostName;
               if (manualSwitch) return;
             }
 

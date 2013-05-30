@@ -737,7 +737,13 @@ WindowWrapper.prototype = {
     }
     return null;
   },
-
+  
+  /** Check whether we should switch back to Firefox engine */
+  shouldSwitchBack: function(url)
+  {
+    return Prefs.autoswitch_enabled && Prefs.autoSwitchBackEnabled && Policy.checkEngineExceptionalRule(url);
+  },
+  
   /** Check whether current engine is IE.*/
   isIEEngine: function(aTab)
   {
@@ -753,7 +759,7 @@ WindowWrapper.prototype = {
   /**
    *  Switch the engine of specified tab.
    */
-  _switchTabEngine: function(aTab)
+  _switchTabEngine: function(aTab, automatic)
   {
     if (aTab && aTab.localName == "tab")
     {
@@ -768,15 +774,18 @@ WindowWrapper.prototype = {
         let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
         if (browserNode)
         {
-          if (!isIEEngineAfterSwitch)
+          if (!automatic)
           {
-            // User manually switches to Firefox engine.
-            // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-            browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
+            // User manually switch engine.
+            // We have to tell ContentPolicy to stop monitoring this tab until user navigates to another website.
+            browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
           }
           else
           {
-            browserNode.removeAttribute('manuallySwitchToFirefox');
+            // prevent automatic switching on manuallySwitched tabs, until user navigates to another website.
+            let hostName = Utils.getEffectiveHost(url);
+            let manualSwitch = hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+            if (manualSwitch) return;
           }
         }
       }
@@ -851,25 +860,18 @@ WindowWrapper.prototype = {
       let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
       if (browserNode)
       {
-        let isIEEngineAfterSwitch = this.isIEEngine(aTab);
-        if (!isIEEngineAfterSwitch)
-        {
-          // User manually switches to Firefox engine.
-          // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-          browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
-        }
-        else
-        {
-          browserNode.removeAttribute('manuallySwitchToFirefox');
-        }
+        // User manually switches to Firefox engine.
+        // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
+        browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
       }
     }
   },
 
-  /** Switch current tab's engine */
-  switchEngine: function()
+  /** Switch the specified tab's engine, or current tab's engine if tab is not provided*/
+  /** If the switch is not initiated by the user, use automatic = true */
+  switchEngine: function(tab, automatic)
   {
-    this._switchTabEngine(this.window.gBrowser.mCurrentTab);
+    this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic);
   },
 
   /** Show the options dialog */
@@ -964,7 +966,7 @@ WindowWrapper.prototype = {
         let originalURL = this.getURL();
         let isBlank = (originalURL == "about:blank");
         let handleUrlBar = Prefs.handleUrlBar;
-        let isSimilar = Utils.getHostname(originalURL) == Utils.getHostname(url);
+        let isSimilar = Utils.getEffectiveHost(originalURL) == Utils.getEffectiveHost(url);
         if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
