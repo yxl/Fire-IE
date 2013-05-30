@@ -1,0 +1,25 @@
+<!ENTITY dialog.title               "Subskrypcja reguł">
+
+<!ENTITY subscriptionSelector.label "Proszę wybrać subskrypcję reguł z listy:">
+
+<!ENTITY viewList.label             "Zobacz reguły">
+<!ENTITY visitHomepage.label        "Odwiedź stronę domową">
+
+<!ENTITY addSubscription.label      "Dodaj subskrypcję">
+
+<!ENTITY list.download.failed       "Nie udało się uzyskać listy dostępnych subskrypcji.">
+<!ENTITY list.download.retry        "Ponów próbę">
+<!ENTITY list.download.website      "View website">
+
+<!ENTITY fromWeb.description        "Potwierdź, że chcesz dodać tej subskrypcji reguł. Możesz zmienić tytuł subskrypcji lub lokalizację przed dodaniem jej">
+
+<!ENTITY title.label                "Tytuł subskrypcji:">
+<!ENTITY title.accesskey            "t">
+<!ENTITY location.label             "Lokalizacja listy reguł:">
+<!ENTITY location.accesskey         "l">
+
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY supplementMessage          "Ta subskrypcja reguł musi byc używana z zestawem „?1?”, który nie jest jeszcze subskrybowany.">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY addMain.label              "Dodaj także subskypcję „?1?”">
+<!ENTITY addMain.accesskey          "s">

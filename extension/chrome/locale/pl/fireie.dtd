@@ -1,0 +1,79 @@
+<!ENTITY fireie.switchButton.label "Fire IE">
+
+<!ENTITY fireie.urlbar.switch.tooltip1 "Zmień silnik renderujący">
+<!ENTITY fireie.urlbar.switch.tooltip1.disabled "Nie można zmienić na tej stronie">
+<!ENTITY fireie.urlbar.switch.tooltip3 "Prawy: Pokaż ustawienia Fire IE">
+<!ENTITY urlbar.switchRules.label "Zmien reguły">
+<!ENTITY internetProperties.lable "Opcje internetowe IE">
+<!ENTITY fireie.autoswitch.disable "Nie zmieniaj automatycznie nigdzie">
+<!ENTITY openInIE.label "Otwórz tę stronę w IE">
+<!ENTITY skin.label "Skórki">
+<!ENTITY default.lable "Domyślna">
+<!ENTITY skin.more.lable "Więcej...">
+
+<!ENTITY fireie.options.title "Fire IE - Opcje">
+
+<!ENTITY fireie.options.general.tab "Ogólne">
+<!ENTITY fireie.options.general.pane "Ogólne">
+<!ENTITY fireie.options.switch.caption "Kiedy zmieniać silnik renderujący:">
+<!ENTITY fireie.options.switch.handleurl "Zawsze używaj tego samego silnika przy otwieraniu linku">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Wyłącz automatyczne zmienianie silnika">
+<!ENTITY fireie.options.shorcut.caption "Skrót klawiszowy">
+<!ENTITY fireie.options.shorcut.enable "Włącz">
+<!ENTITY fireie.options.private.caption "Przeglądanie prywatne">
+<!ENTITY fireie.options.private.privatebrowsingwarning "Pokazuj ostrzeżenie przy przeglądaniu prywatnym">
+<!ENTITY fireie.options.private.descr "Karty w trybie IE nie mogą być przeglądane prywatnie. Możesz wybrać, czy chcesz pokazywać ostrzeżenie w takiej sytuacji.">
+<!ENTITY fireie.options.ui.tab "Interfejs">
+<!ENTITY fireie.options.ui.pane "Interfejs">
+<!ENTITY fireie.options.ui.urlBarButtonCaption "Przycisk paska adresu">
+<!ENTITY fireie.options.ui.iconDisplayLabel "Sposób wyświetlania:">
+<!ENTITY fireie.options.ui.iconHidden "Ukryty">
+<!ENTITY fireie.options.ui.iconOnly "Pokazuj tylko ikonę">
+<!ENTITY fireie.options.ui.iconAndText "Pokazuj ikonę i etykietę">
+<!ENTITY fireie.options.ui.tooltipLabel "Dymek:">
+<!ENTITY fireie.options.ui.showTooltipText "Pokazuj status silnika przy wskazywaniu paska adresu">
+<!ENTITY fireie.options.ui.statusBarCaption "Pasek dodatków">
+<!ENTITY fireie.options.ui.showStatusText "Pokaż status silnika IE na pasku dodatków (stanu)">
+<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
+<!ENTITY fireie.options.ui.faviconCaption "Ikona karty">
+<!ENTITY fireie.options.ui.faviconSite "Używaj favikony strony">
+<!ENTITY fireie.options.ui.faviconIE "Używaj ikony silnika IE">
+<!ENTITY fireie.options.ui.customLabelLabel "Dostosuj etykiety:">
+<!ENTITY fireie.options.integration.tab "Integracja">
+<!ENTITY fireie.options.integration.pane "Integracja">
+<!ENTITY fireie.options.integration.mgCaption "Wsparcie gestów myszy">
+<!ENTITY fireie.options.integration.mgDescr "Rozszerzenia i skrypty do obsługi gestów są wykrywane automatycznie. Jeżeli Twój dodatek lub skrypt nie jest wykrywany, możesz spróbować tej opcji.">
+<!ENTITY fireie.options.integration.forceMGSupport "Wymuś aktywację wsparcia gestów myszy w kartach trybu IE">
+<!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Wsparcie gestów myszy jest aktywne.">
+<!ENTITY fireie.options.integration.abpCaption "Wsparcie Adblock Plus">
+<!ENTITY fireie.options.integration.abpDescr "Używaj filtrów Adblock Plus, żeby blokować reklamy w silniku IE.">
+<!ENTITY fireie.options.integration.abpSupportEnabled "Włącz wsparcie dla Adblock Plus">
+<!ENTITY fireie.options.integration.abpStatusLabel "Aktualny status: ">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "Nie wykryto Adblock Plus">
+<!ENTITY fireie.options.integration.abpStatusEnabled "Włączono">
+<!ENTITY fireie.options.integration.abpStatusDisabled "Wyłączono">
+<!ENTITY fireie.options.integration.abpStatusLoading "Ładowanie filtrów">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "Nie powiodło się wczytywanie filtrów">
+<!ENTITY fireie.options.integration.otherOptions "Inne ustawienia">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "Synchronizuj ciasteczka pomiędzy silnikami IE i Firefox">
+
+<!ENTITY fireie.options.ieoptions.tab  "Silnik IE">
+<!ENTITY fireie.options.ieoptions.pane "Silnik IE">
+<!ENTITY fireie.options.iecompat.group "Tryb kompatybilności z IE">
+<!ENTITY fireie.options.iecompat.ie7   "IE7 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie8   "IE8 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie8f  "IE8 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie9   "IE9 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie9f  "IE9 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie10  "IE10 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie10f "IE10 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.notSupported "Twoja wersja IE nie nie wspiera trybu kompatybilności lub zaawansowanych możliwości.">
+<!ENTITY fireie.options.iefeat.group   "Zaawansowane możliwości">
+<!ENTITY fireie.options.iefeat.gpuRendering "Włącz renderowanie wspomagane sprzętowo">
+
+<!ENTITY fireie.options.apply "Zastosuj">
+<!ENTITY fireie.options.manager "Menedżer ustawień">
+<!ENTITY fireie.options.default "Przywróć domyślne">
+<!ENTITY fireie.options.import "Importuj plik z ustawieniami">
+<!ENTITY fireie.options.export "Eksportuj plik z ustawieniami">
+<!ENTITY fireie.options.restart.descr "Uruchom ponownie Firefox, aby ustawienia zaczęły działać.">
