@@ -534,7 +534,6 @@ var gFireIE = null;
       if (entry.URI.spec != uri.spec)
       {
         entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
-        if (this.parentNode.__SS_data) delete this.parentNode.__SS_data;
       }
     }
   };
