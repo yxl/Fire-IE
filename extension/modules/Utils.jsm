@@ -30,7 +30,8 @@ var Utils = {
   _ieUserAgent: null,
   _userAgent: null,
 
-  _ffMajorVersion: 4,
+  _ffMajorVersion: 6,
+  _ieMajorVersion: 6,
   
   /** nsITimer's */
   _timers: [],
@@ -57,6 +58,11 @@ var Utils = {
   get firefoxMajorVersion()
   {
     return this._ffMajorVersion;
+  },
+  
+  get ieMajorVersion()
+  {
+    return this._ieMajorVersion;
   },
 
   /**
@@ -1017,7 +1023,7 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   _addonVersionCallbacks = null;
 });
 
-(function() {
+(function FetchFirefoxMajorVersion() {
   let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Components.interfaces.nsIXULAppInfo);
 
@@ -1027,6 +1033,33 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   Utils.LOG("Host app major version: " + major);
 
   Utils._ffMajorVersion = major;
+})();
+
+(function FetchIEMajorVersion() {
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  let version = 6;
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+    let versionString = wrk.readStringValue("version");
+    version = parseInt(versionString, 10);
+    // for IE 10, version equals to "9.10.*.*", which should be handled specially
+    if (version == 9)
+    {
+      versionString = wrk.readStringValue("svcVersion");
+      version = parseInt(versionString, 10);
+    }
+    Utils.LOG("IE major version: " + version);
+  }
+  catch (e)
+  {
+    Utils.LOG("Failed to get IE version from registry: " + e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  Utils._ieMajorVersion = version;
 })();
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");

@@ -229,11 +229,15 @@ let IECookieManager = {
      * http://.baidu.com must be transformed into
      * http://baidu.com before it can be recognized
      */
-    let url = 'http://' + hostname + cookie2.path;
+    let url = (cookie2.isSecure ? 'https://' : 'http://') + hostname + cookie2.path;
     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
     if (cookie2.expires > 0)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
+    }
+    if (cookie2.isSecure)
+    {
+      cookieData += "; secure";
     }
     if (cookie2.isHttpOnly)
     {
@@ -375,11 +379,16 @@ let IECookieManager = {
     let cookiesDir = ieTempDir + "\\cookies";
     let cacheDir = ieTempDir + "\\cache";
 
-    let originalCookies = getIECtrlRegString("Cookies");
-    // Backup the cookie directory setting if needed.
-    if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
+    // Temporary disable cookie folder redirection for IE10
+    // For details, see issue #98 (https://github.com/yxl/Fire-IE/issues/98)
+    if (Utils.ieMajorVersion < 10)
     {
-      setIECtrlRegString("Cookies", cookiesDir);
+      let originalCookies = getIECtrlRegString("Cookies");
+      // Backup the cookie directory setting if needed.
+      if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
+      {
+        setIECtrlRegString("Cookies", cookiesDir);
+      }
     }
 
     let originalCache = getIECtrlRegString("Cache");
@@ -399,7 +408,7 @@ let IECookieManager = {
     let cookies = getIECtrlRegString("Cookies_fireie");
     if (cookies)
     {
-    // Remove backup values to allow user change IE browser's cache directory settings
+      // Remove backup values to allow user change IE browser's cache directory settings
       setIECtrlRegString("Cookies", cookies);
       removeIECtrlRegString("Cookies_fireie");
     }
