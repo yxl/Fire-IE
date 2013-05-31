@@ -473,7 +473,9 @@ namespace HttpMonitor
 				if (!m_bIsSubRequest)
 				{
 					if (m_pIEHostWindow)
+					{
 						m_pIEHostWindow->SetLoadingURL(szStatusText);
+					}
 					m_strURL = szStatusText;
 				}
 

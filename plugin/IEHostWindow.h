@@ -148,6 +148,7 @@ protected:
 	void OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel);
 	void OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL);
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
+	void OnURLChanged(const CString& url);
 
 	void SendKey(WORD vkey);
 	CString GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pDoc);

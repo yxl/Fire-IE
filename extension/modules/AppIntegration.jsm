@@ -759,13 +759,13 @@ WindowWrapper.prototype = {
   /**
    *  Switch the engine of specified tab.
    */
-  _switchTabEngine: function(aTab, automatic)
+  _switchTabEngine: function(aTab, automatic, overrideUrl)
   {
     if (aTab && aTab.localName == "tab")
     {
 
       // getURL retrieves the actual URL from, maybe, container url
-      let url = this.getURL(aTab);
+      let url = overrideUrl || this.getURL(aTab);
 
       let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
 
@@ -869,9 +869,10 @@ WindowWrapper.prototype = {
 
   /** Switch the specified tab's engine, or current tab's engine if tab is not provided*/
   /** If the switch is not initiated by the user, use automatic = true */
-  switchEngine: function(tab, automatic)
+  /** Override new url by providing the 3rd argument */
+  switchEngine: function(tab, automatic, overrideUrl)
   {
-    this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic);
+    this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic, overrideUrl);
   },
 
   /** Show the options dialog */

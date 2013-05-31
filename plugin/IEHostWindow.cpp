@@ -1056,8 +1056,12 @@ static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 void CIEHostWindow::SetLoadingURL(const CString& url)
 {
 	m_csLoadingUrl.Lock();
+	bool bUrlChanged = (url != m_strLoadingUrl);
 	m_strLoadingUrl = url;
 	m_csLoadingUrl.Unlock();
+
+	if (bUrlChanged)
+		RunAsync([=] { OnURLChanged(url); });
 }
 
 CString CIEHostWindow::GetLoadingURL()
@@ -1068,8 +1072,22 @@ CString CIEHostWindow::GetLoadingURL()
 	return result;
 }
 
+void CIEHostWindow::OnURLChanged(const CString& url)
+{
+	// Fire navigate event so that the extension will have a chance to switch back
+	// before the first "progress changed" event arrives
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnURLChanged(url);
+	}
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
+	if (!URL) return;
+
+	COLE2T szUrl(URL->bstrVal);
+
 	// 按Firefox的设置缩放页面
 	if (m_pPlugin)
 	{
@@ -1079,10 +1097,6 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			Zoom(level);
 		}
 	}
-
-	if (!URL) return;
-
-	COLE2T szUrl(URL->bstrVal);
 
 	// 滤掉非 HTTP 协议
 	if (!UrlCanHandle(szUrl)) return;
@@ -1097,6 +1111,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
 		}
 	}
+
 
 	// 设置正在载入的Url
 	SetLoadingURL(CString(szUrl));

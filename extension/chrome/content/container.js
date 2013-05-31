@@ -141,6 +141,7 @@ let FireIEContainer = {};
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
+    window.addEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -205,31 +206,51 @@ let FireIEContainer = {};
     syncURL();
   }
   
+  function onIEURLChanged(event)
+  {
+    checkSwitchBack(event.detail);
+  }
+  
   let bSwitchEngineInitiated = false;
 
+  function checkSwitchBack(url)
+  {
+    if (bSwitchEngineInitiated)
+      return true;
+
+    if (url)
+    {
+      let containerUrl = Utils.toContainerUrl(url);
+      if (window.location.href != containerUrl)
+      {
+        // Issue #51: check if we need to switch back to Firefox engine
+        if (gFireIE && gFireIE.shouldSwitchBack(url))
+        {
+          bSwitchEngineInitiated = true;
+          gFireIE.switchEngine(Utils.getTabFromWindow(window), true, url);
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
   /** sync recorded url when IE engine navigates to another location */
   function syncURL()
   {
-    if (bSwitchEngineInitiated)
-      return;
-      
     let po = E(Utils.containerPluginId);
     if (!po) return;
     
     let url = po.URL;
     if (!url) return;
-    
+
+    if (checkSwitchBack(url))
+      return;
+      
     let containerUrl = Utils.toContainerUrl(url);
     if (window.location.href != containerUrl)
     {
-      // Issue #51: check if we need to switch back to Firefox engine
-      if (gFireIE && gFireIE.shouldSwitchBack(url))
-      {
-        bSwitchEngineInitiated = true;
-        gFireIE.switchEngine(Utils.getTabFromWindow(window), true);
-        return;
-      }
-      
       // HTML5 history manipulation,
       // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
       if (window.history)

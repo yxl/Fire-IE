@@ -169,6 +169,9 @@ namespace Plugin
 
 		/** AdBlock Plus filters failed load */
 		void OnABPLoadFailure();
+
+		/** IE engine URL changed */
+		void OnURLChanged(const CString& url);
 	protected:
 
 		NPP m_pNPInstance;

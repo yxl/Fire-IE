@@ -738,4 +738,11 @@ namespace Plugin
 		CString strDetail = _T("");
 		FireEvent(strEventType, strDetail);
 	}
+
+	void CPlugin::OnURLChanged(const CString& url)
+	{
+		CString strEventType = _T("IEURLChanged");
+		CString strDetail = url;
+		FireEvent(strEventType, strDetail);
+	}
 }
