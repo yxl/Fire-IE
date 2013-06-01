@@ -195,6 +195,7 @@ bool RegExp::execCore(RegExpMatch& match, const std::wstring& str, int lastPos) 
 	// Matches
 	match.index = offsets[0];
 	match.input = str;
+	match.substrings.clear();
 	match.substrings.reserve(m_nSubPatterns + 1);
 	size_t pos = static_cast<size_t>(offsets[0]);
 	size_t count = static_cast<size_t>(offsets[1] - offsets[0]);

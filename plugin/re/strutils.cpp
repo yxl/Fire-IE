@@ -166,6 +166,8 @@ bool match(RegExpMatch& match, const std::wstring& base, const RegExp& re)
 	if (!re.isGlobal()) return re.exec(match, base);
 
 	match.index = 0;
+	match.input.clear();
+	match.substrings.clear();
 
 	RegExpMatch tmp;
 	bool ret = re.exec(tmp, base, 0);
