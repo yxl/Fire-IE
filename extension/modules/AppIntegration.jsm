@@ -1948,7 +1948,8 @@ WindowWrapper.prototype = {
         {
           let url = this._getURLAfterSwitch(gBrowser.selectedTab);
           // should load actual url after setting the manuallyswitched flag
-          let newTab = gBrowser.addTab("about:blank");
+          let newTab = gBrowser.addTab("about:blank",
+            { relatedToCurrent: true });
           // first set manual switch flags
           this._setManuallySwitchFlag(newTab, url);
           // and then load the actual url
