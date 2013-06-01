@@ -860,7 +860,8 @@ WindowWrapper.prototype = {
       let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
       if (browserNode)
       {
-        // User manually switches to Firefox engine.
+        if (Utils.isIEEngine(url)) url = Utils.fromContainerUrl(url);
+        // User manually switch engine.
         // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
         browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
       }
@@ -1024,15 +1025,16 @@ WindowWrapper.prototype = {
     let url = data.url;
     let id = data.id;
     var gBrowser = this.window.gBrowser;
-    let newTab = gBrowser.addTab(Utils.toContainerUrl(url));
+    let newTab = gBrowser.addTab(Utils.toContainerUrl(url),
+      { relatedToCurrent: true }); // it is highly probable that the new tab is related to current
 
     let shift = data.shift;
     let ctrl = data.ctrl;
     // shift  ctrl  value  where
-    //    0     0     0   current
-    //    0     1     1   tab
-    //    1     0     2   window
-    //    1     1     3   tabshifted
+    //    0     0     0    current
+    //    0     1     1    tab
+    //    1     0     2    window
+    //    1     1     3    tabshifted
     let where = shift ? (ctrl ? "tabshifted" : "window") : (ctrl ? "tab" : "current");
     let loadInBackground = Utils.shouldLoadInBackground();
 

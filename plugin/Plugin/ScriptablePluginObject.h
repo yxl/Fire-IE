@@ -65,6 +65,7 @@ namespace Plugin
 		NPI_DEF(ScrollRight);
 		NPI_DEF(ScrollWheelUp);
 		NPI_DEF(ScrollWheelDown);
+		NPI_DEF(RemoveNewWindow);
 
 		// findbar methods
 		NPI_DEF(FBFindText); // FB stands for firefox FindBar
@@ -150,6 +151,7 @@ namespace Plugin
 			NPN_GSI_M(ScrollRight);
 			NPN_GSI_M(ScrollWheelUp);
 			NPN_GSI_M(ScrollWheelDown);
+			NPN_GSI_M(RemoveNewWindow);
 			NPN_GSI_M(FBFindText);
 			NPN_GSI_M(FBEndFindText);
 			NPN_GSI_M(FBFindAgain);

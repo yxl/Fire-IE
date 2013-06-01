@@ -475,6 +475,43 @@ var Utils = {
 
     return Utils.getTabFromDocument(aWindow.document);
   },
+  
+  generatorFromEnumerator: function(enumerator, nsInterface)
+  {
+    while (enumerator.hasMoreElements())
+    {
+      yield enumerator.getNext().QueryInterface(nsInterface);
+    }
+  },
+  
+  getTabFromBrowser: function(browser)
+  {
+    function getTabFromBrowserWithinWindow(browser, window)
+    {
+      let gBrowser = window.gBrowser;
+      if (gBrowser)
+      {
+        let mTabs = gBrowser.mTabContainer.childNodes;
+        for (let i = 0; i < mTabs.length; i++)
+        {
+          if (mTabs[i].linkedBrowser === browser)
+          {
+            return mTabs[i];
+          }
+        }
+      }
+      return null;
+    }
+    
+    let windows = Utils.generatorFromEnumerator(Services.wm.getEnumerator("navigator:browser"),
+      Ci.nsIDOMWindow);
+    for (let window in windows)
+    {
+      let tab = getTabFromBrowserWithinWindow(browser, window);
+      if (tab) return tab;
+    }
+    return null;
+  },
 
   /** Check whether URL is firefox-only
    *  e.g. about:config chrome://xxx

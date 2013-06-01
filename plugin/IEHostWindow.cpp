@@ -145,9 +145,8 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
-	else 
+	if (!pIEHostWindow)
 	{
-		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
 		{
@@ -161,7 +160,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		{
 			pIEHostWindow->m_bUtils = isUtils;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 	return pIEHostWindow;
 }
@@ -300,6 +298,8 @@ void CIEHostWindow::UninitIE()
 #ifdef MATCHER_PERF
 		AdBlockPlus::showPerfInfo();
 #endif
+		TRACE(L"Remaining windows: IEWindowMap: %d, UtilsIEWindowMap: %d, NewIEWindowMap: %d\n",
+			s_IEWindowMap.GetSize(), s_UtilsIEWindowMap.GetSize(), s_NewIEWindowMap.GetSize());
 	}
 }
 
@@ -676,6 +676,20 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 	else
 	{
 		TRACE(_T("Internet Explorer_Server not found, scroll canceled.\n"));
+	}
+}
+
+void CIEHostWindow::RemoveNewWindow(ULONG_PTR ulId)
+{
+	s_csNewIEWindowMap.Lock();
+	CIEHostWindow* pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
+	s_NewIEWindowMap.Remove(ulId);
+	s_csNewIEWindowMap.Unlock();
+
+	if (pIEHostWindow)
+	{
+		pIEHostWindow->DestroyWindow();
+		delete pIEHostWindow;
 	}
 }
 

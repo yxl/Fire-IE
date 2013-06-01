@@ -205,6 +205,7 @@ public:
 	void ScrollWhole(bool up);
 	void ScrollHorizontal(bool left);
 	void ScrollWheelLine(bool up);
+	static void RemoveNewWindow(ULONG_PTR ulId);
 
 	// FindBar methods
 	void FBFindText(const CString& text);

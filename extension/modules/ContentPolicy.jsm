@@ -35,6 +35,7 @@ Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "RuleStorage.jsm");
 Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 
 /**
  * Public policy checking functions and auxiliary objects
@@ -204,7 +205,16 @@ var PolicyPrivate = {
         Utils.runAsync(function()
         {
           browserNode.loadURI(url);
-        }, this);
+          // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
+          let tab = Utils.getTabFromBrowser(browserNode);
+          let attr = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+          if (attr && attr.id)
+          {
+            Utils.LOG("Removing IE new window because of switch back, id = " + attr.id);
+            UtilsPluginManager.getPlugin().RemoveNewWindow(attr.id);
+            tab.removeAttribute("fireieNavigateParams");
+          }
+       }, this);
         return Ci.nsIContentPolicy.REJECT_OTHER;
       }
     }

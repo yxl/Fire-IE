@@ -470,6 +470,27 @@ namespace Plugin
 			pMainWindow->ScrollWheelLine(false);
 			return true;
 		}
+		// void RemoveNewWindow({String} strId)
+		else if (name == NPI_ID(RemoveNewWindow))
+		{
+			TRACE ("RemoveNewWindow called!\n");
+			if (argCount < 1) return false;
+
+			CString strId = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				strId = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			ULONG_PTR ulId = 
+#ifdef _M_X64
+				_tcstoui64(strId, NULL, 10);
+#else
+				_tcstoul(strId, NULL, 10);
+#endif
+			CIEHostWindow::RemoveNewWindow(ulId);
+			return true;
+		}
 		// void FBFindText({String} text)
 		else if (name == NPI_ID(FBFindText))
 		{

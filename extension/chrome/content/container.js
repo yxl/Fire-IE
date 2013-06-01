@@ -147,19 +147,6 @@ let FireIEContainer = {};
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
     // support focus on plain DOMMouseScroll
     E("container").addEventListener("DOMMouseScroll", onDOMMouseScroll, false);
-    // Use the following code to check mouse events
-    /*
-    window.addEventListener("mousedown", function(e)
-    {
-      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mousedown " +
-        "from " + e.originalTarget.toString());
-    }, false);
-    window.addEventListener("mouseup", function(e)
-    {
-      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mouseup " +
-        "from " + e.originalTarget.toString());
-    }, false);
-    */
   }
 
   function unregisterEventHandler()
@@ -168,6 +155,7 @@ let FireIEContainer = {};
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
+    window.removeEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);

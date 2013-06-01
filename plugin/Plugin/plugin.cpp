@@ -398,11 +398,11 @@ namespace Plugin
 	// Get CIEHostWindow ID
 	ULONG_PTR CPlugin::GetNavigateWindowId() const
 	{
-		CString strID = GetNavigateParam("getNavigateWindowId");
+		CString strId = GetNavigateParam("getNavigateWindowId");
 #ifdef _M_X64
-		return _tcstoui64(strID, NULL, 10);
+		return _tcstoui64(strId, NULL, 10);
 #else
-		return _tcstoul(strID, NULL, 10);
+		return _tcstoul(strId, NULL, 10);
 #endif
 	}
 
