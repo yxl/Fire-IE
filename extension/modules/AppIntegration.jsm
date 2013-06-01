@@ -1025,7 +1025,7 @@ WindowWrapper.prototype = {
     let url = data.url;
     let id = data.id;
     var gBrowser = this.window.gBrowser;
-    let newTab = gBrowser.addTab(Utils.toContainerUrl(url),
+    let newTab = gBrowser.addTab("about:blank",
       { relatedToCurrent: true }); // it is highly probable that the new tab is related to current
 
     let shift = data.shift;
@@ -1062,6 +1062,14 @@ WindowWrapper.prototype = {
       id: id
     };
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
+    
+    // load URI outside of addTab() to supress potential load error message caused by switch back
+    const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+    try
+    {
+      newTab.linkedBrowser.loadURIWithFlags(Utils.toContainerUrl(url), flags);
+    }
+    catch (ex) { }
   },
 
   _onIESetSecureLockIcon: function(event)
@@ -1952,10 +1960,8 @@ WindowWrapper.prototype = {
             { relatedToCurrent: true });
           // first set manual switch flags
           this._setManuallySwitchFlag(newTab, url);
-          // and then load the actual url
-          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-          newTab.linkedBrowser.loadURIWithFlags(url, flags);
           
+          // determine the tab location
           switch (where)
           {
           case "window":
@@ -1971,6 +1977,14 @@ WindowWrapper.prototype = {
             // otherwise, A background tab has been opened, nothing else to do here.
             break;
           }
+
+          // and then load the actual url
+          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+          try
+          {
+            newTab.linkedBrowser.loadURIWithFlags(url, flags);
+          }
+          catch (ex) { }
         }
       }
     }

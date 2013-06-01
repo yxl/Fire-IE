@@ -214,7 +214,7 @@ var PolicyPrivate = {
             UtilsPluginManager.getPlugin().RemoveNewWindow(attr.id);
             tab.removeAttribute("fireieNavigateParams");
           }
-       }, this);
+        }, this);
         return Ci.nsIContentPolicy.REJECT_OTHER;
       }
     }
