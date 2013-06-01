@@ -40,8 +40,8 @@ RegExp::RegExp()
 }
 
 RegExp::RegExp(const wstring& strFullPattern)
+	: m_strFullPattern(strFullPattern)
 {
-	m_strFullPattern = strFullPattern;
 	m_bCompiled = false;
 	m_re = NULL;
 	setAttributes();
@@ -49,8 +49,8 @@ RegExp::RegExp(const wstring& strFullPattern)
 }
 
 RegExp::RegExp(const RegExp& other)
+	: m_strFullPattern(other.m_strFullPattern)
 {
-	m_strFullPattern = other.m_strFullPattern;
 	m_bIgnoreCase = other.m_bIgnoreCase;
 	m_bMultiLine = other.m_bMultiLine;
 	m_bGlobal = other.m_bGlobal;
@@ -60,6 +60,24 @@ RegExp::RegExp(const RegExp& other)
 	m_bCompiled = false;
 	if (other.m_bCompiled)
 		compile();
+}
+
+RegExp::RegExp(RegExp&& other)
+	: m_strFullPattern(std::move(other.m_strFullPattern))
+{
+	m_bIgnoreCase = other.m_bIgnoreCase;
+	m_bMultiLine = other.m_bMultiLine;
+	m_bGlobal = other.m_bGlobal;
+	m_nLastPos = other.m_nLastPos;
+
+	// compiled information
+	m_bCompiled = other.m_bCompiled;
+	m_re = other.m_re;
+	m_nSubPatterns = other.m_nSubPatterns;
+
+	// leave destructable state
+	other.m_re = NULL;
+	other.m_bCompiled = false;
 }
 
 RegExp& RegExp::operator=(const RegExp& other)
@@ -78,6 +96,30 @@ RegExp& RegExp::operator=(const RegExp& other)
 	m_bCompiled = false;
 	if (other.m_bCompiled)
 		compile();
+
+	return *this;
+}
+
+RegExp& RegExp::operator=(RegExp&& other)
+{
+	if (this == &other) return *this;
+
+	if (m_re) jsRegExpFree(m_re, jscre_free);
+
+	m_strFullPattern = std::move(other.m_strFullPattern);
+	m_bIgnoreCase = other.m_bIgnoreCase;
+	m_bMultiLine = other.m_bMultiLine;
+	m_bGlobal = other.m_bGlobal;
+	m_nLastPos = other.m_nLastPos;
+
+	// compiled information
+	m_bCompiled = other.m_bCompiled;
+	m_re = other.m_re;
+	m_nSubPatterns = other.m_nSubPatterns;
+
+	// leave destructable state
+	other.m_re = NULL;
+	other.m_bCompiled = false;
 
 	return *this;
 }

@@ -30,6 +30,30 @@ struct RegExpMatch {
 	int index;
 	std::wstring input;
 	std::vector<std::wstring> substrings;
+
+	RegExpMatch() {}
+	RegExpMatch(const RegExpMatch& match)
+		: index(match.index), input(match.input),
+		  substrings(match.substrings) { }
+	RegExpMatch(RegExpMatch&& match)
+		: index(match.index), input(std::move(match.input)),
+		  substrings(std::move(match.substrings)) { }
+	RegExpMatch& operator=(const RegExpMatch& match)
+	{
+		index = match.index;
+		input = match.input;
+		substrings = match.substrings;
+
+		return *this;
+	}
+	RegExpMatch& operator=(RegExpMatch&& match)
+	{
+		index = match.index;
+		input = std::move(match.input);
+		substrings = std::move(match.substrings);
+
+		return *this;
+	}
 };
 
 class RegExp {
@@ -37,9 +61,11 @@ public:
 	RegExp();
 	RegExp(const std::wstring& strFullPattern);
 	RegExp(const RegExp&);
+	RegExp(RegExp&&);
 	~RegExp();
 
 	RegExp& operator=(const RegExp&);
+	RegExp& operator=(RegExp&&);
 	RegExp& operator=(const std::wstring& strFullPattern);
 
 	// Compiles the regular expression

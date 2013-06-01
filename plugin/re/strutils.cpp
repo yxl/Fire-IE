@@ -102,16 +102,17 @@ wstring replace(const wstring& base, const RegExp& re, const wstring& str)
 		ret = re.exec(match, base, 0);
 		while (ret)
 		{
-			matches.push_back(match);
 			int advance = (int)match.substrings[0].length();
 			if (advance < 1) advance = 1;
-			ret = re.exec(match, base, match.index + advance);
+			int lastPos = match.index + advance;
+			matches.push_back(std::move(match));
+			ret = re.exec(match, base, lastPos);
 		}
 	}
 	else
 	{
 		ret = re.exec(match, base);
-		if (ret) matches.push_back(match);
+		if (ret) matches.push_back(std::move(match));
 	}
 
 	// do the replace
@@ -119,7 +120,7 @@ wstring replace(const wstring& base, const RegExp& re, const wstring& str)
 	size_t lastPos = 0;
 	for (size_t i = 0; i < matches.size(); i++)
 	{
-		RegExpMatch& match = matches[i];
+		const RegExpMatch& match = matches[i];
 		builder.append(base.begin() + lastPos, base.begin() + match.index);
 		insertReplacedString(builder, base, str, match);
 		lastPos = match.index + match.substrings[0].length();
@@ -173,10 +174,10 @@ bool match(RegExpMatch& match, const std::wstring& base, const RegExp& re)
 	bool ret = re.exec(tmp, base, 0);
 	while (ret)
 	{
-		match.substrings.push_back(tmp.substrings[0]);
 		int advance = (int)tmp.substrings[0].length();
 		if (advance < 1) advance = 1;
 		int lastPos = tmp.index + advance;
+		match.substrings.push_back(std::move(tmp.substrings[0]));
 		ret = re.exec(tmp, base, lastPos);
 	}
 
