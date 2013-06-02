@@ -15,11 +15,17 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
 function init()
 {
-  if (window.arguments[0])
+  if (window.arguments && window.arguments[0])
   {
     initAddon(window.arguments[0]);
+    // Show the close button if it is open as a standalone dialog
+    document.getElementById("fireieAbout").buttons = "accept";
   }
   else
   {
@@ -49,12 +55,12 @@ function initAddon(addon)
     extensionVersion.setAttribute("value", extensionsStrings.getFormattedString("aboutWindowVersionString", [addon.version]));
   else
     extensionVersion.hidden = true;
-
-  // var extensionDescription = document.getElementById("extensionDescription");
-  // if (addon.description)
-    // extensionDescription.textContent = addon.description;
-  // else
-    // extensionDescription.hidden = true;
+  var extensionDescription = document.getElementById("extensionDescription");
+  if (addon.description)
+    extensionDescription.textContent = addon.description;
+  else
+    extensionDescription.hidden = true;
+  extensionDescription.value = addon.description;
   var numDetails = 0;
 
   var extensionCreator = document.getElementById("extensionCreator");
@@ -134,10 +140,9 @@ function processDescription(desc)
                        .replace(/\[\/(\w+)\]/g, "</html:$1>")
                        .replace(/\[(\w+)\s*\/\]/g, "<html:$1 />")
                        .replace(/\[\.([\w\d.#]+)\]/g, "&$1;")
-                       Utils.ERROR(html);
     desc.innerHTML = html;
   }
-  else
+  else if (!desc.textContent)
   {
     desc.hidden = true;
   }

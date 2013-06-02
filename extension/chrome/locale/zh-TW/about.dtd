@@ -3,14 +3,6 @@
 <!ENTITY about.whatsNext.label    "此附加元件的下一步計畫：">
 <!ENTITY about.links.label        "連結：">
 
-<!--
-    To embed html tags in the description, use [tag][/tag] or [tag/]
-    To embed entities in the description, use [.entity], e.g. [.amp] stands for &amp;
-    To embed links, use [link href='url']link_text[/link]
--->
-<!ENTITY about.shortDesc          "讓火狐相容IE的雙核拓展，一鍵切換至IE內核，網銀支付無憂愁。[br/]
-                                   支援 FireGestures 和 Adblock Plus，在IE中使用滑鼠手勢和過濾廣告。">
-
 <!ENTITY about.longDesc           "[p]解雇IE(Fire IE)是一個火狐瀏覽器雙核瀏覽拓展，可以讓火狐瀏覽器額外使用 Internet Explorer (IE) 內核瀏覽網頁。只需滑鼠輕輕一點，即可在Firefox和IE內核之間進行切換。[/p]
                                    [p]使用解雇IE，您可以編寫自動切換規則，這樣在訪問特定網站時解雇IE可以自動切換到IE引擎。類似於 Adblock Plus，您也可以訂閱現有的切換規則清單。我們目前維護一個針對中文網站的切換規則清單。[/p]
                                    [p]解雇IE會保持IE內核和Firefox內核的Cookie同步，因此切換內核瀏覽時無需重複登陸。大多數快速鍵和功能在IE內核下仍然起作用，比如“Ctrl +”和“Ctrl -”縮放頁面，“Ctrl F”搜索文本，“Ctrl D”保存書簽等。[/p]
@@ -18,8 +10,7 @@
                                    [p]拓展已支援 Adblock Plus，您將不再被IE引擎下的廣告所打擾。[/p]
                                    [p]從0.3.3版本起，32位和64位拓展已合併，我們不再單獨提供64位拓展。[/p]">
 
-<!ENTITY about.why                "[p]解雇IE主要目的是為了解決火狐瀏覽器在中國市場的網頁相容問題。由於中國大陸及臺灣地區存在大量僅支援IE瀏覽器網站，如[link href='http://www.icbc.com.cn/']中國工商銀行[/link]、[link href='http://www.cmbchina.com/']中國招商銀行[/link]，解雇IE可以讓用戶在火狐瀏覽器下無障礙地訪問這些網站。[/p]
-                                   [p]解雇IE是一個開源的非盈利性項目，源自中國大陸的開源項目 [link href='http://coralietab.mozdev.org/']IE Tab +[/link], IE Tab + 是臺灣的 [link href='http://ietab.mozdev.org/']IE Tab[/link] 項目的一個分支，解雇IE在程式結構上與後者更為接近。解雇IE加強了 IE Tab + 的功能，改進它的Cookie同步功能、和廣告過濾功能，添加了對火狐快速鍵和手勢的支援。此外，解雇IE還借鑒了 [link href='http://adblockplus.org/en/']Adblock Plus[/link] 項目大量代碼。[/p]">
+<!ENTITY about.why                "[p]解雇IE主要目的是為了解決火狐瀏覽器在中國市場的網頁相容問題。中國大陸及臺灣地區存在大量僅支援IE瀏覽器網站，解雇IE可以讓用戶在火狐瀏覽器下無障礙地訪問這些網站。[/p]">
 
 <!ENTITY about.whatsNext          "[p]智能切換功能。[/p]">
 

@@ -1,6 +1,27 @@
 <?xml version="1.0"?>
+<!--
+This file is part of Fire-IE.
+
+Fire-IE is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Fire-IE is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/about.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://fireie/skin/about.css" type="text/css"?>
 
 <!DOCTYPE dialog [
@@ -15,15 +36,15 @@
 <dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  buttons="accept"
+  buttons="none"
   id="fireieAbout"
   windowtype="fireie:about"
   onload="init()"
   onaccept="close();"
   defaultButton="accept">
         
-  <script type="application/x-javascript;version=1.7" src="utils.js"/>
-  <script type="application/x-javascript;version=1.7" src="about.js"/>
+  <script type="application/x-javascript" src="utils.js"/>
+  <script type="application/x-javascript" src="about.js"/>
   
   <stringbundleset id="aboutSet">
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
@@ -39,7 +60,7 @@
         <label id="extensionVersion" crop="end"/>
       </vbox>
     </hbox>
-    <description id="shortDesc" class="boxIndent" _textTemplate="&about.shortDesc;"></description>
+    <description id="extensionDescription" class="boxIndent"/>
 
     <separator id="groove" class="groove"/>
     

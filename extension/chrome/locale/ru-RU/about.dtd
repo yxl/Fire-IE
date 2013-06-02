@@ -3,15 +3,6 @@
 <!ENTITY about.whatsNext.label    "What's next for this Add-on?">
 <!ENTITY about.links.label        "Links:">
 
-<!--
-    To embed html tags in the description, use [tag][/tag] or [tag/]
-    To embed entities in the description, use [.entity], e.g. [.amp] stands for &amp;
-    To embed links, use [link href='url']link_text[/link]
--->
-<!ENTITY about.shortDesc          "Embeds Internet Explorer (IE) to use the powerful Firefox add-ons.[br/]
-                                   Not only an enhanced IE Tab, but also an enhanced Internet Explorer with Adblock plus and mouse gestures support.[br/]
-                                   Switch to IE engine in one click and give up your Internet Explorer.">
-
 <!ENTITY about.longDesc           "[p]Fire-IE is another ietab-like extension. It embeds the IE engine to handle IE-only websites. You could change the browser engine from Firefox to IE by a simple click.[/p]
                                    [p]Moreover, you can write auto-switch rules so that Fire-IE will automatically switch to IE engine when you visit certain sites. Like Adblock Plus, you can also subscribe to existing rule lists. We currently maintain an auto-switch rule list for Chinese sites.[/p]
                                    [p]When you switch to the IE engine, cookies will be synchronized so that you do not need to relogin. Most of the shortcut keys of Firefox will be available under the IE engine as well. For example you could use [.quot]Ctrl + +[.quot] and [.quot]Ctrl + -[.quot] to zoom in and out, [.quot]Ctrl + F[.quot] to search inside the document and so on.[/p]
@@ -19,8 +10,7 @@
                                    [p]Adblock Plus is supported now. You will no longer be annoyed by ads in the IE engine.[/p]
                                    [p]From 0.3.3 on, 32bit [.amp] 64bit versions are combined into a single package. We will no longer offer standalone 64bit xpi packages.[/p]">
 
-<!ENTITY about.why                "[p]Fire-IE is created mainly to address compatibility problems of Firefox in China. There are a lot of IE-only sites around mainland China and Taiwan, for example [link href='http://www.icbc.com.cn/']Industrial and Commercial Bank of China[/link], [link href='http://www.cmbchina.com/']China Merchants Bank[/link]. Fire-IE will allow users to access these IE-only sites in Firefox.[/p]
-                                   [p]Fire-IE is an open-source, non-commercial project derived from [link href='http://coralietab.mozdev.org/']IE Tab +[/link], which is a branch of the [link href='http://ietab.mozdev.org/']IE Tab[/link] project from Taiwan. Fire-IE is more similar to the latter in code structure. Fire-IE has some improvements over IE Tab +, including better cookie synchronization and Adblock Plus support. Fire-IE also provided support for various shortcut keys and mouse gestures. Some ideas, such as the rule matching engine, are borrowed from the [link href='http://adblockplus.org/en/']Adblock Plus[/link] project.[/p]">
+<!ENTITY about.why                "[p]Fire-IE is created mainly to address compatibility problems of Firefox in China, where there are many IE-only sites. The add-on will allow users to access these sites in Firefox.[/p]">
 
 <!ENTITY about.whatsNext          "[p]Intelligent switching feature.[/p]">
 

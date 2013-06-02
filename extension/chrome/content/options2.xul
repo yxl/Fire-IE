@@ -5,7 +5,14 @@
 <?xml-stylesheet href="chrome://global/skin/preferences.css" type="text/css"?>
 <?xml-stylesheet href="chrome://fireie/skin/options.css" type="text/css"?>
 
-<!DOCTYPE prefwindow SYSTEM "chrome://fireie/locale/fireie.dtd">
+<!DOCTYPE prefwindow [
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+  %globalDTD;
+  <!ENTITY % fireieDTD
+    SYSTEM "chrome://fireie/locale/fireie.dtd">
+  %fireieDTD;
+]>
 
 <prefwindow id="fireie-options"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -226,7 +233,11 @@
         &fireie.options.restart.descr;</label>
     </vbox>
   </prefpane>
-  
+
+  <prefpane id="aboutPane" label="&cmd.about.label;" image="chrome://fireie/skin/icon.png" flex="1">
+    <iframe src="chrome://fireie/content/about.xul" flex="1" />
+  </prefpane>
+
   <hbox class="prefWindow-dlgbuttons">
     <button id="mySettingManager" type="menu"
     label="&fireie.options.manager;">
