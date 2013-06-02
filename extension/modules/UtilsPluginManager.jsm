@@ -262,6 +262,22 @@ let UtilsPluginManager = {
       // Not all states map to a handler
       return null;
     }
+  },
+  
+  /**
+   * Check dangling new windows if we skipped attaching them to a plugin object
+   */
+  checkDanglingNewWindow: function(tab)
+  {
+    let attr = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    if (attr && attr.id)
+    {
+      Utils.LOG("Removing dangling IE new window, id = " + attr.id);
+      let plugin = this.getPlugin();
+      if (plugin)
+        plugin.RemoveNewWindow(attr.id);
+      tab.removeAttribute("fireieNavigateParams");
+    }
   }
 };
 

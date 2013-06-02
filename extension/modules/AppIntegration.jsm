@@ -778,14 +778,13 @@ WindowWrapper.prototype = {
           {
             // User manually switch engine.
             // We have to tell ContentPolicy to stop monitoring this tab until user navigates to another website.
-            browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
+            Policy.setManuallySwitched(browserNode, url);
           }
           else
           {
             // prevent automatic switching on manuallySwitched tabs, until user navigates to another website.
-            let hostName = Utils.getEffectiveHost(url);
-            let manualSwitch = hostName && browserNode.getAttribute('manuallySwitched') == hostName;
-            if (manualSwitch) return;
+            if (Policy.isManuallySwitched(browserNode, url))
+              return;
           }
         }
       }
@@ -863,7 +862,7 @@ WindowWrapper.prototype = {
         if (Utils.isIEEngine(url)) url = Utils.fromContainerUrl(url);
         // User manually switch engine.
         // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-        browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
+        Policy.setManuallySwitched(browserNode, url);
       }
     }
   },

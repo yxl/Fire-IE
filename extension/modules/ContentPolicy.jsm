@@ -140,6 +140,28 @@ var Policy = {
   isSwitchableScheme: function(location)
   {
     return !(location.scheme in Policy.ignoredSchemes);
+  },
+  
+  /**
+   * Checks whether user has manually switched engine on current tab & url
+   * @param {nsIDOMNode} browserNode
+   * @param {String} url
+   * @return {Boolean}
+   */
+  isManuallySwitched: function(browserNode, url)
+  {
+    let hostName = Utils.getEffectiveHost(url);
+    return hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+  },
+  
+  /**
+   * Sets the manually switched flag on current tab & url
+   * @param {nsIDOMNode} browserNode
+   * @param {String} url
+   */
+  setManuallySwitched: function(browserNode, url)
+  {
+    browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
   }
 };
 
@@ -182,8 +204,8 @@ var PolicyPrivate = {
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
     // User has manually switched engine
-    let hostName = Utils.getEffectiveHost(location.spec);
-    if (hostName && browserNode.getAttribute('manuallySwitched') == hostName) return Ci.nsIContentPolicy.ACCEPT;
+    if (Policy.isManuallySwitched(browserNode, location.spec))
+      return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
     if (Policy.checkEngineRule(location.spec))
@@ -198,8 +220,8 @@ var PolicyPrivate = {
     if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(location.spec))
     {
       let url = Utils.fromContainerUrl(location.spec);
-      let hostName = Utils.getEffectiveHost(url);
-      if (hostName && browserNode.getAttribute('manuallySwitched') == hostName) return Ci.nsIContentPolicy.ACCEPT;
+      if (Policy.isManuallySwitched(browserNode, url))
+        return Ci.nsIContentPolicy.ACCEPT;
       if (Policy.checkEngineExceptionalRule(url))
       {
         Utils.runAsync(function()
@@ -207,13 +229,7 @@ var PolicyPrivate = {
           browserNode.loadURI(url);
           // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
           let tab = Utils.getTabFromBrowser(browserNode);
-          let attr = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
-          if (attr && attr.id)
-          {
-            Utils.LOG("Removing IE new window because of switch back, id = " + attr.id);
-            UtilsPluginManager.getPlugin().RemoveNewWindow(attr.id);
-            tab.removeAttribute("fireieNavigateParams");
-          }
+          UtilsPluginManager.checkDanglingNewWindow(tab);
         }, this);
         return Ci.nsIContentPolicy.REJECT_OTHER;
       }
@@ -271,9 +287,8 @@ var PolicyPrivate = {
             if (browserNode)
             {
               // User has manually switched to Firefox engine
-              let hostName = Utils.getEffectiveHost(url);
-              let manualSwitch = hostName && browserNode.getAttribute('manuallySwitched') == hostName;
-              if (manualSwitch) return;
+              if (Policy.isManuallySwitched(browserNode, url))
+                return;
             }
 
             // Check engine switch list

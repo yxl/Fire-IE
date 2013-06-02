@@ -131,7 +131,12 @@ var gFireIE = null;
     {
       let container = gBrowser.tabContainer;
       container.addEventListener("TabOpen", function(e) { hookBrowserGetter(e.target.linkedBrowser); }, true);
-      container.addEventListener("TabClose", function(e) { unhookBrowserGetter(e.target.linkedBrowser); }, false);
+      container.addEventListener("TabClose", function(e)
+      {
+        unhookBrowserGetter(e.target.linkedBrowser);
+        // Check dangling new window on tab close
+        UtilsPluginManager.checkDanglingNewWindow(e.target);
+      }, false);
     }
     catch (ex)
     {
@@ -238,7 +243,8 @@ var gFireIE = null;
           {
             browsers = [];
             let dropCount = dt.mozItemCount;
-            for (let i = 0; i < dropCount; ++i) {
+            for (let i = 0; i < dropCount; ++i)
+            {
               let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
               if (!flavor) return;
               let data = dt.mozGetDataAt(flavor, i);
@@ -261,8 +267,8 @@ var gFireIE = null;
       // Show bookmark state (the star icon in URL bar) when using IE engine
       if (typeof(PlacesStarButton) != "undefined" && typeof(PlacesStarButton.updateState) == "function")
         HM.hookCodeHeadTail("PlacesStarButton.updateState",
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
 
       // Firefox 23 : PlacesStarButton has been changed to BookmarksMenuButton
       if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
