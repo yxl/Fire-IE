@@ -20,10 +20,10 @@
     <description>&pluginNotFound1;</description>
     <description>&pluginNotFound3;</description>
     <description id="makeSure" _textTemplate="&makeSure;">
-      <label class="text-link" onclick="openPluginManager();"/>
+      <label class="text-link" onclick="if (event.button == 0) openPluginManager();"/>
     </description>
     <description id="reinstall" _textTemplate="&reinstall;">
-      <label class="text-link" _url="&homepage;" onclick="visitHomepage(this);"/>
+      <label class="text-link" _url="&homepage;" onclick="if (event.button == 0) visitHomepage(this);"/>
     </description>
   </vbox>
 </dialog>

@@ -12,6 +12,7 @@
    <em:contributor>Yifan Wu</em:contributor>
    <em:homepageURL>http://fireie.org/</em:homepageURL>
    <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
+   <em:aboutURL>chrome://fireie/content/about.xul</em:aboutURL>
    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
    <em:targetPlatform>WINNT</em:targetPlatform>
    <em:unpack>true</em:unpack>

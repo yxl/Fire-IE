@@ -1,0 +1,106 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+#fireieAbout {
+  padding: 0px;
+  min-height: 200px;
+  max-height: 600px;
+  width: 50em;
+}
+
+#clientBox {
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+@media (-moz-windows-compositor) {
+  #fireieAbout {
+    -moz-appearance: -moz-win-glass;
+    background: transparent;
+  }
+
+  #clientBox {
+    -moz-appearance: -moz-win-exclude-glass;
+  }
+}
+
+
+.basic-info {
+  padding: 10px;
+}
+
+#extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
+  max-width: 64px;
+  max-height: 64px;
+  -moz-margin-end: 6px;
+}
+
+#fireieAbout[addontype="theme"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+}
+
+#fireieAbout[addontype="locale"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+}
+
+#fireieAbout[addontype="plugin"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/plugins/pluginGeneric.png");
+}
+
+#fireieAbout[addontype="dictionary"] #extensionIcon {
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+}
+
+#extensionName {
+  font-size: 200%;
+  font-weight: bolder;
+}
+
+#extensionVersion {
+  font-weight: bold;
+}
+
+#extensionDescription {
+  margin-top: 4px;
+}
+
+#groove {
+  margin-top: 8px;
+}
+
+
+#extensionDetailsBox {
+  overflow: auto;
+  min-height: 100px;
+}
+
+.boxIndent {
+  -moz-margin-start: 18px;
+}
+
+#extensionCreator, .contributor {
+  margin: 0px;
+} 
+
+.sectionTitle {
+  padding: 2px 0px 3px 0px;
+  margin-top: 3px;
+  font-weight: bold;
+}
+
+.text-link {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+#links html|ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+#links html|ul html|li {
+  margin: 0 18px;
+}
