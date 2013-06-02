@@ -175,6 +175,11 @@ Exit:
 		{
 			bAltPressed = TRUE;
 		}
+		// Might be in AltGr up sequence, skip
+		else if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_CONTROL)
+		{
+			bAltPressed = FALSE;
+		}
 
 		TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
 		if (bCtrlPressed || bAltPressed || (pMsg->wParam >= VK_F1 && pMsg->wParam <= VK_F24))
@@ -294,6 +299,7 @@ Exit:
 			switch (keyCode)
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
+			case VK_MENU: // Might be in AltGr up sequence
 				return FALSE;
 			case VK_SHIFT: // Issue #90: Ctrl-Shift switching IME, should not lose focus
 			case VK_SPACE:
