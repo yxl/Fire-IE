@@ -136,7 +136,7 @@
               <hbox align="center">
                 <radio id="iconAndText-radio" label="&fireie.options.ui.iconAndText;" value="iconAndText" />
                 <spacer flex="1"/>
-                <image class="icon-and-text" width="150" height="24" onclick="event.button == 0 &amp;&amp; Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('&fireie.options.ui.buttonStylesURL;');" />
+                <image class="icon-and-text" width="150" height="24" onclick="event.button == 0 &amp;&amp; Options.setIconDisplayValue('iconAndText')" style="list-style-image: url('chrome://fireie/locale/url-button-styles.png');" />
               </hbox>
             </radiogroup>
           </vbox>

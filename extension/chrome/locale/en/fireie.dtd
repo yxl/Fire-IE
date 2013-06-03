@@ -34,7 +34,6 @@
 <!ENTITY fireie.options.ui.showTooltipText "Show engine status when hovering URL bar button">
 <!ENTITY fireie.options.ui.statusBarCaption "Floating Status Bar">
 <!ENTITY fireie.options.ui.showStatusText "Show IE engine's status in the floating status bar">
-<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles.png">
 <!ENTITY fireie.options.ui.faviconCaption "Tab Icon">
 <!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
