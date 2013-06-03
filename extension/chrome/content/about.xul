@@ -60,7 +60,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
         <label id="extensionVersion" crop="end"/>
       </vbox>
     </hbox>
-    <description id="extensionDescription" class="boxIndent"/>
+    <html:p id="extensionDescription" class="boxIndent"/>
 
     <separator id="groove" class="groove"/>
     
