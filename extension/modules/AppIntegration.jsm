@@ -69,8 +69,8 @@ function init()
   Prefs.addListener(function(name)
   {
     if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
-      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme"
-      || name == "fxLabel" || name == "ieLabel")
+      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "shortcutEnabled"
+      || name == "currentTheme" || name == "fxLabel" || name == "ieLabel")
     {
       reloadPrefs();
     }
@@ -624,22 +624,53 @@ WindowWrapper.prototype = {
    */
   _configureKeys: function()
   {
+    /*
+      <key id="key_fireieSwitch" command="cmd_fireieSwitch" modifiers="alt"
+      key="C" />
+    */
     try
     {
-      let keyItem = this.E('key_fireieSwitch');
-      if (keyItem)
+      let isFirst = false;
+      let keyItem = this.E("key_fireieSwitch");
+      if (!keyItem)
       {
-        if (Prefs.shortcutEnabled)
+        keyItem = this.CE("key")
+        keyItem.setAttribute("id", "key_fireieSwitch");
+        keyItem.setAttribute("command", "cmd_fireieSwitch");
+        this.E("mainKeyset").appendChild(keyItem);
+        isFirst = true;
+      }
+
+      // Modifying shortcut keys & modifiers requires a restart,
+      // while modifying the disabled state does not.
+      if (isFirst)
+      {
+        // Default key is "C"
+        let shortcut_key = Prefs.shortcut_key;
+        // Normalize to VK_* keycode
+        if (Utils.startsWith(shortcut_key, "VK_"))
         {
-          // Default key is "C"
-          keyItem.setAttribute('key', Prefs.shortcut_key);
-          // Default modifiers is "alt"
-          keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
+          keyItem.setAttribute("keycode", shortcut_key);
+          keyItem.removeAttribute("key");
         }
         else
         {
-          keyItem.parentNode.removeChild(keyItem);
+          keyItem.setAttribute("key", shortcut_key);
+          keyItem.removeAttribute("keycode");
         }
+
+        // Default modifiers is "alt"
+        let shortcut_modifiers = Prefs.shortcut_modifiers;
+        keyItem.setAttribute("modifiers", shortcut_modifiers);
+      }
+
+      if (Prefs.shortcutEnabled)
+      {
+        keyItem.removeAttribute("disabled");
+      }
+      else
+      {
+        keyItem.setAttribute("disabled", "true");
       }
     }
     catch (e)

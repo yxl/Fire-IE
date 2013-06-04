@@ -95,6 +95,18 @@
               <menuitem value="7" label="7" />
               <menuitem value="8" label="8" />
               <menuitem value="9" label="9" />
+              <menuitem value="VK_F1" label="F1" />
+              <menuitem value="VK_F2" label="F2" />
+              <menuitem value="VK_F3" label="F3" />
+              <menuitem value="VK_F4" label="F4" />
+              <menuitem value="VK_F5" label="F5" />
+              <menuitem value="VK_F6" label="F6" />
+              <menuitem value="VK_F7" label="F7" />
+              <menuitem value="VK_F8" label="F8" />
+              <menuitem value="VK_F9" label="F9" />
+              <menuitem value="VK_F10" label="F10" />
+              <menuitem value="VK_F11" label="F11" />
+              <menuitem value="VK_F12" label="F12" />
             </menupopup>
           </menulist>
         </hbox>

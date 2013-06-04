@@ -3,7 +3,8 @@
 <!ENTITY subscriptions.tab.label              "Subskrypcje reguł">
 <!ENTITY rules.tab.label                    "Własne reguły">
 
-<!ENTITY subscription.autoupdate              "Aktualizuj automatycznie">
+<!ENTITY subscription.autoupdate.label        "Aktualizuj automatycznie">
+<!ENTITY subscription.autoupdate.accesskey    "a">
 <!ENTITY addSubscription.label                "Dodaj subskrypcję reguł">
 <!ENTITY addSubscription.accesskey            "f">
 

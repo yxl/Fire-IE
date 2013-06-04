@@ -76,23 +76,18 @@ Options.apply = function(quiet)
   Prefs.handleUrlBar = E("handleurl").checked;
   Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
   let newKey = E("shortcut-key").value;
-  if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
+  if (Prefs.shortcut_key != newKey)
   {
     requiresRestart = true;
   }
   Prefs.shortcut_key = newKey;
   let newModifiers = E("shortcut-modifiers").value;
-  if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
+  if (Prefs.shortcut_modifiers != newModifiers)
   {
     requiresRestart = true;
   }
   Prefs.shortcut_modifiers = newModifiers;
-  let newEnabled = E("shortcutEnabled").checked;
-  if (Prefs.shortcutEnabled != newEnabled)
-  {
-    requiresRestart = true;
-    Prefs.shortcutEnabled = E("shortcutEnabled").checked;
-  }
+  Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   Prefs.privatebrowsingwarning = E("privatebrowsingwarning").checked;
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");

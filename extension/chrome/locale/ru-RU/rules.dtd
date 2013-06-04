@@ -3,7 +3,8 @@
 <!ENTITY subscriptions.tab.label              "Подписки на правила">
 <!ENTITY rules.tab.label                    "Правила пользователя">
 
-<!ENTITY subscription.autoupdate              "Обновлять автоматически">
+<!ENTITY subscription.autoupdate.label        "Обновлять автоматически">
+<!ENTITY subscription.autoupdate.accesskey    "a">
 <!ENTITY addSubscription.label                "Побавить подписку">
 <!ENTITY addSubscription.accesskey            "f">
 
