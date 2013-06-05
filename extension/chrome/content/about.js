@@ -139,7 +139,7 @@ function processDescription(desc)
                        .replace(/\[(\w+)\]/g, "<html:$1>")
                        .replace(/\[\/(\w+)\]/g, "</html:$1>")
                        .replace(/\[(\w+)\s*\/\]/g, "<html:$1 />")
-                       .replace(/\[\.([\w\d.#]+)\]/g, "&$1;")
+                       .replace(/\[\.([\w\d.#]+)\]/g, "&$1;");
     desc.innerHTML = html;
   }
   else if (!desc.textContent)

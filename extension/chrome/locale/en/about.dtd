@@ -5,7 +5,7 @@
 
 <!--
     To embed html tags in the description, use [tag][/tag] or [tag/];
-    To embed entities in the description, use [.entity], e.g. [.amp] stands for &amp(&), and [.quot] stands for &quot(");
+    To embed entities in the description, use [.entity], e.g. [.amp] stands for "&amp;"(&), and [.quot] stands for "&quot;"(");
     To embed links, use [link href='url']link_text[/link].
 -->
 <!ENTITY about.longDesc           "[p]Fire-IE is another ietab-like extension. It embeds the IE engine to handle IE-only websites. You could change the browser engine from Firefox to IE by a simple click.[/p]
