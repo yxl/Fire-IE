@@ -16,11 +16,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <mshtmcid.h>
-#include <mshtmhst.h>
-#include <mshtmdid.h>
-#include <mshtml.h>
-
 class CIEHostWindow;
 
 class CIEControlSite : public COleControlSite

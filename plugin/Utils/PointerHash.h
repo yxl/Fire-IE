@@ -20,8 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // PointerHash.h : Hasher and Equality comparator definition for pointer types
 //
 
-#include <xhash>
-
 namespace Utils {
 	extern std::hash<size_t> size_t_hasher;
 

@@ -42,7 +42,6 @@
 #include "PluginApp.h"
 #include "pluginbase.h"
 #include "UserMessage.h"
-#include <vector>
 
 class CIEHostWindow;
 
@@ -139,8 +138,10 @@ namespace Plugin
 		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
 		 * @param ulId The ID of the CIEHostWindow object.
 		 * @param strURL The page URL to be loaded in the new tab.
+		 * @param bShift Whether the shift key is pressed when the request is made
+		 * @param bCtrl Whether the ctrl key is pressed when the request is made
 		 */
-		void IENewTab(ULONG_PTR ulId, const CString& strURL);
+		void IENewTab(ULONG_PTR ulId, const CString& strURL, bool bShift, bool bCtrl);
 
 		/** Close current IE engie tab. */
 		void CloseIETab();
@@ -168,6 +169,9 @@ namespace Plugin
 
 		/** AdBlock Plus filters failed load */
 		void OnABPLoadFailure();
+
+		/** IE engine URL changed */
+		void OnURLChanged(const CString& url);
 	protected:
 
 		NPP m_pNPInstance;

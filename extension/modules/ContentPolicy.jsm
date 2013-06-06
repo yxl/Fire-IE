@@ -28,12 +28,14 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 Cu.import(baseURL.spec + "RuleStorage.jsm");
 Cu.import(baseURL.spec + "RuleClasses.jsm");
 Cu.import(baseURL.spec + "Matcher.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 
 /**
  * Public policy checking functions and auxiliary objects
@@ -99,6 +101,23 @@ var Policy = {
   },
 
   /**
+   * Checks whether the page should be loaded in Firefox engine. 
+   * @param {String} url
+   * @return {Boolean} true if Firefox engine should be used.
+   */
+  checkEngineExceptionalRule: function(url)
+  {
+    if (Utils.isFirefoxOnly(url)) return true;
+    let docDomain = Utils.getHostname(url);
+    let match = EngineMatcher.matchesAny(url, docDomain);
+    if (match)
+    {
+      RuleStorage.increaseHitCount(match);
+    }
+    return match && match instanceof EngineExceptionalRule;
+  },
+
+  /**
    * Checks whether IE user agent should be used. 
    * @param {String} url
    * @return {UserAgentRule} the rule if there's any match
@@ -121,6 +140,28 @@ var Policy = {
   isSwitchableScheme: function(location)
   {
     return !(location.scheme in Policy.ignoredSchemes);
+  },
+  
+  /**
+   * Checks whether user has manually switched engine on current tab & url
+   * @param {nsIDOMNode} browserNode
+   * @param {String} url
+   * @return {Boolean}
+   */
+  isManuallySwitched: function(browserNode, url)
+  {
+    let hostName = Utils.getEffectiveHost(url);
+    return hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+  },
+  
+  /**
+   * Sets the manually switched flag on current tab & url
+   * @param {nsIDOMNode} browserNode
+   * @param {String} url
+   */
+  setManuallySwitched: function(browserNode, url)
+  {
+    browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
   }
 };
 
@@ -162,9 +203,9 @@ var PolicyPrivate = {
     catch (ex) { }
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
-    // User has manually switched to Firefox engine
-    let hostName = Utils.getHostname(location.spec);
-    if (hostName && browserNode.getAttribute('manuallySwitchToFirefox') == hostName) return Ci.nsIContentPolicy.ACCEPT;
+    // User has manually switched engine
+    if (Policy.isManuallySwitched(browserNode, location.spec))
+      return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
     if (Policy.checkEngineRule(location.spec))
@@ -175,7 +216,25 @@ var PolicyPrivate = {
       }, this);
       return Ci.nsIContentPolicy.REJECT_OTHER;
     }
-
+    // Check engine switch back list
+    if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(location.spec))
+    {
+      let url = Utils.fromContainerUrl(location.spec);
+      if (Policy.isManuallySwitched(browserNode, url))
+        return Ci.nsIContentPolicy.ACCEPT;
+      if (Policy.checkEngineExceptionalRule(url))
+      {
+        Utils.runAsync(function()
+        {
+          browserNode.loadURI(url);
+          // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
+          let tab = Utils.getTabFromBrowser(browserNode);
+          UtilsPluginManager.checkDanglingNewWindow(tab);
+        }, this);
+        return Ci.nsIContentPolicy.REJECT_OTHER;
+      }
+    }
+    
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
@@ -228,9 +287,8 @@ var PolicyPrivate = {
             if (browserNode)
             {
               // User has manually switched to Firefox engine
-              let hostName = Utils.getHostname(url);
-              let manualSwitch = hostName && browserNode.getAttribute('manuallySwitchToFirefox') == Utils.getHostname(url);
-              if (manualSwitch) return;
+              if (Policy.isManuallySwitched(browserNode, url))
+                return;
             }
 
             // Check engine switch list

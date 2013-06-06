@@ -29,11 +29,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "File.h"
 #include "IEHostWindow.h"
 #include "PrefManager.h"
-#include <map>
-#include <unordered_set>
 
 using namespace abp;
-using namespace std;
 using namespace re;
 using namespace strutils;
 
@@ -128,7 +125,7 @@ bool AdBlockPlus::shouldLoad(const wstring& location, ContentType_T contentType,
 
 bool AdBlockPlus::shouldSendDNTHeader(const wstring& location)
 {
-	if (PrefManager::instance().isDNTEnabled()) return true;
+	if (PrefManager::instance().isDNTEnabled() && PrefManager::instance().getDNTValue() == 1) return true;
 	if (!s_bEnabled) return false;
 
 	ReaderLock rl(s_mutex);
@@ -235,19 +232,18 @@ namespace abp {
 		static const wstring strTrue = L"true";
 		static const wstring strLeftBracket = L"[";
 
-		RegExpMatch* match = NULL;
-		if (wantObj && (match = re1.exec(line)))
+		RegExpMatch match;
+		bool ret = false;
+		if (wantObj && re1.exec(match, line))
 		{
-			curObj[match->substrings[1]] = match->substrings[2];
-			delete match;
+			curObj[match.substrings[1]] = match.substrings[2];
 		}
-		else if (eof || (match = re2.exec(line)))
+		else if (eof || (ret = re2.exec(match, line)))
 		{
 			wstring strSection;
-			if (match)
+			if (ret)
 			{
-				strSection = toLowerCase(match->substrings[1]);
-				delete match;
+				strSection = toLowerCase(match.substrings[1]);
 			}
 			if (wantObj ? curObj.size() : curList.size())
 			{
@@ -391,14 +387,11 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 	// Notify main thread about load completion
 	CIEHostWindow* pWindow = CIEHostWindow::GetAnyUtilsWindow();
 	if (pWindow)
-		pWindow->RunAsync([=]
-		{
-			filterLoadedCallback(loaded);
-			pWindow->SendMessage(UserMessage::WM_USER_MESSAGE,
-				loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
-		});
-	else
-		filterLoadedCallback(loaded);
+	{
+		pWindow->PostMessage(UserMessage::WM_USER_MESSAGE,
+			loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
+	}
+	filterLoadedCallback(loaded);
 
 	return 0;
 }

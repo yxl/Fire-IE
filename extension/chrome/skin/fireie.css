@@ -24,11 +24,11 @@
   display: none;
 }
 
-#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-tooltip1 {
+#fireie-urlbar-switch-tooltip.btndisabled #fireie-urlbar-switch-tooltip1 {
   display: none;
 }
 
-#fireie-urlbar-switch[disabled="true"] #fireie-urlbar-switch-tooltip1-disabled {
+#fireie-urlbar-switch-tooltip.btndisabled #fireie-urlbar-switch-tooltip1-disabled {
   display: inline;
 }
 

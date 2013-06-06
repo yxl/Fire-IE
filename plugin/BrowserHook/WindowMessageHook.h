@@ -32,7 +32,7 @@ namespace BrowserHook
 		static WindowMessageHook s_instance;
 		BOOL Install(void);
 		BOOL Uninstall(void);
-
+		static BOOL IsMiddleButtonClicked();
 	private:
 		WindowMessageHook(void);
 		~WindowMessageHook(void);
@@ -42,11 +42,14 @@ namespace BrowserHook
 		static BOOL ForwardFirefoxKeyMessage(HWND hwndFirefox, MSG* pMsg);
 		static BOOL ForwardFirefoxMouseMessage(HWND hwndFirefox, MSG* pMsg);
 		static BOOL ForwardZoomMessage(HWND hwndFirefox, MSG* pMsg);
+		static void RecordMiddleClick(MSG* pMsg);
 	private:
 		// WH_GETMESSAGE hook.
 		static HHOOK s_hhookGetMessage;
 		// WH_CALLWNDPROCRET
 		static HHOOK s_hhookCallWndProcRet;
+		// Record the last time middle button was clicked
+		static UINT64 s_nLastMiddleClickTick;
 	};
 }
 

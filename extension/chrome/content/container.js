@@ -141,24 +141,12 @@ let FireIEContainer = {};
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
+    window.addEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
     // support focus on plain DOMMouseScroll
     E("container").addEventListener("DOMMouseScroll", onDOMMouseScroll, false);
-    // Use the following code to check mouse events
-    /*
-    window.addEventListener("mousedown", function(e)
-    {
-      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mousedown " +
-        "from " + e.originalTarget.toString());
-    }, false);
-    window.addEventListener("mouseup", function(e)
-    {
-      Utils.ERROR((e.button == 0 ? "left" : (e.button == 1 ? "middle" : "right")) + "mouseup " +
-        "from " + e.originalTarget.toString());
-    }, false);
-    */
   }
 
   function unregisterEventHandler()
@@ -167,6 +155,7 @@ let FireIEContainer = {};
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
+    window.removeEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -205,6 +194,36 @@ let FireIEContainer = {};
     syncURL();
   }
   
+  function onIEURLChanged(event)
+  {
+    checkSwitchBack(event.detail);
+  }
+  
+  let bSwitchEngineInitiated = false;
+
+  function checkSwitchBack(url)
+  {
+    if (bSwitchEngineInitiated)
+      return true;
+
+    if (url)
+    {
+      let containerUrl = Utils.toContainerUrl(url);
+      if (window.location.href != containerUrl)
+      {
+        // Issue #51: check if we need to switch back to Firefox engine
+        if (gFireIE && gFireIE.shouldSwitchBack(url))
+        {
+          bSwitchEngineInitiated = true;
+          gFireIE.switchEngine(Utils.getTabFromWindow(window), true, url);
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
   /** sync recorded url when IE engine navigates to another location */
   function syncURL()
   {
@@ -213,14 +232,17 @@ let FireIEContainer = {};
     
     let url = po.URL;
     if (!url) return;
-    
-    url = Utils.toContainerUrl(url);
-    if (window.location.href != url)
+
+    if (checkSwitchBack(url))
+      return;
+      
+    let containerUrl = Utils.toContainerUrl(url);
+    if (window.location.href != containerUrl)
     {
       // HTML5 history manipulation,
       // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
       if (window.history)
-        window.history.replaceState("", document.title, url);
+        window.history.replaceState("", document.title, containerUrl);
     }
   }
   

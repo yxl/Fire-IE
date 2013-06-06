@@ -20,9 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // Matcher.h : ABP filter matching engine
 //
 
-#include <string>
-#include <unordered_map>
-#include <vector>
 #include "FilterClasses.h"
 #include "TList.h"
 #include "RAIILock.h"

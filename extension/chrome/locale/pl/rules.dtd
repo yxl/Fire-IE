@@ -1,0 +1,107 @@
+<!ENTITY dialog.title                         "Fire-IE - Ustawienia reguł">
+
+<!ENTITY subscriptions.tab.label              "Subskrypcje reguł">
+<!ENTITY rules.tab.label                    "Własne reguły">
+
+<!ENTITY subscription.autoupdate.label        "Aktualizuj automatycznie">
+<!ENTITY subscription.autoupdate.accesskey    "a">
+<!ENTITY addSubscription.label                "Dodaj subskrypcję reguł">
+<!ENTITY addSubscription.accesskey            "f">
+
+<!ENTITY addSubscriptionAdd.label             "Dodaj">
+<!ENTITY addSubscriptionCancel.label          "Anuluj">
+<!ENTITY addSubscriptionOther.label           "Wybierz inną subskrypcję">
+
+<!ENTITY noSubscriptions.text                 "Jeszcze nie dodano żadnego zestawu reguł. Fire IE nie może zmieniać silnika przeglądarki i synchronizować ciasteczek bez reguł. Naciśnij przycisk „Dodaj subskrypcję reguł”, by dodać jakąś regułę.">
+<!ENTITY subscription.homepage.label          "Strona domowa">
+<!ENTITY subscription.external.label          "Updated by another extension">
+<!ENTITY subscription.source.label            "Zestaw reguł">
+<!ENTITY subscription.enabled.label           "Włączony">
+<!ENTITY subscription.lastDownload.label      "Ostatnio pobierany:">
+<!ENTITY subscription.lastDownload.inProgress "Pobieranie…">
+<!ENTITY subscription.lastDownload.unknown    "nieznane">
+<!ENTITY subscription.lastDownload.invalidURL "Nie powiodło się – nieprawidłowy adres">
+<!ENTITY subscription.lastDownload.connectionError "Nie powiodło się – błąd pobierania">
+<!ENTITY subscription.lastDownload.invalidData "Nie powiodło się – nieprawidłowy zestaw reguł">
+<!ENTITY subscription.lastDownload.checksumMismatch "Nie powiodło się – niepoprawna suma kontrolna">
+<!ENTITY subscription.lastDownload.success    "Sukces">
+<!ENTITY subscription.minVersion.warning      "Ten zestaw reguł działa z najnowszą wersją Fire IE. Zaktualizuj Fire IE.">
+<!ENTITY subscription.disabledRules.warning "Niektóre filtry w tym zestawie są wyłączone.">
+<!ENTITY subscription.disabledRules.enable  "Włącz zdezaktywowane reguły">
+
+<!ENTITY subscription.actions.label           "Działania">
+<!ENTITY subscription.update.label            "Aktualizuj reguły">
+<!ENTITY subscription.editTitle.label         "Edytuj tytuł">
+<!ENTITY subscription.delete.label            "Usuń">
+<!ENTITY subscription.showHideRules.label   "Pokaż/Ukryj szczegóły">
+<!ENTITY subscription.moveUp.label            "Przesuń wyżej">
+<!ENTITY subscription.moveDown.label          "Przesuń niżej">
+
+<!ENTITY viewList.label                       "Zobacz listę">
+
+<!ENTITY addGroup.label                       "Dodaj zestaw reguł">
+<!ENTITY addGroup.accesskey                   "g">
+
+<!ENTITY noRules.text                       "Nie dodałeś jeszcze żadnych własnych reguł.">
+
+<!ENTITY addRule.label                      "Dodaj regułę">
+<!ENTITY addRule.accesskey                  "d">
+
+<!ENTITY rule.actions.label                 "Działania reguły">
+<!ENTITY rule.edit.label                    "Edytuj">
+<!ENTITY rule.cut.label                     "Wytnij">
+<!ENTITY rule.copy.label                    "Kopiuj">
+<!ENTITY rule.paste.label                   "Wklej">
+<!ENTITY rule.delete.label                  "Usuń">
+<!ENTITY rule.selectAll.label               "Zaznacz wszystko">
+<!ENTITY rule.resetHitCounts.label          "Resetuj statystyki użyćReset hit statistics">
+<!ENTITY rule.moveUp.label                  "Przesuń wyżej">
+<!ENTITY rule.moveDown.label                "Przesuń niżej">
+<!ENTITY viewMenu.label                       "Widok">
+
+<!ENTITY rule.column                        "Reguła zmiany silnika">
+<!ENTITY rule.accesskey                     "F">
+<!ENTITY slow.column                          "Powolne reguły">
+<!ENTITY slow.accesskey                       "w">
+<!ENTITY enabled.column                       "Aktywna">
+<!ENTITY enabled.accesskey                    "n">
+<!ENTITY hitcount.column                      "Użycia">
+<!ENTITY hitcount.accesskey                   "H">
+<!ENTITY lasthit.column                       "Ostatnie użycie">
+<!ENTITY lasthit.accesskey                    "L">
+
+<!ENTITY sort.label                           "Sortuj wg">
+<!ENTITY sort.accesskey                       "S">
+<!ENTITY sort.none.label                      "Nieposortowane">
+<!ENTITY sort.none.accesskey                  "U">
+<!ENTITY sort.ascending.label                 "w kolejności A > Z">
+<!ENTITY sort.ascending.accesskey             "A">
+<!ENTITY sort.descending.label                "w kolejności Z > A">
+<!ENTITY sort.descending.accesskey            "Z">
+
+<!ENTITY noGroupSelected.text                 "Aby reguły mogły być wyświetlane, należy najpierw wybrać grupę.">
+<!ENTITY noRulesInGroup.text                "Wybrany zestaw jest pusty">
+
+<!ENTITY rules.remove.warning               "Czy jesteś pewien, że chcesz usunąć wszystkie reguły">
+
+<!ENTITY backupButton.label                   "Tworzenie i odtwarzanie kopii">
+<!ENTITY backupButton.accesskey               "B">
+
+<!ENTITY backup.label                         "Utwórz nową kopię">
+<!-- Note: the placeholder ?1? will be replaced by date/time of the automatic backup -->
+<!ENTITY restore.default.label                "Odtwórz kopię z dnia ?1?">
+<!ENTITY restore.own.label                    "Odtwórz własną kopię">
+
+<!ENTITY backup.complete.title                "Wszystkie reguły i zestawy">
+<!ENTITY backup.custom.title                  "Tylko własne reguły">
+
+<!ENTITY backup.error                         "W trakcie zapisu reguł wystąpił błąd. Sprawdź, czy czasami plik nie ma zabezpieczenia przed zapisem lub nie jest używany przez inną aplikację.">
+<!ENTITY restore.error                        "Nie można przetworzyć danych filtra. Może to nie jest plik kopii zapasowej Fire IE?">
+<!ENTITY restore.complete.warning             "Wszystkie ustawienia reguł zostaną zastąpione zawartością wybranego pliku. Czy chcesz kontynuować?">
+<!ENTITY restore.custom.warning               "Wszystkie własne reguły zostaną zastąpione zawartością wybranego pliku. Czy chcesz kontynuować?">
+<!ENTITY restore.minVersion.warning           "Ostrzeżenie! Plik został utworzony za pomocą najnowszej wersji Fire IE. Przed odtworzeniem zawartości tego pliku, należy zainstalować najnowszą wersję Fire IE.">
+
+<!ENTITY find.label                           "Znajdź">
+<!ENTITY find.accesskey                       "n">
+
+<!ENTITY close.label                          "Zamknij">

@@ -20,10 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // RegExp.h : regular expression matching engine
 //
 
-#include <string>
-#include <vector>
-#include <stdexcept>
-
 namespace jscre {
 	struct JSRegExp;
 }
@@ -34,6 +30,30 @@ struct RegExpMatch {
 	int index;
 	std::wstring input;
 	std::vector<std::wstring> substrings;
+
+	RegExpMatch() {}
+	RegExpMatch(const RegExpMatch& match)
+		: index(match.index), input(match.input),
+		  substrings(match.substrings) { }
+	RegExpMatch(RegExpMatch&& match)
+		: index(match.index), input(std::move(match.input)),
+		  substrings(std::move(match.substrings)) { }
+	RegExpMatch& operator=(const RegExpMatch& match)
+	{
+		index = match.index;
+		input = match.input;
+		substrings = match.substrings;
+
+		return *this;
+	}
+	RegExpMatch& operator=(RegExpMatch&& match)
+	{
+		index = match.index;
+		input = std::move(match.input);
+		substrings = std::move(match.substrings);
+
+		return *this;
+	}
 };
 
 class RegExp {
@@ -41,9 +61,11 @@ public:
 	RegExp();
 	RegExp(const std::wstring& strFullPattern);
 	RegExp(const RegExp&);
+	RegExp(RegExp&&);
 	~RegExp();
 
 	RegExp& operator=(const RegExp&);
+	RegExp& operator=(RegExp&&);
 	RegExp& operator=(const std::wstring& strFullPattern);
 
 	// Compiles the regular expression
@@ -58,11 +80,11 @@ public:
 	std::wstring getSource() const { return m_strFullPattern; }
 
 	// do regexp matching, caller is responsible to free RegExpMatch*
-	RegExpMatch* exec(const std::wstring& str);
-	RegExpMatch* exec(const std::wstring& str, int lastPos);
+	bool exec(RegExpMatch& match, const std::wstring& str);
+	bool exec(RegExpMatch& match, const std::wstring& str, int lastPos);
 	// should use const version in multi-threading environment
-	RegExpMatch* exec(const std::wstring& str) const; 
-	RegExpMatch* exec(const std::wstring& str, int lastPos) const;
+	bool exec(RegExpMatch& match, const std::wstring& str) const; 
+	bool exec(RegExpMatch& match, const std::wstring& str, int lastPos) const;
 	// do regexp testing
 	bool test(const std::wstring& str);
 	bool test(const std::wstring& str) const; // should use const version in multi-threading environment
@@ -88,7 +110,7 @@ private:
 	void setAttributes();
 	void setAttributes(const std::wstring& strAttributes);
 
-	RegExpMatch* execCore(const std::wstring& str, int lastPos) const;
+	bool execCore(RegExpMatch& match, const std::wstring& str, int lastPos) const;
 	bool testCore(const std::wstring& str) const;
 };
 

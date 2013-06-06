@@ -20,9 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IECtrl.h"
 #include "UserMessage.h"
 #include "PointerHash.h"
-#include <vector>
-#include <string>
-#include <deque>
 
 namespace Plugin
 {
@@ -151,6 +148,7 @@ protected:
 	void OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel);
 	void OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL);
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
+	void OnURLChanged(const CString& url);
 
 	void SendKey(WORD vkey);
 	CString GetSelectionTextFromDoc(const CComPtr<IHTMLDocument2>& pDoc);
@@ -207,6 +205,7 @@ public:
 	void ScrollWhole(bool up);
 	void ScrollHorizontal(bool left);
 	void ScrollWheelLine(bool up);
+	static void RemoveNewWindow(ULONG_PTR ulId);
 
 	// FindBar methods
 	void FBFindText(const CString& text);
@@ -313,43 +312,20 @@ protected:
 	/** Ensure the operations on m_strLoadingUrl are thread safe. */
 	CCriticalSection m_csLoadingUrl;
 
-protected:
-	class ICallable;
-	// Keep track of callable instances, make sure the calling is safe.
-	std::deque<ICallable*> m_qCallables;
-	CCriticalSection m_csCallables;
-
-	// Asynchronous function calling, replaces original PostMessage approach
-	// This makes code more readable by putting caller code and callee code together
-
-	// Callable interface for async function calling
-	class ICallable {
-	public:
-		virtual void call() const = 0;
-		virtual ~ICallable() { }
-	};
-
-	// Wraps callable function (typically a lambda expression) into ICallable
-	template<class Func>
-	class CallableFuncWrapper : public ICallable {
-	public:
-		CallableFuncWrapper(const Func& func) : func(func) { }
-		virtual void call() const { func(); }
-	private:
-		Func func;
-	};
-
 public:
-	// Asynchronously run the specified function at next message loop
-	template <class Func>
-	void RunAsync(const Func& func)
-	{
-		ICallable* wrapper = new CallableFuncWrapper<Func>(func);
-		
-		m_csCallables.Lock();
-		m_qCallables.push_back(wrapper);
-		m_csCallables.Unlock();
+	typedef std::function<void()> MainThreadFunc;
+
+	// Asynchronously run the specified function on at next message loop
+	void RunAsync(const MainThreadFunc& func)
+	{		
+		m_csFuncs.Lock();
+		m_qFuncs.push_back(func);
+		m_csFuncs.Unlock();
 
 		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
 	}
+private:
+	void OnRunAsyncCall();
+	std::deque<MainThreadFunc> m_qFuncs;
+	CCriticalSection m_csFuncs;
 };

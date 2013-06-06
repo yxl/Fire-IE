@@ -23,12 +23,10 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "TLD.h"
 #include "re/RegExp.h"
 #include "re/strutils.h"
-#include <algorithm>
 
 using namespace Utils;
 using namespace re;
 using namespace re::strutils;
-using namespace std;
 
 namespace Utils {
 
@@ -86,18 +84,18 @@ const RegExp URLTokenizer::tokenizerRegExp = L"/^(?=[^&])(?:([^:\\/?#]+):)?(?:\\
 
 bool URLTokenizer::tokenize(const wstring& url)
 {
-	RegExpMatch* match = tokenizerRegExp.exec(url);
-	if (match)
+	RegExpMatch match;
+	bool ret = tokenizerRegExp.exec(match, url);
+	if (ret)
 	{
-		protocol = match->substrings[1];
-		username = match->substrings[2];
-		password = match->substrings[3];
-		domain   = match->substrings[4];
-		port     = match->substrings[5];
-		path     = match->substrings[6];
-		query    = match->substrings[7];
-		anchor   = match->substrings[8];
-		delete match;
+		protocol = match.substrings[1];
+		username = match.substrings[2];
+		password = match.substrings[3];
+		domain   = match.substrings[4];
+		port     = match.substrings[5];
+		path     = match.substrings[6];
+		query    = match.substrings[7];
+		anchor   = match.substrings[8];
 		return true;
 	}
 	else

@@ -16,8 +16,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <vector>
-
 namespace BrowserHook
 {
 

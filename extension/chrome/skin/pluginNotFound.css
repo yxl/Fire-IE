@@ -1,0 +1,11 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+description {
+  width: 350px;
+}
+
+.text-link {
+  border: none;
+  margin: 0;
+  padding: 0;
+}

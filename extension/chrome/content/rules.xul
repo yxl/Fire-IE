@@ -138,7 +138,7 @@
       <!-- subscripted switching rules -->  
       <tabpanel id="subscriptionsTab" orient="vertical" flex="1">
         <hbox>
-          <checkbox id="subscriptionsAutoUpdate" label="&subscription.autoupdate;" accesskey="A" oncommand="Prefs.subscriptions_autoupdate=this.checked;" />
+          <checkbox id="subscriptionsAutoUpdate" label="&subscription.autoupdate.label;" accesskey="&subscription.autoupdate.accesskey;" oncommand="Prefs.subscriptions_autoupdate=this.checked;" />
           <spacer flex="1"/>
           <button id="selectSubscriptionButton" label="&addSubscription.label;" accesskey="&addSubscription.accesskey;" command="subscription-add-command"/>
         </hbox>

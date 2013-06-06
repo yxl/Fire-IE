@@ -40,8 +40,6 @@
 // CPlugin class implementation
 //
 #include "stdafx.h"
-#include <windows.h>
-#include <windowsx.h>
 #include "IEHostWindow.h"
 #include "plugin.h"
 #include "npfunctions.h"
@@ -54,7 +52,6 @@
 #include "test/test.h"
 #endif
 
-using namespace std;
 using namespace UserMessage;
 
 namespace Plugin
@@ -171,7 +168,7 @@ namespace Plugin
 		{
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([=] { OnUtilsPluginInit(); });
+			m_pIEHostWindow->RunAsync([this] { OnUtilsPluginInit(); });
 		}
 		else
 		{
@@ -179,7 +176,7 @@ namespace Plugin
 
 			// cannot directly fire the event since the plugin is not fully constructed 
 			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([=] { OnContentPluginInit(); });
+			m_pIEHostWindow->RunAsync([this] { OnContentPluginInit(); });
 		}
 
 		return TRUE;
@@ -401,11 +398,11 @@ namespace Plugin
 	// Get CIEHostWindow ID
 	ULONG_PTR CPlugin::GetNavigateWindowId() const
 	{
-		CString strID = GetNavigateParam("getNavigateWindowId");
+		CString strId = GetNavigateParam("getNavigateWindowId");
 #ifdef _M_X64
-		return _tcstoui64(strID, NULL, 10);
+		return _tcstoui64(strId, NULL, 10);
 #else
-		return _tcstoul(strID, NULL, 10);
+		return _tcstoul(strId, NULL, 10);
 #endif
 	}
 
@@ -658,11 +655,16 @@ namespace Plugin
 		NPN_MemFree(url);
 	}
 
-	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL)
+	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL, bool bShift, bool bCtrl)
 	{
 		CString strEventType = _T("IENewTab");
 		CString strDetail;
-		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\"}"), ulId, strURL);
+		
+		// Retrieve additional info for cursor & keyboard state
+		CString strShift = bShift ? _T("true") : _T("false");
+		CString strCtrl = bCtrl ? _T("true") : _T("false");
+		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
+			ulId, strURL, strShift, strCtrl);
 		FireEvent(strEventType, strDetail);
 	}
 
@@ -734,6 +736,13 @@ namespace Plugin
 	{
 		CString strEventType = _T("IEABPLoadFailure");
 		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
+
+	void CPlugin::OnURLChanged(const CString& url)
+	{
+		CString strEventType = _T("IEURLChanged");
+		CString strDetail = url;
 		FireEvent(strEventType, strDetail);
 	}
 }

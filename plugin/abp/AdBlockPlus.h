@@ -20,7 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // AdBlockPlus.h : necessary ABP control routines
 //
 
-#include <string>
 #include "FilterContentType.h"
 #include "Matcher.h"
 #include "ElemHideMatcher.h"

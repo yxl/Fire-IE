@@ -21,10 +21,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "TList.h"
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace abp {
 	class ElemHideFilter;

@@ -20,10 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 
-#include <ctype.h>
 #include "RegExp.h"
-
-using namespace std;
 
 namespace re { namespace strutils {
 
@@ -34,9 +31,9 @@ namespace re { namespace strutils {
 // "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$10"): "j"
 // "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$15"): "a5"
 // "abcdefghijklmn".replace(/(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)(k)(l)(m)(n)/, "$20"): "b0"
-void insertReplacedString(wstring& builder, const wstring& base, const wstring& str, const RegExpMatch* match)
+void insertReplacedString(wstring& builder, const wstring& base, const wstring& str, const RegExpMatch& match)
 {
-	const vector<wstring>& substrings = match->substrings;
+	const vector<wstring>& substrings = match.substrings;
 	const wstring& mstr = substrings[0];
 	for (size_t i = 0; i < str.length(); i++)
 	{
@@ -52,10 +49,10 @@ void insertReplacedString(wstring& builder, const wstring& base, const wstring& 
 				builder.append(mstr);
 				break;
 			case L'`': // insert the portion preceding the matched string
-				builder.append(base.begin(), base.begin() + match->index);
+				builder.append(base.begin(), base.begin() + match.index);
 				break;
 			case L'\'': // insert the portion following the matched string
-				builder.append(base.begin() + match->index + mstr.length(), base.end());
+				builder.append(base.begin() + match.index + mstr.length(), base.end());
 				break;
 			default:
 				if (ch >= L'0' && ch <= L'9')
@@ -97,22 +94,25 @@ void insertReplacedString(wstring& builder, const wstring& base, const wstring& 
 
 wstring replace(const wstring& base, const RegExp& re, const wstring& str)
 {
-	std::vector<RegExpMatch*> matches;
+	std::vector<RegExpMatch> matches;
+	RegExpMatch match;
+	bool ret;
 	if (re.isGlobal())
 	{
-		RegExpMatch* match = re.exec(base, 0);
-		while (match)
+		ret = re.exec(match, base, 0);
+		while (ret)
 		{
-			matches.push_back(match);
-			int advance = (int)match->substrings[0].length();
+			int advance = (int)match.substrings[0].length();
 			if (advance < 1) advance = 1;
-			match = re.exec(base, match->index + advance);
+			int lastPos = match.index + advance;
+			matches.push_back(std::move(match));
+			ret = re.exec(match, base, lastPos);
 		}
 	}
 	else
 	{
-		RegExpMatch* match = re.exec(base);
-		if (match) matches.push_back(match);
+		ret = re.exec(match, base);
+		if (ret) matches.push_back(std::move(match));
 	}
 
 	// do the replace
@@ -120,17 +120,13 @@ wstring replace(const wstring& base, const RegExp& re, const wstring& str)
 	size_t lastPos = 0;
 	for (size_t i = 0; i < matches.size(); i++)
 	{
-		RegExpMatch* match = matches[i];
-		builder.append(base.begin() + lastPos, base.begin() + match->index);
+		const RegExpMatch& match = matches[i];
+		builder.append(base.begin() + lastPos, base.begin() + match.index);
 		insertReplacedString(builder, base, str, match);
-		lastPos = match->index + match->substrings[0].length();
+		lastPos = match.index + match.substrings[0].length();
 	}
 	builder.append(base.begin() + lastPos, base.end());
 
-	for (size_t i = 0; i < matches.size(); i++)
-	{
-		delete matches[i];
-	}
 	return builder;
 }
 
@@ -165,25 +161,27 @@ wstring toLowerCase(wstring str)
 	return str;
 }
 
-RegExpMatch* match(const wstring& base, const RegExp& re)
+//RegExpMatch* match(const wstring& base, const RegExp& re)
+bool match(RegExpMatch& match, const std::wstring& base, const RegExp& re)
 {
-	if (!re.isGlobal()) return re.exec(base);
+	if (!re.isGlobal()) return re.exec(match, base);
 
-	RegExpMatch* res = new RegExpMatch();
-	res->index = 0;
+	match.index = 0;
+	match.input.clear();
+	match.substrings.clear();
 
-	RegExpMatch* match = re.exec(base, 0);
-	while (match)
+	RegExpMatch tmp;
+	bool ret = re.exec(tmp, base, 0);
+	while (ret)
 	{
-		res->substrings.push_back(match->substrings[0]);
-		int advance = (int)match->substrings[0].length();
+		int advance = (int)tmp.substrings[0].length();
 		if (advance < 1) advance = 1;
-		int lastPos = match->index + advance;
-		delete match;
-		match = re.exec(base, lastPos);
+		int lastPos = tmp.index + advance;
+		match.substrings.push_back(std::move(tmp.substrings[0]));
+		ret = re.exec(tmp, base, lastPos);
 	}
 
-	return res;
+	return true;
 }
 
 } } // namespace re::strutils

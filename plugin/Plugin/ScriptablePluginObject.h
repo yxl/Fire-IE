@@ -17,7 +17,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "ScriptablePluginObjectBase.h"
-#include <set>
 
 #define NPI_ID(id) m_##id##ID
 #define NPI_DEF(id) NPIdentifier NPI_ID(id)
@@ -66,6 +65,7 @@ namespace Plugin
 		NPI_DEF(ScrollRight);
 		NPI_DEF(ScrollWheelUp);
 		NPI_DEF(ScrollWheelDown);
+		NPI_DEF(RemoveNewWindow);
 
 		// findbar methods
 		NPI_DEF(FBFindText); // FB stands for firefox FindBar
@@ -80,6 +80,8 @@ namespace Plugin
 		NPI_DEF(SetEnabledGestures);
 		NPI_DEF(SetCookieSyncEnabled);
 		NPI_DEF(SetDNTEnabled);
+		NPI_DEF(SetDNTValue);
+
 		// ABP methods
 		NPI_DEF(ABPEnable);
 		NPI_DEF(ABPDisable);
@@ -149,6 +151,7 @@ namespace Plugin
 			NPN_GSI_M(ScrollRight);
 			NPN_GSI_M(ScrollWheelUp);
 			NPN_GSI_M(ScrollWheelDown);
+			NPN_GSI_M(RemoveNewWindow);
 			NPN_GSI_M(FBFindText);
 			NPN_GSI_M(FBEndFindText);
 			NPN_GSI_M(FBFindAgain);
@@ -159,6 +162,7 @@ namespace Plugin
 			NPN_GSI_M(SetEnabledGestures);
 			NPN_GSI_M(SetCookieSyncEnabled);
 			NPN_GSI_M(SetDNTEnabled);
+			NPN_GSI_M(SetDNTValue);
 			NPN_GSI_M(ABPEnable);
 			NPN_GSI_M(ABPDisable);
 			NPN_GSI_M(ABPLoad);

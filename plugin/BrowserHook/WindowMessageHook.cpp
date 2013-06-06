@@ -26,6 +26,7 @@ namespace BrowserHook
 	HHOOK WindowMessageHook::s_hhookGetMessage = NULL;
 	HHOOK WindowMessageHook::s_hhookCallWndProcRet = NULL;
 	WindowMessageHook WindowMessageHook::s_instance;
+	UINT64 WindowMessageHook::s_nLastMiddleClickTick = 0;
 
 	WindowMessageHook::WindowMessageHook(void)
 	{
@@ -64,6 +65,10 @@ namespace BrowserHook
 			s_hhookCallWndProcRet= NULL;
 		}
 		return TRUE;
+	}
+
+	BOOL WindowMessageHook::IsMiddleButtonClicked() {
+		return GetTickCount64() - s_nLastMiddleClickTick < 200;
 	}
 
 	// The message loop of Mozilla does not handle accelertor keys.
@@ -125,6 +130,8 @@ namespace BrowserHook
 				goto Exit;
 			}
 
+			RecordMiddleClick(pMsg);
+
 			bool bShouldSwallow = false;
 
 			if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
@@ -163,10 +170,35 @@ Exit:
 		BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
 		BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
 
-		// Send Alt key up message to Firefox, so that use could select the main window menu by press alt key.
+		static MSG s_pendingAltDown = {0};
+
+		if (bAltPressed && !bCtrlPressed && pMsg->wParam == VK_MENU)
+		{
+			// Alt without Ctrl is pressed. We'll delay sending the Alt down message, in case Ctrl is pressed
+			// before Alt up.  AltGr is represented in Windows massages as the combination of Alt+Ctrl, and 
+			// that is used for text input, not for menu naviagation.
+			s_pendingAltDown = *pMsg;
+			return FALSE;
+		} 
+		else if (bCtrlPressed)
+		{
+			// Clear the pending Alt down message as Ctrl is pressed.
+			memset(&s_pendingAltDown, 0, sizeof(s_pendingAltDown));
+		}
+
+		// Send Alt key up message to Firefox, so that user could select the main window menu by press alt key.
 		if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
 		{
+			// Send the pending Alt down message first.
+			::SetFocus(hwndFirefox);
+			::PostMessage(hwndFirefox, s_pendingAltDown.message, s_pendingAltDown.wParam, s_pendingAltDown.lParam);
 			bAltPressed = TRUE;
+		}
+
+		// Might be in AltGr up sequence, skip
+		else if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_CONTROL)
+		{
+			bAltPressed = FALSE;
 		}
 
 		TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
@@ -287,6 +319,7 @@ Exit:
 			switch (keyCode)
 			{
 			case VK_CONTROL: // Only Ctrl is pressed
+			case VK_MENU: // Might be in AltGr up sequence
 				return FALSE;
 			case VK_SHIFT: // Issue #90: Ctrl-Shift switching IME, should not lose focus
 			case VK_SPACE:
@@ -371,5 +404,11 @@ Exit:
 		}
 
 		return CallNextHookEx(s_hhookCallWndProcRet, nCode, wParam, lParam);
+	}
+
+	void WindowMessageHook::RecordMiddleClick(MSG* pMsg) {
+		if (pMsg->message == WM_MBUTTONUP) {
+			s_nLastMiddleClickTick = GetTickCount64();
+		}
 	}
 }

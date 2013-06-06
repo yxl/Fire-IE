@@ -34,7 +34,6 @@
 <!ENTITY fireie.options.ui.showTooltipText "滑鼠懸停時顯示引擎狀態資訊">
 <!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
 <!ENTITY fireie.options.ui.showStatusText "在浮動狀態列中顯示IE引擎的狀態訊息">
-<!ENTITY fireie.options.ui.buttonStylesURL "chrome://fireie/skin/url-button-styles-cn.png">
 <!ENTITY fireie.options.ui.faviconCaption "分頁圖示">
 <!ENTITY fireie.options.ui.faviconSite "使用網站圖示">
 <!ENTITY fireie.options.ui.faviconIE "使用IE引擎圖示">

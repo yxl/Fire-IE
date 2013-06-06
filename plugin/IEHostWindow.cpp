@@ -19,9 +19,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "stdafx.h"
-#include <mshtml.h>
-#include <exdispid.h>
-#include <comutil.h>
 #include "IEControlSite.h"
 #include "PluginApp.h"
 #include "HttpMonitorApp.h"
@@ -32,11 +29,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "re/strutils.h"
 #include "OS.h"
 #include "App.h"
+#include "WindowMessageHook.h"
 
 using namespace UserMessage;
 using namespace Utils;
 using namespace abp;
-using namespace std;
 using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow
@@ -81,11 +78,9 @@ CIEHostWindow::~CIEHostWindow()
 {
 	SAFE_DELETE(m_pNavigateParams);
 
-	m_csCallables.Lock();
-	for (auto iter = m_qCallables.begin(); iter != m_qCallables.end(); ++iter)
-		delete *iter;
-	m_qCallables.clear();
-	m_csCallables.Unlock();
+	m_csFuncs.Lock();
+	m_qFuncs.clear();
+	m_csFuncs.Unlock();
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
@@ -150,9 +145,8 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
-	else 
+	if (!pIEHostWindow)
 	{
-		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
 		{
@@ -166,7 +160,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		{
 			pIEHostWindow->m_bUtils = isUtils;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 	return pIEHostWindow;
 }
@@ -216,7 +209,7 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	{
 		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
 			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
-		pWindow->RunAsync([=]
+		pWindow->RunAsync([pWindow, pvParams]
 		{
 			if (pWindow->m_pPlugin)
 			{
@@ -305,6 +298,8 @@ void CIEHostWindow::UninitIE()
 #ifdef MATCHER_PERF
 		AdBlockPlus::showPerfInfo();
 #endif
+		TRACE(L"Remaining windows: IEWindowMap: %d, UtilsIEWindowMap: %d, NewIEWindowMap: %d\n",
+			s_IEWindowMap.GetSize(), s_UtilsIEWindowMap.GetSize(), s_NewIEWindowMap.GetSize());
 	}
 }
 
@@ -323,23 +318,8 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 	switch(wParam)
 	{
 	case WPARAM_RUN_ASYNC_CALL:
-		{
-			ICallable* callable = NULL;
-			m_csCallables.Lock();
-			if (!m_qCallables.empty())
-			{
-				callable = m_qCallables.front();
-				m_qCallables.pop_front();
-			}
-			m_csCallables.Unlock();
-
-			if (callable)
-			{
-				callable->call();
-				delete callable;
-			}
-			break;
-		}
+		OnRunAsyncCall();
+		break;
 	case WPARAM_ABP_FILTER_LOADED:
 		OnABPFilterLoaded();
 		break;
@@ -419,7 +399,6 @@ void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, cons
 	m_pNavigateParams->strHeaders = strHeaders;
 	m_csNavigateParams.Unlock();
 
-	//RunAsync([=] { OnNavigate(); });
 	OnNavigate();
 }
 
@@ -697,6 +676,20 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 	else
 	{
 		TRACE(_T("Internet Explorer_Server not found, scroll canceled.\n"));
+	}
+}
+
+void CIEHostWindow::RemoveNewWindow(ULONG_PTR ulId)
+{
+	s_csNewIEWindowMap.Lock();
+	CIEHostWindow* pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
+	s_NewIEWindowMap.Remove(ulId);
+	s_csNewIEWindowMap.Unlock();
+
+	if (pIEHostWindow)
+	{
+		pIEHostWindow->DestroyWindow();
+		delete pIEHostWindow;
 	}
 }
 
@@ -1077,8 +1070,12 @@ static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 void CIEHostWindow::SetLoadingURL(const CString& url)
 {
 	m_csLoadingUrl.Lock();
+	bool bUrlChanged = (url != m_strLoadingUrl);
 	m_strLoadingUrl = url;
 	m_csLoadingUrl.Unlock();
+
+	if (bUrlChanged)
+		RunAsync([=] { OnURLChanged(url); });
 }
 
 CString CIEHostWindow::GetLoadingURL()
@@ -1089,8 +1086,22 @@ CString CIEHostWindow::GetLoadingURL()
 	return result;
 }
 
+void CIEHostWindow::OnURLChanged(const CString& url)
+{
+	// Fire navigate event so that the extension will have a chance to switch back
+	// before the first "progress changed" event arrives
+	if (m_pPlugin)
+	{
+		m_pPlugin->OnURLChanged(url);
+	}
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
+	if (!URL) return;
+
+	COLE2T szUrl(URL->bstrVal);
+
 	// 按Firefox的设置缩放页面
 	if (m_pPlugin)
 	{
@@ -1100,10 +1111,6 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			Zoom(level);
 		}
 	}
-
-	if (!URL) return;
-
-	COLE2T szUrl(URL->bstrVal);
 
 	// 滤掉非 HTTP 协议
 	if (!UrlCanHandle(szUrl)) return;
@@ -1118,6 +1125,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
 		}
 	}
+
 
 	// 设置正在载入的Url
 	SetLoadingURL(CString(szUrl));
@@ -1437,7 +1445,20 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
-			m_pPlugin->IENewTab(ulId, bstrUrl);
+
+			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
+			bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
+			if (dwFlags & NWMF_FORCEWINDOW)
+			{
+				// ignore current key states, always open in new window
+				bShift = true;
+				bCtrl = false;
+			}
+			else if (dwFlags & NWMF_FORCETAB)
+			{
+				bCtrl = true;
+			}
+			m_pPlugin->IENewTab(ulId, bstrUrl, bShift, bCtrl);
 		}
 		else
 		{
@@ -2243,4 +2264,16 @@ bool CIEHostWindow::FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const C
 	}
 	// the comparison magically fails = =||
 	return false;
+}
+
+void CIEHostWindow::OnRunAsyncCall()
+{
+	m_csFuncs.Lock();
+	if (!m_qFuncs.empty())
+	{
+		MainThreadFunc& func = m_qFuncs.front();
+		func();
+		m_qFuncs.pop_front();
+	}
+	m_csFuncs.Unlock();
 }
