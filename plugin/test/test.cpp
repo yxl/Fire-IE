@@ -24,7 +24,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "re/RegExp.h"
 #include "Utils/TLD.h"
 
-using namespace std;
 using namespace re;
 using namespace re::strutils;
 using namespace Utils;

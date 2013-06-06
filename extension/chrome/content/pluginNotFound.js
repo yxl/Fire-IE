@@ -17,18 +17,19 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 function init()
 {
-  generateLinkText(E("visitHomepage"));
-
-  let element = E("correctVersion");
-  let template = element.getAttribute("_textTemplate");
-  element.textContent = template.replace(/\[bit\]/, Utils.is64bit ? "64" : "32");
+  ["makeSure", "reinstall"].forEach(function(id)
+  {
+    generateLinkText(E(id));
+  });
+  doSizeToContent(window, document);
 }
 
 function generateLinkText(element)
 {
   let template = element.getAttribute("_textTemplate");
   let url = element.querySelector("label.text-link").getAttribute("_url");
-  template = template.replace(/\[host\]/, Utils.getHostname(url));
+  if (url)
+    template = template.replace(/\[host\]/, Utils.getHostname(url));
   
   let beforeLink, linkText, afterLink;
   if (/(.*)\[link\](.*)\[\/link\](.*)/.test(template))
@@ -48,8 +49,19 @@ function generateLinkText(element)
   element.appendChild(document.createTextNode(afterLink));
 }
 
+function closeDialog()
+{
+  document.documentElement.acceptDialog();
+}
+
 function visitHomepage(element)
 {
   Utils.loadInBrowser(element.getAttribute("_url"));
-  document.documentElement.acceptDialog();
+  closeDialog();
+}
+
+function openPluginManager()
+{
+  Utils.openAddonsMgr("addons://list/plugin");
+  closeDialog();
 }

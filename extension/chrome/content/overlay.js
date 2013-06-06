@@ -131,7 +131,12 @@ var gFireIE = null;
     {
       let container = gBrowser.tabContainer;
       container.addEventListener("TabOpen", function(e) { hookBrowserGetter(e.target.linkedBrowser); }, true);
-      container.addEventListener("TabClose", function(e) { unhookBrowserGetter(e.target.linkedBrowser); }, false);
+      container.addEventListener("TabClose", function(e)
+      {
+        unhookBrowserGetter(e.target.linkedBrowser);
+        // Check dangling new window on tab close
+        UtilsPluginManager.checkDanglingNewWindow(e.target);
+      }, false);
     }
     catch (ex)
     {
@@ -238,7 +243,8 @@ var gFireIE = null;
           {
             browsers = [];
             let dropCount = dt.mozItemCount;
-            for (let i = 0; i < dropCount; ++i) {
+            for (let i = 0; i < dropCount; ++i)
+            {
               let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
               if (!flavor) return;
               let data = dt.mozGetDataAt(flavor, i);
@@ -261,12 +267,19 @@ var gFireIE = null;
       // Show bookmark state (the star icon in URL bar) when using IE engine
       if (typeof(PlacesStarButton) != "undefined" && typeof(PlacesStarButton.updateState) == "function")
         HM.hookCodeHeadTail("PlacesStarButton.updateState",
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
 
       // Firefox 23 : PlacesStarButton has been changed to BookmarksMenuButton
       if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
         HM.hookCodeHeadTail("BookmarksMenuButton.updateStarState",
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
+                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+      
+      // Firefox 24 : BookmarksMenuButton is again changed into BookmarkingUI...
+      //  WTF... I mean, Welcome To Firefox!!
+      if (typeof(BookmarkingUI) != "undefined" && typeof(BookmarkingUI.updateStarState) == "function")
+        HM.hookCodeHeadTail("BookmarkingUI.updateStarState",
                             function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
                             function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
       
@@ -511,7 +524,7 @@ var gFireIE = null;
         let pluginURL = pluginObject.URL;
         if (pluginURL)
         {
-          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
+          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));     
           return RET.modifyValue(Utils.makeURI(url));
         }
       }
@@ -527,7 +540,6 @@ var gFireIE = null;
       if (entry.URI.spec != uri.spec)
       {
         entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
-        if (this.parentNode.__SS_data) delete this.parentNode.__SS_data;
       }
     }
   };

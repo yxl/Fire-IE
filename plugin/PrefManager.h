@@ -24,11 +24,13 @@ class PrefManager {
 private:
 	bool m_bCookieSyncEnabled;
 	bool m_bDNTEnabled;
+	int m_nDNTValue;
 
 	PrefManager()
 	{
 		m_bCookieSyncEnabled = true;
 		m_bDNTEnabled = false;
+		m_nDNTValue = 1;
 	}
 	PrefManager(const PrefManager&);
 
@@ -39,6 +41,9 @@ public:
 
 	bool isDNTEnabled() const { return m_bDNTEnabled; }
 	void setDNTEnabled(bool value) { m_bDNTEnabled = value; }
+
+	int getDNTValue() const { return m_nDNTValue; }
+	void setDNTValue(int value) { m_nDNTValue = value; }
 
 	static PrefManager& instance() { return s_instance; }
 };

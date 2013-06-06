@@ -470,6 +470,27 @@ namespace Plugin
 			pMainWindow->ScrollWheelLine(false);
 			return true;
 		}
+		// void RemoveNewWindow({String} strId)
+		else if (name == NPI_ID(RemoveNewWindow))
+		{
+			TRACE ("RemoveNewWindow called!\n");
+			if (argCount < 1) return false;
+
+			CString strId = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				strId = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			ULONG_PTR ulId = 
+#ifdef _M_X64
+				_tcstoui64(strId, NULL, 10);
+#else
+				_tcstoul(strId, NULL, 10);
+#endif
+			CIEHostWindow::RemoveNewWindow(ulId);
+			return true;
+		}
 		// void FBFindText({String} text)
 		else if (name == NPI_ID(FBFindText))
 		{
@@ -623,6 +644,22 @@ namespace Plugin
 				return false;
 
 			PrefManager::instance().setDNTEnabled(enabled);
+			return true;
+		}
+		// void SetDNTValue({int} value)
+		else if (name == NPI_ID(SetDNTValue))
+		{
+			TRACE ("SetDNTValue called!\n");
+			if (argCount < 1) return false;
+
+			int value;
+
+			if (NPVARIANT_IS_INT32(args[0]))
+				value = NPVARIANT_TO_INT32(args[0]);
+			else
+				return false;
+
+			PrefManager::instance().setDNTValue(value);
 			return true;
 		}
 		// void ABPEnable()

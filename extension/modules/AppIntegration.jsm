@@ -69,8 +69,8 @@ function init()
   Prefs.addListener(function(name)
   {
     if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
-      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "currentTheme"
-      || name == "fxLabel" || name == "ieLabel")
+      || name == "shortcut_key" || name == "shortcut_modifiers" || name == "shortcutEnabled"
+      || name == "currentTheme" || name == "fxLabel" || name == "ieLabel")
     {
       reloadPrefs();
     }
@@ -385,6 +385,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
@@ -519,6 +520,8 @@ WindowWrapper.prototype = {
         this.window.PlacesStarButton.updateState();
       else if (this.window.BookmarksMenuButton && this.window.BookmarksMenuButton.updateStarState)
         this.window.BookmarksMenuButton.updateStarState();
+      else if (this.window.BookmarkingUI && this.window.BookmarkingUI.updateStarState)
+        this.window.BookmarkingUI.updateStarState();
 
       function escapeURLForCSS(url)
       {
@@ -526,9 +529,11 @@ WindowWrapper.prototype = {
       }
 
       // Update the engine button on the URL bar
-      urlbarButton = this.E("fireie-urlbar-switch");
+      let urlbarButton = this.E("fireie-urlbar-switch");
       urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
       urlbarButton.style.visibility = "visible";
+      let tooltip = this.E("fireie-urlbar-switch-tooltip");
+      tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
       let fxURL = LightweightTheme.fxIconUrl;
       let ieURL = LightweightTheme.ieIconUrl;
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
@@ -619,22 +624,53 @@ WindowWrapper.prototype = {
    */
   _configureKeys: function()
   {
+    /*
+      <key id="key_fireieSwitch" command="cmd_fireieSwitch" modifiers="alt"
+      key="C" />
+    */
     try
     {
-      let keyItem = this.E('key_fireieSwitch');
-      if (keyItem)
+      let isFirst = false;
+      let keyItem = this.E("key_fireieSwitch");
+      if (!keyItem)
       {
-        if (Prefs.shortcutEnabled)
+        keyItem = this.CE("key")
+        keyItem.setAttribute("id", "key_fireieSwitch");
+        keyItem.setAttribute("command", "cmd_fireieSwitch");
+        this.E("mainKeyset").appendChild(keyItem);
+        isFirst = true;
+      }
+
+      // Modifying shortcut keys & modifiers requires a restart,
+      // while modifying the disabled state does not.
+      if (isFirst)
+      {
+        // Default key is "C"
+        let shortcut_key = Prefs.shortcut_key;
+        // Normalize to VK_* keycode
+        if (Utils.startsWith(shortcut_key, "VK_"))
         {
-          // Default key is "C"
-          keyItem.setAttribute('key', Prefs.shortcut_key);
-          // Default modifiers is "alt"
-          keyItem.setAttribute('modifiers', Prefs.shortcut_modifiers);
+          keyItem.setAttribute("keycode", shortcut_key);
+          keyItem.removeAttribute("key");
         }
         else
         {
-          keyItem.parentNode.removeChild(keyItem);
+          keyItem.setAttribute("key", shortcut_key);
+          keyItem.removeAttribute("keycode");
         }
+
+        // Default modifiers is "alt"
+        let shortcut_modifiers = Prefs.shortcut_modifiers;
+        keyItem.setAttribute("modifiers", shortcut_modifiers);
+      }
+
+      if (Prefs.shortcutEnabled)
+      {
+        keyItem.removeAttribute("disabled");
+      }
+      else
+      {
+        keyItem.setAttribute("disabled", "true");
       }
     }
     catch (e)
@@ -732,7 +768,13 @@ WindowWrapper.prototype = {
     }
     return null;
   },
-
+  
+  /** Check whether we should switch back to Firefox engine */
+  shouldSwitchBack: function(url)
+  {
+    return Prefs.autoswitch_enabled && Prefs.autoSwitchBackEnabled && Policy.checkEngineExceptionalRule(url);
+  },
+  
   /** Check whether current engine is IE.*/
   isIEEngine: function(aTab)
   {
@@ -748,13 +790,13 @@ WindowWrapper.prototype = {
   /**
    *  Switch the engine of specified tab.
    */
-  _switchTabEngine: function(aTab)
+  _switchTabEngine: function(aTab, automatic, overrideUrl)
   {
     if (aTab && aTab.localName == "tab")
     {
 
       // getURL retrieves the actual URL from, maybe, container url
-      let url = this.getURL(aTab);
+      let url = overrideUrl || this.getURL(aTab);
 
       let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
 
@@ -763,15 +805,17 @@ WindowWrapper.prototype = {
         let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
         if (browserNode)
         {
-          if (!isIEEngineAfterSwitch)
+          if (!automatic)
           {
-            // User manually switches to Firefox engine.
-            // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-            browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
+            // User manually switch engine.
+            // We have to tell ContentPolicy to stop monitoring this tab until user navigates to another website.
+            Policy.setManuallySwitched(browserNode, url);
           }
           else
           {
-            browserNode.removeAttribute('manuallySwitchToFirefox');
+            // prevent automatic switching on manuallySwitched tabs, until user navigates to another website.
+            if (Policy.isManuallySwitched(browserNode, url))
+              return;
           }
         }
       }
@@ -846,25 +890,20 @@ WindowWrapper.prototype = {
       let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
       if (browserNode)
       {
-        let isIEEngineAfterSwitch = this.isIEEngine(aTab);
-        if (!isIEEngineAfterSwitch)
-        {
-          // User manually switches to Firefox engine.
-          // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
-          browserNode.setAttribute('manuallySwitchToFirefox', Utils.getHostname(url));
-        }
-        else
-        {
-          browserNode.removeAttribute('manuallySwitchToFirefox');
-        }
+        if (Utils.isIEEngine(url)) url = Utils.fromContainerUrl(url);
+        // User manually switch engine.
+        // We have to tell ContentPolicy to stop monitoring this tab until user navigates another website.
+        Policy.setManuallySwitched(browserNode, url);
       }
     }
   },
 
-  /** Switch current tab's engine */
-  switchEngine: function()
+  /** Switch the specified tab's engine, or current tab's engine if tab is not provided*/
+  /** If the switch is not initiated by the user, use automatic = true */
+  /** Override new url by providing the 3rd argument */
+  switchEngine: function(tab, automatic, overrideUrl)
   {
-    this._switchTabEngine(this.window.gBrowser.mCurrentTab);
+    this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic, overrideUrl);
   },
 
   /** Show the options dialog */
@@ -959,7 +998,7 @@ WindowWrapper.prototype = {
         let originalURL = this.getURL();
         let isBlank = (originalURL == "about:blank");
         let handleUrlBar = Prefs.handleUrlBar;
-        let isSimilar = Utils.getHostname(originalURL) == Utils.getHostname(url);
+        let isSimilar = Utils.getEffectiveHost(originalURL) == Utils.getEffectiveHost(url);
         if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
@@ -1015,13 +1054,52 @@ WindowWrapper.prototype = {
     let data = JSON.parse(event.detail);
     let url = data.url;
     let id = data.id;
-    let newTab = this.window.gBrowser.addTab(Utils.toContainerUrl(url));
-    this.window.gBrowser.selectedTab = newTab;
+    var gBrowser = this.window.gBrowser;
+    let newTab = gBrowser.addTab("about:blank",
+      { relatedToCurrent: true }); // it is highly probable that the new tab is related to current
+
+    let shift = data.shift;
+    let ctrl = data.ctrl;
+    // shift  ctrl  value  where
+    //    0     0     0    current
+    //    0     1     1    tab
+    //    1     0     2    window
+    //    1     1     3    tabshifted
+    let where = shift ? (ctrl ? "tabshifted" : "window") : (ctrl ? "tab" : "current");
+    let loadInBackground = Utils.shouldLoadInBackground();
+
+    switch (where)
+    {
+    case "window":
+      gBrowser.hideTab(newTab);
+      gBrowser.replaceTabWithWindow(newTab);
+      break;
+    case "current":
+      gBrowser.selectedTab = newTab;
+      break;
+    case "tabshifted":
+      loadInBackground = !loadInBackground;
+      // fall through
+    case "tab":
+    default:
+      if (!loadInBackground)
+        gBrowser.selectedTab = newTab;
+      // otherwise, A background tab has been opened, nothing else to do here.
+      break;
+    }
 
     let param = {
       id: id
     };
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
+    
+    // load URI outside of addTab() to supress potential load error message caused by switch back
+    const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+    try
+    {
+      newTab.linkedBrowser.loadURIWithFlags(Utils.toContainerUrl(url), flags);
+    }
+    catch (ex) { }
   },
 
   _onIESetSecureLockIcon: function(event)
@@ -1897,7 +1975,8 @@ WindowWrapper.prototype = {
     {
       // switch behavior similar to the reload button
       let where = this.window.whereToOpenLink(e, false, true);
-
+      let loadInBackground = Utils.shouldLoadInBackground();
+      
       if (where == "current")
         this.switchEngine();
       else
@@ -1907,13 +1986,12 @@ WindowWrapper.prototype = {
         {
           let url = this._getURLAfterSwitch(gBrowser.selectedTab);
           // should load actual url after setting the manuallyswitched flag
-          let newTab = gBrowser.addTab("about:blank");
+          let newTab = gBrowser.addTab("about:blank",
+            { relatedToCurrent: true });
           // first set manual switch flags
           this._setManuallySwitchFlag(newTab, url);
-          // and then load the actual url
-          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-          newTab.linkedBrowser.loadURIWithFlags(url, flags);
           
+          // determine the tab location
           switch (where)
           {
           case "window":
@@ -1921,12 +1999,22 @@ WindowWrapper.prototype = {
             gBrowser.replaceTabWithWindow(newTab);
             break;
           case "tabshifted":
-            // A background tab has been opened, nothing else to do here.
-            break;
+            loadInBackground = !loadInBackground;
+            // fall through
           case "tab":
-            gBrowser.selectedTab = newTab;
+            if (!loadInBackground)
+              gBrowser.selectedTab = newTab;
+            // otherwise, A background tab has been opened, nothing else to do here.
             break;
           }
+
+          // and then load the actual url
+          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+          try
+          {
+            newTab.linkedBrowser.loadURIWithFlags(url, flags);
+          }
+          catch (ex) { }
         }
       }
     }

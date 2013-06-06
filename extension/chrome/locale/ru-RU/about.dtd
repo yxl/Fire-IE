@@ -1,0 +1,27 @@
+<!ENTITY about.longDesc.label     "About this Add-on:">
+<!ENTITY about.why.label          "Why was this Add-on created?">
+<!ENTITY about.whatsNext.label    "What's next for this Add-on?">
+<!ENTITY about.links.label        "Links:">
+
+<!ENTITY about.longDesc           "[p]Fire-IE is another ietab-like extension. It embeds the IE engine to handle IE-only websites. You could change the browser engine from Firefox to IE by a simple click.[/p]
+                                   [p]Moreover, you can write auto-switch rules so that Fire-IE will automatically switch to IE engine when you visit certain sites. Like Adblock Plus, you can also subscribe to existing rule lists. We currently maintain an auto-switch rule list for Chinese sites.[/p]
+                                   [p]When you switch to the IE engine, cookies will be synchronized so that you do not need to relogin. Most of the shortcut keys of Firefox will be available under the IE engine as well. For example you could use [.quot]Ctrl + +[.quot] and [.quot]Ctrl + -[.quot] to zoom in and out, [.quot]Ctrl + F[.quot] to search inside the document and so on.[/p]
+                                   [p]It also supports mouse gestures for the IE engine with the FireGuestures or All-in-One Gestures extension installed.[/p]
+                                   [p]Adblock Plus is supported now. You will no longer be annoyed by ads in the IE engine.[/p]
+                                   [p]From 0.3.3 on, 32bit [.amp] 64bit versions are combined into a single package. We will no longer offer standalone 64bit xpi packages.[/p]">
+
+<!ENTITY about.why                "[p]Fire-IE is created mainly to address compatibility problems of Firefox in China, where there are many IE-only sites. The add-on will allow users to access these sites in Firefox.[/p]">
+
+<!ENTITY about.whatsNext          "[p]Intelligent switching feature.[/p]">
+
+<!ENTITY about.links              "[p]Project home: [link href='http://fireie.org/en'][/link][/p]
+                                   [p]FAQ: [link href='http://fireie.org/en/faq'][/link][br/]
+                                      Skins: [link href='http://fireie.org/en/skins'][/link][br/]
+                                      How to write switch rules: [link href='http://fireie.org/en/switch_rules'][/link]
+                                   [/p]
+                                   [p]Source code: [link href='https://github.com/yxl/Fire-IE'][/link][br/]
+                                      Give us feedback on issues, suggestions or translations:
+                                   [ul][li][link href='https://getsatisfaction.com/fireie'][/link] (English support forum)[/li]
+                                       [li][link href='https://github.com/yxl/Fire-IE/issues'][/link] (GitHub issues)[/li]
+                                   [/ul]
+                                   [/p]">

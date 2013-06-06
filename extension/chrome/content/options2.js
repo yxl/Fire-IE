@@ -76,23 +76,18 @@ Options.apply = function(quiet)
   Prefs.handleUrlBar = E("handleurl").checked;
   Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
   let newKey = E("shortcut-key").value;
-  if (Prefs.shortcutEnabled && Prefs.shortcut_key != newKey)
+  if (Prefs.shortcut_key != newKey)
   {
     requiresRestart = true;
   }
   Prefs.shortcut_key = newKey;
   let newModifiers = E("shortcut-modifiers").value;
-  if (Prefs.shortcutEnabled && Prefs.shortcut_modifiers != newModifiers)
+  if (Prefs.shortcut_modifiers != newModifiers)
   {
     requiresRestart = true;
   }
   Prefs.shortcut_modifiers = newModifiers;
-  let newEnabled = E("shortcutEnabled").checked;
-  if (Prefs.shortcutEnabled != newEnabled)
-  {
-    requiresRestart = true;
-    Prefs.shortcutEnabled = E("shortcutEnabled").checked;
-  }
+  Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   Prefs.privatebrowsingwarning = E("privatebrowsingwarning").checked;
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
@@ -278,29 +273,7 @@ Options.applyGPURenderingState = function()
 // Get IE's main version number
 Options.getIEMainVersion = function()
 {
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
-  let version = 6;
-  try
-  {
-    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
-    let versionString = wrk.readStringValue("version");
-    version = parseInt(versionString, 10);
-    // for IE 10, version equals to "9.10.*.*", which should be handled specially
-    if (version == 9)
-    {
-      versionString = wrk.readStringValue("svcVersion");
-      version = parseInt(versionString, 10);
-    }
-  }
-  catch (e)
-  {
-    Utils.LOG("Failed to get IE version from registry: " + e);
-  }
-  finally
-  {
-    wrk.close();
-  }
-  return version;
+  return Utils.ieMajorVersion;
 };
 
 Options.updateIEModeTab = function(restore)
@@ -432,14 +405,7 @@ Options.handleShortcutEnabled = function(e)
 
 Options.sizeToContent = function()
 {
-  // for multi-line label sizing problem
-  window.sizeToContent();
-  let vboxes = document.querySelectorAll("prefpane > vbox");
-  Array.prototype.forEach.call(vboxes, function(vbox)
-  {
-    vbox.height = vbox.boxObject.height;
-  });
-  window.sizeToContent();
+  doSizeToContent(window, document);
 };
 
 Options.init = function()

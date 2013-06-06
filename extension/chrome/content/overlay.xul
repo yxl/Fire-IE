@@ -13,10 +13,6 @@ xmlns:html="http://www.w3.org/1999/xhtml">
   <commandset id="mainCommandSet">
     <command id="cmd_fireieSwitch" oncommand="gFireIE.switchEngine();" />
   </commandset>
-  <keyset id="mainKeyset">
-    <key id="key_fireieSwitch" command="cmd_fireieSwitch" modifiers="alt"
-    key="C" />
-  </keyset>
   <!-- urlbar switch button -->
   <textbox id="urlbar">
     <toolbarbutton id="fireie-urlbar-switch" insertbefore="urlbar-go-button"

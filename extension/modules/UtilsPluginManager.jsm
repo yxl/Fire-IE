@@ -262,6 +262,22 @@ let UtilsPluginManager = {
       // Not all states map to a handler
       return null;
     }
+  },
+  
+  /**
+   * Check dangling new windows if we skipped attaching them to a plugin object
+   */
+  checkDanglingNewWindow: function(tab)
+  {
+    let attr = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+    if (attr && attr.id)
+    {
+      Utils.LOG("Removing dangling IE new window, id = " + attr.id);
+      let plugin = this.getPlugin();
+      if (plugin)
+        plugin.RemoveNewWindow(attr.id);
+      tab.removeAttribute("fireieNavigateParams");
+    }
   }
 };
 
@@ -369,8 +385,11 @@ function loadFailureSubHandler()
   IECookieManager.restoreIETempDirectorySetting();
   // notify user about that
   Utils.ERROR("Plugin failed to load. Possibly due to wrong Fire-IE version.");
-  Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
-    "_blank", "chrome,centerscreen,dialog", null);
+  Utils.runAsync(function()
+  {
+    Services.ww.openWindow(null, "chrome://fireie/content/pluginNotFound.xul",
+      "_blank", "chrome,centerscreen,dialog", null);
+  }, null);
 }
 
 /** handle the plugin load failure events and inform user about that */
@@ -435,7 +454,17 @@ function setDNTPref(plugin)
   }
   catch (ex)
   {
-    Utils.ERROR("Failed to set DNT pref: " + ex);
+    Utils.LOG("Failed to set DNT pref: " + ex);
+  }
+  try
+  {
+    let value = dntBranch.getIntPref("value");
+    plugin.SetDNTValue(value);
+    Utils.LOG("DNT value: " + value);
+  }
+  catch (ex)
+  {
+    Utils.LOG("Failed to set DNT value: " + ex);
   }
 }
 
@@ -448,9 +477,12 @@ let DNTObserverPrivate = {
    */
   observe: function(subject, topic, data)
   {
-    if (topic == "nsPref:changed" && data == "enabled")
+    if (topic == "nsPref:changed")
     {
-      setDNTPref(UtilsPluginManager.getPlugin());
+      if (data == "enabled" || data == "value")
+      {
+        setDNTPref(UtilsPluginManager.getPlugin());
+      }
     }
   },
 

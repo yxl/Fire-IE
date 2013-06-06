@@ -20,8 +20,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // File.h : file reading utilities
 //
 
-#include <string>
-
 namespace Utils {
 	// file reading utilities
 	class File {

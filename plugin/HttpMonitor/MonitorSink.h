@@ -1,6 +1,5 @@
 #pragma once
 
-#include <urlmon.h>
 #include "ContentType.h"
 
 class CIEHostWindow;

@@ -26,7 +26,8 @@ using namespace Plugin;
 
 const TCHAR* COMFix::s_astrCLSID[] = {
 	_T("{ED4CA2E5-0EEA-44C1-AD7E-74A07A7507A4}"), // TimwpDll.TimwpCheck
-	_T("{23752AA7-CAD7-40C2-99EE-7A9CD3C20C6D}")  // QQCPHelper.CPAdder
+	_T("{23752AA7-CAD7-40C2-99EE-7A9CD3C20C6D}"), // QQCPHelper.CPAdder
+	_T("{62B4D041-4667-40B6-BB50-4BC0A5043A73}")  // SharePoint Export Database Launcher
 };
 
 const int COMFix::s_cntCLSID = sizeof(s_astrCLSID) / sizeof(s_astrCLSID[0]);

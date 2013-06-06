@@ -26,7 +26,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace re;
 using namespace jscre;
-using namespace std;
 using namespace strutils;
 
 static void* (*jscre_malloc)(size_t size) = malloc;
@@ -41,8 +40,8 @@ RegExp::RegExp()
 }
 
 RegExp::RegExp(const wstring& strFullPattern)
+	: m_strFullPattern(strFullPattern)
 {
-	m_strFullPattern = strFullPattern;
 	m_bCompiled = false;
 	m_re = NULL;
 	setAttributes();
@@ -50,8 +49,8 @@ RegExp::RegExp(const wstring& strFullPattern)
 }
 
 RegExp::RegExp(const RegExp& other)
+	: m_strFullPattern(other.m_strFullPattern)
 {
-	m_strFullPattern = other.m_strFullPattern;
 	m_bIgnoreCase = other.m_bIgnoreCase;
 	m_bMultiLine = other.m_bMultiLine;
 	m_bGlobal = other.m_bGlobal;
@@ -61,6 +60,24 @@ RegExp::RegExp(const RegExp& other)
 	m_bCompiled = false;
 	if (other.m_bCompiled)
 		compile();
+}
+
+RegExp::RegExp(RegExp&& other)
+	: m_strFullPattern(std::move(other.m_strFullPattern))
+{
+	m_bIgnoreCase = other.m_bIgnoreCase;
+	m_bMultiLine = other.m_bMultiLine;
+	m_bGlobal = other.m_bGlobal;
+	m_nLastPos = other.m_nLastPos;
+
+	// compiled information
+	m_bCompiled = other.m_bCompiled;
+	m_re = other.m_re;
+	m_nSubPatterns = other.m_nSubPatterns;
+
+	// leave destructable state
+	other.m_re = NULL;
+	other.m_bCompiled = false;
 }
 
 RegExp& RegExp::operator=(const RegExp& other)
@@ -79,6 +96,30 @@ RegExp& RegExp::operator=(const RegExp& other)
 	m_bCompiled = false;
 	if (other.m_bCompiled)
 		compile();
+
+	return *this;
+}
+
+RegExp& RegExp::operator=(RegExp&& other)
+{
+	if (this == &other) return *this;
+
+	if (m_re) jsRegExpFree(m_re, jscre_free);
+
+	m_strFullPattern = std::move(other.m_strFullPattern);
+	m_bIgnoreCase = other.m_bIgnoreCase;
+	m_bMultiLine = other.m_bMultiLine;
+	m_bGlobal = other.m_bGlobal;
+	m_nLastPos = other.m_nLastPos;
+
+	// compiled information
+	m_bCompiled = other.m_bCompiled;
+	m_re = other.m_re;
+	m_nSubPatterns = other.m_nSubPatterns;
+
+	// leave destructable state
+	other.m_re = NULL;
+	other.m_bCompiled = false;
 
 	return *this;
 }
@@ -136,84 +177,83 @@ void RegExp::compile(const wstring& strFullPattern, const wstring& strAttributes
 	compile();
 }
 
-RegExpMatch* RegExp::exec(const wstring& str)
+bool RegExp::exec(RegExpMatch& match, const wstring& str)
 {
-	return exec(str, m_nLastPos);
+	return exec(match, str, m_nLastPos);
 }
 
-RegExpMatch* RegExp::exec(const wstring& str, int lastPos)
+bool RegExp::exec(RegExpMatch& match, const wstring& str, int lastPos)
 {
 	if (!m_bCompiled) compile();
-	RegExpMatch* match = execCore(str, lastPos);
+	bool ret = execCore(match, str, lastPos);
 	if (m_bGlobal)
 	{
 		// should record last match position
-		if (match)
+		if (ret)
 		{
-			int advance = (int)match->substrings[0].length();
+			int advance = (int)match.substrings[0].length();
 			if (advance < 1) advance = 1;
-			m_nLastPos = match->index + advance;
+			m_nLastPos = match.index + advance;
 		}
 		else
 			m_nLastPos = 0;
 	}
-	return match;
+	return ret;
 }
 
-RegExpMatch* RegExp::exec(const wstring& str) const
+bool RegExp::exec(RegExpMatch& match, const wstring& str) const
 {
-	return exec(str, m_nLastPos);
+	return exec(match, str, m_nLastPos);
 }
 
-RegExpMatch* RegExp::exec(const wstring& str, int lastPos) const
+bool RegExp::exec(RegExpMatch& match, const wstring& str, int lastPos) const
 {
 	if (!m_bCompiled) throw RegExpCompileError("cannot compile in constant function");
-	return execCore(str, lastPos);
+	return execCore(match, str, lastPos);
 }
 
-RegExpMatch* RegExp::execCore(const wstring& str, int lastPos) const
+//RegExpMatch* RegExp::execCore(const wstring& str, int lastPos) const
+bool RegExp::execCore(RegExpMatch& match, const std::wstring& str, int lastPos) const
 {
+	static const int OFFSET_LENGTH = 10000 * 3;
+	int offsets[OFFSET_LENGTH];
 	int numBackRefs = (int)m_nSubPatterns;
-	int offsetLength = (numBackRefs + 1) * 3;
-	int* offsets = new int[offsetLength];
 
-	int ret;
-	do {
-		ret = jsRegExpExecute(m_re, (const UChar*)str.c_str(), (int)str.length(), lastPos, offsets, offsetLength);
-		if (ret < 0) // Error or no match
-		{
-			delete [] offsets;
-			return NULL;
-		}
-		if (ret == 0) // offsets overflow, re-allocate the array and run again
-		{
-			delete [] offsets;
-			offsetLength *= 2;
-			offsets = new int[offsetLength];
-		}
-	} while (ret == 0);
+	int ret = jsRegExpExecute(m_re, (const UChar*)str.c_str(), (int)str.length(), lastPos, offsets, OFFSET_LENGTH);
+	if (ret < 0) // Error or no match
+	{
+		return false;
+	}
+
+	// Ensure offsets don't overflow
+	if (ret == 0)
+	{
+		ASSERT(false);
+		return false;
+	}
 
 	numBackRefs = ret - 1;
 
 	// Matches
-	RegExpMatch* match = new RegExpMatch();
-	match->index = offsets[0];
-	match->input = str;
-	match->substrings.reserve(m_nSubPatterns + 1);
-	match->substrings.push_back(str.substr(offsets[0], offsets[1] - offsets[0]));
+	match.index = offsets[0];
+	match.input = str;
+	match.substrings.clear();
+	match.substrings.reserve(m_nSubPatterns + 1);
+	size_t pos = static_cast<size_t>(offsets[0]);
+	size_t count = static_cast<size_t>(offsets[1] - offsets[0]);
+	match.substrings.push_back(str.substr(pos, count));
 	for (int i = 1; i <= numBackRefs; i++)
 	{
 		int l = offsets[i * 2], r = offsets[i * 2 + 1];
 		if (l >= 0 && r >= l && r <= (int)str.length())
-			match->substrings.push_back(str.substr(l, r - l));
-		else match->substrings.push_back(L"");
+			match.substrings.push_back(str.substr(l, r - l));
+		else match.substrings.push_back(L"");
 	}
 	for (int i = numBackRefs + 1; i <= (int)m_nSubPatterns; i++)
 	{
-		match->substrings.push_back(L"");
+		match.substrings.push_back(L"");
 	}
-	delete [] offsets;
-	return match;
+	return true;
 }
 
 bool RegExp::test(const wstring& str)

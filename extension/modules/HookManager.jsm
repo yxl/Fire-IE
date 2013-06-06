@@ -139,8 +139,8 @@ HookManager.prototype = {
       + "  } catch (ex) {\n"
       + "    Utils.ERROR('Failed executing hooked function: \"' + funcName + '\"@head: ' + ex);\n"
       + "  }\n"
-      + "  let newArguments = (ret && ret.arguments) || arguments;\n"
-      + "  return orgFunc.apply(this, newArguments);\n"
+      + "  let newArgs = (ret && ret.args) || arguments;\n"
+      + "  return orgFunc.apply(this, newArgs);\n"
       + "})",
 
   _wrapFunctionHead: function(orgFunc, myFunc, funcName)
@@ -182,14 +182,14 @@ HookManager.prototype = {
       + "  } catch (ex) {\n"
       + "    Utils.ERROR('Failed executing hooked function: \"' + funcName + '\"@head: ' + ex);\n"
       + "  }\n"
-      + "  let newArguments = (ret && ret.arguments) || arguments;\n"
+      + "  let newArgs = (ret && ret.args) || arguments;\n"
       + "  let orgRet = null, myRet = null;\n"
       + "  try {\n"
-      + "    orgRet = orgFunc.apply(this, newArguments);\n"
+      + "    orgRet = orgFunc.apply(this, newArgs);\n"
       + "  } finally {\n"
-      + "    Array.prototype.splice.call(newArguments, 0, 0, orgRet);\n"
+      + "    Array.prototype.splice.call(newArgs, 0, 0, orgRet);\n"
       + "    try {\n"
-      + "      myRet = myFuncTail.apply(this, newArguments);\n"
+      + "      myRet = myFuncTail.apply(this, newArgs);\n"
       + "    } catch (ex) {\n"
       + "      Utils.ERROR('Failed executing hooked function: \"' + funcName + '\"@tail: ' + ex);\n"
       + "    }\n"
@@ -239,9 +239,9 @@ HookManager.prototype = {
       return { shouldReturn: true, value: value };
     },
     // hook @ head should modify arguments passed to orgFunc
-    modifyArguments: function(arguments)
+    modifyArguments: function(args)
     {
-      return { shouldReturn: false, arguments: arguments };
+      return { shouldReturn: false, args: args };
     },
     // hook @ tail should modify the return value
     modifyValue: function(value)

@@ -1,0 +1,27 @@
+<!ENTITY about.longDesc.label     "关于此附加组件：">
+<!ENTITY about.why.label          "开发此附加组件的缘由：">
+<!ENTITY about.whatsNext.label    "此附加组件的下一步计划：">
+<!ENTITY about.links.label        "链接：">
+
+<!ENTITY about.longDesc           "[p]解雇IE(Fire IE)是一个火狐浏览器双核浏览扩展，可以让火狐浏览器额外使用 Internet Explorer (IE) 内核浏览网页。只需鼠标轻轻一点，即可在Firefox和IE内核之间进行切换。[/p]
+                                   [p]使用解雇IE，您可以编写自动切换规则，这样在访问特定站点时解雇IE可以自动切换到IE引擎。类似于 Adblock Plus，您也可以订阅现有的切换规则列表。我们目前维护一个针对中文站点的切换规则列表。[/p]
+                                   [p]解雇IE会保持IE内核和Firefox内核的Cookie同步，因此切换内核浏览时无需重复登陆。大多数快捷键和功能在IE内核下仍然起作用，比如“Ctrl +”和“Ctrl -”缩放页面，“Ctrl F”搜索文本，“Ctrl D”保存书签等。[/p]
+                                   [p]扩展还支持在IE内核下使用鼠标手势，只要您安装了 FireGestures、All-in-One Gestures 或类似的扩展，就可以同样在IE内核下使用它们。[/p]
+                                   [p]扩展已支持 Adblock Plus，您将不再被IE引擎下的广告所打扰。[/p]
+                                   [p]从0.3.3版本起，32位和64位扩展已合并，我们不再单独提供64位扩展。[/p]">
+
+<!ENTITY about.why                "[p]解雇IE主要目是为了解决火狐浏览器在中国市场的网页兼容问题。中国大陆及台湾地区存在大量只支持IE浏览器网站，解雇IE可以让用户在火狐浏览器下无障碍地访问这些网站。[/p]">
+
+<!ENTITY about.whatsNext          "[p]智能切换功能。[/p]">
+
+<!ENTITY about.links              "[p]项目主页： [link href='http://fireie.org/zh-CN'][/link][/p]
+                                   [p]常见问题： [link href='http://fireie.org/zh-CN/faq'][/link][br/]
+                                      更换皮肤： [link href='http://fireie.org/zh-CN/skins'][/link][br/]
+                                      如何编写切换规则： [link href='http://fireie.org/zh-CN/switch_rules'][/link]
+                                   [/p]
+                                   [p]源代码： [link href='https://github.com/yxl/Fire-IE'][/link][br/]
+                                      您可以通过下列URL反馈问题、提出建议或是提供翻译：
+                                   [ul][li][link href='https://g.mozest.com/forum-83-1'][/link] (中文支持论坛)[/li]
+                                       [li][link href='https://github.com/yxl/Fire-IE/issues'][/link] (GitHub issue 列表)[/li]
+                                   [/ul]
+                                   [/p]">

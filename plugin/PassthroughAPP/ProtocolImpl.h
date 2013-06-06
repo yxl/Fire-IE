@@ -19,9 +19,6 @@
   #pragma once
 #endif // _MSC_VER > 1000
 
-#include <urlmon.h>
-#pragma comment(lib, "urlmon.lib")
-
 #include "PassthroughObject.h"
 
 namespace PassthroughAPP

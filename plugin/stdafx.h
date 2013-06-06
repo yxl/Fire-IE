@@ -30,6 +30,20 @@
 #include <atlctl.h>
 #include <atlutil.h>
 
+#include <mshtmcid.h>
+#include <mshtmhst.h>
+#include <mshtmdid.h>
+#include <mshtml.h>
+#include <exdispid.h>
+#include <comutil.h>
+
+#include <windows.h>
+#include <windowsx.h>
+#include <WinInet.h>
+#pragma comment(lib, "Wininet.lib")
+#include <urlmon.h>
+#pragma comment(lib, "urlmon.lib")
+
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nptypes.h"
@@ -37,4 +51,17 @@
 #include "ProtocolCF.h"
 
 #include <math.h>
-#include <WinInet.h>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <deque>
+#include <xhash>
+#include <algorithm>
+// std::function
+#include <functional>
+
+using namespace std;

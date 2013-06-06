@@ -30,7 +30,8 @@ var Utils = {
   _ieUserAgent: null,
   _userAgent: null,
 
-  _ffMajorVersion: 4,
+  _ffMajorVersion: 6,
+  _ieMajorVersion: 6,
   
   /** nsITimer's */
   _timers: [],
@@ -57,6 +58,11 @@ var Utils = {
   get firefoxMajorVersion()
   {
     return this._ffMajorVersion;
+  },
+  
+  get ieMajorVersion()
+  {
+    return this._ieMajorVersion;
   },
 
   /**
@@ -277,7 +283,13 @@ var Utils = {
   {
     return "resource://gre-resources/hiddenWindow.html";
   },
-
+  
+  /** Whether url is IE engine container url */
+  isIEEngine: function(url)
+  {
+    return Utils.startsWith(url, Utils.containerUrl);
+  },
+  
   /** Converts URL into IE Engine URL */
   toContainerUrl: function(url)
   {
@@ -462,6 +474,43 @@ var Utils = {
     if (!aWindow || !aWindow.document) return null;
 
     return Utils.getTabFromDocument(aWindow.document);
+  },
+  
+  generatorFromEnumerator: function(enumerator, nsInterface)
+  {
+    while (enumerator.hasMoreElements())
+    {
+      yield enumerator.getNext().QueryInterface(nsInterface);
+    }
+  },
+  
+  getTabFromBrowser: function(browser)
+  {
+    function getTabFromBrowserWithinWindow(browser, window)
+    {
+      let gBrowser = window.gBrowser;
+      if (gBrowser)
+      {
+        let mTabs = gBrowser.mTabContainer.childNodes;
+        for (let i = 0; i < mTabs.length; i++)
+        {
+          if (mTabs[i].linkedBrowser === browser)
+          {
+            return mTabs[i];
+          }
+        }
+      }
+      return null;
+    }
+    
+    let windows = Utils.generatorFromEnumerator(Services.wm.getEnumerator("navigator:browser"),
+      Ci.nsIDOMWindow);
+    for (let window in windows)
+    {
+      let tab = getTabFromBrowserWithinWindow(browser, window);
+      if (tab) return tab;
+    }
+    return null;
   },
 
   /** Check whether URL is firefox-only
@@ -731,27 +780,42 @@ var Utils = {
       });
     }
   },
-
+  
   /**
-   * Opens a URL in the browser window. If browser window isn't passed as parameter,
-   * this function attempts to find a browser window. If an event is passed in
-   * it should be passed in to the browser if possible (will e.g. open a tab in
-   * background depending on modifiers keys).
+   * Attempts to find a browser window for opening a URL
    */
-  loadInBrowser: function( /**String*/ url)
+  findAnyBrowserWindow: function()
   {
-    let gBrowser = null;
-
     let enumerator = Services.wm.getZOrderDOMWindowEnumerator(null, true);
     while (enumerator.hasMoreElements())
     {
       let window = enumerator.getNext();
       if (window.gBrowser && window.gBrowser.addTab)
       {
-        gBrowser = window.gBrowser;
-        break;
+        return window;
       }
     }
+    return null;
+  },
+  
+  /**
+   * Attempts to find a browser object for opening a URL
+   */
+  findAnyBrowser: function()
+  {
+    let window = Utils.findAnyBrowserWindow();
+    if (window)
+      return window.gBrowser;
+    return null;
+  },
+
+  /**
+   * Opens a URL in the browser window. If browser window isn't passed as parameter,
+   * this function attempts to find a browser window.
+   */
+  loadInBrowser: function( /**String*/ url, /**Browser*/ browser)
+  {
+    let gBrowser = browser || Utils.findAnyBrowser();
 
     if (gBrowser)
     {
@@ -759,8 +823,12 @@ var Utils = {
     }
     else
     {
-      let protocolService = Cc["@mozilla.org/uriloader/external-protocol-service;1"].getService(Ci.nsIExternalProtocolService);
-      protocolService.loadURI(Utils.makeURI(url), null);
+      // open a new window and try again
+      win = Services.ww.openWindow(null, Utils.browserUrl, null, null, null);
+      win.addEventListener("load", function()
+      {
+        Utils.runAsyncTimeout(Utils.loadInBrowser, Utils, 100, url, win.gBrowser);
+      });
     }
   },
 
@@ -769,7 +837,7 @@ var Utils = {
    * send the UI language to fireie.org so that the correct language
    * version of the page can be selected.
    */
-  loadDocLink: function( /**String*/ linkID)
+  loadDocLink: function( /**String*/ linkID, /**Browser*/ browser)
   {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
@@ -778,7 +846,30 @@ var Utils = {
     let link = Prefs.documentation_link.replace(/%LINK%/g, linkID).replace(/%LANG%/g,
       Utils.appLocale in availableLanguages ? availableLanguages[Utils.appLocale]
                                             : availableLanguages["default"]);
-    Utils.loadInBrowser(link);
+    Utils.loadInBrowser(link, browser);
+  },
+  
+  /**
+   * Opens the Add-ons Manager to the specified addons:// URL. If browser window isn't
+   * passed as parameter, this function attempts to find a browser window.
+   */
+  openAddonsMgr: function( /**String*/ url, /**BrowserWindow*/ window)
+  {
+    let win = window || Utils.findAnyBrowserWindow();
+    
+    if (win)
+    {
+      win.BrowserOpenAddonsMgr(url);
+    }
+    else
+    {
+      // open a new window and try again
+      win = Services.ww.openWindow(null, Utils.browserUrl, null, null, null);
+      win.addEventListener("load", function()
+      {
+        Utils.runAsyncTimeout(Utils.openAddonsMgr, Utils, 100, url, win);
+      });
+    }
   },
 
   /**
@@ -933,6 +1024,14 @@ var Utils = {
       idx = arr.indexOf(item);
     }
   },
+  
+  shouldLoadInBackground: function() {
+    try {
+      return Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+    } catch (ex) {
+      return true;
+    }
+  }
 };
 
 /**
@@ -961,7 +1060,7 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   _addonVersionCallbacks = null;
 });
 
-(function() {
+(function FetchFirefoxMajorVersion() {
   let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
     .getService(Components.interfaces.nsIXULAppInfo);
 
@@ -971,6 +1070,33 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   Utils.LOG("Host app major version: " + major);
 
   Utils._ffMajorVersion = major;
+})();
+
+(function FetchIEMajorVersion() {
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+  let version = 6;
+  try
+  {
+    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+    let versionString = wrk.readStringValue("version");
+    version = parseInt(versionString, 10);
+    // for IE 10, version equals to "9.10.*.*", which should be handled specially
+    if (version == 9)
+    {
+      versionString = wrk.readStringValue("svcVersion");
+      version = parseInt(versionString, 10);
+    }
+    Utils.LOG("IE major version: " + version);
+  }
+  catch (e)
+  {
+    Utils.LOG("Failed to get IE version from registry: " + e);
+  }
+  finally
+  {
+    wrk.close();
+  }
+  Utils._ieMajorVersion = version;
 })();
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
