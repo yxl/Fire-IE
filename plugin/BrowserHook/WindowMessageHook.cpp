@@ -170,38 +170,48 @@ Exit:
 		BOOL bCtrlPressed = HIBYTE(GetKeyState(VK_CONTROL)) != 0;
 		BOOL bShiftPressed = HIBYTE(GetKeyState(VK_SHIFT))  != 0;
 
-		static MSG s_pendingAltDown = {0};
+		static MSG s_pendingAltDown = { 0 };
 
+		TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
 		if (bAltPressed && !bCtrlPressed && pMsg->wParam == VK_MENU)
 		{
 			// Alt without Ctrl is pressed. We'll delay sending the Alt down message, in case Ctrl is pressed
 			// before Alt up.  AltGr is represented in Windows massages as the combination of Alt+Ctrl, and 
 			// that is used for text input, not for menu naviagation.
 			s_pendingAltDown = *pMsg;
+			TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage : Alt pending...\n"));
 			return FALSE;
 		} 
 		else if (bCtrlPressed)
 		{
-			// Clear the pending Alt down message as Ctrl is pressed.
-			memset(&s_pendingAltDown, 0, sizeof(s_pendingAltDown));
+			if (s_pendingAltDown.message != WM_NULL)
+			{
+				// Clear the pending Alt down message as Ctrl is pressed.
+				s_pendingAltDown.message = WM_NULL;
+				TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage : Cleared pending Alt.\n"));
+			}
 		}
 
 		// Send Alt key up message to Firefox, so that user could select the main window menu by press alt key.
 		if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_MENU) 
 		{
-			// Send the pending Alt down message first.
-			::SetFocus(hwndFirefox);
-			::PostMessage(hwndFirefox, s_pendingAltDown.message, s_pendingAltDown.wParam, s_pendingAltDown.lParam);
-			bAltPressed = TRUE;
+			if (s_pendingAltDown.message != WM_NULL)
+			{
+				// Send the pending Alt down message first.
+				::SetFocus(hwndFirefox);
+				::PostMessage(hwndFirefox, s_pendingAltDown.message, s_pendingAltDown.wParam, s_pendingAltDown.lParam);
+				s_pendingAltDown.message = WM_NULL;
+				bAltPressed = TRUE;
+				TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage : Sent pending Alt.\n"));
+			}
 		}
-
 		// Might be in AltGr up sequence, skip
 		else if (pMsg->message == WM_SYSKEYUP && pMsg->wParam == VK_CONTROL)
 		{
-			bAltPressed = FALSE;
+			TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage : Return from AltGr up sequence.\n"));
+			return FALSE;
 		}
 
-		TRACE(_T("WindowMessageHook::ForwardFirefoxKeyMessage MSG: %x wParam: %x, lPara: %x\n"), pMsg->message, pMsg->wParam, pMsg->lParam);
 		if (bCtrlPressed || bAltPressed || (pMsg->wParam >= VK_F1 && pMsg->wParam <= VK_F24))
 		{
 			int nKeyCode = static_cast<int>(pMsg->wParam);
