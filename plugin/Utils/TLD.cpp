@@ -26,7 +26,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "File.h"
 
 namespace Utils {
-	const regdom::tldnode* rootTLDNode = NULL;
+	static const regdom::tldnode* rootTLDNode = NULL;
 }
 
 using namespace Utils;
