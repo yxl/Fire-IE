@@ -38,6 +38,7 @@ pref("extensions.fireie.ieLabel", "");
 pref("extensions.fireie.forceMGSupport", false);
 pref("extensions.fireie.abpSupportEnabled", true);
 pref("extensions.fireie.cookieSyncEnabled", true);
+pref("extensions.fireie.fontSyncEnabled", true);
 
 // IE Options
 pref("extensions.fireie.compatMode", "ie7mode");
