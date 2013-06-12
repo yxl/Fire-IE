@@ -520,6 +520,8 @@ let CookieObserver = {
   
   onFirefoxPrivateCookieChanged: function(subject, data)
   {
+    if (!Prefs.privateCookieSyncEnabled) return;
+    
     // delegate to normal cookie handler
     this.onFirefoxCookieChanged(subject, data);
   },
