@@ -437,6 +437,7 @@ let CookieObserver = {
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "private-cookie-changed", false);
     Services.obs.addObserver(this, "fireie-clear-cookies", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
@@ -445,6 +446,7 @@ let CookieObserver = {
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "private-cookie-changed");
     Services.obs.removeObserver(this, "fireie-clear-cookies");
     Services.obs.removeObserver(this, "fireie-set-cookie");
     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
@@ -457,6 +459,9 @@ let CookieObserver = {
     {
     case 'cookie-changed':
       this.onFirefoxCookieChanged(subject, data);
+      break;
+    case 'private-cookie-changed':
+      this.onFirefoxPrivateCookieChanged(subject, data);
       break;
     case 'fireie-clear-cookies':
       IECookieManager.clearIESessionCookies();
@@ -511,6 +516,12 @@ let CookieObserver = {
       IECookieManager.clearAllIECookies();
       break;
     }
+  },
+  
+  onFirefoxPrivateCookieChanged: function(subject, data)
+  {
+    // delegate to normal cookie handler
+    this.onFirefoxCookieChanged(subject, data);
   },
   
   onIECookieChanged: function(data)
