@@ -15,6 +15,7 @@ pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
 pref("extensions.fireie.doc_link_languages", "{ \"default\": \"en\", \"zh-CN\": \"zh-CN\", \"zh-TW\": \"zh-CN\", \"en-US\": \"en\" }");
 pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) Gecko/20100101 Firefox/10.0");
 pref("extensions.fireie.savestats", true);
+pref("extensions.fireie.logCookies", false);
 
 // General
 pref("extensions.fireie.handleUrlBar", false);

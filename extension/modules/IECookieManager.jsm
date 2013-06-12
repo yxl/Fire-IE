@@ -398,7 +398,7 @@ let IECookieManager = {
       setIECtrlRegString("Cache", cacheDir);
     }
     
-    this._bTmpDirChanged = true;    
+    this._bTmpDirChanged = true;
   },
   
   restoreIETempDirectorySetting: function()
@@ -420,7 +420,7 @@ let IECookieManager = {
     }
 
     this._bTmpDirChanged = false;
-    this.releaseMutex();    
+    this.releaseMutex();
   },
 
   _getExpiresString: function(expiresInSeconds)
@@ -479,25 +479,35 @@ let CookieObserver = {
     switch (data)
     {
     case 'deleted':
+      this.logFirefoxCookie(data, cookie);
       IECookieManager.deleteIECookie(cookie);
       break;
     case 'added':
+      this.logFirefoxCookie(data, cookie);
       IECookieManager.saveIECookie(cookie);
       break;
     case 'changed':
+      this.logFirefoxCookie(data, cookie);
       IECookieManager.saveIECookie(cookie);
       break;
     case 'batch-deleted':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver batch-deleted] ' + cookieArray.length + ' cookie(s)');
       for (let i = 0; i < cookieArray.length; i++)
       {
         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
         IECookieManager.deleteIECookie(cookie);
+        this.logFirefoxCookie(data, cookie);
       }
       break;
     case 'cleared':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver cleared]');
       IECookieManager.clearAllIECookies();
       break;
     case 'reload':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver reload]');
       IECookieManager.clearAllIECookies();
       break;
     }
@@ -531,5 +541,12 @@ let CookieObserver = {
     {
       Utils.ERROR("onIEBatchCookieChanged(" + data + "): " + e);
     }
+  },
+
+  logFirefoxCookie: function(tag, cookie2)
+  {
+    if (!Prefs.logCookies) return;
+    
+    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isSecure:" + cookie2.isSecure + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };
