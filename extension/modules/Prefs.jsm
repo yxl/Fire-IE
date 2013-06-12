@@ -129,6 +129,47 @@ var Prefs =
     let index = listeners.indexOf(listener);
     if (index >= 0)
       listeners.splice(index, 1);
+  },
+  
+  /**
+   * PrivateBrowsingUtils object
+   */
+  get privateBrowsingUtils()
+  {
+    let pbutils = null;
+    try
+    {
+      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+      pbutils = PrivateBrowsingUtils;
+    }
+    catch (ex)
+    {
+      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
+    }
+    this.__defineGetter__("privateBrowsingUtils", function() pbutils);
+    return pbutils;
+  },
+  
+  /**
+   * Are we in private browsing mode?
+   */
+  isPrivateBrowsingWindow: function(window)
+  {
+    let pbutils = this.privateBrowsingUtils;
+    this.isPrivateBrowsingWindow = (pbutils ? (function(w) pbutils.isWindowPrivate(w))
+                                            : (function() Prefs.privateBrowsing));
+    return this.isPrivateBrowsingWindow(window);
+  },
+  
+  /**
+   * Get the nsILoadContext for current window
+   */
+  getPrivacyContext: function(window)
+  {
+    let pbutils = this.privateBrowsingUtils;
+    this.getLoadContext = (pbutils ? (function(w) pbutils.privacyContextFromWindow(w))
+                                   : (function() null));
+    return this.getLoadContext(window);
   }
 };
 

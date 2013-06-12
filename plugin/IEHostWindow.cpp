@@ -202,18 +202,27 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
 	return hwnd;
 }
 
-void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams)
+void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext)
 {
-	CIEHostWindow* pWindow = GetAnyUtilsWindow();
+	CIEHostWindow* pWindow = pWindowContext ? pWindowContext : GetAnyUtilsWindow();
 	if (pWindow)
 	{
 		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
 			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
 		pWindow->RunAsync([pWindow, pvParams]
 		{
+			// To use the window context, the window must already be attached to a plugin object,
+			// otherwise, we can't fire the event.
 			if (pWindow->m_pPlugin)
 			{
 				pWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
+			}
+			else
+			{
+				// Fall back to use the utils plugin
+				CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
+				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
+					pUtilsWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
 			}
 			delete pvParams;
 		});

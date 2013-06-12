@@ -410,6 +410,7 @@ function onIEUserAgentReceived(event)
 
 /**
  * Handles 'IESetCookie' event receiving from the plugin
+ * Context is set to null as a fallback situation
  */
 function onIESetCookie(event)
 {
@@ -421,6 +422,7 @@ function onIESetCookie(event)
 
 /**
  * Handles 'IEBatchSetCookie' event receiving from the plugin
+ * Context is set to null as a fallback situation
  */
 function onIEBatchSetCookie(event)
 {

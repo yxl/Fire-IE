@@ -1025,10 +1025,14 @@ var Utils = {
     }
   },
   
-  shouldLoadInBackground: function() {
-    try {
+  shouldLoadInBackground: function()
+  {
+    try
+    {
       return Services.prefs.getBoolPref("browser.tabs.loadInBackground");
-    } catch (ex) {
+    }
+    catch (ex)
+    {
       return true;
     }
   }

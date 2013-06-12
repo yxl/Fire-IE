@@ -354,7 +354,7 @@ namespace HttpMonitor
 			}
 		}
 		if (vCookieParams.size())
-			CIEHostWindow::SetFirefoxCookie(std::move(vCookieParams));
+			CIEHostWindow::SetFirefoxCookie(std::move(vCookieParams), m_pIEHostWindow);
 	}
 
 	ContentType_T MonitorSink::ScanContentType(LPCWSTR szContentType)
@@ -398,14 +398,6 @@ namespace HttpMonitor
 	}
 	bool MonitorSink::CanLoadContent(ContentType_T aContentType)
 	{
-		// stub implementation, filter baidu logo
-		/*bool result = m_strURL != _T("http://www.baidu.com/img/baidu_sylogo1.gif")
-			&& m_strURL != _T("http://www.baidu.com/img/baidu_jgylogo3.gif")
-			&& m_strURL != _T("http://img.baidu.com/img/post-jg.gif")
-			&& m_strURL.Find(_T("http://tb2.bdstatic.com/tb/static-common/img/tieba_logo")) != 0
-			&& m_strURL.Find(_T("http://360.cn")) != 0
-			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
-		;*/ /*!re::RegExp(_T("/http:\\/\\/\\w+\\.(qhimg\\.com)/i")).test(std::wstring(m_strURL.GetString()));*/
 		bool thirdParty = m_strReferer.GetLength() ? Utils::IsThirdPartyRequest(m_strURL, m_strReferer) : false;
 		const CString& referer =  m_strReferer.GetLength() ? m_strReferer : m_strURL;
 

@@ -193,7 +193,7 @@ let IECookieManager = {
     mutex.close();
   },
   
-  saveFirefoxCookie: function(url, cookieHeader)
+  saveFirefoxCookie: function(url, cookieHeader, context)
   {
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
@@ -201,6 +201,10 @@ let IECookieManager = {
     
     // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
     let uri = Utils.makeURI(url);
+    // Issue #105:
+    // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
+    // It seems that only nsILoadContext is needed, however, we need new APIs for this.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
     cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
   },
 
@@ -467,10 +471,10 @@ let CookieObserver = {
       IECookieManager.clearIESessionCookies();
       break;
     case 'fireie-set-cookie':
-      this.onIECookieChanged(data);
+      this.onIECookieChanged(subject, data);
       break;
     case 'fireie-batch-set-cookie':
-      this.onIEBatchCookieChanged(data);
+      this.onIEBatchCookieChanged(subject, data);
       break;
     }
   },
@@ -526,12 +530,16 @@ let CookieObserver = {
     this.onFirefoxCookieChanged(subject, data);
   },
   
-  onIECookieChanged: function(data)
+  onIECookieChanged: function(subject, data)
   {
+    // Skip syncing private browsing cookies from IE engine
+    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
+      return;
     try
     {
       let {header, url} = JSON.parse(data);
-      IECookieManager.saveFirefoxCookie(url, header);
+      let context = subject && Prefs.getPrivacyContext(subject);
+      IECookieManager.saveFirefoxCookie(url, header, context);
     }
     catch(e)
     {
@@ -539,15 +547,19 @@ let CookieObserver = {
     }
   },
 
-  onIEBatchCookieChanged: function(data)
+  onIEBatchCookieChanged: function(subject, data)
   {
+    // Skip syncing private browsing cookies from IE engine
+    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
+      return;
     try
     {
       let cookies = JSON.parse(data);
+      let context = subject && Prefs.getPrivacyContext(subject);
       cookies.forEach(function(cookie)
       {
         let {header, url} = cookie;
-        IECookieManager.saveFirefoxCookie(url, header);
+        IECookieManager.saveFirefoxCookie(url, header, context);
       });
     }
     catch(e)
