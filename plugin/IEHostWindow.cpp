@@ -207,15 +207,13 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	CIEHostWindow* pWindow = GetAnyUtilsWindow();
 	if (pWindow)
 	{
-		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
-			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
-		pWindow->RunAsync([pWindow, pvParams]
+		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
+		pWindow->RunAsync([pWindow, vParams]
 		{
 			if (pWindow->m_pPlugin)
 			{
-				pWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
+				pWindow->m_pPlugin->SetFirefoxCookie(vParams);
 			}
-			delete pvParams;
 		});
 	}
 }
