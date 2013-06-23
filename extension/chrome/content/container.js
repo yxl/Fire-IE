@@ -78,12 +78,13 @@ let FireIEContainer = {};
   function needPrivateBrowsingWarning()
   {
     let need = gFireIE && gFireIE.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !gFireIE.isResumeFromPBW();
-    // If we have fireieNavigateParams, the tab is a new window opened from IE
+    // If we have fireieNavigateParams.id, the tab is a new window opened from IE
     // We should attach to it as soon as possible, ignoring privatebrowsingwarning
     if (need)
     {
       let tab = Utils.getTabFromDocument(document);
-      need = need && !Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+      let params = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+      need = !params || !params.id;
     }
     return !!need;
   }
