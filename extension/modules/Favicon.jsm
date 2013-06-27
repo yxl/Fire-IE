@@ -24,8 +24,17 @@ var EXPORTED_SYMBOLS = ["Favicon"];
 var Favicon = {
 
   setIcon: function(document, iconURL) {
-    this._removeIconIfExists(document);
-    this._addIcon(document, iconURL);
+    var link = this._docHead(document).querySelector("link[rel=icon]");
+    // If favicon not changed, do nothing
+    if (link && link.href === iconURL)
+      return;
+    
+    // Remove previous favicon if exists
+    if (link)
+      link.parentElement.removeChild(link);
+    // Add new favicon
+    if (iconURL)
+      this._addIcon(document, iconURL);
   },
 
   _addIcon: function(document, iconURL) {
@@ -36,20 +45,8 @@ var Favicon = {
     this._docHead(document).appendChild(link);
   },
 
-  _removeIconIfExists: function(document) {
-    var links = this._docHead(document).getElementsByTagName("link");
-    for (var i = 0; i < links.length; i++) {
-      var link = links[i];
-      if (link.rel == "icon") {
-        this._docHead(document).removeChild(link);
-        return; // Assuming only one match at most.
-      }
-    }
-  },
-
   _docHead: function(document) {
     return document.getElementsByTagName("head")[0];
   }
 
 };
-
