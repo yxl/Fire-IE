@@ -1,6 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#fireie-urlbar-switch-image, #fireie-toolbar-palette-button{
+/* Force priority over chrome default CSS */
+#fireie-urlbar-switch[fx-icon-url][ie-icon-url], #fireie-urlbar-switch-image, #fireie-toolbar-palette-button {
   list-style-image: url("chrome://fireie/skin/engine-fx.png");
 }
 

@@ -537,6 +537,7 @@ WindowWrapper.prototype = {
       let fxURL = LightweightTheme.fxIconUrl;
       let ieURL = LightweightTheme.ieIconUrl;
       let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
+      this.E("fireie-urlbar-switch").style.listStyleImage = engineIconCSS;
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
       urlbarButtonLabel.value = isIEEngine ? (Prefs.ieLabel || Utils.getString("fireie.urlbar.switch.label.ie"))
