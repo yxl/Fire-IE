@@ -49,7 +49,6 @@ namespace BrowserHook
 		// WH_CALLWNDPROCRET
 		static HHOOK s_hhookCallWndProcRet;
 		// Record the last time middle button was clicked
-		static UINT64 s_nLastMiddleClickTick;
+		static UINT s_nLastMiddleClickTick;
 	};
 }
-

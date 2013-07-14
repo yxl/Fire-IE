@@ -207,24 +207,22 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	CIEHostWindow* pWindow = pWindowContext ? pWindowContext : GetAnyUtilsWindow();
 	if (pWindow)
 	{
-		vector<UserMessage::SetFirefoxCookieParams>* pvParams = 
-			new vector<UserMessage::SetFirefoxCookieParams>(std::move(vCookieParams));
-		pWindow->RunAsync([pWindow, pvParams]
+		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
+		pWindow->RunAsync([pWindow, vParams]
 		{
 			// To use the window context, the window must already be attached to a plugin object,
 			// otherwise, we can't fire the event.
 			if (pWindow->m_pPlugin)
 			{
-				pWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
+				pWindow->m_pPlugin->SetFirefoxCookie(vParams);
 			}
 			else
 			{
 				// Fall back to use the utils plugin
 				CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
 				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
-					pUtilsWindow->m_pPlugin->SetFirefoxCookie(*pvParams);
+					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams);
 			}
-			delete pvParams;
 		});
 	}
 }

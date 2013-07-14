@@ -32,6 +32,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import(baseURL.spec + "Utils.jsm");
+Cu.import(baseURL.spec + "Prefs.jsm");
 
 const prefRoot = "font.name.";
 
@@ -83,6 +84,8 @@ var PrefsPrivate = {
 
   notifyDataChange: function()
   {
+    if (!Prefs.fontSyncEnabled) return;
+    
     let fontName = this.getFirefoxDefaultFontName();
     if (fontName && fontName.length) setIEDefaultFont(fontName);
   },

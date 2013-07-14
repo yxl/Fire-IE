@@ -388,10 +388,21 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 	CIEHostWindow* pWindow = CIEHostWindow::GetAnyUtilsWindow();
 	if (pWindow)
 	{
-		pWindow->PostMessage(UserMessage::WM_USER_MESSAGE,
-			loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
+		pWindow->RunAsync([=]
+		{
+			// filterLoadedCallback() should be called on the main thread
+			// to ensure atomicity;
+			// Must call the callback before sending the message
+			filterLoadedCallback(loaded);
+			pWindow->SendMessage(UserMessage::WM_USER_MESSAGE,
+				loaded ? UserMessage::WPARAM_ABP_FILTER_LOADED : UserMessage::WPARAM_ABP_LOAD_FAILURE, 0);
+		});
 	}
-	filterLoadedCallback(loaded);
+	else
+	{
+		// Just a fallback, may never get to here
+		filterLoadedCallback(loaded);
+	}
 
 	return 0;
 }
