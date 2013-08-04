@@ -55,6 +55,7 @@
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "Failed to load filters">
 <!ENTITY fireie.options.integration.otherOptions "Other Options">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Sync cookies between IE and Firefox engines">
+<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE Options">
 <!ENTITY fireie.options.ieoptions.pane "IE Options">
