@@ -193,7 +193,7 @@ let IECookieManager = {
     mutex.close();
   },
   
-  saveFirefoxCookie: function(url, cookieHeader, context)
+  saveFirefoxCookie: function(url, cookieHeader, context, forceSession)
   {
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
@@ -208,7 +208,7 @@ let IECookieManager = {
     cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
   },
 
-  saveIECookie: function(cookie2)
+  saveIECookie: function(cookie2, forceSession)
   {  
     // If the cookie is received from IE, do not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
@@ -235,7 +235,8 @@ let IECookieManager = {
      */
     let url = (cookie2.isSecure ? 'https://' : 'http://') + hostname + cookie2.path;
     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
-    if (cookie2.expires > 0)
+    // Force the cookie to be session cookie if we synchronized it from private browsing windows
+    if (cookie2.expires > 0 && !forceSession)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
@@ -462,7 +463,7 @@ let CookieObserver = {
     switch (topic)
     {
     case 'cookie-changed':
-      this.onFirefoxCookieChanged(subject, data);
+      this.onFirefoxCookieChanged(subject, data, false);
       break;
     case 'private-cookie-changed':
       this.onFirefoxPrivateCookieChanged(subject, data);
@@ -479,7 +480,7 @@ let CookieObserver = {
     }
   },
 
-  onFirefoxCookieChanged: function(subject, data)
+  onFirefoxCookieChanged: function(subject, data, forceSession)
   {
     if (!Prefs.cookieSyncEnabled) return;
     
@@ -493,11 +494,11 @@ let CookieObserver = {
       break;
     case 'added':
       this.logFirefoxCookie(data, cookie);
-      IECookieManager.saveIECookie(cookie);
+      IECookieManager.saveIECookie(cookie, forceSession);
       break;
     case 'changed':
       this.logFirefoxCookie(data, cookie);
-      IECookieManager.saveIECookie(cookie);
+      IECookieManager.saveIECookie(cookie, forceSession);
       break;
     case 'batch-deleted':
       if (Prefs.logCookies)
@@ -527,7 +528,7 @@ let CookieObserver = {
     if (!Prefs.privateCookieSyncEnabled) return;
     
     // delegate to normal cookie handler
-    this.onFirefoxCookieChanged(subject, data);
+    this.onFirefoxCookieChanged(subject, data, true);
   },
   
   onIECookieChanged: function(subject, data)
@@ -538,8 +539,10 @@ let CookieObserver = {
     try
     {
       let {header, url} = JSON.parse(data);
-      let context = subject && Prefs.getPrivacyContext(subject);
-      IECookieManager.saveFirefoxCookie(url, header, context);
+      let window = subject;
+      let context = window && Prefs.getPrivacyContext(window);
+      let forceSession = window && Prefs.isPrivateBrowsingWindow(window);
+      IECookieManager.saveFirefoxCookie(url, header, context, forceSession);
     }
     catch(e)
     {

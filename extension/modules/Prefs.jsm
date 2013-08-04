@@ -167,9 +167,9 @@ var Prefs =
   getPrivacyContext: function(window)
   {
     let pbutils = this.privateBrowsingUtils;
-    this.getLoadContext = (pbutils ? (function(w) pbutils.privacyContextFromWindow(w))
-                                   : (function() null));
-    return this.getLoadContext(window);
+    this.getPrivacyContext = (pbutils ? (function(w) pbutils.privacyContextFromWindow(w))
+                                      : (function() null));
+    return this.getPrivacyContext(window);
   }
 };
 
