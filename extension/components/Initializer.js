@@ -29,6 +29,8 @@ Initializer.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
+  _forceClear: false,
+  
   observe: function(subject, topic, data)
   {
     let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -66,6 +68,12 @@ Initializer.prototype = {
         if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
           this._clearCookies();
       }
+      
+      // Record private browsing autostart pref, in order to determine whether we should force
+      // clear history at shutdown
+      this._forceClear =
+        prefs.getPrefType("browser.privatebrowsing.autostart") === Ci.nsIPrefBranch.PREF_BOOL &&
+        prefs.getBoolPref("browser.privatebrowsing.autostart");
 
       observerService.addObserver(this, "quit-application", true);
       observerService.addObserver(this, "fireie-clear-cache", true);
@@ -76,12 +84,15 @@ Initializer.prototype = {
 
       break;
     case "quit-application":
-      // Clear the history if need sanitize on shutdown
-      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
+      // Clear the history if need sanitize on shutdown,
+      // or if we're in permanent private browsing mode
+      let needClear = this._forceClear || prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
+      let forceClear = this._forceClear;
+      if (needClear)
       {
-        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+        if (forceClear || prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
           observerService.notifyObservers(null, "fireie-clear-cache", null);
-        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+        if (forceClear || prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
           observerService.notifyObservers(null, "fireie-clear-cookies", null);
       }
 
