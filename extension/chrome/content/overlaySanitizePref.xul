@@ -29,7 +29,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
         <caption label="&fireieSection.label;" />
         <grid flex="1">
           <columns>
-            <column style="width: &column.width;" />
+            <column style="width: auto;" />
             <column flex="1" />
           </columns>
           <rows>
