@@ -8,6 +8,7 @@
 #include "abp/AdBlockPlus.h"
 #include "URL.h"
 #include "PrefManager.h"
+#include "HTTP.h"
 
 namespace HttpMonitor
 {
@@ -27,56 +28,6 @@ namespace HttpMonitor
 
 	static const BYTE   EMPTY_FILE []= "";
 	static const DWORD  EMPTY_FILE_LENGTH = sizeof(EMPTY_FILE)-1;
-
-	// 把以 \0 分隔的 Raw HTTP Header 数据转换成以 \r\n 分隔的 Header
-	void HttpRawHeader2CrLfHeader(LPCSTR szRawHeader, CString & strCrLfHeader)
-	{
-		strCrLfHeader.Empty();
-
-		LPCSTR p = szRawHeader;
-		while ( p[0] )
-		{
-			CString strHeaderLine(p);
-
-			p += strHeaderLine.GetLength() + 1;
-
-			strCrLfHeader += strHeaderLine + _T("\r\n");
-		}
-	}
-
-	LPWSTR ExtractFieldValue(LPCWSTR szHeader, LPCWSTR szFieldName, LPWSTR * pFieldValue, size_t * pSize )
-	{
-		LPWSTR r = NULL;
-
-		do 
-		{
-			// 根据 RFC2616 规定, HTTP field name 不区分大小写
-			LPWSTR pStart = StrStrIW( szHeader, szFieldName );
-			if ( ! pStart ) break;
-			pStart += wcslen(szFieldName);
-			while ( L' ' == pStart[0] ) pStart++;		// 跳过开头的空格
-			LPWSTR pEnd = StrStrW( pStart, L"\r\n" );
-			if ( ( ! pEnd ) || ( pEnd <= pStart ) ) break;
-
-			size_t nSize = pEnd - pStart;
-			size_t nBufLen = nSize + 2;		// 留给字符串的 0 结束符
-			LPWSTR lpBuffer = (LPWSTR)malloc(nBufLen * sizeof(WCHAR));
-			if ( !lpBuffer ) break;
-
-			if (wcsncpy_s( lpBuffer, nBufLen, pStart, nSize))
-			{
-				free(lpBuffer);
-				break;
-			}
-
-			* pSize = nBufLen;
-			* pFieldValue = lpBuffer;
-			r = pEnd;
-
-		} while(false);
-
-		return r;
-	}
 
 	bool FuzzyUrlCompare( LPCTSTR lpszUrl1, LPCTSTR lpszUrl2 )
 	{
@@ -220,11 +171,11 @@ namespace HttpMonitor
 				static const WCHAR CONTENT_TYPE_HEAD [] = L"Content-Type:";
 				LPWSTR pContentType = NULL;
 				size_t nLen = 0;
-				if (ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
+				if (Utils::HTTP::ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
 				{
 					ContentType_T aContentType = ScanContentType(pContentType);
 
-					if (pContentType) free(pContentType);
+					if (pContentType) Utils::HTTP::FreeFieldValue(pContentType);
 
 					if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
 						aContentType = ContentType::TYPE_SUBDOCUMENT;
@@ -336,13 +287,13 @@ namespace HttpMonitor
 		LPWSTR p = (LPWSTR)szResponseHeaders;
 		LPWSTR lpCookies = NULL;
 		size_t nCookieLen = 0;
-		while (p = ExtractFieldValue(p, SET_COOKIE_HEAD, &lpCookies, & nCookieLen))
+		while (p = Utils::HTTP::ExtractFieldValue(p, SET_COOKIE_HEAD, &lpCookies, & nCookieLen))
 		{
 			if (lpCookies)
 			{
 				CString strURL = GetBindURL();
 				CString strCookie((LPCTSTR)CW2T(lpCookies));
-				free(lpCookies);
+				Utils::HTTP::FreeFieldValue(lpCookies);
 				lpCookies = NULL;
 
 				UserMessage::SetFirefoxCookieParams cookieParam;
@@ -388,11 +339,11 @@ namespace HttpMonitor
 
 			LPWSTR lpReferer = NULL;
 			size_t nRefererLen = 0;
-			if (ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
+			if (Utils::HTTP::ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
 			{
 				m_strReferer = lpReferer;
 
-				free(lpReferer);
+				Utils::HTTP::FreeFieldValue(lpReferer);
 			}
 		}
 	}
@@ -424,14 +375,14 @@ namespace HttpMonitor
 				LPWSTR lpDNT = NULL;
 				size_t nDNTLen = 0;
 				bool hasDNT = false;
-				if (ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
+				if (Utils::HTTP::ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
 				{
 					if (nDNTLen)
 					{
 						// 已经有DNT头了，不用再加
 						hasDNT = true;
 					}
-					if (lpDNT) free(lpDNT);
+					if (lpDNT) Utils::HTTP::FreeFieldValue(lpDNT);
 				}
 				// 增加 DoNotTrack (DNT) 头
 				if (!hasDNT)
@@ -482,7 +433,7 @@ namespace HttpMonitor
 					{
 						// 注意 HTTP_QUERY_RAW_HEADERS 返回的 Raw Header 是 \0 分隔的, 以 \0\0 作为结束, 所以这里要做转换
 						CString strHeader;
-						HttpRawHeader2CrLfHeader(szRawHeader, strHeader);
+						Utils::HTTP::HttpRawHeader2CrLfHeader(szRawHeader, strHeader);
 
 						ExportCookies(strHeader);
 					}

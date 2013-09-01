@@ -30,6 +30,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "OS.h"
 #include "App.h"
 #include "WindowMessageHook.h"
+#include "HTTP.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -842,6 +843,15 @@ void CIEHostWindow::OnNavigate()
 			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
 			if (!strPost.IsEmpty()) 
 			{
+				// Header中应该添加上strPost中的Content-Type信息
+				LPWSTR szContentType = NULL;
+				size_t nCTLen;
+				if (HTTP::ExtractFieldValue(strPost.GetString(), L"Content-Type:", &szContentType, &nCTLen))
+				{
+					vHeader = CString(vHeader) + _T("Content-Type: ") + szContentType + _T("\r\n");
+					HTTP::FreeFieldValue(szContentType);
+				}
+
 				// 去除postContent-Type和Content-Length这样的header信息
 				int pos = strPost.Find(_T("\r\n\r\n"));
 
@@ -850,13 +860,14 @@ void CIEHostWindow::OnNavigate()
 				char* szPostData = new char[size + 1];
 				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
 				FillSafeArray(vPost, szPostData);
+				delete [] szPostData;
 			}
 			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
 		}
 		catch(...)
 		{
 			TRACE(_T("CIEHostWindow::Navigate URL=%s failed!\n"), strURL);
-		}	
+		}
 	}
 }
 
