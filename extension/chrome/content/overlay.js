@@ -342,6 +342,8 @@ var gFireIE = null;
       });
 
       initializeFindBarHooks();
+      // Firefox 25 has per-tab gFindBar that we should hook individually
+      gBrowser.tabContainer.addEventListener("TabSelect", initializeFindBarHooks, false);
     }
   }
 
@@ -364,6 +366,14 @@ var gFireIE = null;
 
   function initializeFindBarHooks()
   {
+    if (gFindBar.FireIE_hooked) {
+      Utils.LOG("Current tab's gFindBar already hooked.");
+      return;
+    }
+    gFindBar.FireIE_hooked = true;
+    
+    Utils.LOG("Hooking current tab's gFindBar...");
+    
     // find_next, find_prev, arguments[0] denotes whether find_prev
     HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)
     {

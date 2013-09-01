@@ -55,6 +55,7 @@
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "Nie powiodło się wczytywanie filtrów">
 <!ENTITY fireie.options.integration.otherOptions "Inne ustawienia">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Synchronizuj ciasteczka pomiędzy silnikami IE i Firefox">
+<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
 
 <!ENTITY fireie.options.ieoptions.tab  "Silnik IE">
 <!ENTITY fireie.options.ieoptions.pane "Silnik IE">

@@ -208,7 +208,10 @@
       </groupbox>
       <groupbox>
         <caption label="&fireie.options.integration.otherOptions;" />
-        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;" />
+        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;"
+                  oncommand="Options.onCookieSyncChanged()" />
+        <checkbox id="privateCookieSyncEnabled" label="&fireie.options.integration.privateCookieSyncEnabled;" class="indent"
+                  oncommand="Options.onPrivateCookieSyncChanged()" />
       </groupbox>
     </vbox>
   </prefpane>

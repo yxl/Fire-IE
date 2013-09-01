@@ -193,7 +193,7 @@ let IECookieManager = {
     mutex.close();
   },
   
-  saveFirefoxCookie: function(url, cookieHeader)
+  saveFirefoxCookie: function(url, cookieHeader, context, forceSession)
   {
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
@@ -201,10 +201,14 @@ let IECookieManager = {
     
     // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
     let uri = Utils.makeURI(url);
+    // Issue #105:
+    // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
+    // It seems that only nsILoadContext is needed, however, we need new APIs for this.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
     cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
   },
 
-  saveIECookie: function(cookie2)
+  saveIECookie: function(cookie2, forceSession)
   {  
     // If the cookie is received from IE, do not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
@@ -231,7 +235,8 @@ let IECookieManager = {
      */
     let url = (cookie2.isSecure ? 'https://' : 'http://') + hostname + cookie2.path;
     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
-    if (cookie2.expires > 0)
+    // Force the cookie to be session cookie if we synchronized it from private browsing windows
+    if (cookie2.expires > 0 && !forceSession)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
@@ -398,7 +403,7 @@ let IECookieManager = {
       setIECtrlRegString("Cache", cacheDir);
     }
     
-    this._bTmpDirChanged = true;    
+    this._bTmpDirChanged = true;
   },
   
   restoreIETempDirectorySetting: function()
@@ -420,7 +425,7 @@ let IECookieManager = {
     }
 
     this._bTmpDirChanged = false;
-    this.releaseMutex();    
+    this.releaseMutex();
   },
 
   _getExpiresString: function(expiresInSeconds)
@@ -437,6 +442,7 @@ let CookieObserver = {
   register: function()
   {
     Services.obs.addObserver(this, "cookie-changed", false);
+    Services.obs.addObserver(this, "private-cookie-changed", false);
     Services.obs.addObserver(this, "fireie-clear-cookies", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
@@ -445,6 +451,7 @@ let CookieObserver = {
   unregister: function()
   {
     Services.obs.removeObserver(this, "cookie-changed");
+    Services.obs.removeObserver(this, "private-cookie-changed");
     Services.obs.removeObserver(this, "fireie-clear-cookies");
     Services.obs.removeObserver(this, "fireie-set-cookie");
     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
@@ -456,21 +463,24 @@ let CookieObserver = {
     switch (topic)
     {
     case 'cookie-changed':
-      this.onFirefoxCookieChanged(subject, data);
+      this.onFirefoxCookieChanged(subject, data, false);
+      break;
+    case 'private-cookie-changed':
+      this.onFirefoxPrivateCookieChanged(subject, data);
       break;
     case 'fireie-clear-cookies':
       IECookieManager.clearIESessionCookies();
       break;
     case 'fireie-set-cookie':
-      this.onIECookieChanged(data);
+      this.onIECookieChanged(subject, data);
       break;
     case 'fireie-batch-set-cookie':
-      this.onIEBatchCookieChanged(data);
+      this.onIEBatchCookieChanged(subject, data);
       break;
     }
   },
 
-  onFirefoxCookieChanged: function(subject, data)
+  onFirefoxCookieChanged: function(subject, data, forceSession)
   {
     if (!Prefs.cookieSyncEnabled) return;
     
@@ -479,36 +489,60 @@ let CookieObserver = {
     switch (data)
     {
     case 'deleted':
+      this.logFirefoxCookie(data, cookie);
       IECookieManager.deleteIECookie(cookie);
       break;
     case 'added':
-      IECookieManager.saveIECookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie, forceSession);
       break;
     case 'changed':
-      IECookieManager.saveIECookie(cookie);
+      this.logFirefoxCookie(data, cookie);
+      IECookieManager.saveIECookie(cookie, forceSession);
       break;
     case 'batch-deleted':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver batch-deleted] ' + cookieArray.length + ' cookie(s)');
       for (let i = 0; i < cookieArray.length; i++)
       {
         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
         IECookieManager.deleteIECookie(cookie);
+        this.logFirefoxCookie(data, cookie);
       }
       break;
     case 'cleared':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver cleared]');
       IECookieManager.clearAllIECookies();
       break;
     case 'reload':
+      if (Prefs.logCookies)
+        Utils.LOG('[CookieObserver reload]');
       IECookieManager.clearAllIECookies();
       break;
     }
   },
   
-  onIECookieChanged: function(data)
+  onFirefoxPrivateCookieChanged: function(subject, data)
   {
+    if (!Prefs.privateCookieSyncEnabled) return;
+    
+    // delegate to normal cookie handler
+    this.onFirefoxCookieChanged(subject, data, true);
+  },
+  
+  onIECookieChanged: function(subject, data)
+  {
+    // Skip syncing private browsing cookies from IE engine
+    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
+      return;
     try
     {
       let {header, url} = JSON.parse(data);
-      IECookieManager.saveFirefoxCookie(url, header);
+      let window = subject;
+      let context = window && Prefs.getPrivacyContext(window);
+      let forceSession = window && Prefs.isPrivateBrowsingWindow(window);
+      IECookieManager.saveFirefoxCookie(url, header, context, forceSession);
     }
     catch(e)
     {
@@ -516,20 +550,31 @@ let CookieObserver = {
     }
   },
 
-  onIEBatchCookieChanged: function(data)
+  onIEBatchCookieChanged: function(subject, data)
   {
+    // Skip syncing private browsing cookies from IE engine
+    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
+      return;
     try
     {
       let cookies = JSON.parse(data);
+      let context = subject && Prefs.getPrivacyContext(subject);
       cookies.forEach(function(cookie)
       {
         let {header, url} = cookie;
-        IECookieManager.saveFirefoxCookie(url, header);
+        IECookieManager.saveFirefoxCookie(url, header, context);
       });
     }
     catch(e)
     {
       Utils.ERROR("onIEBatchCookieChanged(" + data + "): " + e);
     }
+  },
+
+  logFirefoxCookie: function(tag, cookie2)
+  {
+    if (!Prefs.logCookies) return;
+    
+    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isSecure:" + cookie2.isSecure + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };

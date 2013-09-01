@@ -393,6 +393,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="test\test.cpp" />
     <ClCompile Include="Utils\App.cpp" />
     <ClCompile Include="Utils\File.cpp" />
+    <ClCompile Include="Utils\HTTP.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
     <ClCompile Include="Utils\PointerHash.cpp" />
     <ClCompile Include="Utils\TLD.cpp" />
@@ -449,6 +450,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="UserMessage.h" />
     <ClInclude Include="Utils\App.h" />
     <ClInclude Include="Utils\File.h" />
+    <ClInclude Include="Utils\HTTP.h" />
     <ClInclude Include="Utils\OS.h" />
     <ClInclude Include="Utils\PointerHash.h" />
     <ClInclude Include="Utils\TLD.h" />

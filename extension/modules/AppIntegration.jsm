@@ -392,6 +392,8 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
+    this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
+    this.window.addEventListener("IEBatchSetCookie", this._bindMethod(this._onIEBatchSetCookie), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -1217,6 +1219,30 @@ WindowWrapper.prototype = {
     {
       Utils.ERROR("updateIEStatusText: " + ex);
     }
+  },
+  
+  /**
+   * Handles 'IESetCookie' event receiving from the plugin.
+   * Here we have context information, which differs from UtilsPluginManager's handler.
+   */
+  _onIESetCookie: function(event)
+  {
+    let subject = this.window;
+    let topic = "fireie-set-cookie";
+    let data = event.detail;
+    Services.obs.notifyObservers(subject, topic, data);
+  },
+  
+  /**
+   * Handles 'IEBatchSetCookie' event receiving from the plugin.
+   * Here we have context information, which differs from UtilsPluginManager's handler.
+   */
+  _onIEBatchSetCookie: function(event)
+  {
+    let subject = this.window;
+    let topic = "fireie-batch-set-cookie";
+    let data = event.detail;
+    Services.obs.notifyObservers(subject, topic, data);
   },
 
   // do not allow intalling themes on sites other than fireie.org
@@ -2175,21 +2201,7 @@ WindowWrapper.prototype = {
    */
   isPrivateBrowsing: function()
   {
-    let pbutils = null;
-    try
-    {
-      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
-      pbutils = PrivateBrowsingUtils;
-    }
-    catch (ex)
-    {
-      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
-    }
-    this.isPrivateBrowsing = function()
-    {
-      return pbutils ? pbutils.isWindowPrivate(this.window) : Prefs.privateBrowsing;
-    };
-    return this.isPrivateBrowsing();
+    return Prefs.isPrivateBrowsingWindow(this.window);
   },
   
   /**

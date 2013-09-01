@@ -55,6 +55,7 @@
 <!ENTITY fireie.options.integration.abpStatusLoadFailed "載入過濾規則失敗">
 <!ENTITY fireie.options.integration.otherOptions "其他選項">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之間同步 Cookie">
+<!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隱私瀏覽模式下啟用 Cookie 同步">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE引擎選項">
 <!ENTITY fireie.options.ieoptions.pane "IE引擎選項">

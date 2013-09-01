@@ -96,6 +96,7 @@ Options.apply = function(quiet)
   Prefs.forceMGSupport = E("forceMGSupport").checked;
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
+  Prefs.privateCookieSyncEnabled = E("privateCookieSyncEnabled").checked;
   Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
   Prefs.fxLabel = E("fxLabel").value;
   Prefs.ieLabel = E("ieLabel").value;
@@ -352,6 +353,7 @@ Options.initDialog = function(restore)
   E("forceMGSupport").checked = Prefs.forceMGSupport;
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
   E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
+  E("privateCookieSyncEnabled").checked = Prefs.privateCookieSyncEnabled;
   E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
   E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
@@ -388,6 +390,23 @@ Options.setIconDisplayValue = function(value)
   E("iconDisplay").value = value;
   Options.updateCustomLabelsUI();
   Options.updateApplyButton(true);
+};
+
+Options.onCookieSyncChanged = function()
+{
+  let enabled = E("cookieSyncEnabled").checked;
+  E("privateCookieSyncEnabled").disabled = !enabled;
+};
+
+Options.onPrivateCookieSyncChanged = function()
+{
+  let enabled = E("privateCookieSyncEnabled").checked;
+  // Let user confirm potential privacy issue
+  if (enabled && !Utils.confirm(window, Utils.getString("fireie.options.alert.privateCookieSync"), 
+                                Utils.getString("fireie.options.alert.title")))
+  {
+    E("privateCookieSyncEnabled").checked = false;
+  }
 };
 
 Options.updateApplyButton = function(e)
