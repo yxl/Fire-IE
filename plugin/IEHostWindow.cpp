@@ -1590,7 +1590,7 @@ bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& p
 	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
 	if (!pDoc3) return false;
 
-	// Remove all previously created stylesheets
+	// IE6 can't use getElementsByClassName interface, have to iterate and filter
 	CComPtr<IHTMLElementCollection> pcolStyles;
 	if (FAILED(pDoc3->getElementsByTagName(_T("style"), &pcolStyles)) || !pcolStyles)
 		return false;
