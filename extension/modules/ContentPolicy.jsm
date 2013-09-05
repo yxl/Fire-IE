@@ -110,10 +110,9 @@ var Policy = {
     if (Utils.isFirefoxOnly(url)) return true;
     let docDomain = Utils.getHostname(url);
     let match = EngineMatcher.matchesAny(url, docDomain);
-    if (match)
-    {
-      RuleStorage.increaseHitCount(match);
-    }
+    // While explicitly checking against exceptional rules,
+    // don't count hits as we'll hit the exceptional rule again
+    // after switch back.
     return match && match instanceof EngineExceptionalRule;
   },
 
