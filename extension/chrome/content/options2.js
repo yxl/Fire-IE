@@ -176,6 +176,9 @@ Options.getIECompatMode = function()
   case 10001:
     mode = "ie10forced";
     break;
+  case 11000:
+    mode = "ie11mode-experimental";
+    break;
   default:
     mode = "ie7mode";
     break;
@@ -210,6 +213,9 @@ Options.applyIECompatMode = function()
     break;
   case "ie10forced":
     value = 10001;
+    break;
+  case "ie11mode-experimental":
+    value = 11000;
     break;
   default:
     value = 7000;
@@ -284,6 +290,10 @@ Options.updateIEModeTab = function(restore)
   if (mainIEVersion < 8)
   {
     return;
+  }
+  if (mainIEVersion >= 11)
+  {
+    E("ie11mode-experimental-menuitem").hidden = false;
   }
   if (mainIEVersion >= 10)
   {

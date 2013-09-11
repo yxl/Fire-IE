@@ -67,6 +67,7 @@
 <!ENTITY fireie.options.iecompat.ie9f  "IE9 - Wymuszony tryb standardowy">
 <!ENTITY fireie.options.iecompat.ie10  "IE10 - Tryb standardowy">
 <!ENTITY fireie.options.iecompat.ie10f "IE10 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie11  "IE11 Mode (Experimental)">
 <!ENTITY fireie.options.iecompat.notSupported "Twoja wersja IE nie nie wspiera trybu kompatybilności lub zaawansowanych możliwości.">
 <!ENTITY fireie.options.iefeat.group   "Zaawansowane możliwości">
 <!ENTITY fireie.options.iefeat.gpuRendering "Włącz renderowanie wspomagane sprzętowo">

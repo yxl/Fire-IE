@@ -60,13 +60,14 @@
 <!ENTITY fireie.options.ieoptions.tab  "Настройки IE">
 <!ENTITY fireie.options.ieoptions.pane "Навтройки IE">
 <!ENTITY fireie.options.iecompat.group "Режим совсметимости IE">
-<!ENTITY fireie.options.iecompat.ie7 "Режим IE7 Standards">
-<!ENTITY fireie.options.iecompat.ie8 "Режим IE8 Standards">
+<!ENTITY fireie.options.iecompat.ie7   "Режим IE7 Standards">
+<!ENTITY fireie.options.iecompat.ie8   "Режим IE8 Standards">
 <!ENTITY fireie.options.iecompat.ie8f  "Форсированный режим IE8 Standards">
-<!ENTITY fireie.options.iecompat.ie9 "Режим IE9 Standards">
+<!ENTITY fireie.options.iecompat.ie9   "Режим IE9 Standards">
 <!ENTITY fireie.options.iecompat.ie9f  "Форсированный режим IE9 Standards">
 <!ENTITY fireie.options.iecompat.ie10  "Режим IE10 Standards">
 <!ENTITY fireie.options.iecompat.ie10f "Форсированный режим IE10 Standards">
+<!ENTITY fireie.options.iecompat.ie11  "IE11 Mode (Experimental)">
 <!ENTITY fireie.options.iecompat.notSupported "Ваша версия IE не подерживает режим совместимости.">
 <!ENTITY fireie.options.iefeat.group   "Дополнительные настройки">
 <!ENTITY fireie.options.iefeat.gpuRendering "Включить режим аппартного ускорения">

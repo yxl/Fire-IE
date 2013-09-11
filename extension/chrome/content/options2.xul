@@ -239,6 +239,8 @@
                       hidden="true" value="ie10mode" />
             <menuitem id="ie10forced-menuitem" label="&fireie.options.iecompat.ie10f;"
                       hidden="true" value="ie10forced" />
+            <menuitem id="ie11mode-experimental-menuitem" label="&fireie.options.iecompat.ie11;"
+                      hidden="true" value="ie11mode-experimental" />
           </menupopup>
         </menulist>
         <label id="iemode-descr" class="descr" />
