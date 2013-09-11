@@ -223,28 +223,31 @@
         &fireie.options.iecompat.notSupported;</label>
       <groupbox id="iecompat" hidden="true">
         <caption label="&fireie.options.iecompat.group;" />
-        <radiogroup id="iemode">
-          <radio id="ie7mode-radio" label="&fireie.options.iecompat.ie7;"
-          hidden="true" value="ie7mode" />
-          <radio id="ie8mode-radio" label="&fireie.options.iecompat.ie8;"
-          hidden="true" value="ie8mode" />
-          <radio id="ie8forced-radio" label="&fireie.options.iecompat.ie8f;"
-          hidden="true" value="ie8forced" />
-          <radio id="ie9mode-radio" label="&fireie.options.iecompat.ie9;"
-          hidden="true" value="ie9mode" />
-          <radio id="ie9forced-radio" label="&fireie.options.iecompat.ie9f;"
-          hidden="true" value="ie9forced" />
-          <radio id="ie10mode-radio" label="&fireie.options.iecompat.ie10;"
-          hidden="true" value="ie10mode" />
-          <radio id="ie10forced-radio" label="&fireie.options.iecompat.ie10f;"
-          hidden="true" value="ie10forced" />
-        </radiogroup>
+        <menulist id="iemode-menulist">
+          <menupopup>
+            <menuitem id="ie7mode-menuitem" label="&fireie.options.iecompat.ie7;"
+                      hidden="true" value="ie7mode" />
+            <menuitem id="ie8mode-menuitem" label="&fireie.options.iecompat.ie8;"
+                      hidden="true" value="ie8mode" />
+            <menuitem id="ie8forced-menuitem" label="&fireie.options.iecompat.ie8f;"
+                      hidden="true" value="ie8forced" />
+            <menuitem id="ie9mode-menuitem" label="&fireie.options.iecompat.ie9;"
+                      hidden="true" value="ie9mode" />
+            <menuitem id="ie9forced-menuitem" label="&fireie.options.iecompat.ie9f;"
+                      hidden="true" value="ie9forced" />
+            <menuitem id="ie10mode-menuitem" label="&fireie.options.iecompat.ie10;"
+                      hidden="true" value="ie10mode" />
+            <menuitem id="ie10forced-menuitem" label="&fireie.options.iecompat.ie10f;"
+                      hidden="true" value="ie10forced" />
+          </menupopup>
+        </menulist>
+        <label id="iemode-descr" class="descr" />
       </groupbox>
       <groupbox id="ieFeatures" hidden="true">
         <caption label="&fireie.options.iefeat.group;" />
         <checkbox id="gpuRendering" label="&fireie.options.iefeat.gpuRendering;" hidden="true" />
       </groupbox>
-      <label id="iemodeDescr" class="descr" style="margin-top:20px;" hidden="true">
+      <label id="iemodeRestartDescr" class="descr" style="margin-top:20px;" hidden="true">
         &fireie.options.restart.descr;</label>
     </vbox>
   </prefpane>
