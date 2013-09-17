@@ -4,6 +4,8 @@
  * http://mozilla.org/MPL/2.0/.
  */
 
+ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 /**
  * Implementation of the rule search functionality.
  * @class
@@ -16,7 +18,7 @@ var RuleSearch =
   init: function()
   {
     let findbar = E("findbar");
-    findbar.browser = RuleSearch.fakeBrowser;
+    findbar.browser = findbar._browser = RuleSearch.fakeBrowser;
 
     findbar.addEventListener("keypress", function(event)
     {
@@ -146,7 +148,13 @@ RuleSearch.fakeBrowser =
     init: function() {},
     setDocShell: function() {},
     setSelectionModeAndRepaint: function() {},
-    collapseSelection: function() {}
+    collapseSelection: function() {},
+    // compatibility with Nightly 26+
+    addResultListener: function() {},
+    removeResultListener: function() {},
+    highlight: function() {},
+    focusContent: function () {},
+    removeSelection: function () {}
   },
   currentURI: Utils.makeURI("http://example.com/"),
   contentWindow:
@@ -163,6 +171,15 @@ RuleSearch.fakeBrowser =
     {
       E("rulesTree").boxObject.scrollByPages(num);
     },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
+    getInterface: function(aIID) {
+      if (aIID.equals(Ci.nsIDOMWindowUtils))
+        return this;
+      throw Cr.NS_NOINTERFACE;
+    },
+    get screenPixelsPerCSSPixel() {
+      return 1.0;
+    }
   },
 
   addEventListener: function(event, handler, capture)
@@ -174,6 +191,10 @@ RuleSearch.fakeBrowser =
     E("rulesTree").addEventListener(event, handler, capture);
   },
 };
+
+// compatibility with Nightly 26+
+RuleSearch.fakeBrowser.finder = RuleSearch.fakeBrowser.fastFind;
+RuleSearch.fakeBrowser.finder.fastFind = RuleSearch.fakeBrowser.fastFind.find;
 
 window.addEventListener("load", function()
 {
