@@ -1,0 +1,1230 @@
+diff --git a/.gitignore b/.gitignore
+index ffd5213..dbea1d0 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -99,6 +99,5 @@ Desktop.ini
+ ## Project Specific
+ ############
+ /extension/plugins/npfireie*
+-/test/
+ /fireie*.xpi
+ /ReleaseNotes.txt
+diff --git a/extension/chrome/content/options2.js b/extension/chrome/content/options2.js
+index a1f6cba..7b4cf4d 100644
+--- a/extension/chrome/content/options2.js
++++ b/extension/chrome/content/options2.js
+@@ -96,6 +96,7 @@ Options.apply = function(quiet)
+   Prefs.forceMGSupport = E("forceMGSupport").checked;
+   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
+   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
++  Prefs.privateCookieSyncEnabled = E("privateCookieSyncEnabled").checked;
+   Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
+   Prefs.fxLabel = E("fxLabel").value;
+   Prefs.ieLabel = E("ieLabel").value;
+@@ -352,6 +353,7 @@ Options.initDialog = function(restore)
+   E("forceMGSupport").checked = Prefs.forceMGSupport;
+   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
+   E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
++  E("privateCookieSyncEnabled").checked = Prefs.privateCookieSyncEnabled;
+   E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
+   E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
+   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
+@@ -390,6 +392,23 @@ Options.setIconDisplayValue = function(value)
+   Options.updateApplyButton(true);
+ };
+ 
++Options.onCookieSyncChanged = function()
++{
++  let enabled = E("cookieSyncEnabled").checked;
++  E("privateCookieSyncEnabled").disabled = !enabled;
++};
++
++Options.onPrivateCookieSyncChanged = function()
++{
++  let enabled = E("privateCookieSyncEnabled").checked;
++  // Let user confirm potential privacy issue
++  if (enabled && !Utils.confirm(window, Utils.getString("fireie.options.alert.privateCookieSync"), 
++                                Utils.getString("fireie.options.alert.title")))
++  {
++    E("privateCookieSyncEnabled").checked = false;
++  }
++};
++
+ Options.updateApplyButton = function(e)
+ {
+   document.getElementById("myApply").disabled = !e;
+diff --git a/extension/chrome/content/options2.xul b/extension/chrome/content/options2.xul
+index 08b5270..5f8e0c2 100644
+--- a/extension/chrome/content/options2.xul
++++ b/extension/chrome/content/options2.xul
+@@ -208,7 +208,10 @@
+       </groupbox>
+       <groupbox>
+         <caption label="&fireie.options.integration.otherOptions;" />
+-        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;" />
++        <checkbox id="cookieSyncEnabled" label="&fireie.options.integration.cookieSyncEnabled;"
++                  oncommand="Options.onCookieSyncChanged()" />
++        <checkbox id="privateCookieSyncEnabled" label="&fireie.options.integration.privateCookieSyncEnabled;" class="indent"
++                  oncommand="Options.onPrivateCookieSyncChanged()" />
+       </groupbox>
+     </vbox>
+   </prefpane>
+diff --git a/extension/chrome/content/overlay.js b/extension/chrome/content/overlay.js
+index 775c35a..b35cf21 100644
+--- a/extension/chrome/content/overlay.js
++++ b/extension/chrome/content/overlay.js
+@@ -342,6 +342,8 @@ var gFireIE = null;
+       });
+ 
+       initializeFindBarHooks();
++      // Firefox 25 has per-tab gFindBar that we should hook individually
++      gBrowser.tabContainer.addEventListener("TabSelect", initializeFindBarHooks, false);
+     }
+   }
+ 
+@@ -364,6 +366,14 @@ var gFireIE = null;
+ 
+   function initializeFindBarHooks()
+   {
++    if (gFindBar.FireIE_hooked) {
++      Utils.LOG("Current tab's gFindBar already hooked.");
++      return;
++    }
++    gFindBar.FireIE_hooked = true;
++    
++    Utils.LOG("Hooking current tab's gFindBar...");
++    
+     // find_next, find_prev, arguments[0] denotes whether find_prev
+     HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)
+     {
+diff --git a/extension/chrome/content/overlaySanitizePref.xul b/extension/chrome/content/overlaySanitizePref.xul
+index dba412b..70d03f1 100644
+--- a/extension/chrome/content/overlaySanitizePref.xul
++++ b/extension/chrome/content/overlaySanitizePref.xul
+@@ -29,7 +29,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         <caption label="&fireieSection.label;" />
+         <grid flex="1">
+           <columns>
+-            <column style="width: &column.width;" />
++            <column style="width: auto;" />
+             <column flex="1" />
+           </columns>
+           <rows>
+diff --git a/extension/chrome/locale/en/fireie.dtd b/extension/chrome/locale/en/fireie.dtd
+index 596b941..5a74405 100644
+--- a/extension/chrome/locale/en/fireie.dtd
++++ b/extension/chrome/locale/en/fireie.dtd
+@@ -55,6 +55,7 @@
+ <!ENTITY fireie.options.integration.abpStatusLoadFailed "Failed to load filters">
+ <!ENTITY fireie.options.integration.otherOptions "Other Options">
+ <!ENTITY fireie.options.integration.cookieSyncEnabled "Sync cookies between IE and Firefox engines">
++<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
+ 
+ <!ENTITY fireie.options.ieoptions.tab  "IE Options">
+ <!ENTITY fireie.options.ieoptions.pane "IE Options">
+diff --git a/extension/chrome/locale/en/global.properties b/extension/chrome/locale/en/global.properties
+index c429bc4..64db33b 100644
+--- a/extension/chrome/locale/en/global.properties
++++ b/extension/chrome/locale/en/global.properties
+@@ -19,6 +19,7 @@ fireie.options.import.error=Failed to import.
+ fireie.options.alert.title=Fire IE Options
+ fireie.options.alert.restart=Firefox must be restarted for all changes to take effect.
+ fireie.options.alert.modified=The preferences are modified. Save changes?
++fireie.options.alert.privateCookieSync=Warning: IE engine doesn't support private browsing mode. If you enable this option, IE engine might keep your cookies even if you exit private browsing mode.\nEnable this option anyway?
+ fireie.security.notEntrypted=Your connection to this website is not encrypted
+ fireie.security.partiallyEncrypted=Your connection to this site is only partially encrypted
+ fireie.security.encrypted=Your connection to this website is encrypted\nEncryption strength: 
+diff --git a/extension/chrome/locale/pl/fireie.dtd b/extension/chrome/locale/pl/fireie.dtd
+index 046b72a..e2a71b4 100644
+--- a/extension/chrome/locale/pl/fireie.dtd
++++ b/extension/chrome/locale/pl/fireie.dtd
+@@ -55,6 +55,7 @@
+ <!ENTITY fireie.options.integration.abpStatusLoadFailed "Nie powiodło się wczytywanie filtrów">
+ <!ENTITY fireie.options.integration.otherOptions "Inne ustawienia">
+ <!ENTITY fireie.options.integration.cookieSyncEnabled "Synchronizuj ciasteczka pomiędzy silnikami IE i Firefox">
++<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
+ 
+ <!ENTITY fireie.options.ieoptions.tab  "Silnik IE">
+ <!ENTITY fireie.options.ieoptions.pane "Silnik IE">
+diff --git a/extension/chrome/locale/pl/global.properties b/extension/chrome/locale/pl/global.properties
+index 5b9e513..912f172 100644
+--- a/extension/chrome/locale/pl/global.properties
++++ b/extension/chrome/locale/pl/global.properties
+@@ -19,6 +19,7 @@ fireie.options.import.error=Nie udało się zaimportować.
+ fireie.options.alert.title=Fire IE - Opcje
+ fireie.options.alert.restart=Należy zrestartować Firefoksa, żeby wszyskie zmiany zaczęły działać.
+ fireie.options.alert.modified=Ustawienia zostały zmienione. Zapisać zmiany?
++fireie.options.alert.privateCookieSync=Warning: IE engine doesn't support private browsing mode. If you enable this option, IE engine might keep your cookies even if you exit private browsing mode.\nEnable this option anyway?
+ fireie.security.notEntrypted=Twoje połączenie na tej stronie nie jest szyfrowane
+ fireie.security.partiallyEncrypted=Twoje połączenie na tej stronie jest tylko częściowo szyfrowane
+ fireie.security.encrypted=Twoje połączenie na tej stronie jest szyfrowane\nSiła szyfrowania: 
+diff --git a/extension/chrome/locale/ru-RU/fireie.dtd b/extension/chrome/locale/ru-RU/fireie.dtd
+index 2c7385b..fb1a803 100644
+--- a/extension/chrome/locale/ru-RU/fireie.dtd
++++ b/extension/chrome/locale/ru-RU/fireie.dtd
+@@ -55,6 +55,7 @@
+ <!ENTITY fireie.options.integration.abpStatusLoadFailed "Сбой при загрузке фильтров">
+ <!ENTITY fireie.options.integration.otherOptions "Other Options">
+ <!ENTITY fireie.options.integration.cookieSyncEnabled "Sync cookies between IE and Firefox engines">
++<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
+ 
+ <!ENTITY fireie.options.ieoptions.tab  "Настройки IE">
+ <!ENTITY fireie.options.ieoptions.pane "Навтройки IE">
+diff --git a/extension/chrome/locale/ru-RU/global.properties b/extension/chrome/locale/ru-RU/global.properties
+index b3a4f30..2a16d61 100644
+--- a/extension/chrome/locale/ru-RU/global.properties
++++ b/extension/chrome/locale/ru-RU/global.properties
+@@ -19,6 +19,7 @@ fireie.options.import.error=Ошибка при импорте.
+ fireie.options.alert.title=Настройки Fire IE
+ fireie.options.alert.restart=Необходим перезапуск Firefox для вступления изменений в силу.
+ fireie.options.alert.modified=Настройки были изменены. Сохранить изменения?
++fireie.options.alert.privateCookieSync=Warning: IE engine doesn't support private browsing mode. If you enable this option, IE engine might keep your cookies even if you exit private browsing mode.\nEnable this option anyway?
+ fireie.security.notEntrypted=Ваше соединение с этим сайтом не зашифровано
+ fireie.security.partiallyEncrypted=Ваше соединение с этим сайтом зашифровано только частично
+ fireie.security.encrypted=Ваше соединение с этим сайтом зашифровано\nУровень шифрования: 
+diff --git a/extension/chrome/locale/zh-CN/fireie.dtd b/extension/chrome/locale/zh-CN/fireie.dtd
+index 8066f0e..d0c7eb7 100644
+--- a/extension/chrome/locale/zh-CN/fireie.dtd
++++ b/extension/chrome/locale/zh-CN/fireie.dtd
+@@ -55,6 +55,7 @@
+ <!ENTITY fireie.options.integration.abpStatusLoadFailed "载入过滤规则失败">
+ <!ENTITY fireie.options.integration.otherOptions "其他选项">
+ <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之间同步 Cookie">
++<!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隐私浏览模式下启用 Cookie 同步">
+ 
+ <!ENTITY fireie.options.ieoptions.tab  "IE引擎选项">
+ <!ENTITY fireie.options.ieoptions.pane "IE引擎选项">
+diff --git a/extension/chrome/locale/zh-CN/global.properties b/extension/chrome/locale/zh-CN/global.properties
+index ce61b91..a7f428a 100644
+--- a/extension/chrome/locale/zh-CN/global.properties
++++ b/extension/chrome/locale/zh-CN/global.properties
+@@ -19,6 +19,7 @@ fireie.options.import.error=导入失败。
+ fireie.options.alert.title=解雇IE 选项
+ fireie.options.alert.restart=设置生效需要重启火狐。
+ fireie.options.alert.modified=选项已修改，是否保存？
++fireie.options.alert.privateCookieSync=警告：IE引擎不支持隐私浏览模式。如果启用此选项，即使您退出隐私浏览模式后，IE引擎依然可能保留您的Cookie。\n仍要启用此选项吗？
+ fireie.security.notEntrypted=您和此网站的连接未被加密
+ fireie.security.partiallyEncrypted=您与此站点的连接仅仅被部分加密
+ fireie.security.encrypted=您和此网站的连接已被加密\n加密强度：
+diff --git a/extension/chrome/locale/zh-TW/fireie.dtd b/extension/chrome/locale/zh-TW/fireie.dtd
+index 9b25d4b..6719e50 100644
+--- a/extension/chrome/locale/zh-TW/fireie.dtd
++++ b/extension/chrome/locale/zh-TW/fireie.dtd
+@@ -55,6 +55,7 @@
+ <!ENTITY fireie.options.integration.abpStatusLoadFailed "載入過濾規則失敗">
+ <!ENTITY fireie.options.integration.otherOptions "其他選項">
+ <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之間同步 Cookie">
++<!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隱私瀏覽模式下啟用 Cookie 同步">
+ 
+ <!ENTITY fireie.options.ieoptions.tab  "IE引擎選項">
+ <!ENTITY fireie.options.ieoptions.pane "IE引擎選項">
+diff --git a/extension/chrome/locale/zh-TW/global.properties b/extension/chrome/locale/zh-TW/global.properties
+index 8090438..486538b 100644
+--- a/extension/chrome/locale/zh-TW/global.properties
++++ b/extension/chrome/locale/zh-TW/global.properties
+@@ -19,6 +19,7 @@ fireie.options.import.error=匯入失敗。
+ fireie.options.alert.title=解雇IE 選項
+ fireie.options.alert.restart=設定生效需要重啟火狐。
+ fireie.options.alert.modified=選項已修改，是否儲存？
++fireie.options.alert.privateCookieSync=警告：IE引擎不支援隱私瀏覽模式。如果啟用此選項，即使您退出隱私瀏覽模式後，IE引擎依然可能保留您的Cookie。\n仍要啟用此選項嗎？
+ fireie.security.notEntrypted=您和此網站的連接未被加密
+ fireie.security.partiallyEncrypted=您與此網站的連接僅僅被部分加密
+ fireie.security.encrypted=您和此網站的連接已被加密\n加密強度：
+diff --git a/extension/components/Initializer.js b/extension/components/Initializer.js
+index 86ec633..761ec93 100644
+--- a/extension/components/Initializer.js
++++ b/extension/components/Initializer.js
+@@ -29,6 +29,8 @@ Initializer.prototype = {
+ 
+   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+ 
++  _forceClear: false,
++  
+   observe: function(subject, topic, data)
+   {
+     let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+@@ -66,6 +68,12 @@ Initializer.prototype = {
+         if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+           this._clearCookies();
+       }
++      
++      // Record private browsing autostart pref, in order to determine whether we should force
++      // clear history at shutdown
++      this._forceClear =
++        prefs.getPrefType("browser.privatebrowsing.autostart") === Ci.nsIPrefBranch.PREF_BOOL &&
++        prefs.getBoolPref("browser.privatebrowsing.autostart");
+ 
+       observerService.addObserver(this, "quit-application", true);
+       observerService.addObserver(this, "fireie-clear-cache", true);
+@@ -76,12 +84,15 @@ Initializer.prototype = {
+ 
+       break;
+     case "quit-application":
+-      // Clear the history if need sanitize on shutdown
+-      if (prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown"))
++      // Clear the history if need sanitize on shutdown,
++      // or if we're in permanent private browsing mode
++      let needClear = this._forceClear || prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
++      let forceClear = this._forceClear;
++      if (needClear)
+       {
+-        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
++        if (forceClear || prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cache"))
+           observerService.notifyObservers(null, "fireie-clear-cache", null);
+-        if (prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
++        if (forceClear || prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie-cookies"))
+           observerService.notifyObservers(null, "fireie-clear-cookies", null);
+       }
+ 
+diff --git a/extension/defaults/preferences/fireie.js b/extension/defaults/preferences/fireie.js
+index 796d878..f65f5a3 100644
+--- a/extension/defaults/preferences/fireie.js
++++ b/extension/defaults/preferences/fireie.js
+@@ -15,6 +15,7 @@ pref("extensions.fireie.documentation_link", "http://fireie.org/%LANG%/%LINK%");
+ pref("extensions.fireie.doc_link_languages", "{ \"default\": \"en\", \"zh-CN\": \"zh-CN\", \"zh-TW\": \"zh-CN\", \"en-US\": \"en\" }");
+ pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) Gecko/20100101 Firefox/10.0");
+ pref("extensions.fireie.savestats", true);
++pref("extensions.fireie.logCookies", false);
+ 
+ // General
+ pref("extensions.fireie.handleUrlBar", false);
+@@ -39,6 +40,7 @@ pref("extensions.fireie.forceMGSupport", false);
+ pref("extensions.fireie.abpSupportEnabled", true);
+ pref("extensions.fireie.cookieSyncEnabled", true);
+ pref("extensions.fireie.fontSyncEnabled", true);
++pref("extensions.fireie.privateCookieSyncEnabled", false);
+ 
+ // IE Options
+ pref("extensions.fireie.compatMode", "ie7mode");
+diff --git a/extension/install.rdf b/extension/install.rdf
+index e450ef4..b7016ca 100644
+--- a/extension/install.rdf
++++ b/extension/install.rdf
+@@ -5,7 +5,7 @@
+ 
+    <em:id>fireie@fireie.org</em:id>
+    <em:name>Fire IE</em:name>
+-   <em:version>0.3.4</em:version>
++   <em:version>0.3.5</em:version>
+    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
+    <em:creator>Yuan Xulei</em:creator>
+    <em:contributor>Wei Deng</em:contributor>
+@@ -22,7 +22,7 @@
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>6.0</em:minVersion>
+-       <em:maxVersion>25.0a1</em:maxVersion>
++       <em:maxVersion>27.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+ 
+diff --git a/extension/modules/AppIntegration.jsm b/extension/modules/AppIntegration.jsm
+index bff5552..00a784d 100644
+--- a/extension/modules/AppIntegration.jsm
++++ b/extension/modules/AppIntegration.jsm
+@@ -392,6 +392,8 @@ WindowWrapper.prototype = {
+     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
+     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
+     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
++    this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
++    this.window.addEventListener("IEBatchSetCookie", this._bindMethod(this._onIEBatchSetCookie), false);
+ 
+     // Listen for theme related events that bubble up from content
+     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
+@@ -1218,6 +1220,30 @@ WindowWrapper.prototype = {
+       Utils.ERROR("updateIEStatusText: " + ex);
+     }
+   },
++  
++  /**
++   * Handles 'IESetCookie' event receiving from the plugin.
++   * Here we have context information, which differs from UtilsPluginManager's handler.
++   */
++  _onIESetCookie: function(event)
++  {
++    let subject = this.window;
++    let topic = "fireie-set-cookie";
++    let data = event.detail;
++    Services.obs.notifyObservers(subject, topic, data);
++  },
++  
++  /**
++   * Handles 'IEBatchSetCookie' event receiving from the plugin.
++   * Here we have context information, which differs from UtilsPluginManager's handler.
++   */
++  _onIEBatchSetCookie: function(event)
++  {
++    let subject = this.window;
++    let topic = "fireie-batch-set-cookie";
++    let data = event.detail;
++    Services.obs.notifyObservers(subject, topic, data);
++  },
+ 
+   // do not allow intalling themes on sites other than fireie.org
+   _checkThemeSite: function(node)
+@@ -2175,21 +2201,7 @@ WindowWrapper.prototype = {
+    */
+   isPrivateBrowsing: function()
+   {
+-    let pbutils = null;
+-    try
+-    {
+-      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+-      pbutils = PrivateBrowsingUtils;
+-    }
+-    catch (ex)
+-    {
+-      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
+-    }
+-    this.isPrivateBrowsing = function()
+-    {
+-      return pbutils ? pbutils.isWindowPrivate(this.window) : Prefs.privateBrowsing;
+-    };
+-    return this.isPrivateBrowsing();
++    return Prefs.isPrivateBrowsingWindow(this.window);
+   },
+   
+   /**
+diff --git a/extension/modules/ContentPolicy.jsm b/extension/modules/ContentPolicy.jsm
+index 0fff2bc..48046d4 100644
+--- a/extension/modules/ContentPolicy.jsm
++++ b/extension/modules/ContentPolicy.jsm
+@@ -110,10 +110,9 @@ var Policy = {
+     if (Utils.isFirefoxOnly(url)) return true;
+     let docDomain = Utils.getHostname(url);
+     let match = EngineMatcher.matchesAny(url, docDomain);
+-    if (match)
+-    {
+-      RuleStorage.increaseHitCount(match);
+-    }
++    // While explicitly checking against exceptional rules,
++    // don't count hits as we'll hit the exceptional rule again
++    // after switch back.
+     return match && match instanceof EngineExceptionalRule;
+   },
+ 
+diff --git a/extension/modules/IECookieManager.jsm b/extension/modules/IECookieManager.jsm
+index 321ae2c..8a4b0c5 100644
+--- a/extension/modules/IECookieManager.jsm
++++ b/extension/modules/IECookieManager.jsm
+@@ -193,7 +193,7 @@ let IECookieManager = {
+     mutex.close();
+   },
+   
+-  saveFirefoxCookie: function(url, cookieHeader)
++  saveFirefoxCookie: function(url, cookieHeader, context, forceSession)
+   {
+     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
+     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
+@@ -201,10 +201,14 @@ let IECookieManager = {
+     
+     // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
+     let uri = Utils.makeURI(url);
++    // Issue #105:
++    // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
++    // It seems that only nsILoadContext is needed, however, we need new APIs for this.
++    // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
+     cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
+   },
+ 
+-  saveIECookie: function(cookie2)
++  saveIECookie: function(cookie2, forceSession)
+   {  
+     // If the cookie is received from IE, do not sync it back
+     let valueInMap = this._ieCookieMap[cookie2.name] || null;
+@@ -231,7 +235,8 @@ let IECookieManager = {
+      */
+     let url = (cookie2.isSecure ? 'https://' : 'http://') + hostname + cookie2.path;
+     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
+-    if (cookie2.expires > 0)
++    // Force the cookie to be session cookie if we synchronized it from private browsing windows
++    if (cookie2.expires > 0 && !forceSession)
+     {
+       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
+     }
+@@ -398,7 +403,7 @@ let IECookieManager = {
+       setIECtrlRegString("Cache", cacheDir);
+     }
+     
+-    this._bTmpDirChanged = true;    
++    this._bTmpDirChanged = true;
+   },
+   
+   restoreIETempDirectorySetting: function()
+@@ -420,7 +425,7 @@ let IECookieManager = {
+     }
+ 
+     this._bTmpDirChanged = false;
+-    this.releaseMutex();    
++    this.releaseMutex();
+   },
+ 
+   _getExpiresString: function(expiresInSeconds)
+@@ -437,6 +442,7 @@ let CookieObserver = {
+   register: function()
+   {
+     Services.obs.addObserver(this, "cookie-changed", false);
++    Services.obs.addObserver(this, "private-cookie-changed", false);
+     Services.obs.addObserver(this, "fireie-clear-cookies", false);
+     Services.obs.addObserver(this, "fireie-set-cookie", false);
+     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
+@@ -445,6 +451,7 @@ let CookieObserver = {
+   unregister: function()
+   {
+     Services.obs.removeObserver(this, "cookie-changed");
++    Services.obs.removeObserver(this, "private-cookie-changed");
+     Services.obs.removeObserver(this, "fireie-clear-cookies");
+     Services.obs.removeObserver(this, "fireie-set-cookie");
+     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
+@@ -456,21 +463,24 @@ let CookieObserver = {
+     switch (topic)
+     {
+     case 'cookie-changed':
+-      this.onFirefoxCookieChanged(subject, data);
++      this.onFirefoxCookieChanged(subject, data, false);
++      break;
++    case 'private-cookie-changed':
++      this.onFirefoxPrivateCookieChanged(subject, data);
+       break;
+     case 'fireie-clear-cookies':
+       IECookieManager.clearIESessionCookies();
+       break;
+     case 'fireie-set-cookie':
+-      this.onIECookieChanged(data);
++      this.onIECookieChanged(subject, data);
+       break;
+     case 'fireie-batch-set-cookie':
+-      this.onIEBatchCookieChanged(data);
++      this.onIEBatchCookieChanged(subject, data);
+       break;
+     }
+   },
+ 
+-  onFirefoxCookieChanged: function(subject, data)
++  onFirefoxCookieChanged: function(subject, data, isPrivate)
+   {
+     if (!Prefs.cookieSyncEnabled) return;
+     
+@@ -479,36 +489,61 @@ let CookieObserver = {
+     switch (data)
+     {
+     case 'deleted':
++      this.logFirefoxCookie(data, cookie, isPrivate);
+       IECookieManager.deleteIECookie(cookie);
+       break;
+     case 'added':
+-      IECookieManager.saveIECookie(cookie);
++      this.logFirefoxCookie(data, cookie, isPrivate);
++      IECookieManager.saveIECookie(cookie, isPrivate);
+       break;
+     case 'changed':
+-      IECookieManager.saveIECookie(cookie);
++      this.logFirefoxCookie(data, cookie, isPrivate);
++      IECookieManager.saveIECookie(cookie, isPrivate);
+       break;
+     case 'batch-deleted':
++      if (Prefs.logCookies)
++        Utils.LOG('[CookieObserver' + (isPrivate ? ' (Private)' : '') + ' batch-deleted] '
++                  + cookieArray.length + ' cookie(s)');
+       for (let i = 0; i < cookieArray.length; i++)
+       {
+         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
+         IECookieManager.deleteIECookie(cookie);
++        this.logFirefoxCookie(data, cookie, isPrivate);
+       }
+       break;
+     case 'cleared':
++      if (Prefs.logCookies)
++        Utils.LOG('[CookieObserver cleared]');
+       IECookieManager.clearAllIECookies();
+       break;
+     case 'reload':
++      if (Prefs.logCookies)
++        Utils.LOG('[CookieObserver reload]');
+       IECookieManager.clearAllIECookies();
+       break;
+     }
+   },
+   
+-  onIECookieChanged: function(data)
++  onFirefoxPrivateCookieChanged: function(subject, data)
++  {
++    if (!Prefs.privateCookieSyncEnabled) return;
++    
++    // delegate to normal cookie handler
++    this.onFirefoxCookieChanged(subject, data, true);
++  },
++  
++  onIECookieChanged: function(subject, data)
+   {
++    // Skip syncing private browsing cookies from IE engine
++    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
++      return;
+     try
+     {
+       let {header, url} = JSON.parse(data);
+-      IECookieManager.saveFirefoxCookie(url, header);
++      let window = subject;
++      let context = window && Prefs.getPrivacyContext(window);
++      let forceSession = window && Prefs.isPrivateBrowsingWindow(window);
++      IECookieManager.saveFirefoxCookie(url, header, context, forceSession);
+     }
+     catch(e)
+     {
+@@ -516,20 +551,31 @@ let CookieObserver = {
+     }
+   },
+ 
+-  onIEBatchCookieChanged: function(data)
++  onIEBatchCookieChanged: function(subject, data)
+   {
++    // Skip syncing private browsing cookies from IE engine
++    if (subject && !Prefs.privateCookieSyncEnabled && Prefs.isPrivateBrowsingWindow(subject))
++      return;
+     try
+     {
+       let cookies = JSON.parse(data);
++      let context = subject && Prefs.getPrivacyContext(subject);
+       cookies.forEach(function(cookie)
+       {
+         let {header, url} = cookie;
+-        IECookieManager.saveFirefoxCookie(url, header);
++        IECookieManager.saveFirefoxCookie(url, header, context);
+       });
+     }
+     catch(e)
+     {
+       Utils.ERROR("onIEBatchCookieChanged(" + data + "): " + e);
+     }
++  },
++
++  logFirefoxCookie: function(tag, cookie2, isPrivate)
++  {
++    if (!Prefs.logCookies) return;
++    
++    Utils.LOG('[CookieObserver ' + (isPrivate ? '(Private) ' : '') + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isSecure:" + cookie2.isSecure + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
+   }
+ };
+diff --git a/extension/modules/Prefs.jsm b/extension/modules/Prefs.jsm
+index 2c7beec..e3f9b10 100644
+--- a/extension/modules/Prefs.jsm
++++ b/extension/modules/Prefs.jsm
+@@ -129,6 +129,47 @@ var Prefs =
+     let index = listeners.indexOf(listener);
+     if (index >= 0)
+       listeners.splice(index, 1);
++  },
++  
++  /**
++   * PrivateBrowsingUtils object
++   */
++  get privateBrowsingUtils()
++  {
++    let pbutils = null;
++    try
++    {
++      Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
++      pbutils = PrivateBrowsingUtils;
++    }
++    catch (ex)
++    {
++      Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
++    }
++    this.__defineGetter__("privateBrowsingUtils", function() pbutils);
++    return pbutils;
++  },
++  
++  /**
++   * Are we in private browsing mode?
++   */
++  isPrivateBrowsingWindow: function(window)
++  {
++    let pbutils = this.privateBrowsingUtils;
++    this.isPrivateBrowsingWindow = (pbutils ? (function(w) pbutils.isWindowPrivate(w))
++                                            : (function() Prefs.privateBrowsing));
++    return this.isPrivateBrowsingWindow(window);
++  },
++  
++  /**
++   * Get the nsILoadContext for current window
++   */
++  getPrivacyContext: function(window)
++  {
++    let pbutils = this.privateBrowsingUtils;
++    this.getPrivacyContext = (pbutils ? (function(w) pbutils.privacyContextFromWindow(w))
++                                      : (function() null));
++    return this.getPrivacyContext(window);
+   }
+ };
+ 
+diff --git a/extension/modules/Utils.jsm b/extension/modules/Utils.jsm
+index 2f09062..0adea80 100644
+--- a/extension/modules/Utils.jsm
++++ b/extension/modules/Utils.jsm
+@@ -1025,10 +1025,14 @@ var Utils = {
+     }
+   },
+   
+-  shouldLoadInBackground: function() {
+-    try {
++  shouldLoadInBackground: function()
++  {
++    try
++    {
+       return Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+-    } catch (ex) {
++    }
++    catch (ex)
++    {
+       return true;
+     }
+   }
+diff --git a/extension/modules/UtilsPluginManager.jsm b/extension/modules/UtilsPluginManager.jsm
+index bb13844..e5474ce 100644
+--- a/extension/modules/UtilsPluginManager.jsm
++++ b/extension/modules/UtilsPluginManager.jsm
+@@ -410,6 +410,7 @@ function onIEUserAgentReceived(event)
+ 
+ /**
+  * Handles 'IESetCookie' event receiving from the plugin
++ * Context is set to null as a fallback situation
+  */
+ function onIESetCookie(event)
+ {
+@@ -421,6 +422,7 @@ function onIESetCookie(event)
+ 
+ /**
+  * Handles 'IEBatchSetCookie' event receiving from the plugin
++ * Context is set to null as a fallback situation
+  */
+ function onIEBatchSetCookie(event)
+ {
+diff --git a/plugin/HttpMonitor/MonitorSink.cpp b/plugin/HttpMonitor/MonitorSink.cpp
+index f273740..8f617f3 100644
+--- a/plugin/HttpMonitor/MonitorSink.cpp
++++ b/plugin/HttpMonitor/MonitorSink.cpp
+@@ -8,6 +8,7 @@
+ #include "abp/AdBlockPlus.h"
+ #include "URL.h"
+ #include "PrefManager.h"
++#include "HTTP.h"
+ 
+ namespace HttpMonitor
+ {
+@@ -28,56 +29,6 @@ namespace HttpMonitor
+ 	static const BYTE   EMPTY_FILE []= "";
+ 	static const DWORD  EMPTY_FILE_LENGTH = sizeof(EMPTY_FILE)-1;
+ 
+-	// ���� \0 �ָ��� Raw HTTP Header ����ת������ \r\n �ָ��� Header
+-	void HttpRawHeader2CrLfHeader(LPCSTR szRawHeader, CString & strCrLfHeader)
+-	{
+-		strCrLfHeader.Empty();
+-
+-		LPCSTR p = szRawHeader;
+-		while ( p[0] )
+-		{
+-			CString strHeaderLine(p);
+-
+-			p += strHeaderLine.GetLength() + 1;
+-
+-			strCrLfHeader += strHeaderLine + _T("\r\n");
+-		}
+-	}
+-
+-	LPWSTR ExtractFieldValue(LPCWSTR szHeader, LPCWSTR szFieldName, LPWSTR * pFieldValue, size_t * pSize )
+-	{
+-		LPWSTR r = NULL;
+-
+-		do 
+-		{
+-			// ���� RFC2616 �涨, HTTP field name �����ִ�Сд
+-			LPWSTR pStart = StrStrIW( szHeader, szFieldName );
+-			if ( ! pStart ) break;
+-			pStart += wcslen(szFieldName);
+-			while ( L' ' == pStart[0] ) pStart++;		// ������ͷ�Ŀո�
+-			LPWSTR pEnd = StrStrW( pStart, L"\r\n" );
+-			if ( ( ! pEnd ) || ( pEnd <= pStart ) ) break;
+-
+-			size_t nSize = pEnd - pStart;
+-			size_t nBufLen = nSize + 2;		// �����ַ����� 0 ������
+-			LPWSTR lpBuffer = (LPWSTR)malloc(nBufLen * sizeof(WCHAR));
+-			if ( !lpBuffer ) break;
+-
+-			if (wcsncpy_s( lpBuffer, nBufLen, pStart, nSize))
+-			{
+-				free(lpBuffer);
+-				break;
+-			}
+-
+-			* pSize = nBufLen;
+-			* pFieldValue = lpBuffer;
+-			r = pEnd;
+-
+-		} while(false);
+-
+-		return r;
+-	}
+-
+ 	bool FuzzyUrlCompare( LPCTSTR lpszUrl1, LPCTSTR lpszUrl2 )
+ 	{
+ 		static const TCHAR ANCHOR = _T('#');
+@@ -220,11 +171,11 @@ namespace HttpMonitor
+ 				static const WCHAR CONTENT_TYPE_HEAD [] = L"Content-Type:";
+ 				LPWSTR pContentType = NULL;
+ 				size_t nLen = 0;
+-				if (ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
++				if (Utils::HTTP::ExtractFieldValue(szResponseHeaders, CONTENT_TYPE_HEAD, &pContentType, &nLen))
+ 				{
+ 					ContentType_T aContentType = ScanContentType(pContentType);
+ 
+-					if (pContentType) free(pContentType);
++					if (pContentType) Utils::HTTP::FreeFieldValue(pContentType);
+ 
+ 					if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
+ 						aContentType = ContentType::TYPE_SUBDOCUMENT;
+@@ -336,13 +287,13 @@ namespace HttpMonitor
+ 		LPWSTR p = (LPWSTR)szResponseHeaders;
+ 		LPWSTR lpCookies = NULL;
+ 		size_t nCookieLen = 0;
+-		while (p = ExtractFieldValue(p, SET_COOKIE_HEAD, &lpCookies, & nCookieLen))
++		while (p = Utils::HTTP::ExtractFieldValue(p, SET_COOKIE_HEAD, &lpCookies, & nCookieLen))
+ 		{
+ 			if (lpCookies)
+ 			{
+ 				CString strURL = GetBindURL();
+ 				CString strCookie((LPCTSTR)CW2T(lpCookies));
+-				free(lpCookies);
++				Utils::HTTP::FreeFieldValue(lpCookies);
+ 				lpCookies = NULL;
+ 
+ 				UserMessage::SetFirefoxCookieParams cookieParam;
+@@ -354,7 +305,7 @@ namespace HttpMonitor
+ 			}
+ 		}
+ 		if (vCookieParams.size())
+-			CIEHostWindow::SetFirefoxCookie(std::move(vCookieParams));
++			CIEHostWindow::SetFirefoxCookie(std::move(vCookieParams), m_pIEHostWindow);
+ 	}
+ 
+ 	ContentType_T MonitorSink::ScanContentType(LPCWSTR szContentType)
+@@ -388,24 +339,16 @@ namespace HttpMonitor
+ 
+ 			LPWSTR lpReferer = NULL;
+ 			size_t nRefererLen = 0;
+-			if (ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
++			if (Utils::HTTP::ExtractFieldValue(*pszAdditionalHeaders, REFERER, &lpReferer, &nRefererLen))
+ 			{
+ 				m_strReferer = lpReferer;
+ 
+-				free(lpReferer);
++				Utils::HTTP::FreeFieldValue(lpReferer);
+ 			}
+ 		}
+ 	}
+ 	bool MonitorSink::CanLoadContent(ContentType_T aContentType)
+ 	{
+-		// stub implementation, filter baidu logo
+-		/*bool result = m_strURL != _T("http://www.baidu.com/img/baidu_sylogo1.gif")
+-			&& m_strURL != _T("http://www.baidu.com/img/baidu_jgylogo3.gif")
+-			&& m_strURL != _T("http://img.baidu.com/img/post-jg.gif")
+-			&& m_strURL.Find(_T("http://tb2.bdstatic.com/tb/static-common/img/tieba_logo")) != 0
+-			&& m_strURL.Find(_T("http://360.cn")) != 0
+-			&& m_strURL.Find(_T("http://static.youku.com/v1.0.0223/v/swf")) != 0
+-		;*/ /*!re::RegExp(_T("/http:\\/\\/\\w+\\.(qhimg\\.com)/i")).test(std::wstring(m_strURL.GetString()));*/
+ 		bool thirdParty = m_strReferer.GetLength() ? Utils::IsThirdPartyRequest(m_strURL, m_strReferer) : false;
+ 		const CString& referer =  m_strReferer.GetLength() ? m_strReferer : m_strURL;
+ 
+@@ -432,14 +375,14 @@ namespace HttpMonitor
+ 				LPWSTR lpDNT = NULL;
+ 				size_t nDNTLen = 0;
+ 				bool hasDNT = false;
+-				if (ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
++				if (Utils::HTTP::ExtractFieldValue(*pszAdditionalHeaders, L"DNT:", &lpDNT, &nDNTLen))
+ 				{
+ 					if (nDNTLen)
+ 					{
+ 						// �Ѿ���DNTͷ�ˣ������ټ�
+ 						hasDNT = true;
+ 					}
+-					if (lpDNT) free(lpDNT);
++					if (lpDNT) Utils::HTTP::FreeFieldValue(lpDNT);
+ 				}
+ 				// ���� DoNotTrack (DNT) ͷ
+ 				if (!hasDNT)
+@@ -490,7 +433,7 @@ namespace HttpMonitor
+ 					{
+ 						// ע�� HTTP_QUERY_RAW_HEADERS ���ص� Raw Header �� \0 �ָ���, �� \0\0 ��Ϊ����, ��������Ҫ��ת��
+ 						CString strHeader;
+-						HttpRawHeader2CrLfHeader(szRawHeader, strHeader);
++						Utils::HTTP::HttpRawHeader2CrLfHeader(szRawHeader, strHeader);
+ 
+ 						ExportCookies(strHeader);
+ 					}
+diff --git a/plugin/IEHostWindow.cpp b/plugin/IEHostWindow.cpp
+index 025c686..c6472b1 100644
+--- a/plugin/IEHostWindow.cpp
++++ b/plugin/IEHostWindow.cpp
+@@ -30,6 +30,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
+ #include "OS.h"
+ #include "App.h"
+ #include "WindowMessageHook.h"
++#include "HTTP.h"
+ 
+ using namespace UserMessage;
+ using namespace Utils;
+@@ -202,18 +203,27 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
+ 	return hwnd;
+ }
+ 
+-void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams)
++void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext)
+ {
+-	CIEHostWindow* pWindow = GetAnyUtilsWindow();
++	CIEHostWindow* pWindow = pWindowContext ? pWindowContext : GetAnyUtilsWindow();
+ 	if (pWindow)
+ 	{
+ 		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
+ 		pWindow->RunAsync([pWindow, vParams]
+ 		{
++			// To use the window context, the window must already be attached to a plugin object,
++			// otherwise, we can't fire the event.
+ 			if (pWindow->m_pPlugin)
+ 			{
+ 				pWindow->m_pPlugin->SetFirefoxCookie(vParams);
+ 			}
++			else
++			{
++				// Fall back to use the utils plugin
++				CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
++				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
++					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams);
++			}
+ 		});
+ 	}
+ }
+@@ -833,6 +843,15 @@ void CIEHostWindow::OnNavigate()
+ 			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
+ 			if (!strPost.IsEmpty()) 
+ 			{
++				// Header��Ӧ��������strPost�е�Content-Type��Ϣ
++				LPWSTR szContentType = NULL;
++				size_t nCTLen;
++				if (HTTP::ExtractFieldValue(strPost.GetString(), L"Content-Type:", &szContentType, &nCTLen))
++				{
++					vHeader = CString(vHeader) + _T("Content-Type: ") + szContentType + _T("\r\n");
++					HTTP::FreeFieldValue(szContentType);
++				}
++
+ 				// ȥ��postContent-Type��Content-Length������header��Ϣ
+ 				int pos = strPost.Find(_T("\r\n\r\n"));
+ 
+@@ -841,13 +860,14 @@ void CIEHostWindow::OnNavigate()
+ 				char* szPostData = new char[size + 1];
+ 				WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, szPostData, size, 0, 0);
+ 				FillSafeArray(vPost, szPostData);
++				delete [] szPostData;
+ 			}
+ 			m_ie.Navigate(strURL, &vFlags, &vTarget, &vPost, &vHeader);
+ 		}
+ 		catch(...)
+ 		{
+ 			TRACE(_T("CIEHostWindow::Navigate URL=%s failed!\n"), strURL);
+-		}	
++		}
+ 	}
+ }
+ 
+@@ -1570,7 +1590,7 @@ bool CIEHostWindow::IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& p
+ 	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
+ 	if (!pDoc3) return false;
+ 
+-	// Remove all previously created stylesheets
++	// IE6 can't use getElementsByClassName interface, have to iterate and filter
+ 	CComPtr<IHTMLElementCollection> pcolStyles;
+ 	if (FAILED(pDoc3->getElementsByTagName(_T("style"), &pcolStyles)) || !pcolStyles)
+ 		return false;
+@@ -2269,9 +2289,19 @@ void CIEHostWindow::OnRunAsyncCall()
+ 	m_csFuncs.Lock();
+ 	if (!m_qFuncs.empty())
+ 	{
+-		MainThreadFunc& func = m_qFuncs.front();
+-		func();
++		// Calling the function may pop up modal dialogs, which may interfere
++		//   with the execution flow, causing subsequent async calls to run
++		//   the wrong function instead.
++		// Should fetch the function first, then pop_front, and finally call the
++		//   function.
++		MainThreadFunc func = std::move(m_qFuncs.front());
+ 		m_qFuncs.pop_front();
++		m_csFuncs.Unlock();
++
++		func();
++	}
++	else
++	{
++		m_csFuncs.Unlock();
+ 	}
+-	m_csFuncs.Unlock();
+ }
+diff --git a/plugin/IEHostWindow.h b/plugin/IEHostWindow.h
+index 955b8ba..eaace0e 100644
+--- a/plugin/IEHostWindow.h
++++ b/plugin/IEHostWindow.h
+@@ -52,7 +52,7 @@ public:
+ 
+ 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
+ 
+-	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams);
++	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext);
+ 
+ 	static HWND GetAnyUtilsHWND();
+ 	static CIEHostWindow* GetAnyUtilsWindow();
+diff --git a/plugin/Plugin.vcxproj b/plugin/Plugin.vcxproj
+index c57bb67..4a649aa 100644
+--- a/plugin/Plugin.vcxproj
++++ b/plugin/Plugin.vcxproj
+@@ -111,8 +111,6 @@
+     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">npfireie$(PlatformArchitecture)</TargetName>
+     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">npfireie$(PlatformArchitecture)</TargetName>
+     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">npfireie$(PlatformArchitecture)</TargetName>
+-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include</IncludePath>
+-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSdkDir)lib\x64</LibraryPath>
+     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)extension\plugins\</OutDir>
+     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)extension\plugins\</OutDir>
+     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)extension\plugins\</OutDir>
+@@ -393,6 +391,7 @@ buildxpi64.bat</Command>
+     <ClCompile Include="test\test.cpp" />
+     <ClCompile Include="Utils\App.cpp" />
+     <ClCompile Include="Utils\File.cpp" />
++    <ClCompile Include="Utils\HTTP.cpp" />
+     <ClCompile Include="Utils\OS.cpp" />
+     <ClCompile Include="Utils\PointerHash.cpp" />
+     <ClCompile Include="Utils\TLD.cpp" />
+@@ -449,6 +448,7 @@ buildxpi64.bat</Command>
+     <ClInclude Include="UserMessage.h" />
+     <ClInclude Include="Utils\App.h" />
+     <ClInclude Include="Utils\File.h" />
++    <ClInclude Include="Utils\HTTP.h" />
+     <ClInclude Include="Utils\OS.h" />
+     <ClInclude Include="Utils\PointerHash.h" />
+     <ClInclude Include="Utils\TLD.h" />
+diff --git a/plugin/Plugin.vcxproj.filters b/plugin/Plugin.vcxproj.filters
+index 334d327..6322fa1 100644
+--- a/plugin/Plugin.vcxproj.filters
++++ b/plugin/Plugin.vcxproj.filters
+@@ -115,6 +115,9 @@
+     <ClCompile Include="Utils\File.cpp">
+       <Filter>Utils</Filter>
+     </ClCompile>
++    <ClCompile Include="Utils\HTTP.cpp">
++      <Filter>Utils</Filter>
++    </ClCompile>
+   </ItemGroup>
+   <ItemGroup>
+     <ClInclude Include="IECtrl.h" />
+@@ -261,6 +264,9 @@
+     <ClInclude Include="Utils\File.h">
+       <Filter>Utils</Filter>
+     </ClInclude>
++    <ClInclude Include="Utils\HTTP.h">
++      <Filter>Utils</Filter>
++    </ClInclude>
+   </ItemGroup>
+   <ItemGroup>
+     <None Include="plugin.def" />
+diff --git a/plugin/Utils/HTTP.cpp b/plugin/Utils/HTTP.cpp
+new file mode 100644
+index 0000000..6971d9e
+--- /dev/null
++++ b/plugin/Utils/HTTP.cpp
+@@ -0,0 +1,79 @@
++/*
++This file is part of Fire-IE.
++
++Fire-IE is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++Fire-IE is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++// HTTP.cpp : HTTP related utilities (header extraction)
++
++#include "StdAfx.h"
++
++#include "HTTP.h"
++
++using namespace Utils;
++
++// ���� \0 �ָ��� Raw HTTP Header ����ת������ \r\n �ָ��� Header
++void HTTP::HttpRawHeader2CrLfHeader(LPCSTR szRawHeader, CString & strCrLfHeader)
++{
++	strCrLfHeader.Empty();
++
++	LPCSTR p = szRawHeader;
++	while ( p[0] )
++	{
++		CString strHeaderLine(p);
++
++		p += strHeaderLine.GetLength() + 1;
++
++		strCrLfHeader += strHeaderLine + _T("\r\n");
++	}
++}
++
++LPWSTR HTTP::ExtractFieldValue(LPCWSTR szHeader, LPCWSTR szFieldName, LPWSTR * pFieldValue, size_t * pSize )
++{
++	LPWSTR r = NULL;
++
++	do 
++	{
++		// ���� RFC2616 �涨, HTTP field name �����ִ�Сд
++		LPWSTR pStart = StrStrIW( szHeader, szFieldName );
++		if ( ! pStart ) break;
++		pStart += wcslen(szFieldName);
++		while ( L' ' == pStart[0] ) pStart++;		// ������ͷ�Ŀո�
++		LPWSTR pEnd = StrStrW( pStart, L"\r\n" );
++		if ( ( ! pEnd ) || ( pEnd <= pStart ) ) break;
++
++		size_t nSize = pEnd - pStart;
++		size_t nBufLen = nSize + 2;		// �����ַ����� 0 ������
++		LPWSTR lpBuffer = (LPWSTR)malloc(nBufLen * sizeof(WCHAR));
++		if ( !lpBuffer ) break;
++
++		if (wcsncpy_s( lpBuffer, nBufLen, pStart, nSize))
++		{
++			free(lpBuffer);
++			break;
++		}
++
++		* pSize = nBufLen;
++		* pFieldValue = lpBuffer;
++		r = pEnd;
++
++	} while(false);
++
++	return r;
++}
++
++void HTTP::FreeFieldValue(LPWSTR szFieldValue)
++{
++	free(szFieldValue);
++}
+diff --git a/plugin/Utils/HTTP.h b/plugin/Utils/HTTP.h
+new file mode 100644
+index 0000000..a407bd8
+--- /dev/null
++++ b/plugin/Utils/HTTP.h
+@@ -0,0 +1,32 @@
++/*
++This file is part of Fire-IE.
++
++Fire-IE is free software: you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation, either version 3 of the License, or
++(at your option) any later version.
++
++Fire-IE is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++// HTTP.h : HTTP related utilities (header extraction)
++
++#pragma once
++
++namespace Utils { namespace HTTP {
++
++	// Extracts szFieldName field from szHeader, returns the pointer past the found field, or NULL if not found
++	// The string (*pFieldValue) must be freed using FreeFieldValue(LPWSTR*)
++	LPWSTR ExtractFieldValue(LPCWSTR szHeader, LPCWSTR szFieldName, LPWSTR* pFieldValue, size_t* pSize);
++
++	// Free field value allocated by ExtractFieldValue(...)
++	void FreeFieldValue(LPWSTR pFieldValue);
++
++	void HttpRawHeader2CrLfHeader(LPCSTR szRawHeader, CString & strCrLfHeader);
++} } // namespace Utils::HTTP
+diff --git a/plugin/plugin.rc b/plugin/plugin.rc
+index 6ee50fe..a564a31 100644
+--- a/plugin/plugin.rc
++++ b/plugin/plugin.rc
+@@ -131,8 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+ //
+ 
+ VS_VERSION_INFO VERSIONINFO
+- FILEVERSION 1,3,4,3
+- PRODUCTVERSION 1,3,4,3
++ FILEVERSION 1,3,5,2
++ PRODUCTVERSION 1,3,5,2
+  FILEFLAGSMASK 0x3fL
+ #ifdef _DEBUG
+  FILEFLAGS 0x1L
+@@ -150,13 +150,13 @@ BEGIN
+             VALUE "CompanyName", "fireie@fireie.org"
+             VALUE "FileDescription", "Fire IE DLL"
+             VALUE "FileExtents", "*"
+-            VALUE "FileVersion", "1.3.4.3"
++            VALUE "FileVersion", "1.3.5.2"
+             VALUE "InternalName", "npfireie.dll"
+             VALUE "LegalCopyright", "Copyright (C) 2012-2013 fireie.org"
+             VALUE "MIMEType", "application/fireie"
+             VALUE "OriginalFilename", "npfireie.dll"
+             VALUE "ProductName", "Fire IE DLL"
+-            VALUE "ProductVersion", "1.3.4.3"
++            VALUE "ProductVersion", "1.3.5.2"
+         END
+     END
+     BLOCK "VarFileInfo"
+diff --git a/test/PHP/posttest.html b/test/PHP/posttest.html
+new file mode 100644
+index 0000000..8675f80
+--- /dev/null
++++ b/test/PHP/posttest.html
+@@ -0,0 +1,13 @@
++<!DOCTYPE html>
++<html>
++  <head>
++    <meta charset="utf-8" />
++    <title>Post</title>
++  </head>
++  <body>
++    <form method="post" action="posttest.php" target="_blank">
++      <input type="text" name="data" value="Data" />
++      <input type="submit" />
++    </form>
++  </body>
++</html>
+diff --git a/test/PHP/posttest.php b/test/PHP/posttest.php
+new file mode 100644
+index 0000000..604d10b
+--- /dev/null
++++ b/test/PHP/posttest.php
+@@ -0,0 +1,17 @@
++<!DOCTYPE html>
++<html>
++  <head>
++    <meta charset="utf-8" />
++    <title>Result</title>
++  </head>
++  <body>
++    <pre><?php
++      foreach (getallheaders() as $name => $value) {
++        echo "$name: $value\n";
++      }
++    ?></pre>
++    <div style="color: blue;"><?php
++      echo $_POST["data"];
++    ?></div>
++  </body>
++</html>
