@@ -2289,9 +2289,19 @@ void CIEHostWindow::OnRunAsyncCall()
 	m_csFuncs.Lock();
 	if (!m_qFuncs.empty())
 	{
-		MainThreadFunc& func = m_qFuncs.front();
-		func();
+		// Calling the function may pop up modal dialogs, which may interfere
+		//   with the execution flow, causing subsequent async calls to run
+		//   the wrong function instead.
+		// Should fetch the function first, then pop_front, and finally call the
+		//   function.
+		MainThreadFunc func = std::move(m_qFuncs.front());
 		m_qFuncs.pop_front();
+		m_csFuncs.Unlock();
+
+		func();
 	}
-	m_csFuncs.Unlock();
+	else
+	{
+		m_csFuncs.Unlock();
+	}
 }

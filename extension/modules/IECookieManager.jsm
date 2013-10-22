@@ -480,7 +480,7 @@ let CookieObserver = {
     }
   },
 
-  onFirefoxCookieChanged: function(subject, data, forceSession)
+  onFirefoxCookieChanged: function(subject, data, isPrivate)
   {
     if (!Prefs.cookieSyncEnabled) return;
     
@@ -489,25 +489,26 @@ let CookieObserver = {
     switch (data)
     {
     case 'deleted':
-      this.logFirefoxCookie(data, cookie);
+      this.logFirefoxCookie(data, cookie, isPrivate);
       IECookieManager.deleteIECookie(cookie);
       break;
     case 'added':
-      this.logFirefoxCookie(data, cookie);
-      IECookieManager.saveIECookie(cookie, forceSession);
+      this.logFirefoxCookie(data, cookie, isPrivate);
+      IECookieManager.saveIECookie(cookie, isPrivate);
       break;
     case 'changed':
-      this.logFirefoxCookie(data, cookie);
-      IECookieManager.saveIECookie(cookie, forceSession);
+      this.logFirefoxCookie(data, cookie, isPrivate);
+      IECookieManager.saveIECookie(cookie, isPrivate);
       break;
     case 'batch-deleted':
       if (Prefs.logCookies)
-        Utils.LOG('[CookieObserver batch-deleted] ' + cookieArray.length + ' cookie(s)');
+        Utils.LOG('[CookieObserver' + (isPrivate ? ' (Private)' : '') + ' batch-deleted] '
+                  + cookieArray.length + ' cookie(s)');
       for (let i = 0; i < cookieArray.length; i++)
       {
         let cookie = cookieArray.queryElementAt(i, Ci.nsICookie2);
         IECookieManager.deleteIECookie(cookie);
-        this.logFirefoxCookie(data, cookie);
+        this.logFirefoxCookie(data, cookie, isPrivate);
       }
       break;
     case 'cleared':
@@ -571,10 +572,10 @@ let CookieObserver = {
     }
   },
 
-  logFirefoxCookie: function(tag, cookie2)
+  logFirefoxCookie: function(tag, cookie2, isPrivate)
   {
     if (!Prefs.logCookies) return;
     
-    Utils.LOG('[CookieObserver ' + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isSecure:" + cookie2.isSecure + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
+    Utils.LOG('[CookieObserver ' + (isPrivate ? '(Private) ' : '') + tag + "] host:" + cookie2.host + " path:" + cookie2.path + " name:" + cookie2.name + " value:" + cookie2.value + " expires:" + new Date(cookie2.expires * 1000).toGMTString() + " isSecure:" + cookie2.isSecure + " isHttpOnly:" + cookie2.isHttpOnly + " isSession:" + cookie2.isSession);
   }
 };
