@@ -185,7 +185,7 @@ let EasyRuleCreator = {
     let uaMenu = CE("menu");
     uaMenu.className = this._enableOnClassName;
     uaMenu.setAttribute("id", "fireie-erc-ua-rules");
-    uaMenu.setAttribute("label", Utils.getString("fireie.erc.uaRules"));
+    uaMenu.setAttribute("label", Utils.getString("fireie.erc.uaRules").replace(/--/g, effHost));
     menu.insertBefore(uaMenu, ctx.curItem);
     
     let uaMenuPopup = CE("menupopup");
