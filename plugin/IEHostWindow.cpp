@@ -46,6 +46,7 @@ CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
+bool CIEHostWindow::s_bUserAgentProccessed = false;
 const TCHAR* const CIEHostWindow::s_strElemHideClass = _T("fireie-elemhide-style");
 
 // CIEHostWindow dialog
@@ -1153,6 +1154,35 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 
 void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 {
+	if (m_bUtils)
+	{
+		/**
+		* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
+		* 文档中获取UserAgent。
+		*/
+		if (!s_bUserAgentProccessed)
+		{
+			// For IE8 and lower, navigator.userAgent is the user-agent sent to servers
+			CString strUserAgent = GetDocumentUserAgent();
+			if (strUserAgent.GetLength())
+			{
+				ReceiveUserAgent(strUserAgent);
+				if (OS::GetIEVersion() >= 9)
+				{
+					// For IE9 and higher, navigator.userAgent is defined by the document mode, thus we can't figure out
+					// the "real" user agent this way.
+					// We have to load an arbitrary document and get the user-agent from http monitor
+					RunAsync([=] {
+						Navigate(GetUserAgentURL(), _T(""), _T(""));
+					});
+				}
+				s_bUserAgentProccessed = true;
+			}
+		}
+
+		return;
+	}
+
 	m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
 
@@ -1163,19 +1193,6 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 		if (fabs(level - 1.0) > 0.01) 
 		{
 			Zoom(level);
-		}
-	}
-
-	/**
-	* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
-	* 文档中获取UserAgent。
-	*/
-	if (s_strIEUserAgent.IsEmpty() && m_bUtils)
-	{
-		s_strIEUserAgent = GetDocumentUserAgent();
-		if (!s_strIEUserAgent.IsEmpty() && m_pPlugin)
-		{
-			m_pPlugin->OnIEUserAgentReceived(s_strIEUserAgent);
 		}
 	}
 
@@ -1193,6 +1210,22 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	{
 		m_pPlugin->OnDocumentComplete();
 	}
+}
+
+void CIEHostWindow::ReceiveUserAgent(const CString& userAgent)
+{
+	if (userAgent.GetLength() && m_pPlugin)
+	{
+		s_strIEUserAgent = userAgent;
+		m_pPlugin->OnIEUserAgentReceived(userAgent);
+	}
+}
+
+CString CIEHostWindow::GetUserAgentURL()
+{
+	// Arbitrary URL to request (host must exist, while the page does not need to,
+	// since we're not reading anything from the response)
+	return _T("http://www.fireie.org/sites/useragent.php");
 }
 
 const CString CIEHostWindow::s_strSecureLockInfos[] =

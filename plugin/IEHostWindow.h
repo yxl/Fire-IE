@@ -110,6 +110,7 @@ protected:
 
 	/** IE controls' UserAgent */
 	static CString s_strIEUserAgent;
+	static bool s_bUserAgentProccessed;
 
 	static const CString s_strSecureLockInfos[];
 
@@ -250,6 +251,8 @@ public:
 
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
+	void ReceiveUserAgent(const CString& userAgent);
+	static CString GetUserAgentURL();
 protected:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
