@@ -37,6 +37,7 @@ namespace HttpMonitor {
 		RunAsyncFunc runAsync;
 		int minPort, maxPort;
 		int listeningPort;
+		CString guid;
 		CString userAgent;
 
 		static const int MAX_TRIES = 100;
@@ -46,6 +47,7 @@ namespace HttpMonitor {
 
 		int getRandomPort() const;
 		CString getLoopbackURL() const;
+		void generateGUID();
 
 		// listener code, etc...
 		static UINT listenerThread(void* param);
@@ -53,8 +55,13 @@ namespace HttpMonitor {
 		void callURLCallback() const;
 		void callUserAgentCallback() const;
 
+		struct ProcessContext {
+			bool requestLineDone, requestDone, userAgentDone;
+			bool urlMatch;
+			ProcessContext();
+		};
 		bool serveSocket(SOCKET socket);
-		void processLine(const CString& line, bool& requestDone, bool& userAgentDone);
+		void processLine(const CString& line, ProcessContext& context);
 		static void sendPlaceholderPage(SOCKET socket);
 	};
 } // namespace HttpMonitor

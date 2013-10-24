@@ -19,15 +19,20 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 
+#pragma comment(lib, "Rpcrt4.lib")
+
 #include "UserAgentListener.h"
 #include "HTTP.h"
+#include "re/RegExp.h"
 
 using namespace HttpMonitor;
+using namespace re;
 
 UserAgentListener::UserAgentListener(RunAsyncFunc runAsync, int minPort, int maxPort)
 	: runAsync(runAsync), minPort(minPort), maxPort(maxPort)
 {
 	listeningPort = -1;
+	generateGUID();
 	AfxBeginThread(listenerThread, reinterpret_cast<void*>(this));
 }
 
@@ -56,7 +61,21 @@ CString UserAgentListener::getLoopbackURL() const
 {
 	TCHAR szPort[10] = { 0 };
 	_itot_s(listeningPort, szPort, 10);
-	return _T("http://127.0.0.1:") + CString(szPort) + _T("/");
+	return _T("http://127.0.0.1:") + CString(szPort) + _T("/") + guid;
+}
+
+void UserAgentListener::generateGUID()
+{
+	UUID uuid;
+	if (RPC_S_OK == UuidCreate(&uuid))
+	{
+		RPC_WSTR lprpcwstrUUID;
+		if (RPC_S_OK == UuidToString(&uuid, &lprpcwstrUUID))
+		{
+			guid = (LPCWSTR)lprpcwstrUUID;
+			RpcStringFree(&lprpcwstrUUID);
+		}
+	}
 }
 
 UINT UserAgentListener::listenerThread(void* param)
@@ -154,13 +173,18 @@ UINT UserAgentListener::listenerThread()
 	return ret;
 }
 
+UserAgentListener::ProcessContext::ProcessContext()
+{
+	requestLineDone = requestDone = userAgentDone = urlMatch = false;
+}
+
 bool UserAgentListener::serveSocket(SOCKET socket)
 {
 	const int RECV_BUF_LEN = 1024;
 	char recv_buf[RECV_BUF_LEN + 1] = { 0 };
 	CStringA content;
 	int bytesReceived;
-	bool requestDone = false, userAgentDone = false;
+	ProcessContext context;
 	do
 	{
 		bytesReceived = recv(socket, recv_buf, RECV_BUF_LEN, 0);
@@ -172,53 +196,72 @@ bool UserAgentListener::serveSocket(SOCKET socket)
 			while (retIndex != -1)
 			{
 				CString nextLine(content.Mid(0, retIndex));
-				processLine(nextLine, requestDone, userAgentDone);
+				processLine(nextLine, context);
 				content = content.Mid(retIndex + 2);
 				retIndex = content.Find("\r\n");
 			}
 		}
 		else if (bytesReceived == 0)
 		{
-			processLine(CString(content), requestDone, userAgentDone);
+			processLine(CString(content), context);
 		}
 		else // bytesReceived < 0
 		{
 			TRACE("[UA Listener] Failed to receive data, error = %d.\n", WSAGetLastError());
 		}
-	} while (!requestDone && bytesReceived > 0);
+	} while (!context.requestDone && bytesReceived > 0);
 
-	if (requestDone)
+	if (context.requestDone && context.urlMatch)
 	{
 		sendPlaceholderPage(socket);
 	}
 
-	return userAgentDone;
+	return context.userAgentDone;
 }
 
-void UserAgentListener::processLine(const CString& line, bool& requestDone, bool& userAgentDone)
+static const RegExp reRequestLine = _T("/^GET\\s([^\\s]+)\\sHTTP\\/[\\d\\.]+$/");
+
+void UserAgentListener::processLine(const CString& line, ProcessContext& context)
 {
 	CString trimmed = line;
 	trimmed.Trim();
 	if (trimmed.GetLength() == 0)
 	{
-		requestDone = true;
+		context.requestDone = true;
+		return;
+	}
+
+	if (!context.requestLineDone)
+	{
+		TRACE(_T("[UA Listener] [Request Line] %s\n"), trimmed);
+		RegExpMatch match;
+		if (reRequestLine.exec(match, trimmed.GetString()))
+		{
+			CString requestURL = match.substrings[1].c_str();
+			context.urlMatch = requestURL.GetLength() >= guid.GetLength()
+				&& requestURL.Mid(requestURL.GetLength() - guid.GetLength()) == guid;
+		}
+		context.requestLineDone = true;
 		return;
 	}
 
 	TRACE(_T("[UA Listener] [Request Header] %s\n"), trimmed);
-	if (userAgentDone) return;
+	if (context.userAgentDone) return;
 
-	LPCTSTR lpFieldName = _T("user-agent:");
-	LPTSTR lpUserAgent = StrStrI(trimmed.GetString(), lpFieldName);
-	if (lpUserAgent)
+	if (context.urlMatch)
 	{
-		CString userAgent = CString(lpUserAgent + _tcslen(lpFieldName)).Trim();
-		TRACE(_T("[UA Listener] Extracted user-agent: %s\n"), userAgent);
-		userAgentDone = true;
-		runAsync([=] {
-			this->userAgent = userAgent;
-			callUserAgentCallback();
-		});
+		LPCTSTR lpFieldName = _T("user-agent:");
+		LPTSTR lpUserAgent = StrStrI(trimmed.GetString(), lpFieldName);
+		if (lpUserAgent)
+		{
+			CString userAgent = CString(lpUserAgent + _tcslen(lpFieldName)).Trim();
+			TRACE(_T("[UA Listener] Extracted user-agent: %s\n"), userAgent);
+			context.userAgentDone = true;
+			runAsync([=] {
+				this->userAgent = userAgent;
+				callUserAgentCallback();
+			});
+		}
 	}
 }
 
