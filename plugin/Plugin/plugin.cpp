@@ -341,7 +341,7 @@ namespace Plugin
 		}
 		catch (CString strMessage)
 		{
-			TRACE(_T("[CPlugin::GetHostURL Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::GetHostURL Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vHref))	NPN_ReleaseVariantValue(&vHref);
@@ -385,7 +385,7 @@ namespace Plugin
 		}
 		catch (CString strMessage)
 		{
-			TRACE(_T("[CPlugin::GetNavigateHeaders Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::GetNavigateHeaders Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vParam))	NPN_ReleaseVariantValue(&vParam);
@@ -446,7 +446,7 @@ namespace Plugin
 		}
 		catch (CString strMessage)
 		{
-			TRACE(_T("[CPlugin::RemoveNavigateParams Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::RemoveNavigateParams Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vResult))	NPN_ReleaseVariantValue(&vResult);
@@ -559,7 +559,7 @@ namespace Plugin
 		}
 		catch (CString strMessage)
 		{
-			TRACE(_T("[CPlugin::FireEvent Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::FireEvent Exception] %s\n"), strMessage);
 			bOK = FALSE;
 		}
 		if (pPlugin != NULL) NPN_ReleaseObject(pPlugin);
@@ -603,7 +603,7 @@ namespace Plugin
 		catch (CString strMessage)
 		{
 			level = 1;
-			TRACE(_T("[CPlugin::GetZoomLevel Exception] %s"), strMessage);
+			TRACE(_T("[CPlugin::GetZoomLevel Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vLevel))	NPN_ReleaseVariantValue(&vLevel);

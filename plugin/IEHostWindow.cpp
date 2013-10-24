@@ -31,6 +31,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "App.h"
 #include "WindowMessageHook.h"
 #include "HTTP.h"
+#include "UserAgentListener.h"
 
 using namespace UserMessage;
 using namespace Utils;
@@ -1033,6 +1034,9 @@ void CIEHostWindow::OnTitleChange(LPCTSTR Text)
 
 void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 {
+	if (m_bUtils)
+		return;
+
 	if (Progress == -1) 
 		Progress = ProgressMax;
 	if (ProgressMax > 0) 
@@ -1122,7 +1126,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	COLE2T szUrl(URL->bstrVal);
 
 	// 按Firefox的设置缩放页面
-	if (m_pPlugin)
+	if (!m_bUtils && m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
 		if (fabs(level - 1.0) > 0.01) 
@@ -1171,9 +1175,28 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 				{
 					// For IE9 and higher, navigator.userAgent is defined by the document mode, thus we can't figure out
 					// the "real" user agent this way.
-					// We have to load an arbitrary document and get the user-agent from http monitor
-					RunAsync([=] {
-						Navigate(GetUserAgentURL(), _T(""), _T(""));
+					// Here we use a local loopback server to retrieve the "real" user-agent sent by IE engine
+					HttpMonitor::UserAgentListener* uaListener = new HttpMonitor::UserAgentListener([] (MainThreadFunc func) {
+						CIEHostWindow* pWindow = GetAnyUtilsWindow();
+						if (pWindow)
+						{
+							pWindow->RunAsync(func);
+						}
+					}, 2013, 59794);
+					uaListener->registerURLCallback([] (const CString& url) {
+						CIEHostWindow* pWindow = GetAnyUtilsWindow();
+						if (pWindow)
+						{
+							pWindow->Navigate(url, _T(""), _T(""));
+						}
+					});
+					uaListener->registerUserAgentCallback([=] (const CString& userAgent) {
+						CIEHostWindow* pWindow = GetAnyUtilsWindow();
+						if (pWindow)
+						{
+							pWindow->ReceiveUserAgent(userAgent);
+						}
+						delete uaListener;
 					});
 				}
 				s_bUserAgentProccessed = true;
@@ -1214,7 +1237,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 
 void CIEHostWindow::ReceiveUserAgent(const CString& userAgent)
 {
-	if (userAgent.GetLength() && m_pPlugin)
+	if (userAgent.GetLength() && s_strIEUserAgent != userAgent && m_pPlugin)
 	{
 		s_strIEUserAgent = userAgent;
 		m_pPlugin->OnIEUserAgentReceived(userAgent);

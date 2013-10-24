@@ -444,36 +444,6 @@ namespace HttpMonitor
 				}
 			}
 			break;
-
-		case BINDSTATUS_SENDINGREQUEST:
-			{
-				// Abort everything that utils window requests, and send back the user-agent
-				if (m_pIEHostWindow && m_pIEHostWindow->IsUtils() && FuzzyUrlCompare(m_strURL, CIEHostWindow::GetUserAgentURL()))
-				{
-					CComQIPtr<IWinInetHttpInfo> spWinInetHttpInfo = m_spInternetProtocolSink;
-					if (spWinInetHttpInfo)
-					{
-						CHAR szUserAgent[1024] = { 0 };		// raw header returned by IWinInetHttpInfo::QueryInfo() is not Unicode
-						DWORD dwBuffSize = sizeof(szUserAgent);
-
-						if (SUCCEEDED(spWinInetHttpInfo->QueryInfo(HTTP_QUERY_FLAG_REQUEST_HEADERS | HTTP_QUERY_USER_AGENT, szUserAgent, &dwBuffSize, 0, NULL)))
-						{
-							CString strUserAgent(szUserAgent);
-							TRACE(_T("[UA] Extracted user-agent value: %s\n"), strUserAgent);
-							// use pWindow to avoid capturing "this" pointer, which may not exist
-							// when the lambda is called
-							CIEHostWindow* pWindow = m_pIEHostWindow;
-							pWindow->RunAsync([=] {
-								if (pWindow)
-									pWindow->ReceiveUserAgent(strUserAgent);
-							});
-						}
-					}
-
-					return E_ABORT;
-				}
-			}
-			break;
 		}
 		return hr;
 	}
