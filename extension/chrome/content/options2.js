@@ -103,7 +103,7 @@ Options.apply = function(quiet)
   
   // IE compatibility mode
   let newMode = "ie7mode";
-  let iemode = E("iemode");
+  let iemode = E("iemode-menulist");
   if (iemode)
   {
     newMode = iemode.value;
@@ -176,6 +176,9 @@ Options.getIECompatMode = function()
   case 10001:
     mode = "ie10forced";
     break;
+  case 11000:
+    mode = "ie11mode-experimental";
+    break;
   default:
     mode = "ie7mode";
     break;
@@ -210,6 +213,9 @@ Options.applyIECompatMode = function()
     break;
   case "ie10forced":
     value = 10001;
+    break;
+  case "ie11mode-experimental":
+    value = 11000;
     break;
   default:
     value = 7000;
@@ -285,33 +291,38 @@ Options.updateIEModeTab = function(restore)
   {
     return;
   }
+  if (mainIEVersion >= 11)
+  {
+    E("ie11mode-experimental-menuitem").hidden = false;
+  }
   if (mainIEVersion >= 10)
   {
-    E("ie10mode-radio").hidden = false;
-    E("ie10forced-radio").hidden = false;
+    E("ie10mode-menuitem").hidden = false;
+    E("ie10forced-menuitem").hidden = false;
   }
   if (mainIEVersion >= 9)
   {
-    E("ie9mode-radio").hidden = false;
-    E("ie9forced-radio").hidden = false;
+    E("ie9mode-menuitem").hidden = false;
+    E("ie9forced-menuitem").hidden = false;
     // IE9+ supports hardware accelerated rendering
     E("ieFeatures").hidden = false;
     E("gpuRendering").hidden = false;
   }
   // mainIEVersion >= 8
-  E("ie8mode-radio").hidden = false;
-  E("ie8forced-radio").hidden = false;
-  E("ie7mode-radio").hidden = false;
+  E("ie8mode-menuitem").hidden = false;
+  E("ie8forced-menuitem").hidden = false;
+  E("ie7mode-menuitem").hidden = false;
   E("iecompat").hidden = false;
   
   E("iemodeNotSupported").hidden = true;
-  E("iemodeDescr").hidden = false;
+  E("iemodeRestartDescr").hidden = false;
   
   // do not attempt to get values from registry if we are restoring default
   if (!restore)
     Options.getIECompatMode();
   let mode = Prefs.compatMode;
-  E("iemode").value = mode;
+  E("iemode-menulist").value = mode;
+  Options.updateIECompatDescription();
   
   if (!restore)
     Options.getGPURenderingState();
@@ -335,6 +346,13 @@ Options.updateABPStatus = function()
 Options.updateCustomLabelsUI = function()
 {
   E("customLabels").hidden = (E("iconDisplay").value != "iconAndText");
+  Options.sizeToContent();
+};
+
+Options.updateIECompatDescription = function()
+{
+  E("iemode-descr").textContent =
+    Utils.getString("fireie.options.iemodeDescr." + E("iemode-menulist").value);
   Options.sizeToContent();
 };
 
@@ -374,7 +392,6 @@ Options.initDialog = function(restore)
   }
   
   Options.updateCustomLabelsUI();
-  
   Options.updateABPStatus();
 
   // updateStatus
@@ -449,7 +466,8 @@ Options.init = function()
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
   
   E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
-  
+  E("iemode-menulist").addEventListener("command", Options.updateIECompatDescription, false);
+
   ABPObserver.addListener(Options.updateABPStatus);
   window.addEventListener("unload", function()
   {

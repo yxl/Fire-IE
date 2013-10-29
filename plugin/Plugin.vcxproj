@@ -317,6 +317,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="BrowserHook\GestureHandler.cpp" />
     <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp" />
     <ClCompile Include="BrowserHook\WindowMessageHook.cpp" />
+    <ClCompile Include="HttpMonitor\UserAgentListener.cpp" />
     <ClCompile Include="IEControlSite.cpp" />
     <ClCompile Include="IECtrl.cpp" />
     <ClCompile Include="IEHostWindow.cpp" />
@@ -409,6 +410,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
     <ClInclude Include="BrowserHook\GestureHandler.h" />
     <ClInclude Include="BrowserHook\WindowMessageHook.h" />
+    <ClInclude Include="HttpMonitor\UserAgentListener.h" />
     <ClInclude Include="PrefManager.h" />
     <ClInclude Include="HttpMonitor\ContentType.h" />
     <ClInclude Include="IEControlSite.h" />

@@ -299,8 +299,26 @@ var gFireIE = null;
       });
 
       // Visit the new URL
-      HM.hookCodeTail("getShortcutOrURI", function(ret) RET.modifyValue(gFireIE.getHandledURL(ret)));
-
+      if (typeof(getShortcutOrURI) !== "undefined")
+        HM.hookCodeTail("getShortcutOrURI", function(ret) RET.modifyValue(gFireIE.getHandledURL(ret)));
+      else if (typeof(getShortcutOrURIAndPostData) !== "undefined")
+        HM.hookCodeTail("getShortcutOrURIAndPostData", function(ret)
+        {
+          // FF25+
+          // getShortcutOrURIAndPostData returns a promise that resolves to a url/postData structure
+          // Should wrap the promise into another promise so we can handle the URL
+          let promise = ret;
+          let newPromise = promise.then(function(data)
+          {
+            if (data.url)
+            {
+              data.url = gFireIE.getHandledURL(data.url);
+            }
+            return data;
+          });
+          return RET.modifyValue(newPromise);
+        });
+      
       //hook Interface Commands
       HM.hookCodeHead("BrowserBack", function() { if (gFireIE.goDoCommand('Back')) return RET.shouldReturn(); });
       HM.hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return RET.shouldReturn(); });

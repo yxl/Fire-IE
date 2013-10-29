@@ -139,6 +139,10 @@ namespace HttpMonitor
 		// 查询请求所对应的 CIEHostWindow 对象, 后面随时会用到
 		QueryIEHostWindow();
 
+		// Abort everything the utils window requests
+		if (m_pIEHostWindow && m_pIEHostWindow->IsUtils() && m_bIsSubRequest)
+			return E_ABORT;
+
 		// 设置自定义header，如DNT等
 		SetCustomHeaders(pszAdditionalHeaders);
 		
