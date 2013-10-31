@@ -40,31 +40,31 @@ var gFireIE = null;
   let HM = new HookManager(window, "gFireIE._hookManager");
   let RET = HM.RET;
   
-  // hook click_to_play, should take place before WindowWrapper installs the utils plugin
+  // hook click_to_play
+  // Don't allow PluginClickToPlay, PluginInstantiated and PluginRemoved to be processed by
+  // gPluginHandler, in order to hide the notification icon
   let clickToPlayHandler = function(event)
   {
+    // Only handle click_to_play events and those may trigger the notification
+    if (event.type != "PluginClickToPlay" && event.type != "PluginBindingAttached"
+        && event.type != "PluginInstantiated" && event.type != "PluginRemoved")
+      return;
+    
     let plugin = event.target;
     
     // We're expecting the target to be a plugin.
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
 
-    // Do a quick check to see if it's our plugin
+    // Check if it's our plugin
     if (plugin.getAttribute("type") != "application/fireie")
       return;
     
-    // check the container page
+    // Check the container page
     let doc = plugin.ownerDocument;
     let url = doc.location.href;
     if (!Utils.startsWith(url, Utils.containerUrl))
       return;
-
-    // disallow any further processing of this event
-    event.stopImmediatePropagation();
-    
-    // Only handle click_to_play events
-    if (event.type != "PluginClickToPlay" && event.type != "PluginBindingAttached")
-      return RET.shouldReturn();
     
     // The plugin binding fires this event when it is created.
     // As an untrusted event, ensure that this object actually has a binding
@@ -75,24 +75,31 @@ var gFireIE = null;
       let doc = plugin.ownerDocument;
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
       if (!overlay || overlay.FireIE_OverlayBindingHandled)
-        return RET.shouldReturn();
-
+        return;
+      
       overlay.FireIE_OverlayBindingHandled = true;
-
       eventType = UtilsPluginManager.getPluginBindingType(plugin);
     }
     
-    if (eventType != "PluginClickToPlay")
-      return RET.shouldReturn();
+    if (eventType != "PluginClickToPlay" && event.type != "PluginInstantiated"
+        && event.type != "PluginRemoved")
+      return;
     
-    // check whether the plugin is already activated
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    if (!objLoadingContent.activated)
+    // disallow any further processing of this event
+    event.stopImmediatePropagation();
+    
+    if (eventType == "PluginClickToPlay")
     {
-      // not activated yet, play the plugin and let go
-      plugin.playPlugin();
-      gFireIE.updateInterface();
+      // check whether the plugin is already activated
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      if (!objLoadingContent.activated)
+      {
+        // not activated yet, play the plugin and let go
+        plugin.playPlugin();
+        gFireIE.updateInterface();
+      }
     }
+    
     return RET.shouldReturn();
   };
   
