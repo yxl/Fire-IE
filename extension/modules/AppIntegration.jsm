@@ -823,7 +823,7 @@ WindowWrapper.prototype = {
         }
       }
 
-      let zoomLevel = this.getZoomLevel();
+      let zoomLevel = this.getZoomLevel(aTab.linkedBrowser);
       Utils.setTabAttributeJSON(aTab, 'zoom', {
         zoomLevel: zoomLevel
       });
@@ -2072,9 +2072,10 @@ WindowWrapper.prototype = {
   /**
    * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
-  getZoomLevel: function()
+  getZoomLevel: function(aBrowser)
   {
-    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser
+    let docViewer = browser.markupDocumentViewer;
     let zoomLevel = docViewer.fullZoom;
     return zoomLevel;
   },
@@ -2082,9 +2083,10 @@ WindowWrapper.prototype = {
   /**
    * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
-  _setZoomLevel: function(value)
+  _setZoomLevel: function(value, aBrowser)
   {
-    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+    let docViewer = browser.markupDocumentViewer;
     docViewer.fullZoom = value;
   },
 
@@ -2117,7 +2119,7 @@ WindowWrapper.prototype = {
     let zoomLevelParams = Utils.getTabAttributeJSON(tab, 'zoom');
     if (zoomLevelParams)
     {
-      this._setZoomLevel(zoomLevelParams.zoomLevel);
+      this._setZoomLevel(zoomLevelParams.zoomLevel, tab.linkedBrowser);
       tab.removeAttribute('zoom');
     }
   },

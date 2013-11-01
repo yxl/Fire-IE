@@ -413,6 +413,6 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
-    return gFireIE ? gFireIE.getZoomLevel() : 1;
+    return gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
   }
 })();

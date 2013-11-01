@@ -39,6 +39,21 @@ var gFireIE = null;
   
   let HM = new HookManager(window, "gFireIE._hookManager");
   let RET = HM.RET;
+  gFireIE = AppIntegration.addWindow(window);
+  gFireIE._hookManager = HM;
+  
+  function setUseRealURI(browser)
+  {
+    let value = browser.FireIE_bUseRealURI || 0;
+    return browser.FireIE_bUseRealURI = value + 1;
+  }
+
+  function unsetUseRealURI(browser)
+  {
+    let value = browser.FireIE_bUseRealURI || 1;
+    if (value < 1) value = 1;
+    return browser.FireIE_bUseRealURI = value - 1;
+  }
   
   // hook click_to_play, should take place before WindowWrapper installs the utils plugin
   let clickToPlayHandler = function(event)
@@ -104,9 +119,6 @@ var gFireIE = null;
   {
     HM.hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
   }
-
-  gFireIE = AppIntegration.addWindow(window);
-  gFireIE._hookManager = HM;
   
   function initBasicHooks()
   {
@@ -234,8 +246,8 @@ var gFireIE = null;
       //hook functions
       // Obtain real URL when bookmarking
       HM.hookCodeHeadTail("PlacesCommandHook.bookmarkPage",
-                          function(aBrowser) { aBrowser.FireIE_bUseRealURI = true; },
-                          function(ret, aBrowser) { aBrowser.FireIE_bUseRealURI = false; });
+                          function(aBrowser) { setUseRealURI(aBrowser); },
+                          function(ret, aBrowser) { unsetUseRealURI(aBrowser); });
       {
         let browsers = [];
         HM.hookCodeHeadTail("PlacesControllerDragHelper.onDrop",
@@ -250,7 +262,7 @@ var gFireIE = null;
               let data = dt.mozGetDataAt(flavor, i);
               if (data instanceof XULElement && data.localName == "tab" && data.linkedBrowser)
               {
-                data.linkedBrowser.FireIE_bUseRealURI = true;
+                setUseRealURI(data.linkedBrowser);
                 browsers.push(data.linkedBrowser);
               }
             }
@@ -259,7 +271,7 @@ var gFireIE = null;
           {
             browsers.forEach(function(browser)
             {
-              browser.FireIE_bUseRealURI = false;
+              unsetUseRealURI(browser);
             });
           });
       }
@@ -267,26 +279,26 @@ var gFireIE = null;
       // Show bookmark state (the star icon in URL bar) when using IE engine
       if (typeof(PlacesStarButton) != "undefined" && typeof(PlacesStarButton.updateState) == "function")
         HM.hookCodeHeadTail("PlacesStarButton.updateState",
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                            function() { setUseRealURI(gBrowser.mCurrentBrowser); },
+                            function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
 
       // Firefox 23 : PlacesStarButton has been changed to BookmarksMenuButton
       if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
         HM.hookCodeHeadTail("BookmarksMenuButton.updateStarState",
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                            function() { setUseRealURI(gBrowser.mCurrentBrowser); },
+                            function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
       
       // Firefox 24 : BookmarksMenuButton is again changed into BookmarkingUI...
       //  WTF... I mean, Welcome To Firefox!!
       if (typeof(BookmarkingUI) != "undefined" && typeof(BookmarkingUI.updateStarState) == "function")
         HM.hookCodeHeadTail("BookmarkingUI.updateStarState",
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                            function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                            function() { setUseRealURI(gBrowser.mCurrentBrowser); },
+                            function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
       
       // Show number of bookmarks in the overlay editing panel when using IE engine
       HM.hookCodeHeadTail("StarUI._doShowEditBookmarkPanel",
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = true; },
-                          function() { gBrowser.mCurrentBrowser.FireIE_bUseRealURI = false; });
+                          function() { setUseRealURI(gBrowser.mCurrentBrowser); },
+                          function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
       
 
       // Cancel setTabTitle when using IE engine
@@ -362,6 +374,9 @@ var gFireIE = null;
       initializeFindBarHooks();
       // Firefox 25 has per-tab gFindBar that we should hook individually
       gBrowser.tabContainer.addEventListener("TabSelect", initializeFindBarHooks, false);
+      
+      // Hook FullZoom object to use per-site zooming for IE container pages
+      initializeFullZoomHooks();
     }
   }
 
@@ -473,6 +488,56 @@ var gFireIE = null;
     {
       Utils.ERROR("findbar-textbox addEventListener('keypress') failed. " + ex);
     }    
+  }
+  
+  // Per-site FullZoom support
+  function initializeFullZoomHooks()
+  {
+    HM.hookCodeHeadTail("FullZoom.handleEvent",
+      function() { setUseRealURI(gBrowser.selectedBrowser); },
+      function() { unsetUseRealURI(gBrowser.selectedBrowser); });
+    
+    HM.hookCodeHeadTail("FullZoom.onContentPrefSet",
+      function() { setUseRealURI(gBrowser.selectedBrowser); },
+      function() { unsetUseRealURI(gBrowser.selectedBrowser); });
+    
+    HM.hookCodeHeadTail("FullZoom.onContentPrefRemoved",
+      function() { setUseRealURI(gBrowser.selectedBrowser); },
+      function() { unsetUseRealURI(gBrowser.selectedBrowser); });
+
+    HM.hookCodeHeadTail("FullZoom.onLocationChange",
+      function(aURI, aIsTabSwitch, aBrowser)
+      {
+        if (aBrowser)
+          setUseRealURI(aBrowser);
+        if (Utils.startsWith(aURI.spec, Utils.containerUrl))
+        {
+          arguments[0] = Utils.makeURI(Utils.fromContainerUrl(aURI.spec));
+          return RET.modifyArguments(arguments);
+        }
+      },
+      function(ret, aURI, aIsTabSwitch, aBrowser)
+      {
+        if (aBrowser)
+          unsetUseRealURI(aBrowser);
+      });
+    
+    if (typeof(FullZoom._applyZoomToPref) === "function")
+    {
+      HM.hookCodeHeadTail("FullZoom._applyZoomToPref",
+        function(browser) { setUseRealURI(browser); },
+        function(ret, browser) { unsetUseRealURI(browser); });
+    }
+    else if (typeof(FullZoom._applySettingToPref) === "function")
+    {
+      HM.hookCodeHeadTail("FullZoom._applySettingToPref",
+        function() { setUseRealURI(gBrowser.mCurrentBrowser); },
+        function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
+    }
+
+    HM.hookCodeHeadTail("FullZoom.reset",
+      function() { setUseRealURI(gBrowser.selectedBrowser); },
+      function() { unsetUseRealURI(gBrowser.selectedBrowser); });
   }
 
   // FireGestures support
