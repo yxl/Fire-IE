@@ -340,6 +340,14 @@ Options.updateABPStatus = function()
   E("abpStatusLoadFailed").hidden = (status != ABPStatus.LoadFailed);
   
   E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
+  
+  if (status == ABPStatus.NotDetected)
+    E("abpStatusAdblockerName").hidden = true;
+  else
+  {
+    E("abpStatusAdblockerName").value = "(" + ABPObserver.getAdblockerName() + ")";
+    E("abpStatusAdblockerName").hidden = false;
+  }
 };
 
 // Hide customLabels UI if icon display mode is not iconAndText

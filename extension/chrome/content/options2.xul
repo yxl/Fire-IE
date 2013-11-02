@@ -204,6 +204,7 @@
           <label id="abpStatusDisabled">&fireie.options.integration.abpStatusDisabled;</label>
           <label id="abpStatusLoading" style="color: green">&fireie.options.integration.abpStatusLoading;</label>
           <label id="abpStatusLoadFailed" style="color: red">&fireie.options.integration.abpStatusLoadFailed;</label>
+          <label id="abpStatusAdblockerName"></label>
         </hbox>
       </groupbox>
       <groupbox>

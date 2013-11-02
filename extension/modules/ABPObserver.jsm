@@ -38,48 +38,95 @@ Cu.import(baseURL.spec + "Prefs.jsm");
 
 let abp = {};
 
-const abpId = "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}";
-/**
- * Queries the FilterNotifier Object used to trigger reloads on "save" events
- */
-function queryFilterNotifier()
+let adblockerMap = (function generateAdblockers()
 {
-  // ABP 2.0 and older
-  let ABPPrivate = Cc["@adblockplus.org/abp/private;1"];
-  if (ABPPrivate)
-  {
-    let abpURL = ABPPrivate.getService(Ci.nsIURI);
-    try
-    {
-      Cu.import(abpURL.spec + "FilterNotifier.jsm", abp);
-      return;
-    }
-    catch (ex) { }
-  }
-
-  // ABP 2.1+
-  function require(/**String*/ module)
+  function requireGeneric(/**String*/ module, /**String*/ topic)
   {
     let result = {};
     result.wrappedJSObject = result;
-    Services.obs.notifyObservers(result, "adblockplus-require", module);
+    Services.obs.notifyObservers(result, topic, module);
     if(!result.exports)
     {
       return null;
     }
     return result.exports;
   }
-
-  try
-  {
-    let {FilterNotifier} = require("filterNotifier");
-    if (FilterNotifier)
+  
+  let adblockersArray = [{
+    name: "Adblock Plus",
+    id: "{d10d0bf8-f5b5-c8b4-a8b2-2b9879e08c5d}",
+    prefsBranch: "extensions.adblockplus.",
+    filterFilePath: "adblockplus/patterns.ini",
+    priority: 100,
+    getFilterNotifier: function()
     {
-      abp.FilterNotifier = FilterNotifier;
-      return;
+      // ABP 2.0 and older
+      let ABPPrivate = Cc["@adblockplus.org/abp/private;1"];
+      if (ABPPrivate)
+      {
+        let abpURL = ABPPrivate.getService(Ci.nsIURI);
+        try
+        {
+          let obj = {};
+          Cu.import(abpURL.spec + "FilterNotifier.jsm", obj);
+          return obj.FilterNotifier;
+        }
+        catch (ex) { }
+      }
+
+      // ABP 2.1+
+      try
+      {
+        let { FilterNotifier } = requireGeneric("filterNotifier", "adblockplus-require");
+        if (FilterNotifier)
+        {
+          return FilterNotifier;
+        }
+      }
+      catch (ex) { }
     }
-  }
-  catch (ex) { }
+  }, {
+    name: "Adblock Edge",
+    id: "{fe272bd1-5f76-4ea4-8501-a05d35d823fc}",
+    prefsBranch: "extensions.adblockedge.",
+    filterFilePath: "adblockedge/patterns.ini",
+    priority: 50,
+    getFilterNotifier: function()
+    {
+      // ABP 2.1+
+      try
+      {
+        let { FilterNotifier } = requireGeneric("filterNotifier", "adblockedge-require");
+        if (FilterNotifier)
+        {
+          return FilterNotifier;
+        }
+      }
+      catch (ex) { }
+    }
+  }];
+  
+  let map = {};
+  adblockersArray.forEach(function(adblocker)
+  {
+    map[adblocker.id] = adblocker;
+  });
+  
+  return map;
+})();
+
+/**
+ * Current adblocker in use
+ */
+let adblocker = null;
+
+/**
+ * Queries the FilterNotifier Object used to trigger reloads on "save" events
+ */
+function queryFilterNotifier()
+{
+  if (adblocker)
+    abp.FilterNotifier = adblocker.getFilterNotifier();
 }
 
 let ABPStatus = {
@@ -155,9 +202,7 @@ let ABPObserver = {
       this._detectABP();
       Utils.runAsyncTimeout(this._detectABP, this, 5000);
       Utils.runAsyncTimeout(this._detectABP, this, 30000);
-      
-      this._abpBranch = Services.prefs.getBranch("extensions.adblockplus.");
-      
+            
       this._registerListeners();
       
       UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
@@ -194,6 +239,11 @@ let ABPObserver = {
     return this._status;
   },
   
+  getAdblockerName: function()
+  {
+    return adblocker.name;
+  },
+  
   addListener: function(listener)
   {
     this._listeners.push(listener);
@@ -209,8 +259,15 @@ let ABPObserver = {
     if (this._abpInstalled) return;
     
     this._abpInstalled = true;
-    Utils.LOG("[ABP] Adblock Plus detected.");
+    Utils.LOG("[ABP] " + adblocker.name + " detected.");
     
+    this._abpBranch = Services.prefs.getBranch(adblocker.prefsBranch);
+    if (this._abpBranch)
+    {
+      this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
+      this._abpBranch.addObserver("", ABPObserverPrivate, false);
+    }
+
     if (!abp.FilterNotifier)
       queryFilterNotifier();
     this._setStatus(ABPStatus.Disabled);
@@ -222,7 +279,7 @@ let ABPObserver = {
     }
     catch (ex)
     {
-      Utils.LOG("[ABP] Failed to add listener to ABP's FilterNotifier: " + ex);
+      Utils.LOG("[ABP] Failed to add listener to FilterNotifier: " + ex);
     }
     
     this._needReload = true;
@@ -234,8 +291,14 @@ let ABPObserver = {
     if (!this._abpInstalled) return;
 
     this._abpInstalled = false;
-    Utils.LOG("[ABP] Adblock Plus not installed or disabled.");
+    Utils.LOG("[ABP] " + adblocker.name + " disabled or removed.");
 
+    if (this._abpBranch)
+    {
+      this._abpBranch.removeObserver("", ABPObserverPrivate);
+      this._abpBranch = null;    
+    }
+    
     try
     {
       abp.FilterNotifier.removeListener(onABPFilterNotify);
@@ -246,21 +309,49 @@ let ABPObserver = {
 
     abp = {};
     this._setStatus(ABPStatus.NotDetected);
+    
+    // In-case there're other adblockers available
+    this._detectABP();
   },
   
   _detectABP: function()
   {
     if (this._abpInstalled) return;
     
-    Utils.LOG("[ABP] Detecting Adblock Plus...");
-    AddonManager.getAddonByID(abpId, function(addon)
+    Utils.LOG("[ABP] Detecting adblockers...");
+    
+    let idArray = [];
+    for (let id in adblockerMap)
     {
-      let installed = (addon != null && addon.isActive);
-      if (installed)
-        this._onABPEnable();
-      else
-        this._onABPDisable();
-    }.bind(this));
+      idArray.push(id);
+    }
+    // Sort detection order by adblocker priority
+    idArray.sort(function(id1, id2)
+    {
+      let priority1 = adblockerMap[id1].priority;
+      let priority2 = adblockerMap[id2].priority;
+      return priority2 - priority1;
+    });
+    let self = this;
+    function detectAddon(index)
+    {
+      if (index >= idArray.length) return;
+      let id = idArray[index];
+      AddonManager.getAddonByID(id, function(addon)
+      {
+        let installed = (addon != null && addon.isActive);
+        if (installed)
+        {
+          adblocker = adblockerMap[id];
+          // Replace name with localized one
+          adblocker.name = addon.name;
+          self._onABPEnable();
+          return;
+        }
+        detectAddon(index + 1);
+      });
+    }
+    detectAddon(0);
   },
   
   _setStatus: function(status)
@@ -351,7 +442,7 @@ let ABPObserver = {
       // Data directory pref misconfigured? Try the default value
       try
       {
-        file = Utils.resolveFilePath(Services.prefs.getDefaultBranch("extensions.adblockplus.").getCharPref("data_directory"));
+        file = Utils.resolveFilePath(Services.prefs.getDefaultBranch(adblocker.prefsBranch).getCharPref("data_directory"));
         if (file)
           file.append("patterns.ini");
       } catch (ex) {}
@@ -361,7 +452,7 @@ let ABPObserver = {
       // Still no good? Try the hard-coded path
       try
       {
-        file = Utils.resolveFilePath("adblockplus/patterns.ini");
+        file = Utils.resolveFilePath(adblocker.filterFilePath);
       } catch (ex) {}
     }
     let pathname = file ? file.path : null;
@@ -493,12 +584,6 @@ let ABPObserver = {
   
   _registerListeners: function()
   {
-    if (this._abpBranch)
-    {
-      this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
-      this._abpBranch.addObserver("", ABPObserverPrivate, false);
-    }
-
     let window = UtilsPluginManager.getWindow();
     window.addEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
     window.addEventListener("IEABPLoadFailure", onABPLoadFailure, false);
@@ -508,11 +593,6 @@ let ABPObserver = {
   
   _unregisterListeners: function()
   {
-    if (this._abpBranch)
-    {
-      this._abpBranch.removeObserver("", ABPObserverPrivate);
-    }
-
     let window = UtilsPluginManager.getWindow();
     window.removeEventListener("IEABPFilterLoaded", onABPFilterLoaded, false);
     window.removeEventListener("IEABPLoadFailure", onABPLoadFailure, false);
@@ -629,37 +709,36 @@ let ABPObserverPrivate = {
 let ABPAddonListener = {
   onEnabled: function(/* in Addon */addon)
   {
-    if (addon.id == abpId)
+    let blocker = adblockerMap[addon.id];
+    if (blocker && !ABPObserver.isInstalled())
+    {
+      adblocker = blocker;
       Utils.runAsync(function()
       {
         ABPObserver._onABPEnable();
       }, this);
+    }
   },
   
   onDisabled: function(/* in Addon */addon)
   {
-    if (addon.id == abpId)
+    let blocker = adblockerMap[addon.id];
+    if (blocker && ABPObserver.isInstalled() && adblocker === blocker)
+    {
       Utils.runAsync(function()
       {
         ABPObserver._onABPDisable();
       }, this);
+    }
   },
   
   onInstalled: function(/* in Addon */addon)
   {
-    if (addon.id == abpId)
-      Utils.runAsync(function()
-      {
-        ABPObserver._onABPEnable();
-      }, this);
+    this.onEnabled(addon);
   },
   
   onUninstalled: function(/* in Addon */addon)
   {
-    if (addon.id == abpId)
-      Utils.runAsync(function()
-      {
-        ABPObserver._onABPDisable();
-      }, this);
+    this.onDisabled(addon);
   }
 };
