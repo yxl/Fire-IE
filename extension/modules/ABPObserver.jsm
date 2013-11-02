@@ -132,6 +132,11 @@ let ABPObserver = {
   _clearTimer: null,
   
   /**
+   * Anything loaded (including cache)?
+   */
+  _cleared: true,
+  
+  /**
    * Lazy initialization on first browser window creation. See Bootstrap.jsm
    */
   lazyStartup: function()
@@ -220,7 +225,8 @@ let ABPObserver = {
       Utils.LOG("[ABP] Failed to add listener to ABP's FilterNotifier: " + ex);
     }
     
-    this.reloadUpdate();
+    this._needReload = true;
+    this.updateState();
   },
   
   _onABPDisable: function()
@@ -526,11 +532,12 @@ let ABPObserver = {
   
   _setClearTimer: function()
   {
-    if (this._clearTimer) return;
+    if (this._clearTimer || this._cleared) return;
     this._clearTimer = Utils.runAsyncTimeout(function()
     {
       UtilsPluginManager.getPlugin().ABPClear();
       this._clearTimer = null;
+      this._cleared = true;
       Utils.LOG("[ABP] Cleared.");
     }, this, 60000);
     Utils.LOG("[ABP] Scheduled to clear in 60 seconds.");
@@ -562,6 +569,7 @@ function onABPFilterLoaded(e)
   }
   // enable ABP support
   let self = ABPObserver;
+  self._cleared = false;
   if (self._pendingUpdate)
     self.updateState();
   else
