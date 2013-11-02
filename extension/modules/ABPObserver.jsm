@@ -713,6 +713,8 @@ let ABPAddonListener = {
     if (blocker && !ABPObserver.isInstalled())
     {
       adblocker = blocker;
+      // Replace name with localized one
+      adblocker.name = addon.name;
       Utils.runAsync(function()
       {
         ABPObserver._onABPEnable();
