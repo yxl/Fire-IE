@@ -143,6 +143,9 @@ namespace HttpMonitor
 		if (m_pIEHostWindow && m_pIEHostWindow->IsUtils() && m_bIsSubRequest)
 			return E_ABORT;
 
+		if (m_pIEHostWindow && !m_bIsSubRequest)
+			m_pIEHostWindow->SetMainPageDone();
+
 		// 设置自定义header，如DNT等
 		SetCustomHeaders(pszAdditionalHeaders);
 		

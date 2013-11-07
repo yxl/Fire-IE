@@ -73,6 +73,9 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
 	, m_strLoadingUrl(_T(""))
+	, m_bIsRefresh(false)
+	, m_bMainPageDone(false)
+	, m_nObjCounter(0)
 {
 	FBResetFindStatus();
 }
@@ -352,6 +355,8 @@ BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOCUMENTCOMPLETE  , CIEHostWindow::OnDocumentComplete, VTS_DISPATCH VTS_PVARIANT)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_NEWWINDOW3        , CIEHostWindow::OnNewWindow3Ie, VTS_PDISPATCH VTS_PBOOL VTS_UI4 VTS_BSTR VTS_BSTR)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_SETSECURELOCKICON , CIEHostWindow::OnSetSecureLockIcon, VTS_I4)
+	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOWNLOADBEGIN     , CIEHostWindow::OnDownloadBegin, VTS_NONE)
+	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOWNLOADCOMPLETE  , CIEHostWindow::OnDownloadComplete, VTS_NONE)
 END_EVENTSINK_MAP()
 
 
@@ -1101,6 +1106,11 @@ void CIEHostWindow::SetLoadingURL(const CString& url)
 		RunAsync([=] { OnURLChanged(url); });
 }
 
+void CIEHostWindow::SetMainPageDone()
+{
+	m_bMainPageDone = true;
+}
+
 CString CIEHostWindow::GetLoadingURL()
 {
 	m_csLoadingUrl.Lock();
@@ -1119,13 +1129,26 @@ void CIEHostWindow::OnURLChanged(const CString& url)
 	}
 }
 
+bool CIEHostWindow::IsTopLevelContainer(CComQIPtr<IWebBrowser2> spBrowser)
+{
+	if (spBrowser)
+	{
+		VARIANT_BOOL vbIsTopLevelContainer;
+		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
+		{
+			return ( VARIANT_TRUE == vbIsTopLevelContainer );
+		}
+	}
+	return false;
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
 	if (!URL) return;
 
 	COLE2T szUrl(URL->bstrVal);
 
-	// 按Firefox的设置缩放页面
+	// Zoom according to Firefox setting
 	if (!m_bUtils && m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
@@ -1135,22 +1158,19 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 		}
 	}
 
-	// 滤掉非 HTTP 协议
+	// Filter non-http protocols
 	if (!UrlCanHandle(szUrl)) return;
 
-	// 如果是在一个 frame 里面, 忽略
-	CComQIPtr<IWebBrowser2> spBrowser(pDisp);
-	if (spBrowser)
-	{
-		VARIANT_BOOL vbIsTopLevelContainer;
-		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
-		{
-			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
-		}
-	}
+	// Ignore if it's in an iframe
+	if (!IsTopLevelContainer(pDisp))
+		return;
 
+	// Reset refresh detection status
+	m_bIsRefresh = false;
+	m_nObjCounter = 0;
+	m_bMainPageDone = false;
 
-	// 设置正在载入的Url
+	// Set currently loading URL
 	SetLoadingURL(CString(szUrl));
 	// Clear cached title
 	m_strTitle = _T("");
@@ -1161,9 +1181,9 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	if (m_bUtils)
 	{
 		/**
-		* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
-		* 文档中获取UserAgent。
-		*/
+		 * IE doesn't provide API to get the userAgent.
+		 * We have to fetch it from the document it has loaded.
+		 */
 		if (!s_bUserAgentProccessed)
 		{
 			// For IE8 and lower, navigator.userAgent is the user-agent sent to servers
@@ -1209,18 +1229,26 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
 
-	// 按Firefox的设置缩放页面
-	if (m_pPlugin)
+	if (IsTopLevelContainer(pDisp))
 	{
-		double level = m_pPlugin->GetZoomLevel();
-		if (fabs(level - 1.0) > 0.01) 
+		// Zoom according to Firefox setting
+		if (m_pPlugin)
 		{
-			Zoom(level);
+			double level = m_pPlugin->GetZoomLevel();
+			if (fabs(level - 1.0) > 0.01) 
+			{
+				Zoom(level);
+			}
 		}
-	}
 
-	/** 缓存 Favicon URL */
-	m_strFaviconURL = GetFaviconURLFromContent();
+		// Cache Favicon URL
+		m_strFaviconURL = GetFaviconURLFromContent();
+
+		// Setup refresh detection
+		m_bIsRefresh = true;
+		m_nObjCounter = 0;
+		m_bMainPageDone = false;
+	}
 
 	/** Reset Find Bar state */
 	if (m_bFBInProgress)
@@ -1235,6 +1263,40 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	}
 }
 
+void CIEHostWindow::OnDownloadBegin()
+{
+	if (!m_bIsRefresh)
+		return;
+
+	m_nObjCounter++;
+}
+
+void CIEHostWindow::OnDownloadComplete()
+{
+	/**
+	 * Refresh() detection code. Note that there are currently no reliable means to do this.
+	 * Main trick is to detect DownloadComplete events after DocumentComplete is fired and 
+	 * at least one request to the main page URL.
+	 */
+	if (!m_bIsRefresh)
+		return;
+
+	m_nObjCounter--;
+	if (m_nObjCounter <= 0 && m_bMainPageDone)
+	{
+		TRACE(_T("[Refresh] OnDownloadComplete: ObjCounter = 0, MainPageDone = 1, Refresh detected!\n"));
+		m_nObjCounter = 0;
+		m_bMainPageDone = false;
+		// Re-apply element hiding styles on refresh
+		// However, since we check before adding the styles, the impact should not be severe.
+		ProcessElemHideStyles();
+	}
+	else
+	{
+		TRACE(_T("[Refresh] OnDownloadComplete: ObjCounter = %d, MainPageDone = %d\n"), m_nObjCounter, m_bMainPageDone);
+	}
+}
+
 void CIEHostWindow::ReceiveUserAgent(const CString& userAgent)
 {
 	if (userAgent.GetLength() && s_strIEUserAgent != userAgent && m_pPlugin)
@@ -1242,13 +1304,6 @@ void CIEHostWindow::ReceiveUserAgent(const CString& userAgent)
 		s_strIEUserAgent = userAgent;
 		m_pPlugin->OnIEUserAgentReceived(userAgent);
 	}
-}
-
-CString CIEHostWindow::GetUserAgentURL()
-{
-	// Arbitrary URL to request (host must exist, while the page does not need to,
-	// since we're not reading anything from the response)
-	return _T("http://www.fireie.org/sites/useragent.php");
 }
 
 const CString CIEHostWindow::s_strSecureLockInfos[] =

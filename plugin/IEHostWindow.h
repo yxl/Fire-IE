@@ -70,6 +70,8 @@ public:
 	CString GetLoadingURL();
 	void SetLoadingURL(const CString& value);
 	
+	/* Indicates that a main page request is detected */
+	void SetMainPageDone();
 public:
 	
 	virtual ~CIEHostWindow();
@@ -148,6 +150,8 @@ protected:
 	void OnProgressChange(long Progress, long ProgressMax);
 	void OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel);
 	void OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL);
+	void OnDownloadBegin();
+	void OnDownloadComplete();
 	void OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl);
 	void OnURLChanged(const CString& url);
 
@@ -176,6 +180,8 @@ protected:
 	void ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc);
 	bool IfAlreadyHaveElemHideStyles(const CComPtr<IHTMLDocument2>& pDoc);
 	void ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc, const std::vector<std::wstring>& vStyles);
+
+	static bool IsTopLevelContainer(CComQIPtr<IWebBrowser2> spBrowser);
 public:
 	CIECtrl m_ie;
 
@@ -252,13 +258,12 @@ public:
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
 	void ReceiveUserAgent(const CString& userAgent);
-	static CString GetUserAgentURL();
 protected:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
 	INT32 m_iProgress;
 
-	/** »º´æ×î½üµÄ Favicon URL */
+	/** Cache recent favicon URL */
 	CString m_strFaviconURL;
 
 	// Cache recent status text
@@ -331,4 +336,11 @@ private:
 	void OnRunAsyncCall();
 	std::deque<MainThreadFunc> m_qFuncs;
 	CCriticalSection m_csFuncs;
+
+	/**
+	 * Used for Refresh() detection, as IE fire neither NavigateComplete2 nor DocumentComplete when Refresh() completes.
+	 */
+	int m_nObjCounter;
+	bool m_bIsRefresh;
+	bool m_bMainPageDone;
 };
