@@ -1,0 +1,7 @@
+<!ENTITY dialog.title "Installatie Fire IE afgerond">
+<!ENTITY confirmation "Bedankt voor het installeren van Fire IE. Vanaf nu is de IE-engine ingebouwd. Veel plezier!">
+<!ENTITY advancedSection "Geavanceerde opties">
+<!ENTITY listSelection1 "De volgende regellijst is ingesteld om automatisch van engine te wisselen:">
+<!ENTITY noList "Geen regellijst">
+<!ENTITY visitHomepage.label "Startpagina lijst bezoeken">
+<!ENTITY listSelection2 "U kunt te allen tijde deze selectie wijzigen via de [link]Regelvoorkeuren[/link].">

@@ -1,0 +1,75 @@
+<!ENTITY fireie.switchButton.label "Fire IE">
+<!ENTITY fireie.urlbar.switch.tooltip1 "Render-engine wisselen">
+<!ENTITY fireie.urlbar.switch.tooltip1.disabled "Kan niet wisselen op deze pagina">
+<!ENTITY fireie.urlbar.switch.tooltip3 "Rechtsklik: Fire IE-opties weergeven">
+<!ENTITY urlbar.switchRules.label "Wisselregels">
+<!ENTITY internetProperties.lable "Interneteigenschappen IE">
+<!ENTITY fireie.autoswitch.disable "Automatisch wisselen overal uitschakelen">
+<!ENTITY openInIE.label "Huidige pagina in IE openen">
+<!ENTITY skin.label "Skins">
+<!ENTITY default.lable "Standaard">
+<!ENTITY skin.more.lable "Meer…">
+<!ENTITY fireie.options.title "Fire IE-opties">
+<!ENTITY fireie.options.general.tab "Algemeen">
+<!ENTITY fireie.options.general.pane "Algemeen">
+<!ENTITY fireie.options.switch.caption "Bij wisselen render-engine:">
+<!ENTITY fireie.options.switch.handleurl "Altijd huidige engine gebruiken om een nieuwe URL te openen">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Automatisch wisselen engine uitschakelen">
+<!ENTITY fireie.options.shorcut.caption "Sneltoets">
+<!ENTITY fireie.options.shorcut.enable "Inschakelen">
+<!ENTITY fireie.options.private.caption "Privénavigatie">
+<!ENTITY fireie.options.private.privatebrowsingwarning "Waarschuwingspagina privénavigatie weergeven">
+<!ENTITY fireie.options.private.descr "IE-modus-tabbladen ondersteunen geen privénavigatie. U kunt kiezen of u in dit geval een waarschuwingspagina wilt laten weergeven.">
+<!ENTITY fireie.options.ui.tab "UI">
+<!ENTITY fireie.options.ui.pane "UI">
+<!ENTITY fireie.options.ui.urlBarButtonCaption "Adresbalkknop">
+<!ENTITY fireie.options.ui.iconDisplayLabel "Weergavestijl:">
+<!ENTITY fireie.options.ui.iconHidden "Verborgen">
+<!ENTITY fireie.options.ui.iconOnly "Pictogram weergeven">
+<!ENTITY fireie.options.ui.iconAndText "Pictogram en label weergeven">
+<!ENTITY fireie.options.ui.tooltipLabel "Tooltip:">
+<!ENTITY fireie.options.ui.showTooltipText "Enginestatus weergeven bij aanwijzen adresbalkknop">
+<!ENTITY fireie.options.ui.statusBarCaption "Drijvende statusbalk">
+<!ENTITY fireie.options.ui.showStatusText "Status IE-engine weergeven in drijvende statusbalk">
+<!ENTITY fireie.options.ui.faviconCaption "Tabbladpictogram">
+<!ENTITY fireie.options.ui.faviconSite "Favicon van website gebruiken">
+<!ENTITY fireie.options.ui.faviconIE "Pictogram IE-engine gebruiken">
+<!ENTITY fireie.options.ui.customLabelLabel "Labels aanpassen:">
+<!ENTITY fireie.options.integration.tab "Integratie">
+<!ENTITY fireie.options.integration.pane "Integratie">
+<!ENTITY fireie.options.integration.mgCaption "Ondersteuning muisbewegingen">
+<!ENTITY fireie.options.integration.mgDescr "Bewegingsextensies en scripts worden automatisch gedetecteerd. Als uw muisbewegingsextensie of script niet automatisch wordt herkend kunt u proberen deze optie in te schakelen.">
+<!ENTITY fireie.options.integration.forceMGSupport "Ondersteuning voor muisbewegingen in IE-modus-tabbladen afdwingen">
+<!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Ondersteuning voor muisbewegingen is momenteel ingeschakeld.">
+<!ENTITY fireie.options.integration.abpCaption "Ondersteuning Adblock Plus">
+<!ENTITY fireie.options.integration.abpDescr "Filters van Adblock Plus gebruiken om advertenties in de IE-engine te blokkeren.">
+<!ENTITY fireie.options.integration.abpSupportEnabled "Ondersteuning Adblock Plus inschakelen">
+<!ENTITY fireie.options.integration.abpStatusLabel "Huidige status:">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "Adblock Plus niet gedetecteerd">
+<!ENTITY fireie.options.integration.abpStatusEnabled "Ingeschakeld">
+<!ENTITY fireie.options.integration.abpStatusDisabled "Uitgeschakeld">
+<!ENTITY fireie.options.integration.abpStatusLoading "Filters laden…">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "Laden filters mislukt">
+<!ENTITY fireie.options.integration.otherOptions "Overige opties">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "Cookies tussen IE- en Firefox-engines synchroniseren">
+<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Cookies in privénavigatiemodus synchroniseren">
+<!ENTITY fireie.options.ieoptions.tab "IE-opties">
+<!ENTITY fireie.options.ieoptions.pane "IE-opties">
+<!ENTITY fireie.options.iecompat.group "IE-compatibiliteitsmodus">
+<!ENTITY fireie.options.iecompat.ie7 "IE7-standaardmodus">
+<!ENTITY fireie.options.iecompat.ie8 "IE8-standaardmodus">
+<!ENTITY fireie.options.iecompat.ie8f "IE8-standaardmodus afgedwongen">
+<!ENTITY fireie.options.iecompat.ie9 "IE9-standaardmodus">
+<!ENTITY fireie.options.iecompat.ie9f "IE9-standaardmodus afgedwongen">
+<!ENTITY fireie.options.iecompat.ie10 "IE10-standaardmodus">
+<!ENTITY fireie.options.iecompat.ie10f "IE10-standaardmodus afgedwongen">
+<!ENTITY fireie.options.iecompat.ie11 "IE11-modus (experimenteel)">
+<!ENTITY fireie.options.iecompat.notSupported "Uw versie van IE ondersteunt de IE-compatibiliteitsmodus of geavanceerde functies niet.">
+<!ENTITY fireie.options.iefeat.group "Geavanceerde functies">
+<!ENTITY fireie.options.iefeat.gpuRendering "Rendering middels hardwareversnelling inschakelen">
+<!ENTITY fireie.options.apply "Toepassen">
+<!ENTITY fireie.options.manager "Optiebeheer">
+<!ENTITY fireie.options.default "Standaardinstellingen terugzetten">
+<!ENTITY fireie.options.import "Optiebestand importeren">
+<!ENTITY fireie.options.export "Optiebestand exporteren">
+<!ENTITY fireie.options.restart.descr "Herstart Firefox om de wijzigingen door te voeren.">

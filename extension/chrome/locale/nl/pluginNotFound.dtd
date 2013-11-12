@@ -1,0 +1,9 @@
+<!ENTITY dialog.title "Fire IE-plug-in niet geladen">
+<!ENTITY pluginNotFound1 "Fire IE heeft gedetecteerd dat de “Fire IE-dll”-plug-in niet succesvol is geladen.">
+<!ENTITY pluginNotFound2 "U hebt mogelijk een verkeerde versie van Fire IE geïnstalleerd.">
+<!ENTITY correctVersion "Afgaand op uw configuratie moet u de [bit]-bitsversie gebruiken.">
+<!ENTITY homepage "http://yxl.github.com/Fire-IE">
+<!ENTITY visitHomepage "Bezoek [link][host][/link] om te downloaden en installeren.">
+<!ENTITY pluginNotFound3 "U hebt mogelijk een verkeerde versie van Fire IE geïnstalleerd; de plug-in is mogelijk verwijderd of in de add-onbeheerder uitgeschakeld.">
+<!ENTITY makeSure "Zorg ervoor dat “Fire IE dll” is ingeschakeld in de [link]add-onbeheerder[/link].">
+<!ENTITY reinstall "U kunt ook proberen Fire IE opnieuw te installeren vanaf [link][host][/link]">
