@@ -1597,27 +1597,29 @@ void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
 
 void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
 {
-	CComBSTR bstrURL;
-	// while -- break, essentially a break-able 'if'
-	while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
+	if (!IfAlreadyHaveElemHideStyles(pDoc))
 	{
-		std::wstring strURL = CString(bstrURL).GetString();
-		URLTokenizer tokensURL(strURL);
-
-		std::wstring strProtocol = toLowerCase(tokensURL.protocol);
-		// Do not handle protocols other than http/https
-		if (strProtocol != L"http" && strProtocol != L"https") break;
-
-		std::vector<std::wstring> vStyles;
-		if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+		CComBSTR bstrURL;
+		// while -- break, essentially a break-able 'if'
+		while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
 		{
-			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
-			ApplyElemHideStylesForDoc(pDoc, vStyles);
-			ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+			std::wstring strURL = CString(bstrURL).GetString();
+			URLTokenizer tokensURL(strURL);
+
+			std::wstring strProtocol = toLowerCase(tokensURL.protocol);
+			// Do not handle protocols other than http/https
+			if (strProtocol != L"http" && strProtocol != L"https") break;
+
+			std::vector<std::wstring> vStyles;
+			if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+			{
+				ApplyElemHideStylesForDoc(pDoc, vStyles);
+				ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+			}
+			break;
 		}
-		break;
+		//DumpInnerHTML(pDoc);
 	}
-	//DumpInnerHTML(pDoc);
 
 	CComPtr<IHTMLFramesCollection2> pFrames;
 	long length;
@@ -1711,7 +1713,7 @@ void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDo
 		if (FAILED(pDoc->createStyleSheet(_T(""), -1, &pStyleSheet)) || !pStyleSheet)
 			continue;
 
-		if (FAILED(pStyleSheet->put_cssText(CComBSTR((int)style.length(), (LPCOLESTR)style.c_str()))))
+		if (FAILED(pStyleSheet->put_cssText(CString(style.c_str()).AllocSysString())))
 			continue;
 
 		CComPtr<IHTMLElement> pElem;
