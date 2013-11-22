@@ -1897,6 +1897,25 @@ bool CIEHostWindow::FBCheckDocument()
 		CComPtr<IHTMLTxtRange> pTmpTxtRange;
 		if (dfs.txtRange == NULL || FAILED(dfs.txtRange->duplicate(&pTmpTxtRange)) || pTmpTxtRange == NULL)
 		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot duplicate text range.\n");
+			return FBResetFindRange();
+		}
+		CComPtr<IHTMLElement> pBodyElem;
+		CComQIPtr<IHTMLBodyElement> pBody;
+		if (FAILED(dfs.doc->get_body(&pBodyElem)) || pBodyElem == NULL || NULL == (pBody = pBodyElem))
+		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot get body element.\n");
+			return FBResetFindRange();
+		}
+		CComPtr<IHTMLTxtRange> pTxtRange;
+		if (FAILED(pBody->createTextRange(&pTxtRange)) || pTxtRange == NULL)
+		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot get body text range.\n");
+			return FBResetFindRange();
+		}
+		if (!FBRangesEqual(pTxtRange, dfs.originalRange))
+		{
+			TRACE("[FindBar] FBCheckDocument failed: text range of the body changed.\n");
 			return FBResetFindRange();
 		}
 	}
