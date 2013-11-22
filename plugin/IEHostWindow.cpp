@@ -1290,6 +1290,9 @@ void CIEHostWindow::OnDownloadComplete()
 		// Re-apply element hiding styles on refresh
 		// However, since we check before adding the styles, the impact should not be severe.
 		ProcessElemHideStyles();
+		// Should reset find range, too
+		if (m_bFBInProgress)
+			FBResetFindRange();
 	}
 	else
 	{
