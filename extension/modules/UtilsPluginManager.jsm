@@ -464,12 +464,10 @@ function onIEBatchSetCookie(event)
   let subject = null;
   let topic = "fireie-batch-set-cookie";
   let cookiesObject = JSON.parse(event.detail);
-  Utils.ERROR(event.detail);
   let windowId = cookiesObject.windowId;
   if (windowId && windowId != "0")
   {
     subject = findChromeWindowByPluginWindowId(windowId);
-    Utils.ERROR("Found context window: " + subject);
   }
   let data = JSON.stringify(cookiesObject.cookies);
   Services.obs.notifyObservers(subject, topic, data);
