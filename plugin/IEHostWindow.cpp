@@ -54,8 +54,6 @@ const TCHAR* const CIEHostWindow::s_strElemHideClass = _T("fireie-elemhide-style
 
 IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 
-typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
-
 CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
 	: CDialog(CIEHostWindow::IDD, pParent)
 	, m_pPlugin(pPlugin)

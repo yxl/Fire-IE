@@ -223,8 +223,7 @@ static const RegExp reRequestLine = _T("/^GET\\s([^\\s]+)\\sHTTP\\/[\\d\\.]+$/")
 
 void UserAgentListener::processLine(const CString& line, ProcessContext& context)
 {
-	CString trimmed = line;
-	trimmed.Trim();
+	CString trimmed = CString(line).Trim();
 	if (trimmed.GetLength() == 0)
 	{
 		context.requestDone = true;

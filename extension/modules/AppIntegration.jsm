@@ -388,6 +388,7 @@ WindowWrapper.prototype = {
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
     // Listen to plugin events
+    this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
@@ -1034,6 +1035,21 @@ WindowWrapper.prototype = {
           }
         }
       }
+    }
+  },
+  
+  /** Handler for IE content plugin init event */
+  _onIEContentPluginInitialized: function(event)
+  {
+    let plugin = event.target;
+    
+    // Check if the tab is currently selected
+    let tab = Utils.getTabFromDocument(plugin.ownerDocument);
+    if (tab === this.window.gBrowser.selectedTab)
+    {
+      // Focus the plugin after its creation
+      // Don't call Focus(). Instead, let the focus handler do the trick (see container.js)
+      Utils.runAsyncTimeout(function() { plugin.focus(); }, this, 100);
     }
   },
 
@@ -2066,6 +2082,10 @@ WindowWrapper.prototype = {
   _onTabSelected: function(e)
   {
     this._updateInterface();
+    // Focus the content plugin on TabSelect
+    let plugin = this.getContainerPlugin();
+    if (plugin)
+      Utils.runAsyncTimeout(function() { plugin.focus(); }, this, 100);
   },
 
 
