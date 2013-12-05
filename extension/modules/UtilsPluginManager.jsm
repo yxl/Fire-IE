@@ -408,27 +408,70 @@ function onIEUserAgentReceived(event)
   IECookieManager.restoreIETempDirectorySetting();
 }
 
+/** look for chrome window that contains the specific plugin window id */
+function findChromeWindowByPluginWindowId(id)
+{
+  function containsPlugin(window)
+  {
+    let gBrowser = window.gBrowser;
+    if (gBrowser)
+    {
+      let mTabs = gBrowser.mTabContainer.childNodes;
+      for (let i = 0; i < mTabs.length; i++)
+      {
+        let tab = mTabs[i];
+        let params = Utils.getTabAttributeJSON(tab, "fireieNavigateParams");
+        if (params && params.id && id === params.id)
+          return true;
+      }
+    }
+    return false;
+  }
+  
+  let windows = Utils.generatorFromEnumerator(Services.wm.getEnumerator("navigator:browser"),
+    Ci.nsIDOMWindow);
+  for (let window in windows)
+  {
+    if (containsPlugin(window))
+      return window;
+  }
+  return null;
+}
+
 /**
  * Handles 'IESetCookie' event receiving from the plugin
- * Context is set to null as a fallback situation
+ * Context is deduced from windowId, or set to null as a fallback situation
  */
 function onIESetCookie(event)
 {
   let subject = null;
   let topic = "fireie-set-cookie";
   let data = event.detail;
+  let windowId = JSON.parse(data).windowId;
+  if (windowId && windowId != "0")
+  {
+    subject = findChromeWindowByPluginWindowId(windowId);
+  }
   Services.obs.notifyObservers(subject, topic, data);
 }
 
 /**
  * Handles 'IEBatchSetCookie' event receiving from the plugin
- * Context is set to null as a fallback situation
+ * Context is deduced from windowId, or set to null as a fallback situation
  */
 function onIEBatchSetCookie(event)
 {
   let subject = null;
   let topic = "fireie-batch-set-cookie";
-  let data = event.detail;
+  let cookiesObject = JSON.parse(event.detail);
+  Utils.ERROR(event.detail);
+  let windowId = cookiesObject.windowId;
+  if (windowId && windowId != "0")
+  {
+    subject = findChromeWindowByPluginWindowId(windowId);
+    Utils.ERROR("Found context window: " + subject);
+  }
+  let data = JSON.stringify(cookiesObject.cookies);
   Services.obs.notifyObservers(subject, topic, data);
 }
 

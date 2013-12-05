@@ -613,7 +613,7 @@ namespace Plugin
 		return level;
 	}
 
-	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader)
+	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader, ULONG_PTR ulWindowId)
 	{
 		USES_CONVERSION_EX;
 		CString strEventType = _T("IESetCookie");
@@ -621,15 +621,22 @@ namespace Plugin
 		Json::Value json;
 		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
 		json["header"] = T2A_EX(strCookieHeader, strCookieHeader.GetLength() + 1);
+		if (ulWindowId)
+		{
+			char szWindowId[32] = { 0 };
+			_ui64toa_s(ulWindowId, szWindowId, 32, 10);
+			json["windowId"] = szWindowId;
+		}
 		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 
-	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies)
+	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId)
 	{
 		USES_CONVERSION_EX;
 		CString strEventType = _T("IEBatchSetCookie");
 		CString strDetail;
+		Json::Value json;
 		Json::Value aCookies;
 		for (size_t i = 0; i < vCookies.size(); i++)
 		{
@@ -639,7 +646,16 @@ namespace Plugin
 			cookie["header"] = T2A_EX(param.strCookie, param.strCookie.GetLength() + 1);
 			aCookies.append(cookie);
 		}
-		strDetail = CA2T(aCookies.toStyledString().c_str());
+		json["cookies"] = aCookies;
+
+		if (ulWindowId)
+		{
+			char szWindowId[32] = { 0 };
+			_ui64toa_s(ulWindowId, szWindowId, 32, 10);
+			json["windowId"] = szWindowId;
+		}
+
+		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 
@@ -659,12 +675,16 @@ namespace Plugin
 	{
 		CString strEventType = _T("IENewTab");
 		CString strDetail;
-		
+
+		TCHAR szId[32] = { 0 };
+		_ui64tot_s(ulId, szId, 32, 10);
+		CString strId = szId;
+
 		// Retrieve additional info for cursor & keyboard state
 		CString strShift = bShift ? _T("true") : _T("false");
 		CString strCtrl = bCtrl ? _T("true") : _T("false");
-		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
-			ulId, strURL, strShift, strCtrl);
+		strDetail.Format(_T("{\"id\": \"%s\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
+			strId, strURL, strShift, strCtrl);
 		FireEvent(strEventType, strDetail);
 	}
 

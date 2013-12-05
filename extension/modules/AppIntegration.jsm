@@ -1257,7 +1257,7 @@ WindowWrapper.prototype = {
   {
     let subject = this.window;
     let topic = "fireie-batch-set-cookie";
-    let data = event.detail;
+    let data = JSON.stringify(JSON.parse(event.detail).cookies);
     Services.obs.notifyObservers(subject, topic, data);
   },
 

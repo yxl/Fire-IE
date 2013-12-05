@@ -122,11 +122,11 @@ namespace Plugin
 		/**
 		 * Sets Firefox Cookie by firing a JavaScript event.
 		 */
-		void SetFirefoxCookie(const CString& strURL, const CString& strCookie);
+		void SetFirefoxCookie(const CString& strURL, const CString& strCookie, ULONG_PTR ulWindowId);
 		/**
 		 * Batch-setting Firefox Cookie by firing a JavaScript event.
 		 */
-		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies);
+		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId);
 
 		/** 
 		 * Sets Firefox Cookie using NPAPI

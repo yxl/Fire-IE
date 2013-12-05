@@ -212,20 +212,25 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	if (pWindow)
 	{
 		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
-		pWindow->RunAsync([pWindow, vParams]
+		pWindow->RunAsync([pWindow, vParams, pWindowContext]
 		{
 			// To use the window context, the window must already be attached to a plugin object,
 			// otherwise, we can't fire the event.
 			if (pWindow->m_pPlugin)
 			{
-				pWindow->m_pPlugin->SetFirefoxCookie(vParams);
+				pWindow->m_pPlugin->SetFirefoxCookie(vParams, 0);
 			}
 			else
 			{
 				// Fall back to use the utils plugin
 				CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
 				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
-					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams);
+				{
+					// Figure out the id of the window where the cookie(s) come from
+					ULONG_PTR ulId = pWindowContext ? reinterpret_cast<ULONG_PTR>(pWindowContext) : 0;
+					// Send cookies as well as window id, so that extension can recover the context information
+					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams, ulId);
+				}
 			}
 		});
 	}
