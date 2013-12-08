@@ -399,13 +399,10 @@ var gFireIE = null;
 
   function initializeFindBarHooks()
   {
-    if (gFindBar.FireIE_hooked) {
-      Utils.LOG("Current tab's gFindBar already hooked.");
+    if (gFindBar.FireIE_hooked)
       return;
-    }
+
     gFindBar.FireIE_hooked = true;
-    
-    Utils.LOG("Hooking current tab's gFindBar...");
     
     // find_next, find_prev, arguments[0] denotes whether find_prev
     HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)

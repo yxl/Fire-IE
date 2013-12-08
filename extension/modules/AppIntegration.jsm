@@ -284,27 +284,21 @@ WindowWrapper.prototype = {
    * Whether the UI is updating.
    * @type Boolean
    */
-  isUpdating: false,
+  _isUpdating: false,
   
   /**
    * Whether the UI is scheduled to update at a later time.
    * This is to prevent too frequent updates eating up CPU time.
    * @type Boolean
    */
-  hasScheduledUpdate: false,
+  _hasScheduledUpdate: false,
   
   /**
    * Whether we are in delayed update period.
    * This is to prevent too frequent updates eating up CPU time.
    * @type Boolean
    */
-  isDelayingUpdate: false,
-  
-  /**
-   * Timeout of the delay
-   * @type Integer
-   */
-  DELAY_TIMEOUT: 100,
+  _isDelayingUpdate: false,
   
   /**
    * Reference to the progress listener
@@ -315,6 +309,11 @@ WindowWrapper.prototype = {
    * Resuming from private browsing warning
    */
   _pbwResume: false,
+  
+  /**
+   * ID of the delayed focus plugin timeout
+   */
+  _delayedFocusPluginTimer: null,
   
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
@@ -447,12 +446,12 @@ WindowWrapper.prototype = {
   /**
    * Run the delayed update UI action if there's any
    */
-  _delayUpdateInterface: function()
+  _delayedUpdateInterface: function()
   {
-    this.isDelayingUpdate = false;
-    if (this.hasScheduledUpdate)
+    this._isDelayingUpdate = false;
+    if (this._hasScheduledUpdate)
     {
-      this.hasScheduledUpdate = false;
+      this._hasScheduledUpdate = false;
       this._updateInterfaceCore();
     }
   },
@@ -465,18 +464,18 @@ WindowWrapper.prototype = {
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
-    if (this.isUpdating || this.hasScheduledUpdate)
+    if (this._isUpdating || this._hasScheduledUpdate)
       return;
 
-    this.hasScheduledUpdate = true;
-    if (!this.isDelayingUpdate)
-      Utils.runAsync(this._delayUpdateInterface, this);
+    this._hasScheduledUpdate = true;
+    if (!this._isDelayingUpdate)
+      Utils.runAsync(this._delayedUpdateInterface, this);
   },
   _updateInterfaceCore: function()
   {
     try
     {
-      this.isUpdating = true;
+      this._isUpdating = true;
 
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
@@ -562,10 +561,10 @@ WindowWrapper.prototype = {
     }
     finally
     {
-      this.isUpdating = false;
-      this.isDelayingUpdate = true;
-      this.hasScheduledUpdate = false;
-      this.window.setTimeout(this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
+      this._isUpdating = false;
+      this._isDelayingUpdate = true;
+      this._hasScheduledUpdate = false;
+      Utils.runAsyncTimeout(this._delayedUpdateInterface, this, 100);
     }
   },
 
@@ -851,14 +850,14 @@ WindowWrapper.prototype = {
       }
       if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url)
       {
-        let self = this;
-        this.window.setTimeout(function()
+        Utils.runAsyncTimeout(function()
         {
           const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
           aTab.linkedBrowser.loadURIWithFlags(url, flags);
-          self._updateInterface();
-          self.window.gURLBar.value = url;
-        }, 100);
+          if (aTab === this.gBrowser.selectedTab)
+            this.window.gURLBar.value = url;
+          this._updateInterface();
+        }, this, 100);
       }
     }
   },
@@ -1038,6 +1037,27 @@ WindowWrapper.prototype = {
     }
   },
   
+  _focusPlugin: function()
+  {
+    let plugin = this.getContainerPlugin();
+    // Don't call the SPO method Focus! Instead, let the focus handler do the trick.
+    if (plugin)
+      plugin.focus();
+  },
+  
+  /** Focus current content plugin after a specific delay */
+  _delayedFocusPlugin: function()
+  {
+    // Schedules calls to the _focusPlugin function
+    if (this._delayedFocusPluginTimer)
+      Utils.cancelAsyncTimeout(this._delayedFocusPluginTimer);
+    this._delayedFocusPluginTimer = Utils.runAsyncTimeout(function()
+    {
+      this._focusPlugin();
+      this._delayedFocusPluginTimer = null;
+    }, this, 100);
+  },
+  
   /** Handler for IE content plugin init event */
   _onIEContentPluginInitialized: function(event)
   {
@@ -1048,8 +1068,7 @@ WindowWrapper.prototype = {
     if (tab === this.window.gBrowser.selectedTab)
     {
       // Focus the plugin after its creation
-      // Don't call Focus(). Instead, let the focus handler do the trick (see container.js)
-      Utils.runAsyncTimeout(function() { plugin.focus(); }, this, 100);
+      this._delayedFocusPlugin();
     }
   },
 
@@ -2083,9 +2102,7 @@ WindowWrapper.prototype = {
   {
     this._updateInterface();
     // Focus the content plugin on TabSelect
-    let plugin = this.getContainerPlugin();
-    if (plugin)
-      Utils.runAsyncTimeout(function() { plugin.focus(); }, this, 100);
+    this._delayedFocusPlugin();
   },
 
 
