@@ -854,7 +854,7 @@ WindowWrapper.prototype = {
         {
           const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
           aTab.linkedBrowser.loadURIWithFlags(url, flags);
-          if (aTab === this.gBrowser.selectedTab)
+          if (aTab === this.window.gBrowser.selectedTab)
             this.window.gURLBar.value = url;
           this._updateInterface();
         }, this, 100);

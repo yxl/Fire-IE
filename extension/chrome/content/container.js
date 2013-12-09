@@ -224,7 +224,7 @@ let FireIEContainer = {};
         if (gFireIE && gFireIE.shouldSwitchBack(url))
         {
           bSwitchEngineInitiated = true;
-          gFireIE.switchEngine(Utils.getTabFromWindow(window), true, url);
+          gFireIE.switchEngine(Utils.getTabFromDocument(document), true, url);
           return true;
         }
       }
