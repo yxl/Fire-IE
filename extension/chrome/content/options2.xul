@@ -240,8 +240,10 @@
                       hidden="true" value="ie10mode" />
             <menuitem id="ie10forced-menuitem" label="&fireie.options.iecompat.ie10f;"
                       hidden="true" value="ie10forced" />
-            <menuitem id="ie11mode-experimental-menuitem" label="&fireie.options.iecompat.ie11;"
-                      hidden="true" value="ie11mode-experimental" />
+            <menuitem id="ie11edge-menuitem" label="&fireie.options.iecompat.ie11e;"
+                      hidden="true" value="ie11edge" />
+            <menuitem id="ie11forcededge-menuitem" label="&fireie.options.iecompat.ie11fe;"
+                      hidden="true" value="ie11forcededge" />
           </menupopup>
         </menulist>
         <label id="iemode-descr" class="descr" />

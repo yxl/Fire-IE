@@ -67,7 +67,8 @@
 <!ENTITY fireie.options.iecompat.ie9f  "IE9強制標準模式">
 <!ENTITY fireie.options.iecompat.ie10  "IE10標準模式">
 <!ENTITY fireie.options.iecompat.ie10f "IE10強制標準模式">
-<!ENTITY fireie.options.iecompat.ie11  "IE11模式（實驗功能）">
+<!ENTITY fireie.options.iecompat.ie11e  "IE11邊緣模式">
+<!ENTITY fireie.options.iecompat.ie11fe  "IE11強制邊緣模式">
 <!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支援設置 IE 兼容模式和高級特性。">
 <!ENTITY fireie.options.iefeat.group   "高級特性">
 <!ENTITY fireie.options.iefeat.gpuRendering "啟用硬體加速渲染">
