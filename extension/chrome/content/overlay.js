@@ -55,19 +55,32 @@ var gFireIE = null;
     return browser.FireIE_bUseRealURI = value - 1;
   }
   
-  // hook click_to_play, should take place before WindowWrapper installs the utils plugin
+  // hook click_to_play
+  // Don't allow PluginClickToPlay, PluginInstantiated and PluginRemoved to be processed by
+  // gPluginHandler, in order to hide the notification icon
   let clickToPlayHandler = function(event)
   {
-    // Only handle click_to_play events
-    if (event.type != "PluginClickToPlay" && event.type != "PluginBindingAttached")
+    // Only handle click_to_play events and those may trigger the notification
+    if (event.type != "PluginClickToPlay" && event.type != "PluginBindingAttached"
+        && event.type != "PluginInstantiated" && event.type != "PluginRemoved")
       return;
     
     let plugin = event.target;
-
+    
     // We're expecting the target to be a plugin.
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
 
+    // Check if it's our plugin
+    if (plugin.getAttribute("type") != "application/fireie")
+      return;
+    
+    // Check the container page
+    let doc = plugin.ownerDocument;
+    let url = doc.location.href;
+    if (!Utils.startsWith(url, Utils.containerUrl))
+      return;
+    
     // The plugin binding fires this event when it is created.
     // As an untrusted event, ensure that this object actually has a binding
     // and make sure we don't handle it twice
@@ -76,40 +89,35 @@ var gFireIE = null;
     {
       let doc = plugin.ownerDocument;
       let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-      if (!overlay || overlay.FireIE_OverlayBindingHandled) {
+      if (!overlay || overlay.FireIE_OverlayBindingHandled)
         return;
-      }
+      
       overlay.FireIE_OverlayBindingHandled = true;
-
       eventType = UtilsPluginManager.getPluginBindingType(plugin);
     }
     
-    if (eventType != "PluginClickToPlay")
+    if (eventType != "PluginClickToPlay" && event.type != "PluginInstantiated"
+        && event.type != "PluginRemoved")
       return;
     
-    // used to check whether the plugin is already activated
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    // disallow any further processing of this event
+    event.stopImmediatePropagation();
     
-    let mimetype = plugin.getAttribute("type");
-    if (mimetype == "application/fireie")
+    if (eventType == "PluginClickToPlay")
     {
-      // check the container page
-      let doc = plugin.ownerDocument;
-      let url = doc.location.href;
-      if (Utils.startsWith(url, Utils.containerUrl))
+      // check whether the plugin is already activated
+      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+      if (!objLoadingContent.activated)
       {
-        // ok, play the plugin and let go
-        if (!objLoadingContent.activated)
-        {
-          plugin.playPlugin();
-          gFireIE.updateInterface();
-        }
-        event.stopPropagation();
-        return RET.shouldReturn();
+        // not activated yet, play the plugin and let go
+        plugin.playPlugin();
+        gFireIE.updateInterface();
       }
-      // let gPluginHandler do the rest of the work
     }
+    
+    return RET.shouldReturn();
   };
+  
   this.window.addEventListener("PluginClickToPlay", clickToPlayHandler, true);
   // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
   this.window.addEventListener("PluginBindingAttached", clickToPlayHandler, true);

@@ -1,0 +1,18 @@
+<!ENTITY dialog.title "Regelabonnement">
+<!ENTITY subscriptionSelector.label "Kies een regelabonnement uit de lijst:">
+<!ENTITY viewList.label "Regels bekijken">
+<!ENTITY visitHomepage.label "Startpagina bezoeken">
+<!ENTITY addSubscription.label "Abonnement toevoegen">
+<!ENTITY list.download.failed "Ophalen abonnementslijst mislukt.">
+<!ENTITY list.download.retry "Opnieuw proberen">
+<!ENTITY list.download.website "Website bekijken">
+<!ENTITY fromWeb.description "Bevestig dat u dit regelabonnement wilt toevoegen. U kunt de abonnementstitel of locatie wijzigen voordat u het abonnement toevoegt.">
+<!ENTITY title.label "Abonnementstitel:">
+<!ENTITY title.accesskey "t">
+<!ENTITY location.label "Locatie regellijst:">
+<!ENTITY location.accesskey "L">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY supplementMessage "Dit regelabonnement is bedoeld om gebruikt te worden met regelabonnement “?1?”, dat u nog niet gebruikt.">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY addMain.label "Regelabonnement “?1?” tevens toevoegen">
+<!ENTITY addMain.accesskey "a">

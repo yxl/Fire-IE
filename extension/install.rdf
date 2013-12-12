@@ -5,7 +5,7 @@
 
    <em:id>fireie@fireie.org</em:id>
    <em:name>Fire IE</em:name>
-   <em:version>0.3.5</em:version>
+   <em:version>0.3.6</em:version>
    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
    <em:creator>Yuan Xulei</em:creator>
    <em:contributor>Wei Deng</em:contributor>
@@ -22,7 +22,7 @@
      <Description>
        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
        <em:minVersion>6.0</em:minVersion>
-       <em:maxVersion>27.0a1</em:maxVersion>
+       <em:maxVersion>28.0a1</em:maxVersion>
      </Description>
    </em:targetApplication>
 
@@ -36,6 +36,7 @@
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:translator>markh van BabelZilla.org (nl)</em:translator>
        <em:homepageURL>http://fireie.org/en</em:homepageURL>
        <em:description>Embeds Internet Explorer(IE) to use the powerful Firefox add-ons. Not only an enhanced IE Tab, but also an enhanced Internet Explorer with Addblock plus and FireGestures support. Switch to the IE engine in one click and dismiss your IE.</em:description>
      </Description>
@@ -51,6 +52,7 @@
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:translator>markh van BabelZilla.org (nl)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>让火狐兼容IE的双核扩展，一键切换至IE内核，网银支付无忧愁。支持Adblock plus和FireGestures，在IE中使用鼠标手势和屏蔽广告。</em:description>
      </Description>
@@ -66,26 +68,12 @@
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:translator>markh van BabelZilla.org (nl)</em:translator>
        <em:homepageURL>http://fireie.org/zh-CN</em:homepageURL>
        <em:description>讓火狐相容IE的雙核拓展，一鍵切換至IE內核，網路銀行支付無憂愁。支援Adblock plus和FireGestures，在IE中使用滑鼠手勢和遮罩廣告。</em:description>
      </Description>
    </em:localized>
 
-   <em:localized>
-     <Description>
-       <em:locale>ru-RU</em:locale>
-       <em:name>Fire IE</em:name>
-       <em:creator>Yuan Xulei</em:creator>
-       <em:contributor>Wei Deng</em:contributor>
-       <em:contributor>Yifan Wu</em:contributor>
-       <em:translator>cck168 (zh-TW)</em:translator>
-       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
-       <em:translator>github.com/piotrex (pl)</em:translator>
-       <em:homepageURL>http://fireie.org/en</em:homepageURL>
-       <em:description>Embeds Internet Explorer(IE) to use the powerful Firefox add-ons. Not only an enhanced IE Tab, but also an enhanced Internet Explorer with Addblock plus and FireGestures support. Switch to the IE engine in one click and dismiss your IE.</em:description>
-     </Description>
-   </em:localized>
-   
    <em:localized>
      <Description>
        <em:locale>pl</em:locale>
@@ -96,8 +84,26 @@
        <em:translator>cck168 (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:translator>markh van BabelZilla.org (nl)</em:translator>
        <em:homepageURL>http://fireie.org/en</em:homepageURL>
        <em:description>Osadza Internet Explorer (IE) do korzystania ze świetnych dodatków do Firefoksa. Jest to nie tylko ulepszone IE Tab, ale też ulepszony IE ze wparciem dla AdblockPlus i gestów FireGestures. Zmieniaj jednym kliknięciem silnik na IE i porzuć swój IE.</em:description>
+     </Description>
+   </em:localized>
+
+   <em:localized>
+     <Description>
+       <em:locale>nl</em:locale>
+       <em:name>Fire IE</em:name>
+       <em:creator>Yuan Xulei</em:creator>
+       <em:contributor>Wei Deng</em:contributor>
+       <em:contributor>Yifan Wu</em:contributor>
+       <em:translator>cck168 (zh-TW)</em:translator>
+       <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
+       <em:translator>github.com/piotrex (pl)</em:translator>
+       <em:translator>markh van BabelZilla.org (nl)</em:translator>
+       <em:homepageURL>http://fireie.org/en</em:homepageURL>
+       <em:description>Bouwt Internet Explorer (IE) in om de krachtige Firefox-add-ons te gebruiken. Niet slechts een verbeterde IE Tab, maar ook een verbeterde Internet Explorer met ondersteuning voor Adblock plus en FireGestures. Wissel naar de IE-engine in een muisklik en stuur uw IE naar huis.
+       </em:description>
      </Description>
    </em:localized>
 

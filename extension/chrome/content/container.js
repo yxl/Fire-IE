@@ -29,10 +29,9 @@ let FireIEContainer = {};
   Cu.import(baseURL.spec + "Prefs.jsm", jsm);
   Cu.import(baseURL.spec + "Favicon.jsm", jsm);
   Cu.import(baseURL.spec + "LightweightTheme.jsm", jsm);
-  Components.utils.import("resource://gre/modules/Services.jsm", jsm);
   let
   {
-    Utils, Prefs, Favicon, LightweightTheme, Services
+    Utils, Prefs, Favicon, LightweightTheme
   } = jsm;
   let gFireIE = (function()
   {

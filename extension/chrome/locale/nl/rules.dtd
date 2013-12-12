@@ -1,0 +1,87 @@
+<!ENTITY dialog.title "Voorkeuren Fire IE-wisselregels">
+<!ENTITY subscriptions.tab.label "Regelabonnementen">
+<!ENTITY rules.tab.label "Aangepaste regels">
+<!ENTITY subscription.autoupdate.label "Automatisch bijwerken">
+<!ENTITY subscription.autoupdate.accesskey "A">
+<!ENTITY addSubscription.label "Regelabonnement toevoegen">
+<!ENTITY addSubscription.accesskey "v">
+<!ENTITY addSubscriptionAdd.label "Toevoegen">
+<!ENTITY addSubscriptionCancel.label "Annuleren">
+<!ENTITY addSubscriptionOther.label "Ander abonnement toevoegen">
+<!ENTITY noSubscriptions.text "U hebt nog geen abonnementen toegevoegd. Fire IE wisselt niet automatisch van browserengine en synchroniseert geen cookies zonder regels, gebruik “Regelabonnement toevoegen” om regels toe te voegen.">
+<!ENTITY subscription.homepage.label "Startpagina">
+<!ENTITY subscription.external.label "Bijgewerkt door een andere extensie">
+<!ENTITY subscription.source.label "Regellijst">
+<!ENTITY subscription.enabled.label "Ingeschakeld">
+<!ENTITY subscription.lastDownload.label "Laatste download:">
+<!ENTITY subscription.lastDownload.inProgress "Downloaden…">
+<!ENTITY subscription.lastDownload.unknown "N.B.">
+<!ENTITY subscription.lastDownload.invalidURL "Mislukt, geen geldig adres">
+<!ENTITY subscription.lastDownload.connectionError "Mislukt, downloaden mislukt">
+<!ENTITY subscription.lastDownload.invalidData "Mislukt, geen geldige regellijst">
+<!ENTITY subscription.lastDownload.checksumMismatch "Mislukt, controlecijfer komt niet overeen">
+<!ENTITY subscription.lastDownload.success "Succes">
+<!ENTITY subscription.minVersion.warning "Dit regelabonnement vereist een nieuwere versie van Fire IE, werk bij naar de laatste versie.">
+<!ENTITY subscription.disabledRules.warning "Sommige regels in dit abonnement zijn uitgeschakeld.">
+<!ENTITY subscription.disabledRules.enable "Uitgeschakelde regels inschakelen">
+<!ENTITY subscription.actions.label "Acties">
+<!ENTITY subscription.update.label "Regels bijwerken">
+<!ENTITY subscription.editTitle.label "Titel bewerken">
+<!ENTITY subscription.delete.label "Verwijderen">
+<!ENTITY subscription.showHideRules.label "Details weergeven/verbergen">
+<!ENTITY subscription.moveUp.label "Omhoog">
+<!ENTITY subscription.moveDown.label "Omlaag">
+<!ENTITY viewList.label "Lijst bekijken">
+<!ENTITY addGroup.label "Regelgroep toevoegen">
+<!ENTITY addGroup.accesskey "g">
+<!ENTITY noRules.text "U hebt nog geen aangepaste regels.">
+<!ENTITY addRule.label "Regel toevoegen">
+<!ENTITY addRule.accesskey "t">
+<!ENTITY rule.actions.label "Regelacties">
+<!ENTITY rule.edit.label "Bewerken">
+<!ENTITY rule.cut.label "Knippen">
+<!ENTITY rule.copy.label "Kopiëren">
+<!ENTITY rule.paste.label "Plakken">
+<!ENTITY rule.delete.label "Verwijderen">
+<!ENTITY rule.selectAll.label "Alles selecteren">
+<!ENTITY rule.resetHitCounts.label "Toepassingsstatistieken resetten">
+<!ENTITY rule.moveUp.label "Omhoog">
+<!ENTITY rule.moveDown.label "Omlaag">
+<!ENTITY viewMenu.label "Bekijken">
+<!ENTITY rule.column "Wisselregel">
+<!ENTITY rule.accesskey "W">
+<!ENTITY slow.column "Langzame regels">
+<!ENTITY slow.accesskey "z">
+<!ENTITY enabled.column "Ingeschakeld">
+<!ENTITY enabled.accesskey "g">
+<!ENTITY hitcount.column "Toepassingen">
+<!ENTITY hitcount.accesskey "p">
+<!ENTITY lasthit.column "Laatste toepassing">
+<!ENTITY lasthit.accesskey "L">
+<!ENTITY sort.label "Sorteren op">
+<!ENTITY sort.accesskey "S">
+<!ENTITY sort.none.label "Ongesorteerd">
+<!ENTITY sort.none.accesskey "O">
+<!ENTITY sort.ascending.label "Sorteren A &gt; Z">
+<!ENTITY sort.ascending.accesskey "A">
+<!ENTITY sort.descending.label "Sorteren Z &gt; A">
+<!ENTITY sort.descending.accesskey "Z">
+<!ENTITY noGroupSelected.text "U dient een regelgroep te selecteren voordat de regels kunnen worden weergegeven.">
+<!ENTITY noRulesInGroup.text "De geselecteerde groep is leeg.">
+<!ENTITY rules.remove.warning "Wilt u echt alle geselecteerde regels verwijderen?">
+<!ENTITY backupButton.label "Back-up en herstel">
+<!ENTITY backupButton.accesskey "B">
+<!ENTITY backup.label "Nieuwe back-up maken">
+<!-- Note: the placeholder ?1? will be replaced by date/time of the automatic backup -->
+<!ENTITY restore.default.label "Back-up van ?1? terugzetten">
+<!ENTITY restore.own.label "Eigen back-up herstellen">
+<!ENTITY backup.complete.title "Alle regels en abonnementen">
+<!ENTITY backup.custom.title "Alleen aangepaste regels">
+<!ENTITY backup.error "Er is een fout opgetreden bij het wegschrijven van de regels naar het bestand. Zorg er voor dat het bestand niet is beschermd tegen overschrijven en niet wordt gebruikt door een andere toepassing.">
+<!ENTITY restore.error "De bestandsgegevens konden niet worden verwerkt, wellicht is dit geen back-upbestand van Fire IE?">
+<!ENTITY restore.complete.warning "Al uw regelvoorkeuren worden vervangen door de inhoud van het geselecteerde bestand. Wilt u doorgaan?">
+<!ENTITY restore.custom.warning "Al uw aangepaste regels worden vervangen door de inhoud van het geselecteerde bestand. Wilt u doorgaan?">
+<!ENTITY restore.minVersion.warning "Waarschuwing: het bestand is gemaakt met een nieuwere versie van Fire IE. U dient bij te werken naar de nieuwste versie van Fire IE voordat u vanuit dit bestand kunt terugzetten.">
+<!ENTITY find.label "Zoeken">
+<!ENTITY find.accesskey "Z">
+<!ENTITY close.label "Sluiten">

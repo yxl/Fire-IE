@@ -208,22 +208,25 @@ HWND CIEHostWindow::GetAnyUtilsHWND()
 
 void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext)
 {
-	CIEHostWindow* pWindow = pWindowContext ? pWindowContext : GetAnyUtilsWindow();
-	if (pWindow)
+	CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
+	if (pUtilsWindow)
 	{
 		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
-		pWindow->RunAsync([pWindow, vParams, pWindowContext]
+		pUtilsWindow->RunAsync([pWindowContext, pUtilsWindow, vParams]
 		{
+			// Ensure that pWindowContext still exists
+			// No need to use lock - modifications happen only on main thread
+			bool bExists = pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext));
+
 			// To use the window context, the window must already be attached to a plugin object,
 			// otherwise, we can't fire the event.
-			if (pWindow->m_pPlugin)
+			if (bExists && pWindowContext->m_pPlugin)
 			{
-				pWindow->m_pPlugin->SetFirefoxCookie(vParams, 0);
+				pWindowContext->m_pPlugin->SetFirefoxCookie(vParams, 0);
 			}
 			else
 			{
 				// Fall back to use the utils plugin
-				CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
 				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
 				{
 					// Figure out the id of the window where the cookie(s) come from
@@ -1658,27 +1661,29 @@ void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
 
 void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
 {
-	CComBSTR bstrURL;
-	// while -- break, essentially a break-able 'if'
-	while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
+	if (!IfAlreadyHaveElemHideStyles(pDoc))
 	{
-		std::wstring strURL = CString(bstrURL).GetString();
-		URLTokenizer tokensURL(strURL);
-
-		std::wstring strProtocol = toLowerCase(tokensURL.protocol);
-		// Do not handle protocols other than http/https
-		if (strProtocol != L"http" && strProtocol != L"https") break;
-
-		std::vector<std::wstring> vStyles;
-		if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+		CComBSTR bstrURL;
+		// while -- break, essentially a break-able 'if'
+		while (SUCCEEDED(pDoc->get_URL(&bstrURL)) && bstrURL)
 		{
-			if (IfAlreadyHaveElemHideStyles(pDoc)) break;
-			ApplyElemHideStylesForDoc(pDoc, vStyles);
-			ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+			std::wstring strURL = CString(bstrURL).GetString();
+			URLTokenizer tokensURL(strURL);
+
+			std::wstring strProtocol = toLowerCase(tokensURL.protocol);
+			// Do not handle protocols other than http/https
+			if (strProtocol != L"http" && strProtocol != L"https") break;
+
+			std::vector<std::wstring> vStyles;
+			if (AdBlockPlus::getElemHideStyles(strURL, vStyles))
+			{
+				ApplyElemHideStylesForDoc(pDoc, vStyles);
+				ApplyElemHideStylesForDoc(pDoc, AdBlockPlus::getGlobalElemHideStyles());
+			}
+			break;
 		}
-		break;
+		//DumpInnerHTML(pDoc);
 	}
-	//DumpInnerHTML(pDoc);
 
 	CComPtr<IHTMLFramesCollection2> pFrames;
 	long length;
@@ -1772,7 +1777,7 @@ void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDo
 		if (FAILED(pDoc->createStyleSheet(_T(""), -1, &pStyleSheet)) || !pStyleSheet)
 			continue;
 
-		if (FAILED(pStyleSheet->put_cssText(CComBSTR((int)style.length(), (LPCOLESTR)style.c_str()))))
+		if (FAILED(pStyleSheet->put_cssText(CString(style.c_str()).AllocSysString())))
 			continue;
 
 		CComPtr<IHTMLElement> pElem;
@@ -1956,6 +1961,25 @@ bool CIEHostWindow::FBCheckDocument()
 		CComPtr<IHTMLTxtRange> pTmpTxtRange;
 		if (dfs.txtRange == NULL || FAILED(dfs.txtRange->duplicate(&pTmpTxtRange)) || pTmpTxtRange == NULL)
 		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot duplicate text range.\n");
+			return FBResetFindRange();
+		}
+		CComPtr<IHTMLElement> pBodyElem;
+		CComQIPtr<IHTMLBodyElement> pBody;
+		if (FAILED(dfs.doc->get_body(&pBodyElem)) || pBodyElem == NULL || NULL == (pBody = pBodyElem))
+		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot get body element.\n");
+			return FBResetFindRange();
+		}
+		CComPtr<IHTMLTxtRange> pTxtRange;
+		if (FAILED(pBody->createTextRange(&pTxtRange)) || pTxtRange == NULL)
+		{
+			TRACE("[FindBar] FBCheckDocument failed: cannot get body text range.\n");
+			return FBResetFindRange();
+		}
+		if (!FBRangesEqual(pTxtRange, dfs.originalRange))
+		{
+			TRACE("[FindBar] FBCheckDocument failed: text range of the body changed.\n");
 			return FBResetFindRange();
 		}
 	}
