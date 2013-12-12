@@ -583,6 +583,8 @@ namespace Plugin
 			TRACE ("SetEnabledGestures called!\n");
 			if (argCount < 1) return false;
 
+			bool ret = false;
+
 			if (NPVARIANT_IS_OBJECT(args[0]))
 			{
 				NPObject* npvNameArray = NPVARIANT_TO_OBJECT(args[0]);
@@ -603,16 +605,20 @@ namespace Plugin
 								{
 									strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
 								}
+								NPN_ReleaseVariantValue(&npvName);
 							}
 
 							BrowserHook::GestureHandler::setEnabledGestures(strGestures, length);
 			
 							delete[] strGestures;
-							return true;
+							ret = true;
 						}
 					}
+					NPN_ReleaseVariantValue(&npvLength);
 				}
 			}
+
+			return ret;
 		}
 		// void SetCookieSyncEnabled({Boolean} value)
 		else if (name == NPI_ID(SetCookieSyncEnabled))
