@@ -973,9 +973,14 @@ WindowWrapper.prototype = {
     }
     var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     try {
-      var args = [this.getURL()];
+      var url = this.getURL();
+      // file:// urls should be decoded, otherwise IE won't recognize
+      if (/^file:\/\/.*/.test(url))
+        url = decodeURI(url);
+      var args = [url];
       process.init(file);
-      process.run(false, args, args.length);
+      // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
+      process.runw(false, args, args.length);
     }
     catch (ex) {
       Utils.ERROR("Cannot launch IE, process creation failed: " + Utils.iePath);
