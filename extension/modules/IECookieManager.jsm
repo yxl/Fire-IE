@@ -193,7 +193,7 @@ let IECookieManager = {
     mutex.close();
   },
   
-  saveFirefoxCookie: function(url, cookieHeader, context, forceSession)
+  saveFirefoxCookie: function(url, cookieHeader, context, isPrivate)
   {
     // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
     let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
@@ -205,10 +205,12 @@ let IECookieManager = {
     // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
     // It seems that only nsILoadContext is needed, however, we need new APIs for this.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
-    cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
+    // Currently, skip synchronizing cookies from private browsing window
+    if (!isPrivate)
+      cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
   },
 
-  saveIECookie: function(cookie2, forceSession)
+  saveIECookie: function(cookie2, isPrivate)
   {  
     // If the cookie is received from IE, do not sync it back
     let valueInMap = this._ieCookieMap[cookie2.name] || null;
@@ -236,7 +238,7 @@ let IECookieManager = {
     let url = (cookie2.isSecure ? 'https://' : 'http://') + hostname + cookie2.path;
     let cookieData = cookie2.name + "=" + cookie2.value + "; domain=" + cookie2.host + "; path=" + cookie2.path;
     // Force the cookie to be session cookie if we synchronized it from private browsing windows
-    if (cookie2.expires > 0 && !forceSession)
+    if (cookie2.expires > 0 && !isPrivate)
     {
       cookieData += "; expires=" + this._getExpiresString(cookie2.expires);
     }
@@ -542,8 +544,8 @@ let CookieObserver = {
       let {header, url} = JSON.parse(data);
       let window = subject;
       let context = window && Prefs.getPrivacyContext(window);
-      let forceSession = window && Prefs.isPrivateBrowsingWindow(window);
-      IECookieManager.saveFirefoxCookie(url, header, context, forceSession);
+      let isPrivate = window && Prefs.isPrivateBrowsingWindow(window);
+      IECookieManager.saveFirefoxCookie(url, header, context, isPrivate);
     }
     catch(e)
     {
