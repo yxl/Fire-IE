@@ -301,7 +301,8 @@ void CIEHostWindow::UninitIE()
 	*  强制关闭所有弹窗提示。
 	*  注意：不能在页面加载时调用put_Silent，否则会同时屏蔽插件安装的提示。
 	*/
-	m_ie.put_Silent(TRUE);
+	if (m_ie.GetSafeHwnd())
+		m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
