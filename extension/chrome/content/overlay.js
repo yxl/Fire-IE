@@ -153,9 +153,13 @@ var gFireIE = null;
       container.addEventListener("TabOpen", function(e) { hookBrowserGetter(e.target.linkedBrowser); }, true);
       container.addEventListener("TabClose", function(e)
       {
-        unhookBrowserGetter(e.target.linkedBrowser);
+        let tab = e.target;
+        unhookBrowserGetter(tab.linkedBrowser);
+        // Reclaim find bar hooks on tab close
+        if (gBrowser.isFindBarInitialized && gBrowser.isFindBarInitialized(tab))
+          reclaimFindBarHooks(gBrowser.getFindBar(tab));
         // Check dangling new window on tab close
-        UtilsPluginManager.checkDanglingNewWindow(e.target);
+        UtilsPluginManager.checkDanglingNewWindow(tab);
       }, false);
     }
     catch (ex)
@@ -382,6 +386,7 @@ var gFireIE = null;
       initializeFindBarHooks();
       // Firefox 25 has per-tab gFindBar that we should hook individually
       gBrowser.tabContainer.addEventListener("TabSelect", initializeFindBarHooks, false);
+      gBrowser.tabContainer.addEventListener("TabFindInitialized", initializeFindBarHooks, false);
       
       // Hook FullZoom object to use per-site zooming for IE container pages
       initializeFullZoomHooks();
@@ -407,32 +412,37 @@ var gFireIE = null;
 
   function initializeFindBarHooks()
   {
+    // FF25+ check: is gFindBar initialized yet?
+    if (gBrowser.isFindBarInitialized && !gBrowser.isFindBarInitialized())
+      return;
+  
     if (gFindBar.FireIE_hooked)
       return;
 
     gFindBar.FireIE_hooked = true;
+    Utils.LOG("Hooking findbar...");
     
     // find_next, find_prev, arguments[0] denotes whether find_prev
     HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)
     {
-      if (gFindBar.getElement('findbar-textbox').value.length != 0
-        && gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value,
-                                 gFindBar.getElement('highlight').checked,
-                                 gFindBar.getElement('find-case-sensitive').checked)
+      if (this.getElement('findbar-textbox').value.length != 0
+        && gFireIE.setFindParams(this.getElement('findbar-textbox').value,
+                                 this.getElement('highlight').checked,
+                                 this.getElement('find-case-sensitive').checked)
         && gFireIE.goDoCommand(prev ? 'FindPrevious' : 'FindAgain'))
       {
-        gFireIE.updateFindBarUI(gFindBar);
+        gFireIE.updateFindBarUI(this);
         return RET.shouldReturn();
       }
     });
 
     HM.hookCodeHead("gFindBar.toggleHighlight", function()
     {
-      if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value,
-                                gFindBar.getElement('highlight').checked,
-                                gFindBar.getElement('find-case-sensitive').checked))
+      if (gFireIE.setFindParams(this.getElement('findbar-textbox').value,
+                                this.getElement('highlight').checked,
+                                this.getElement('find-case-sensitive').checked))
       {
-        gFireIE.updateFindBarUI(gFindBar);
+        gFireIE.updateFindBarUI(this);
         return RET.shouldReturn();
       }
     });
@@ -442,12 +452,12 @@ var gFireIE = null;
 
     HM.hookCodeHead("gFindBar._find", function(text)
     {
-      let value = text || gFindBar.getElement('findbar-textbox').value;
-      if (gFireIE.setFindParams(value, gFindBar.getElement('highlight').checked,
-                                gFindBar.getElement('find-case-sensitive').checked)
+      let value = text || this.getElement('findbar-textbox').value;
+      if (gFireIE.setFindParams(value, this.getElement('highlight').checked,
+                                this.getElement('find-case-sensitive').checked)
         && gFireIE.findText(value))
       {
-        gFireIE.updateFindBarUI(gFindBar);
+        gFireIE.updateFindBarUI(this);
         return RET.shouldReturn();
       }
     });
@@ -487,12 +497,26 @@ var gFireIE = null;
             gFireIE.goDoCommand("LineDown");
             break;
         }
-      });
+      }, false);
     }
     catch (ex)
     {
       Utils.ERROR("findbar-textbox addEventListener('keypress') failed. " + ex);
     }    
+  }
+  
+  // We're not really removing all kinds of hooks, just reclaiming function hooks
+  // and not attribute hooks or listeners - those should be handled well by GC.
+  function reclaimFindBarHooks(findbar)
+  {
+    if (!findbar.FireIE_hooked)
+      return;
+    
+    Utils.LOG("Reclaiming findbar hooks...");
+    HM.reclaimHookIndex(findbar.onFindAgainCommand);
+    HM.reclaimHookIndex(findbar.toggleHighlight);
+    HM.reclaimHookIndex(findbar._find);
+    HM.reclaimHookIndex(findbar._getInitialSelection);
   }
   
   // Per-site FullZoom support

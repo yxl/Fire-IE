@@ -1961,7 +1961,7 @@ WindowWrapper.prototype = {
     }
     catch (ex)
     {
-      Utils.ERROR("setFindText(): " + ex);
+      Utils.ERROR("getSelectionText(): " + ex);
       return null;
     }
   },
