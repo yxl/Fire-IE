@@ -2138,6 +2138,9 @@ WindowWrapper.prototype = {
     this._updateInterface();
 
     let doc = e.originalTarget;
+    
+    // e.originalTarget may not always be a HTMLDocument
+    if (!doc.defaultView) return;
 
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
