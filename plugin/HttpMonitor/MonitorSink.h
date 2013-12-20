@@ -7,10 +7,10 @@ class CIEHostWindow;
 namespace HttpMonitor 
 {
 	class MonitorSink:
-		public PassthroughAPP::CInternetProtocolSinkWithSP<MonitorSink>,
+		public PassthroughAPP::CInternetProtocolSinkWithSP<MonitorSink, CComMultiThreadModel>,
 		public IHttpNegotiate
 	{
-		typedef PassthroughAPP::CInternetProtocolSinkWithSP<MonitorSink> BaseClass;
+		typedef PassthroughAPP::CInternetProtocolSinkWithSP<MonitorSink, CComMultiThreadModel> BaseClass;
 	public:
 		MonitorSink();
 		~MonitorSink() {}

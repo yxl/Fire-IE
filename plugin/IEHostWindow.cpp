@@ -21,7 +21,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 #include "IEControlSite.h"
 #include "PluginApp.h"
-#include "HttpMonitorApp.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
 #include "URL.h"

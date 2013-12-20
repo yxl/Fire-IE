@@ -7,9 +7,9 @@ namespace HttpMonitor
 	class HttpMonitorAPP;
 	typedef PassthroughAPP::CustomSinkStartPolicy<HttpMonitorAPP, MonitorSink> HttpMonitorStartPolicy;
 
-	class HttpMonitorAPP : public PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy>
+	class HttpMonitorAPP : public PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy, CComMultiThreadModel>
 	{
-		typedef PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy> BaseClass;
+		typedef PassthroughAPP::CInternetProtocol<HttpMonitorStartPolicy, CComMultiThreadModel> BaseClass;
 
 	public:
 
