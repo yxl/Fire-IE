@@ -26,9 +26,10 @@ namespace Plugin
 	class CPlugin;
 }
 
-// Firefox 4.0 开始采用了新的窗口结构
-// 对于插件，是放在 GeckoPluginWindow 窗口里，往上有一个 MozillaWindowClass，再往上是顶层的
-// MozillaWindowClass，我们的消息要发到顶层，所以再写一个查找的函数
+// Firefox 4.0 uses a new window hierarchy,
+// Plugin windows are placed in GeckoPluginWindow, which is inside MozillaWindowClass,
+// which is in another top-level MozillaWindowClass.
+// Our messges should be sent to the top-level window, so here's the function that finds it
 HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl);
 
 // CIEHostWindow dialog
@@ -42,12 +43,12 @@ class CIEHostWindow : public CDialog
 public:
 	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils);
 
-	/** Get CIEHostWindow object by its window handle */
+	// Get CIEHostWindow object by its window handle
 	static CIEHostWindow* GetInstance(HWND hwnd);
 
-	/** Get CIEHostWindow object by its embeded Internet Explorer_Server window handle*/
+	// Get CIEHostWindow object by its embeded Internet Explorer_Server window handle
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
-	/** Similar to FromInternetExplorerServer, but involves a lookup routine*/
+	// Similar to FromInternetExplorerServer, but involves a lookup routine
 	static CIEHostWindow* FromChildWindow(HWND hwndChild);
 
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
@@ -92,25 +93,25 @@ public:
 protected:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
-	/** Map used to search the CIEHostWindow object by its window handle  */
+	// Map used to search the CIEHostWindow object by its window handle
 	static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
 	
-	/** Ensure the operations on s_IEWindowMap are thread safe. */
+	// Ensure the operations on s_IEWindowMap are thread safe.
 	static CCriticalSection s_csIEWindowMap;
 
-	/** Map used to search the CIEHostWindow object by its ID */
+	// Map used to search the CIEHostWindow object by its ID
 	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
 
-	/** Ensure the operations on s_NewIEWindowMap are thread safe. */
+	// Ensure the operations on s_NewIEWindowMap are thread safe.
 	static CCriticalSection s_csNewIEWindowMap;
 
-	/** Plugins used to do utilities like transferring cookies to Firfox */
+	// Plugins used to do utilities like transferring cookies to Firfox
 	static CSimpleMap<HWND, CIEHostWindow *> s_UtilsIEWindowMap;
 
-	/** Ensure the operations on s_UtilsIEWindowMap are thread safe. */
+	// Ensure the operations on s_UtilsIEWindowMap are thread safe.
 	static CCriticalSection s_csUtilsIEWindowMap;
 
-	/** IE controls' UserAgent */
+	// IE controls' UserAgent
 	static CString s_strIEUserAgent;
 	static bool s_bUserAgentProccessed;
 
@@ -124,15 +125,15 @@ protected:
 	// Get IE control's UserAgent from the HTML document
 	CString GetDocumentUserAgent();
 
-	// 检测浏览器命令是否可用
+	// Check whether the OLE command is enabled
 	BOOL IsOleCmdEnabled(OLECMDID cmdID);
 
-	// 执行浏览器命令
+	// Execute the OLE command
 	void ExecOleCmd(OLECMDID cmdID);
-	// delay ole cmd execution to next message loop
+	// Delayed OLE command execution at next message loop
 	void RunAsyncOleCmd(OLECMDID cmdID);
 
-	// 自定义窗口消息响应函数
+	// Self-defined (asynchronous) browser command callbacks
 	void OnNavigate();
 	void OnRefresh();
 	void OnStop();
@@ -263,7 +264,7 @@ protected:
 	BOOL m_bCanForward;
 	INT32 m_iProgress;
 
-	/** Cache recent favicon URL */
+	// Cache recent favicon URL
 	CString m_strFaviconURL;
 
 	// Cache recent status text
@@ -309,15 +310,15 @@ protected:
 	Plugin::CPlugin* m_pPlugin;
 
 	UserMessage::NavigateParams* m_pNavigateParams;
-	/** Ensure the operations on m_pNavigateParams are thread safe. */
+	// Ensure the operations on m_pNavigateParams are thread safe.
 	CCriticalSection m_csNavigateParams;
 
-	/** Indicates whether the associated plugin is a utils plugin */
+	// Indicates whether the associated plugin is a utils plugin
 	bool m_bUtils;
 
-	/** The top-level url currently loading */
+	// The top-level url currently loading
 	CString m_strLoadingUrl;
-	/** Ensure the operations on m_strLoadingUrl are thread safe. */
+	// Ensure the operations on m_strLoadingUrl are thread safe.
 	CCriticalSection m_csLoadingUrl;
 
 public:

@@ -39,10 +39,10 @@ namespace HttpMonitor
 
 	private:
 
-		/** 对应的 MonitorSink 对象 */
+		// Corresponding MonitorSink object
 		MonitorSink *m_Sink;
 
-		/** 计数器, 因为 Read() 方法会被反复调用, 我们需要一个变量来记录已经 Read 了多少数据了 */
+		// Counter for how much data has been read
 		DWORD m_nDataWritten;
 	};
 

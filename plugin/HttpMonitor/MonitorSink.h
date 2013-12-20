@@ -62,13 +62,13 @@ namespace HttpMonitor
 		STDMETHODIMP Switch(PROTOCOLDATA *pProtocolData);
 
 	private:
-		/** 查询本请求所对应的 CIEHostWindow 对象 */
+		// Query the CIEHostWindow object associated with this request
 		void QueryIEHostWindow();
 
-		// （ReportProgress() 方法内部专用）检查是否要过滤
+		// Check whether we should filter the request (adblock)
 		bool CanLoadContent(ContentType_T aContentType);
 
-		/** 解析 Content-Type 成 nsIContentPolicy 的定义 */
+		// Resolve raw Content-Type to type value defined in nsIContentPolicy
 		ContentType_T ScanContentType(LPCWSTR szContentType);
 
 		// Current http request URL
@@ -77,22 +77,22 @@ namespace HttpMonitor
 		// Export IE cookies to firefox by parsing the HTTP response headers
 		void ExportCookies(LPCWSTR szResponseHeaders);
 
-		// 设置Referer信息
+		// Query referer of this request
 		void ExtractReferer(LPWSTR *pszAdditionalHeaders);
 
-		// 设置自定义headers
+		// Append custom headers (e.g. DNT)
 		void SetCustomHeaders(LPWSTR *pszAdditionalHeaders);
 
-		/** 本次请求的 URL */
+		// URL of this request
 		CString m_strURL;
 
-		/** 本次请求的 Referer */
+		// Referer of this request
 		CString m_strReferer;
 
-		/** 发起本次请求的 CIEHostWindow 对象 */
+		// The CIEHostWindow object associated with this request
 		CIEHostWindow * m_pIEHostWindow;
 
-		/** 是否是页面的子请求？例如, 对HTML页面里面包含的图片、脚本等的请求就是子请求 */
+		// Is this a sub-request (e.g. images/scripts inside HTML pages)?
 		bool m_bIsSubRequest;
 
 	private:
@@ -100,9 +100,10 @@ namespace HttpMonitor
 		friend class HttpMonitorAPP;
 
 		/**
-		 * 这是用来过滤广告的, 其基本原理是, 对于 HTML 或者图片, 我们给 IE 传一个空
-		 * 文件过去, 这样就过滤了. 这个空文件的内容, 我们用一个缓冲区来保存它, 然后
-		 * 在 IE 读取的时候把缓冲区的内容返回给 IE.
+		 * Block ads.
+		 * For HTML pages or images that need to be blocked, we transfer an 
+		 * empty document or image to IE. pTargetBuffer holds the buffer to
+		 * the empty document/image and dwTargetBufSize holds its size.
 		 */
 		const BYTE * pTargetBuffer;
 		DWORD dwTargetBufSize;

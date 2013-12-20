@@ -30,12 +30,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SAFE_DELETE(X) if(X){delete X; X = NULL;}
 
-/** 将CString转换为UTF8字符串，
- *  使用完毕后，需调用delete[]释放字符串
+/**
+ * Conver CString into UTF8 character sequence
+ * Caller is responsible to delete[] after use
  */
 char* CStringToUTF8String(const CString &str);
 
-/** 将UTF8字符串转为CString*/
+// Convert UTF8 character sequence into CString
 CString UTF8ToCString(const char* szUTF8);
 
 // CPluginApp
