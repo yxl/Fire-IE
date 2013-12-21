@@ -1434,7 +1434,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 	return favurl;
 }
 
-// 从IE控件的HTML文档中获取UserAgent
+// Fetch UserAgent from the HTML document
 CString CIEHostWindow::GetDocumentUserAgent()
 {
 	CString strUserAgent(_T(""));
@@ -1570,10 +1570,6 @@ void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
 	m_pPlugin = pPlugin;
 }
 
-/** 
-*  这里之所有要使用NewWindow3而不使用NewWindow2，是因为NewWindow3提供了bstrUrlContext参数，
-* 该参数用来设置新打开链接的referrer,一些网站通过检查referrer来防止盗链
-*/
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
 {
 	if (m_pPlugin)
