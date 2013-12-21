@@ -177,7 +177,10 @@ Options.getIECompatMode = function()
     mode = "ie10forced";
     break;
   case 11000:
-    mode = "ie11mode-experimental";
+    mode = "ie11edge";
+    break;
+  case 11001:
+    mode = "ie11forcededge";
     break;
   default:
     mode = "ie7mode";
@@ -214,8 +217,11 @@ Options.applyIECompatMode = function()
   case "ie10forced":
     value = 10001;
     break;
-  case "ie11mode-experimental":
+  case "ie11edge":
     value = 11000;
+    break;
+  case "ie11forcededge":
+    value = 11001;
     break;
   default:
     value = 7000;
@@ -293,7 +299,8 @@ Options.updateIEModeTab = function(restore)
   }
   if (mainIEVersion >= 11)
   {
-    E("ie11mode-experimental-menuitem").hidden = false;
+    E("ie11edge-menuitem").hidden = false;
+    E("ie11forcededge-menuitem").hidden = false;
   }
   if (mainIEVersion >= 10)
   {
@@ -340,6 +347,14 @@ Options.updateABPStatus = function()
   E("abpStatusLoadFailed").hidden = (status != ABPStatus.LoadFailed);
   
   E("abpSupportEnabled").disabled = (status == ABPStatus.NotDetected);
+  
+  if (status == ABPStatus.NotDetected)
+    E("abpStatusAdblockerName").hidden = true;
+  else
+  {
+    E("abpStatusAdblockerName").value = "(" + ABPObserver.getAdblockerName() + ")";
+    E("abpStatusAdblockerName").hidden = false;
+  }
 };
 
 // Hide customLabels UI if icon display mode is not iconAndText

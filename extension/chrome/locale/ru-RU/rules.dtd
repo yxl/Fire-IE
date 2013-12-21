@@ -1,107 +1,87 @@
-<!ENTITY dialog.title                         "Настройки провил переключения для Fire-IE">
-
-<!ENTITY subscriptions.tab.label              "Подписки на правила">
-<!ENTITY rules.tab.label                    "Правила пользователя">
-
-<!ENTITY subscription.autoupdate.label        "Обновлять автоматически">
-<!ENTITY subscription.autoupdate.accesskey    "a">
-<!ENTITY addSubscription.label                "Побавить подписку">
-<!ENTITY addSubscription.accesskey            "f">
-
-<!ENTITY addSubscriptionAdd.label             "Добавить">
-<!ENTITY addSubscriptionCancel.label          "Отмена">
-<!ENTITY addSubscriptionOther.label           "Добавить другую подписку">
-
-<!ENTITY noSubscriptions.text                 "Вы еще не добавили не одну подписку. Без правил Fire IE не будет автоматически переключать движок и синхронизировать cookie, пожалуйста, используйте &quot;Добавить подписку&quot; для добавления подписок на правила.">
-<!ENTITY subscription.homepage.label          "Домашняя страница">
-<!ENTITY subscription.external.label          "Обновлено другим расширением">
-<!ENTITY subscription.source.label            "Список подписок">
-<!ENTITY subscription.enabled.label           "Включено">
-<!ENTITY subscription.lastDownload.label      "Последняя загрузка:">
+<!ENTITY dialog.title "Настройки провил переключения для Fire-IE">
+<!ENTITY subscriptions.tab.label "Подписки на правила">
+<!ENTITY rules.tab.label "Правила пользователя">
+<!ENTITY subscription.autoupdate.label "Обновлять автоматически">
+<!ENTITY subscription.autoupdate.accesskey "a">
+<!ENTITY addSubscription.label "Побавить подписку">
+<!ENTITY addSubscription.accesskey "f">
+<!ENTITY addSubscriptionAdd.label "Добавить">
+<!ENTITY addSubscriptionCancel.label "Отмена">
+<!ENTITY addSubscriptionOther.label "Добавить другую подписку">
+<!ENTITY noSubscriptions.text "Вы еще не добавили не одну подписку. Без правил Fire IE не будет автоматически переключать движок и синхронизировать cookie, пожалуйста, используйте &quot;Добавить подписку&quot; для добавления подписок на правила.">
+<!ENTITY subscription.homepage.label "Домашняя страница">
+<!ENTITY subscription.external.label "Обновлено другим расширением">
+<!ENTITY subscription.source.label "Список подписок">
+<!ENTITY subscription.enabled.label "Включено">
+<!ENTITY subscription.lastDownload.label "Последняя загрузка:">
 <!ENTITY subscription.lastDownload.inProgress "Загружается…">
-<!ENTITY subscription.lastDownload.unknown    "N/A">
+<!ENTITY subscription.lastDownload.unknown "N/A">
 <!ENTITY subscription.lastDownload.invalidURL "Ошибка, не верный адрес">
 <!ENTITY subscription.lastDownload.connectionError "Ошибка загрузки">
 <!ENTITY subscription.lastDownload.invalidData "Ошибка, не верный список правил">
 <!ENTITY subscription.lastDownload.checksumMismatch "Ошибка, несовпадение контрольной суммы">
-<!ENTITY subscription.lastDownload.success    "Успешно">
-<!ENTITY subscription.minVersion.warning      "Эта подписка требует более новой версии Fire IE, вы должны обновится до последней версии Fire IE.">
+<!ENTITY subscription.lastDownload.success "Успешно">
+<!ENTITY subscription.minVersion.warning "Эта подписка требует более новой версии Fire IE, вы должны обновится до последней версии Fire IE.">
 <!ENTITY subscription.disabledRules.warning "Некоторые правила в этой подписке отключены.">
-<!ENTITY subscription.disabledRules.enable  "Включить отключенные правила">
-
-<!ENTITY subscription.actions.label           "Действия">
-<!ENTITY subscription.update.label            "Обновить правила">
-<!ENTITY subscription.editTitle.label         "Редактировать название">
-<!ENTITY subscription.delete.label            "Удалить">
-<!ENTITY subscription.showHideRules.label   "Показать/Скрыть детали">
-<!ENTITY subscription.moveUp.label            "Вверх">
-<!ENTITY subscription.moveDown.label          "Вниз">
-
-<!ENTITY viewList.label                       "Просмотр списка">
-
-<!ENTITY addGroup.label                       "Добавить группу правил">
-<!ENTITY addGroup.accesskey                   "g">
-
-<!ENTITY noRules.text                       "У вас еще нет ни одного пользовательского правила.">
-
-<!ENTITY addRule.label                      "Добавить правило">
-<!ENTITY addRule.accesskey                  "d">
-
-<!ENTITY rule.actions.label                 "Действия">
-<!ENTITY rule.edit.label                    "Изменить">
-<!ENTITY rule.cut.label                     "Вырезать">
-<!ENTITY rule.copy.label                    "Копировать">
-<!ENTITY rule.paste.label                   "Вставить">
-<!ENTITY rule.delete.label                  "Удалить">
-<!ENTITY rule.selectAll.label               "Выбрать все">
-<!ENTITY rule.resetHitCounts.label          "Сбросить статистику срабатывания">
-<!ENTITY rule.moveUp.label                  "Вверх">
-<!ENTITY rule.moveDown.label                "Вниз">
-<!ENTITY viewMenu.label                       "Просмотр">
-
-<!ENTITY rule.column                        "Переключить правило">
-<!ENTITY rule.accesskey                     "F">
-<!ENTITY slow.column                          "Медленные правила">
-<!ENTITY slow.accesskey                       "w">
-<!ENTITY enabled.column                       "Включено">
-<!ENTITY enabled.accesskey                    "n">
-<!ENTITY hitcount.column                      "Срабатывания">
-<!ENTITY hitcount.accesskey                   "H">
-<!ENTITY lasthit.column                       "Последнее срабатывание">
-<!ENTITY lasthit.accesskey                    "L">
-
-<!ENTITY sort.label                           "Сортировать">
-<!ENTITY sort.accesskey                       "S">
-<!ENTITY sort.none.label                      "Без сортировки">
-<!ENTITY sort.none.accesskey                  "U">
-<!ENTITY sort.ascending.label                 "По убыванию">
-<!ENTITY sort.ascending.accesskey             "A">
-<!ENTITY sort.descending.label                "По возрастанию">
-<!ENTITY sort.descending.accesskey            "Z">
-
-<!ENTITY noGroupSelected.text                 "Для просмотра правил вы должны сначала выбрать группу правил.">
-<!ENTITY noRulesInGroup.text                "Выбраная группа пуста.">
-
-<!ENTITY rules.remove.warning               "Вы действительно хотите удалить все выбранные правила?">
-
-<!ENTITY backupButton.label                   "Резервное копирование и восстановление">
-<!ENTITY backupButton.accesskey               "B">
-
-<!ENTITY backup.label                         "Создать резервную копию">
+<!ENTITY subscription.disabledRules.enable "Включить отключенные правила">
+<!ENTITY subscription.actions.label "Действия">
+<!ENTITY subscription.update.label "Обновить правила">
+<!ENTITY subscription.editTitle.label "Редактировать название">
+<!ENTITY subscription.delete.label "Удалить">
+<!ENTITY subscription.showHideRules.label "Показать/Скрыть детали">
+<!ENTITY subscription.moveUp.label "Вверх">
+<!ENTITY subscription.moveDown.label "Вниз">
+<!ENTITY viewList.label "Просмотр списка">
+<!ENTITY addGroup.label "Добавить группу правил">
+<!ENTITY addGroup.accesskey "g">
+<!ENTITY noRules.text "У вас еще нет ни одного пользовательского правила.">
+<!ENTITY addRule.label "Добавить правило">
+<!ENTITY addRule.accesskey "d">
+<!ENTITY rule.actions.label "Действия">
+<!ENTITY rule.edit.label "Изменить">
+<!ENTITY rule.cut.label "Вырезать">
+<!ENTITY rule.copy.label "Копировать">
+<!ENTITY rule.paste.label "Вставить">
+<!ENTITY rule.delete.label "Удалить">
+<!ENTITY rule.selectAll.label "Выбрать все">
+<!ENTITY rule.resetHitCounts.label "Сбросить статистику срабатывания">
+<!ENTITY rule.moveUp.label "Вверх">
+<!ENTITY rule.moveDown.label "Вниз">
+<!ENTITY viewMenu.label "Просмотр">
+<!ENTITY rule.column "Переключить правило">
+<!ENTITY rule.accesskey "F">
+<!ENTITY slow.column "Медленные правила">
+<!ENTITY slow.accesskey "w">
+<!ENTITY enabled.column "Включено">
+<!ENTITY enabled.accesskey "n">
+<!ENTITY hitcount.column "Срабатывания">
+<!ENTITY hitcount.accesskey "H">
+<!ENTITY lasthit.column "Последнее срабатывание">
+<!ENTITY lasthit.accesskey "L">
+<!ENTITY sort.label "Сортировать">
+<!ENTITY sort.accesskey "S">
+<!ENTITY sort.none.label "Без сортировки">
+<!ENTITY sort.none.accesskey "U">
+<!ENTITY sort.ascending.label "По убыванию">
+<!ENTITY sort.ascending.accesskey "A">
+<!ENTITY sort.descending.label "По возрастанию">
+<!ENTITY sort.descending.accesskey "Z">
+<!ENTITY noGroupSelected.text "Для просмотра правил вы должны сначала выбрать группу правил.">
+<!ENTITY noRulesInGroup.text "Выбраная группа пуста.">
+<!ENTITY rules.remove.warning "Вы действительно хотите удалить все выбранные правила?">
+<!ENTITY backupButton.label "Резервное копирование и восстановление">
+<!ENTITY backupButton.accesskey "B">
+<!ENTITY backup.label "Создать резервную копию">
 <!-- Note: the placeholder ?1? will be replaced by date/time of the automatic backup -->
-<!ENTITY restore.default.label                "Восстановить резервную копию из ?1?">
-<!ENTITY restore.own.label                    "Восстановить свою резервную копию">
-
-<!ENTITY backup.complete.title                "Все правила и подписки">
-<!ENTITY backup.custom.title                  "Только пользовательские правила">
-
-<!ENTITY backup.error                         "При записи правил в файл возникла ошибка. Убедитесь что файл не защищен от записи или не занят другим приложением.">
-<!ENTITY restore.error                        "Данные из файла не могут быть обработаны, возможно это не файл резервной копии Fire IE?">
-<!ENTITY restore.complete.warning             "Все ваши правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
-<!ENTITY restore.custom.warning               "Все ваши пользовательские правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
-<!ENTITY restore.minVersion.warning           "Предупреждение: файл был создан посредством боле новой версии Fire IE. Перед восстановлением из этого файла вы должны обновиться до последней версии Fire IE.">
-
-<!ENTITY find.label                           "Найти">
-<!ENTITY find.accesskey                       "n">
-
-<!ENTITY close.label                          "Закрыть">
+<!ENTITY restore.default.label "Восстановить резервную копию из ?1?">
+<!ENTITY restore.own.label "Восстановить свою резервную копию">
+<!ENTITY backup.complete.title "Все правила и подписки">
+<!ENTITY backup.custom.title "Только пользовательские правила">
+<!ENTITY backup.error "При записи правил в файл возникла ошибка. Убедитесь что файл не защищен от записи или не занят другим приложением.">
+<!ENTITY restore.error "Данные из файла не могут быть обработаны, возможно это не файл резервной копии Fire IE?">
+<!ENTITY restore.complete.warning "Все ваши правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
+<!ENTITY restore.custom.warning "Все ваши пользовательские правила будут перезаписаны содержимым выбранного файла. Хотите продолжить?">
+<!ENTITY restore.minVersion.warning "Предупреждение: файл был создан посредством боле новой версии Fire IE. Перед восстановлением из этого файла вы должны обновиться до последней версии Fire IE.">
+<!ENTITY find.label "Найти">
+<!ENTITY find.accesskey "n">
+<!ENTITY close.label "Закрыть">

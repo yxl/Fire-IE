@@ -1,25 +1,18 @@
-<!ENTITY dialog.title               "Подписки">
-
+<!ENTITY dialog.title "Подписки">
 <!ENTITY subscriptionSelector.label "Пожалуйста, выбирите подписку из списка:">
-
-<!ENTITY viewList.label             "Просмотр правил">
-<!ENTITY visitHomepage.label        "Посетить домашнюю страницу">
-
-<!ENTITY addSubscription.label      "Добавить подписку">
-
-<!ENTITY list.download.failed       "Ошибка запроса списка подписок.">
-<!ENTITY list.download.retry        "Попробуйте еще раз">
-<!ENTITY list.download.website      "Просморт сайта">
-
-<!ENTITY fromWeb.description        "Пожалуйста, подтвердите добавление этой подписки. Перед добавлением вы можете изменить название и адрес подписки.">
-
-<!ENTITY title.label                "Название подписки:">
-<!ENTITY title.accesskey            "t">
-<!ENTITY location.label             "Адрес подписки:">
-<!ENTITY location.accesskey         "l">
-
+<!ENTITY viewList.label "Просмотр правил">
+<!ENTITY visitHomepage.label "Посетить домашнюю страницу">
+<!ENTITY addSubscription.label "Добавить подписку">
+<!ENTITY list.download.failed "Ошибка запроса списка подписок.">
+<!ENTITY list.download.retry "Попробуйте еще раз">
+<!ENTITY list.download.website "Просморт сайта">
+<!ENTITY fromWeb.description "Пожалуйста, подтвердите добавление этой подписки. Перед добавлением вы можете изменить название и адрес подписки.">
+<!ENTITY title.label "Название подписки:">
+<!ENTITY title.accesskey "t">
+<!ENTITY location.label "Адрес подписки:">
+<!ENTITY location.accesskey "l">
 <!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
-<!ENTITY supplementMessage          "Предполагается что эта подписка должна использоваться с другой подпиской &quot;?1?&quot; которую вы еще не используете.">
+<!ENTITY supplementMessage "Предполагается что эта подписка должна использоваться с другой подпиской &quot;?1?&quot; которую вы еще не используете.">
 <!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
-<!ENTITY addMain.label              "Добавить также подписку &quot;?1?&quot;">
-<!ENTITY addMain.accesskey          "s">
+<!ENTITY addMain.label "Добавить также подписку &quot;?1?&quot;">
+<!ENTITY addMain.accesskey "s">

@@ -70,7 +70,7 @@ CPluginApp theApp;
 
 /* ----------------------------------------------------------------------------
 	Function: SetClassName		
-	Description: Set the class name of the main window. 设置主窗口的类名。
+	Description: Set the class name of the main window.
 	Parameters:
 		sName - [in] The class name.
 	Return Values: TRUE if the operation is successful; otherwise FALSE.

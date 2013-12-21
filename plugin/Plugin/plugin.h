@@ -122,11 +122,11 @@ namespace Plugin
 		/**
 		 * Sets Firefox Cookie by firing a JavaScript event.
 		 */
-		void SetFirefoxCookie(const CString& strURL, const CString& strCookie);
+		void SetFirefoxCookie(const CString& strURL, const CString& strCookie, ULONG_PTR ulWindowId);
 		/**
 		 * Batch-setting Firefox Cookie by firing a JavaScript event.
 		 */
-		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies);
+		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId);
 
 		/** 
 		 * Sets Firefox Cookie using NPAPI
@@ -143,34 +143,34 @@ namespace Plugin
 		 */
 		void IENewTab(ULONG_PTR ulId, const CString& strURL, bool bShift, bool bCtrl);
 
-		/** Close current IE engie tab. */
+		// Close current IE engie tab.
 		void CloseIETab();
 
-		/** Notify the Firefox that the page title has changed. */
+		// Notify the Firefox that the page title has changed.
 		void OnIETitleChanged(const CString& strTitle);
 
-		/** Send the IE UserAgent to the Firefox. */
+		// Send the IE UserAgent to the Firefox.
 		void OnIEUserAgentReceived(const CString& strUserAgent);
 
-		/** Send the page loaded message to the Firefox. */
+		// Send the page loaded message to the Firefox.
 		void OnDocumentComplete();
 
-		/** Set the security info icon */
+		// Set the security info icon
 		void OnSetSecureLockIcon(const CString& description);
 
-		/** Utility plugin intialized */
+		// Utility plugin intialized
 		void OnUtilsPluginInit();
 
-		/** Content plugin intialized */
+		// Content plugin intialized
 		void OnContentPluginInit();
 
-		/** AdBlock Plus filters loaded */
+		// AdBlock Plus filters loaded
 		void OnABPFilterLoaded(int numFilters, unsigned int ticks);
 
-		/** AdBlock Plus filters failed load */
+		// AdBlock Plus filters failed load
 		void OnABPLoadFailure();
 
-		/** IE engine URL changed */
+		// IE engine URL changed
 		void OnURLChanged(const CString& url);
 	protected:
 

@@ -389,6 +389,29 @@ HookManager.prototype = {
       return null;
     }
   },
+  
+  /** 
+   * Reclaim the hook index, without actually unhooking the function
+   * @param hookedFunc - the hooked function
+   * @returns true if successful, false otherwise
+   */
+  reclaimHookIndex: function(hookedFunc)
+  {
+    try
+    {
+      if (this._getOriginalFunc(hookedFunc))
+      {
+        this._recycleFunc(hookedFunc);
+        return true;
+      }
+      throw "not hooked or broken hook";
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to reclaim hook index: " + ex);
+      return false;
+    }
+  },
 
   /**
    * Replace attribute's value V with (myFunc + V) (or (V + myFunc) if insertAtEnd is set to true)

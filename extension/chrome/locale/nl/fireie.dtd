@@ -63,7 +63,8 @@
 <!ENTITY fireie.options.iecompat.ie9f "IE9-standaardmodus afgedwongen">
 <!ENTITY fireie.options.iecompat.ie10 "IE10-standaardmodus">
 <!ENTITY fireie.options.iecompat.ie10f "IE10-standaardmodus afgedwongen">
-<!ENTITY fireie.options.iecompat.ie11 "IE11-modus (experimenteel)">
+<!ENTITY fireie.options.iecompat.ie11e "IE11-Edgemodus">
+<!ENTITY fireie.options.iecompat.ie11fe "IE11-Edgemodus afgedwongen">
 <!ENTITY fireie.options.iecompat.notSupported "Uw versie van IE ondersteunt de IE-compatibiliteitsmodus of geavanceerde functies niet.">
 <!ENTITY fireie.options.iefeat.group "Geavanceerde functies">
 <!ENTITY fireie.options.iefeat.gpuRendering "Rendering middels hardwareversnelling inschakelen">

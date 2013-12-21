@@ -10,13 +10,13 @@ namespace Plugin
 {
 	using namespace Utils;
 
-	/** 用于监视HTTP和HTTPS请求, 同步Cookie */
+	// Factory classes for http/https monitor
 	CComPtr<IClassFactory> g_spCFHTTP;
 	CComPtr<IClassFactory> g_spCFHTTPS;
 
 	typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
 
-	/** Features that can only be enabled through registry */
+	// Features that can only be enabled through registry
 	static const struct { TCHAR* feature; DWORD value; } g_RegOnlyFeatures[] = {
 		// For compatibility, allow the href attribute of a objects to support the javascript prototcol.
 		{ _T("FEATURE_SCRIPTURL_MITIGATION"), 1 },
@@ -37,7 +37,7 @@ namespace Plugin
 	static const int g_nRegOnlyFeatures = sizeof(g_RegOnlyFeatures) / sizeof(g_RegOnlyFeatures[0]);
 	static const CString g_strSubkey = _T("SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\");
 
-	/** Retrieve feature value from registry */
+	// Retrieve feature value from registry
 	static bool getFeatureReg(const TCHAR* feature, DWORD* value)
 	{
 		HKEY hKey;
@@ -51,7 +51,7 @@ namespace Plugin
 		return ret;
 	}
 
-	/** Write feature value into registry */
+	// Write feature value into registry
 	static bool setFeatureReg(const TCHAR* feature, DWORD value)
 	{
 		HKEY hKey;
@@ -62,7 +62,7 @@ namespace Plugin
 		return ret;
 	}
 
-	/** Ensures feature is set to the given value */
+	// Ensures feature is set to the given value
 	static bool ensureFeatureReg(const TCHAR* feature, DWORD value)
 	{
 		DWORD origValue;
@@ -74,7 +74,7 @@ namespace Plugin
 	// global plugin initialization
 	NPError NS_PluginInitialize()
 	{
-		// 监视http和https请求，同步cookie，过滤广告
+		// Monitor http & https requests in order to sync cookies & block ads
 		CComPtr<IInternetSession> spSession;
 		if (FAILED(CoInternetGetSession(0, &spSession, 0)) && spSession )
 		{
@@ -96,6 +96,8 @@ namespace Plugin
 		{
 			return NPERR_GENERIC_ERROR;
 		}
+
+		// Install message hook for the main thread
 		if (!BrowserHook::WindowMessageHook::s_instance.Install())
 		{
 			return NPERR_GENERIC_ERROR;
@@ -110,18 +112,18 @@ namespace Plugin
 
 		// Enable some new features of IE. Refer to CoInternetSetFeatureEnabled Function on MSDN for more information.
 		INTERNETFEATURELIST features[] = {
-			FEATURE_WEBOC_POPUPMANAGEMENT,		// 启用IE的弹出窗口管理
-			FEATURE_SECURITYBAND,				// 下载和安装插件时提示
-			FEATURE_LOCALMACHINE_LOCKDOWN,		// 使用IE的本地安全设置(Apply Local Machine Zone security settings to all local content.)
-			FEATURE_SAFE_BINDTOOBJECT,			// ActiveX插件权限的设置, 具体功能不详，Coral IE Tab设置这个选项
-			FEATURE_TABBED_BROWSING,			// 启用多标签浏览
-			FEATURE_SSLUX,						// 用SSL警告页面代替模态对话框
-			FEATURE_VALIDATE_NAVIGATE_URL,		// 防止访问badly-formed URL
-			FEATURE_DISABLE_NAVIGATION_SOUNDS,	// 关闭页面切换时的点击声，使之更像Firefox
-			FEATURE_BLOCK_INPUT_PROMPTS,		// 允许弹窗阻止程序拦截javascript prompt
-			FEATURE_MIME_HANDLING,				// MIME Type 处理
-			FEATURE_UNC_SAVEDFILECHECK,			// UNC路径MotW处理
-			FEATURE_HTTP_USERNAME_PASSWORD_DISABLE // 禁止在http协议的URL中包含用户名密码
+			FEATURE_WEBOC_POPUPMANAGEMENT,		// Enable popup management
+			FEATURE_SECURITYBAND,				// Prompt when downloading or installing extensions
+			FEATURE_LOCALMACHINE_LOCKDOWN,		// Apply Local Machine Zone security settings to all local content
+			FEATURE_SAFE_BINDTOOBJECT,			// Related to ActiveX plugin permissions. Coral IE Tab enables this feature.
+			FEATURE_TABBED_BROWSING,			// Enable tabbed browsing
+			FEATURE_SSLUX,						// Use SSL warning pages instead of modal dialogs
+			FEATURE_VALIDATE_NAVIGATE_URL,		// Prevent user from visiting badly-formed URLs
+			FEATURE_DISABLE_NAVIGATION_SOUNDS,	// Disable "click" sound when navigating, just like Firefox
+			FEATURE_BLOCK_INPUT_PROMPTS,		// Allow the Pop-up Blocker block javascript prompts
+			FEATURE_MIME_HANDLING,				// MIME-type Handling
+			FEATURE_UNC_SAVEDFILECHECK,			// Enable UNC File support for MotW
+			FEATURE_HTTP_USERNAME_PASSWORD_DISABLE // Disallow usernames or passwords in http URLs
 		};
 		int n = sizeof(features) / sizeof(INTERNETFEATURELIST);
 		for (int i = 0; i < n; i++)
@@ -150,7 +152,7 @@ namespace Plugin
 		}
 #endif
 
-		// 取消监视http和https请求
+		// Stop monitoring http and https requests
 		CComPtr<IInternetSession> spSession;
 		if (SUCCEEDED(CoInternetGetSession(0, &spSession, 0)) && spSession )
 		{

@@ -113,8 +113,8 @@ namespace Plugin
 
 		if (m_strId == RES_OBJECTNAME_T)
 		{
-			// 获取Plugin所在页面的URL, URL的格式是chrome://fireie/content/container.xhtml?url=XXX，
-			// 其中XXX是实际要访问的URL
+			// Fetch the hosting page's URL. The format is chrome://fireie/content/container.xhtml?url=XXX
+			// where XXX is the actual URL to visit
 			CString strHostUrl = GetHostURL();
 			static const CString PREFIX(RES_CHROME_PREFIX_T);
 
@@ -122,10 +122,10 @@ namespace Plugin
 			if (strHostUrl.Mid(0, PREFIX.GetLength()) != PREFIX)
 				return FALSE;
 
-			// 从URL参数中获取实际要访问的URL地址
+			// Fetch the URL to visit from host URL
 			url = strHostUrl.Mid(PREFIX.GetLength());
 
-			// 获取从Firefox传入的其他参数
+			// Fetch other parameters from Firefox
 			ulId = GetNavigateWindowId();
 			post = GetNavigatePostData();
 			headers = GetNavigateHeaders();
@@ -152,13 +152,13 @@ namespace Plugin
 			CIEHostWindow::AddUtilsIEWindow(m_pIEHostWindow);
 		}
 
-		// navId为0时，IEHostWindow是新创建的，需要指定浏览器的地址
+		// if navId is 0, IEHostWindow is newly created and we should specify its URL
 		if (ulId == 0)
 		{
 			m_pIEHostWindow->Navigate(url, post, headers);
 		}
 
-		// 有了这两句, Firefox 窗口变化的时候才会通知 IE 窗口刷新显示
+		// Let IE redraw when Firefox window size changes
 		SetWindowLong(m_hWnd, GWL_STYLE, GetWindowLong(m_hWnd, GWL_STYLE)|WS_CLIPCHILDREN);
 		SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE)|WS_EX_CONTROLPARENT);
 
@@ -323,7 +323,7 @@ namespace Plugin
 				throw(CString(_T("Cannot get window.location.href")));
 			}
 
-			// 转换window.location.href的编码
+			// Convert encoding of window.location.href
 			int buffer_size = vHref.value.stringValue.UTF8Length + 1;
 			char* szUnescaped = new char[buffer_size];
 			DWORD dwSize = buffer_size;
@@ -613,7 +613,7 @@ namespace Plugin
 		return level;
 	}
 
-	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader)
+	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader, ULONG_PTR ulWindowId)
 	{
 		USES_CONVERSION_EX;
 		CString strEventType = _T("IESetCookie");
@@ -621,15 +621,22 @@ namespace Plugin
 		Json::Value json;
 		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
 		json["header"] = T2A_EX(strCookieHeader, strCookieHeader.GetLength() + 1);
+		if (ulWindowId)
+		{
+			char szWindowId[32] = { 0 };
+			_ui64toa_s(ulWindowId, szWindowId, 32, 10);
+			json["windowId"] = szWindowId;
+		}
 		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 
-	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies)
+	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId)
 	{
 		USES_CONVERSION_EX;
 		CString strEventType = _T("IEBatchSetCookie");
 		CString strDetail;
+		Json::Value json;
 		Json::Value aCookies;
 		for (size_t i = 0; i < vCookies.size(); i++)
 		{
@@ -639,7 +646,16 @@ namespace Plugin
 			cookie["header"] = T2A_EX(param.strCookie, param.strCookie.GetLength() + 1);
 			aCookies.append(cookie);
 		}
-		strDetail = CA2T(aCookies.toStyledString().c_str());
+		json["cookies"] = aCookies;
+
+		if (ulWindowId)
+		{
+			char szWindowId[32] = { 0 };
+			_ui64toa_s(ulWindowId, szWindowId, 32, 10);
+			json["windowId"] = szWindowId;
+		}
+
+		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
 	}
 
@@ -659,12 +675,16 @@ namespace Plugin
 	{
 		CString strEventType = _T("IENewTab");
 		CString strDetail;
-		
+
+		TCHAR szId[32] = { 0 };
+		_ui64tot_s(ulId, szId, 32, 10);
+		CString strId = szId;
+
 		// Retrieve additional info for cursor & keyboard state
 		CString strShift = bShift ? _T("true") : _T("false");
 		CString strCtrl = bCtrl ? _T("true") : _T("false");
-		strDetail.Format(_T("{\"id\": \"%d\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
-			ulId, strURL, strShift, strCtrl);
+		strDetail.Format(_T("{\"id\": \"%s\", \"url\": \"%s\", \"shift\": %s, \"ctrl\": %s}"),
+			strId, strURL, strShift, strCtrl);
 		FireEvent(strEventType, strDetail);
 	}
 
@@ -675,7 +695,7 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	/** Notify the Firefox that the page title has changed. */
+	// Notify the Firefox that the page title has changed.
 	void CPlugin::OnIETitleChanged(const CString& strTitle)
 	{
 		CString strEventType = _T("IETitleChanged");
@@ -683,7 +703,7 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	/** Send the IE UserAgent to the Firefox. */
+	// Send the IE UserAgent to the Firefox.
 	void CPlugin::OnIEUserAgentReceived(const CString& strUserAgent)
 	{
 		CString strEventType = _T("IEUserAgentReceived");

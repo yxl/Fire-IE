@@ -435,7 +435,7 @@ var Utils = {
                            .getInterface(Components.interfaces.nsIDOMWindow); 
     return mainWindow;
   },
-
+  
   getTabFromDocument: function(doc)
   {
     let aBrowser = Utils.getChromeWindowFrom(doc.defaultView).gBrowser;

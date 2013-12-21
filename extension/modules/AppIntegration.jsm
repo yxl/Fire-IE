@@ -284,27 +284,21 @@ WindowWrapper.prototype = {
    * Whether the UI is updating.
    * @type Boolean
    */
-  isUpdating: false,
+  _isUpdating: false,
   
   /**
    * Whether the UI is scheduled to update at a later time.
    * This is to prevent too frequent updates eating up CPU time.
    * @type Boolean
    */
-  hasScheduledUpdate: false,
+  _hasScheduledUpdate: false,
   
   /**
    * Whether we are in delayed update period.
    * This is to prevent too frequent updates eating up CPU time.
    * @type Boolean
    */
-  isDelayingUpdate: false,
-  
-  /**
-   * Timeout of the delay
-   * @type Integer
-   */
-  DELAY_TIMEOUT: 100,
+  _isDelayingUpdate: false,
   
   /**
    * Reference to the progress listener
@@ -315,6 +309,11 @@ WindowWrapper.prototype = {
    * Resuming from private browsing warning
    */
   _pbwResume: false,
+  
+  /**
+   * ID of the delayed focus plugin timeout
+   */
+  _delayedFocusPluginTimer: null,
   
   /**
    * Binds a function to the object, ensuring that "this" pointer is always set
@@ -388,6 +387,7 @@ WindowWrapper.prototype = {
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     
     // Listen to plugin events
+    this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
     this.window.addEventListener("IEProgressChanged", this._bindMethod(this._onIEProgressChange), false);
     this.window.addEventListener("IENewTab", this._bindMethod(this._onIENewTab), false);
     this.window.addEventListener("IESetSecureLockIcon", this._bindMethod(this._onIESetSecureLockIcon), false);
@@ -446,12 +446,12 @@ WindowWrapper.prototype = {
   /**
    * Run the delayed update UI action if there's any
    */
-  _delayUpdateInterface: function()
+  _delayedUpdateInterface: function()
   {
-    this.isDelayingUpdate = false;
-    if (this.hasScheduledUpdate)
+    this._isDelayingUpdate = false;
+    if (this._hasScheduledUpdate)
     {
-      this.hasScheduledUpdate = false;
+      this._hasScheduledUpdate = false;
       this._updateInterfaceCore();
     }
   },
@@ -464,18 +464,18 @@ WindowWrapper.prototype = {
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
-    if (this.isUpdating || this.hasScheduledUpdate)
+    if (this._isUpdating || this._hasScheduledUpdate)
       return;
 
-    this.hasScheduledUpdate = true;
-    if (!this.isDelayingUpdate)
-      Utils.runAsync(this._delayUpdateInterface, this);
+    this._hasScheduledUpdate = true;
+    if (!this._isDelayingUpdate)
+      Utils.runAsync(this._delayedUpdateInterface, this);
   },
   _updateInterfaceCore: function()
   {
     try
     {
-      this.isUpdating = true;
+      this._isUpdating = true;
 
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
@@ -561,10 +561,10 @@ WindowWrapper.prototype = {
     }
     finally
     {
-      this.isUpdating = false;
-      this.isDelayingUpdate = true;
-      this.hasScheduledUpdate = false;
-      this.window.setTimeout(this._bindMethod(this._delayUpdateInterface), this.DELAY_TIMEOUT);
+      this._isUpdating = false;
+      this._isDelayingUpdate = true;
+      this._hasScheduledUpdate = false;
+      Utils.runAsyncTimeout(this._delayedUpdateInterface, this, 100);
     }
   },
 
@@ -823,7 +823,7 @@ WindowWrapper.prototype = {
         }
       }
 
-      let zoomLevel = this.getZoomLevel();
+      let zoomLevel = this.getZoomLevel(aTab.linkedBrowser);
       Utils.setTabAttributeJSON(aTab, 'zoom', {
         zoomLevel: zoomLevel
       });
@@ -850,14 +850,14 @@ WindowWrapper.prototype = {
       }
       if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url)
       {
-        let self = this;
-        this.window.setTimeout(function()
+        Utils.runAsyncTimeout(function()
         {
           const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
           aTab.linkedBrowser.loadURIWithFlags(url, flags);
-          self._updateInterface();
-          self.window.gURLBar.value = url;
-        }, 100);
+          if (aTab === this.window.gBrowser.selectedTab)
+            this.window.gURLBar.value = url;
+          this._updateInterface();
+        }, this, 100);
       }
     }
   },
@@ -973,9 +973,14 @@ WindowWrapper.prototype = {
     }
     var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     try {
-      var args = [this.getURL()];
+      var url = this.getURL();
+      // file:// urls should be decoded, otherwise IE won't recognize
+      if (/^file:\/\/.*/.test(url))
+        url = decodeURI(url);
+      var args = [url];
       process.init(file);
-      process.run(false, args, args.length);
+      // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
+      process.runw(false, args, args.length);
     }
     catch (ex) {
       Utils.ERROR("Cannot launch IE, process creation failed: " + Utils.iePath);
@@ -1034,6 +1039,41 @@ WindowWrapper.prototype = {
           }
         }
       }
+    }
+  },
+  
+  _focusPlugin: function()
+  {
+    let plugin = this.getContainerPlugin();
+    // Don't call the SPO method Focus! Instead, let the focus handler do the trick.
+    if (plugin)
+      plugin.focus();
+  },
+  
+  /** Focus current content plugin after a specific delay */
+  _delayedFocusPlugin: function()
+  {
+    // Schedules calls to the _focusPlugin function
+    if (this._delayedFocusPluginTimer)
+      Utils.cancelAsyncTimeout(this._delayedFocusPluginTimer);
+    this._delayedFocusPluginTimer = Utils.runAsyncTimeout(function()
+    {
+      this._focusPlugin();
+      this._delayedFocusPluginTimer = null;
+    }, this, 100);
+  },
+  
+  /** Handler for IE content plugin init event */
+  _onIEContentPluginInitialized: function(event)
+  {
+    let plugin = event.target;
+    
+    // Check if the tab is currently selected
+    let tab = Utils.getTabFromDocument(plugin.ownerDocument);
+    if (tab === this.window.gBrowser.selectedTab)
+    {
+      // Focus the plugin after its creation
+      this._delayedFocusPlugin();
     }
   },
 
@@ -1241,7 +1281,7 @@ WindowWrapper.prototype = {
   {
     let subject = this.window;
     let topic = "fireie-batch-set-cookie";
-    let data = event.detail;
+    let data = JSON.stringify(JSON.parse(event.detail).cookies);
     Services.obs.notifyObservers(subject, topic, data);
   },
 
@@ -1921,7 +1961,7 @@ WindowWrapper.prototype = {
     }
     catch (ex)
     {
-      Utils.ERROR("setFindText(): " + ex);
+      Utils.ERROR("getSelectionText(): " + ex);
       return null;
     }
   },
@@ -2066,15 +2106,18 @@ WindowWrapper.prototype = {
   _onTabSelected: function(e)
   {
     this._updateInterface();
+    // Focus the content plugin on TabSelect
+    this._delayedFocusPlugin();
   },
 
 
   /**
    * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
-  getZoomLevel: function()
+  getZoomLevel: function(aBrowser)
   {
-    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser
+    let docViewer = browser.markupDocumentViewer;
     let zoomLevel = docViewer.fullZoom;
     return zoomLevel;
   },
@@ -2082,9 +2125,10 @@ WindowWrapper.prototype = {
   /**
    * Since IE don't support Text-Only Zoom, consider only Full Zoom
    */
-  _setZoomLevel: function(value)
+  _setZoomLevel: function(value, aBrowser)
   {
-    let docViewer = this.window.gBrowser.selectedBrowser.markupDocumentViewer;
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+    let docViewer = browser.markupDocumentViewer;
     docViewer.fullZoom = value;
   },
 
@@ -2094,6 +2138,9 @@ WindowWrapper.prototype = {
     this._updateInterface();
 
     let doc = e.originalTarget;
+    
+    // e.originalTarget may not always be a HTMLDocument
+    if (!doc.defaultView) return;
 
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
@@ -2117,7 +2164,7 @@ WindowWrapper.prototype = {
     let zoomLevelParams = Utils.getTabAttributeJSON(tab, 'zoom');
     if (zoomLevelParams)
     {
-      this._setZoomLevel(zoomLevelParams.zoomLevel);
+      this._setZoomLevel(zoomLevelParams.zoomLevel, tab.linkedBrowser);
       tab.removeAttribute('zoom');
     }
   },

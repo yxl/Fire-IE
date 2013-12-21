@@ -1,7 +1,7 @@
-<!ENTITY dialog.title               "Установка Fire IE завершена">
-<!ENTITY confirmation               "Спасибо за установку Fire IE. Движок IE теперь интегрирован. Наслаждайтесь!">
-<!ENTITY advancedSection            "Дополнительные настройки">
-<!ENTITY listSelection1             "Следующий список правил был сконфигурирован для автоматического переключения режима движка:">
-<!ENTITY noList                     "Список без правил">
-<!ENTITY visitHomepage.label        "Посетить домашнюю страницу списка">
-<!ENTITY listSelection2             "Вы можете изменить данный выбор в любое время в [link]Настройках правил[/link].">
+<!ENTITY dialog.title "Установка Fire IE завершена">
+<!ENTITY confirmation "Спасибо за установку Fire IE. Движок IE теперь интегрирован. Наслаждайтесь!">
+<!ENTITY advancedSection "Дополнительные настройки">
+<!ENTITY listSelection1 "Следующий список правил был сконфигурирован для автоматического переключения режима движка:">
+<!ENTITY noList "Список без правил">
+<!ENTITY visitHomepage.label "Посетить домашнюю страницу списка">
+<!ENTITY listSelection2 "Вы можете изменить данный выбор в любое время в [link]Настройках правил[/link].">

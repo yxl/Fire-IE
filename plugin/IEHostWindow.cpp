@@ -21,7 +21,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "stdafx.h"
 #include "IEControlSite.h"
 #include "PluginApp.h"
-#include "HttpMonitorApp.h"
 #include "IEHostWindow.h"
 #include "plugin.h"
 #include "URL.h"
@@ -54,8 +53,6 @@ const TCHAR* const CIEHostWindow::s_strElemHideClass = _T("fireie-elemhide-style
 
 IMPLEMENT_DYNAMIC(CIEHostWindow, CDialog)
 
-typedef PassthroughAPP::CMetaFactory<PassthroughAPP::CComClassFactoryProtocol, HttpMonitor::HttpMonitorAPP> MetaFactory;
-
 CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /*=NULL*/)
 	: CDialog(CIEHostWindow::IDD, pParent)
 	, m_pPlugin(pPlugin)
@@ -73,6 +70,9 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
 	, m_strLoadingUrl(_T(""))
+	, m_bIsRefresh(false)
+	, m_bMainPageDone(false)
+	, m_nObjCounter(0)
 {
 	FBResetFindStatus();
 }
@@ -97,7 +97,7 @@ CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 
 CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 {
-	// Internet Explorer_Server 往上三级是 plugin 窗口
+	// The plugin window is 3 layers up from the Internet Explorer_Server window
 	HWND hwnd = ::GetParent(::GetParent(::GetParent(hwndIEServer)));
 	CString strClassName;
 	GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
@@ -107,14 +107,14 @@ CIEHostWindow* CIEHostWindow::FromInternetExplorerServer(HWND hwndIEServer)
 		return NULL;
 	}
 
-	// 从Window Long中取出CIEHostWindow对象指针 
+	// Fetch CIEHostWindow pointer from GWLP_USERDATA
 	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 	return pInstance;
 }
 
 CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
 {
-	// 用一个循环网上找（最多找 5 层）
+	// For security reasons, we only traverse up for 5 layers of windows.
 	HWND hwnd = hwndChild;
 	int count = 0;
 	while ((count++ < 5) && (hwnd = ::GetParent(hwnd)))
@@ -125,7 +125,7 @@ CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
 		if (strClassName != STR_WINDOW_CLASS_NAME)
 			continue;
 
-		// 从Window Long中取出CIEHostWindow对象指针 
+		// Fetch CIEHostWindow pointer from GWLP_USERDATA
 		CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 		return pInstance;
 	}
@@ -221,13 +221,18 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 			// otherwise, we can't fire the event.
 			if (bExists && pWindowContext->m_pPlugin)
 			{
-				pWindowContext->m_pPlugin->SetFirefoxCookie(vParams);
+				pWindowContext->m_pPlugin->SetFirefoxCookie(vParams, 0);
 			}
 			else
 			{
 				// Fall back to use the utils plugin
 				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
-					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams);
+				{
+					// Figure out the id of the window where the cookie(s) come from
+					ULONG_PTR ulId = pWindowContext ? reinterpret_cast<ULONG_PTR>(pWindowContext) : 0;
+					// Send cookies as well as window id, so that extension can recover the context information
+					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams, ulId);
+				}
 			}
 		});
 	}
@@ -267,7 +272,8 @@ BOOL CIEHostWindow::OnInitDialog()
 
 	InitIE();
 
-	// 保存CIEHostWindow对象指针，让BrowserHook::WindowMessageHook可以通过Window handle找到对应的CIEHostWindow对象
+	// Save CIEHostWindow pointer to GWLP_USERDATA so that we can find the object (CIEHostWindow)
+	// through its window handle (HWND).
 	::SetWindowLongPtr(GetSafeHwnd(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this)); 
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -281,7 +287,7 @@ void CIEHostWindow::InitIE()
 
 	m_ie.put_RegisterAsBrowser(TRUE);
 
-	// 允许打开拖拽到浏览器窗口的文件。
+	// Allow drag'n'drop to open files
 	m_ie.put_RegisterAsDropTarget(TRUE);
 }
 
@@ -289,13 +295,16 @@ void CIEHostWindow::InitIE()
 void CIEHostWindow::UninitIE()
 {
 	/**
-	*  屏蔽页面关闭时IE控件的脚本错误提示
-	*  虽然在CIEControlSite::XOleCommandTarget::Exec已经屏蔽了IE控件脚本错误提示，
-	*  但IE Ctrl关闭时，在某些站点(如map.baidu.com)仍会显示脚本错误提示; 这里用put_Silent
-	*  强制关闭所有弹窗提示。
-	*  注意：不能在页面加载时调用put_Silent，否则会同时屏蔽插件安装的提示。
-	*/
-	m_ie.put_Silent(TRUE);
+	 * Block script error prompt when closing the page.
+	 * Although we did that in CIEControlSite::XOleCommandTarget::Exec,
+	 * some websites (e.g. map.baidu.com) still popup script errors upon closing.
+	 * Use put_Silent to force this.
+	 * 
+	 * Note: we can't use put_Silent on page load, or plugin installation prompts
+	 * would be blocked as well.
+	 */
+	if (m_ie.GetSafeHwnd())
+		m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
@@ -355,6 +364,8 @@ BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOCUMENTCOMPLETE  , CIEHostWindow::OnDocumentComplete, VTS_DISPATCH VTS_PVARIANT)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_NEWWINDOW3        , CIEHostWindow::OnNewWindow3Ie, VTS_PDISPATCH VTS_PBOOL VTS_UI4 VTS_BSTR VTS_BSTR)
 	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_SETSECURELOCKICON , CIEHostWindow::OnSetSecureLockIcon, VTS_I4)
+	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOWNLOADBEGIN     , CIEHostWindow::OnDownloadBegin, VTS_NONE)
+	ON_EVENT(CIEHostWindow, IDC_IE_CONTROL, DISPID_DOWNLOADCOMPLETE  , CIEHostWindow::OnDownloadComplete, VTS_NONE)
 END_EVENTSINK_MAP()
 
 
@@ -478,11 +489,10 @@ void CIEHostWindow::Find()
 	ExecOleCmd(OLECMDID_FIND);
 }
 
-// 我们要把消息发送到 MozillaContentWindow 的子窗口，但是这个窗口结构比较复杂，Firefox/SeaMonkey各不相同，
-// Firefox 如果开启了 OOPP 也会增加一级，所以这里专门写一个查找的函数
+// Find the sub-window of MozillaContentWindow.
 HWND GetMozillaContentWindow(HWND hwndIECtrl)
 {
-	//这里来个土办法，用一个循环往上找，直到找到 MozillaContentWindow 为止
+	// The trivial way: traverse up the hierarchy until we find MozillaContentWindow
 	HWND hwnd = ::GetParent(hwndIECtrl);
 	for ( int i = 0; i < 5; i++ )
 	{
@@ -500,9 +510,10 @@ HWND GetMozillaContentWindow(HWND hwndIECtrl)
 	return NULL;
 }
 
-// Firefox 4.0 开始采用了新的窗口结构
-// 对于插件，是放在 GeckoPluginWindow 窗口里，往上有一个 MozillaWindowClass，再往上是顶层的
-// MozillaWindowClass，我们的消息要发到顶层，所以再写一个查找的函数
+// Firefox 4.0 uses a new window hierarchy,
+// Plugin windows are placed in GeckoPluginWindow, which is inside MozillaWindowClass,
+// which is in another top-level MozillaWindowClass.
+// Our messges should be sent to the top-level window, so here's the function that finds it
 HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl)
 {
 	HWND hwnd = ::GetParent(hwndIECtrl);
@@ -822,7 +833,6 @@ void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 	RunAsync([=] { ExecOleCmd(cmdID); });
 }
 
-/** @TODO 将strPost中的Content-Type和Content-Length信息移动到strHeaders中，而不是直接去除*/
 void CIEHostWindow::OnNavigate()
 {
 	m_csNavigateParams.Lock();
@@ -848,7 +858,8 @@ void CIEHostWindow::OnNavigate()
 			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
 			if (!strPost.IsEmpty()) 
 			{
-				// Header中应该添加上strPost中的Content-Type信息
+				// Content-Type in strPost should be appended to headers
+				// in order to let web servers accept post data
 				LPWSTR szContentType = NULL;
 				size_t nCTLen;
 				if (HTTP::ExtractFieldValue(strPost.GetString(), L"Content-Type:", &szContentType, &nCTLen))
@@ -857,7 +868,7 @@ void CIEHostWindow::OnNavigate()
 					HTTP::FreeFieldValue(szContentType);
 				}
 
-				// 去除postContent-Type和Content-Length这样的header信息
+				// Skip remaining headers
 				int pos = strPost.Find(_T("\r\n\r\n"));
 
 				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
@@ -1047,7 +1058,7 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 	else 
 		m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
-	// 按Firefox的设置缩放页面
+	// Zoom according to Firefox setting
 	if (m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
@@ -1060,20 +1071,20 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 
 static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 {
-	// 可能性1: 类似 C:\Documents and Settings\<username>\My Documents\Filename.mht 这样的文件名
+	// Case 1: File names like: C:\Documents and Settings\<username>\My Documents\Filename.mht
 	TCHAR c = _totupper(szUrl[0]);
 	if ( (c >= _T('A')) && (c <= _T('Z')) && (szUrl[1]==_T(':')) && (szUrl[2]==_T('\\')) )
 	{
 		return TRUE;
 	}
 
-	// 可能性2: \\fileserver\folder 这样的 UNC 路径
+	// Case 2: UNC paths like: \\fileserver\folder
 	if ( PathIsUNC(szUrl) )
 	{
 		return TRUE;
 	}
 
-	// 可能性3: http://... https://... file://...
+	// Case 3: http://... https://... file://...
 	URL_COMPONENTS uc;
 	ZeroMemory( &uc, sizeof(uc) );
 	uc.dwStructSize = sizeof(uc);
@@ -1087,7 +1098,7 @@ static inline BOOL UrlCanHandle(LPCTSTR szUrl)
 		return TRUE;
 	default:
 		{
-			// 可能性4: about:blank
+			// Case 4: about: URLs
 			return ( _tcsncmp(szUrl, _T("about:"), 6) == 0 );
 		}
 	}
@@ -1102,6 +1113,11 @@ void CIEHostWindow::SetLoadingURL(const CString& url)
 
 	if (bUrlChanged)
 		RunAsync([=] { OnURLChanged(url); });
+}
+
+void CIEHostWindow::SetMainPageDone()
+{
+	m_bMainPageDone = true;
 }
 
 CString CIEHostWindow::GetLoadingURL()
@@ -1122,13 +1138,26 @@ void CIEHostWindow::OnURLChanged(const CString& url)
 	}
 }
 
+bool CIEHostWindow::IsTopLevelContainer(CComQIPtr<IWebBrowser2> spBrowser)
+{
+	if (spBrowser)
+	{
+		VARIANT_BOOL vbIsTopLevelContainer;
+		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
+		{
+			return ( VARIANT_TRUE == vbIsTopLevelContainer );
+		}
+	}
+	return false;
+}
+
 void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers, BOOL* Cancel)
 {
 	if (!URL) return;
 
 	COLE2T szUrl(URL->bstrVal);
 
-	// 按Firefox的设置缩放页面
+	// Zoom according to Firefox setting
 	if (!m_bUtils && m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
@@ -1138,22 +1167,19 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 		}
 	}
 
-	// 滤掉非 HTTP 协议
+	// Filter non-http protocols
 	if (!UrlCanHandle(szUrl)) return;
 
-	// 如果是在一个 frame 里面, 忽略
-	CComQIPtr<IWebBrowser2> spBrowser(pDisp);
-	if (spBrowser)
-	{
-		VARIANT_BOOL vbIsTopLevelContainer;
-		if (SUCCEEDED(spBrowser->get_RegisterAsBrowser(&vbIsTopLevelContainer)))
-		{
-			if ( VARIANT_FALSE == vbIsTopLevelContainer ) return;
-		}
-	}
+	// Ignore if it's in an iframe
+	if (!IsTopLevelContainer(pDisp))
+		return;
 
+	// Reset refresh detection status
+	m_bIsRefresh = false;
+	m_nObjCounter = 0;
+	m_bMainPageDone = false;
 
-	// 设置正在载入的Url
+	// Set currently loading URL
 	SetLoadingURL(CString(szUrl));
 	// Clear cached title
 	m_strTitle = _T("");
@@ -1164,9 +1190,9 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	if (m_bUtils)
 	{
 		/**
-		* 由于IE控件没有提供直接获取UserAgent的接口，需要从IE控件加载的HTML
-		* 文档中获取UserAgent。
-		*/
+		 * IE doesn't provide API to get the userAgent.
+		 * We have to fetch it from the document it has loaded.
+		 */
 		if (!s_bUserAgentProccessed)
 		{
 			// For IE8 and lower, navigator.userAgent is the user-agent sent to servers
@@ -1212,29 +1238,74 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
 
-	// 按Firefox的设置缩放页面
-	if (m_pPlugin)
+	if (IsTopLevelContainer(pDisp))
 	{
-		double level = m_pPlugin->GetZoomLevel();
-		if (fabs(level - 1.0) > 0.01) 
+		// Zoom according to Firefox setting
+		if (m_pPlugin)
 		{
-			Zoom(level);
+			double level = m_pPlugin->GetZoomLevel();
+			if (fabs(level - 1.0) > 0.01) 
+			{
+				Zoom(level);
+			}
 		}
+
+		// Cache Favicon URL
+		m_strFaviconURL = GetFaviconURLFromContent();
+
+		// Setup refresh detection
+		m_bIsRefresh = true;
+		m_nObjCounter = 0;
+		m_bMainPageDone = false;
 	}
 
-	/** 缓存 Favicon URL */
-	m_strFaviconURL = GetFaviconURLFromContent();
-
-	/** Reset Find Bar state */
+	// Reset Find Bar state
 	if (m_bFBInProgress)
 		FBResetFindRange();
 
-	/** Set element hiding styles */
+	// Set element hiding styles
 	ProcessElemHideStyles();
 
 	if (m_pPlugin)
 	{
 		m_pPlugin->OnDocumentComplete();
+	}
+}
+
+void CIEHostWindow::OnDownloadBegin()
+{
+	if (!m_bIsRefresh)
+		return;
+
+	m_nObjCounter++;
+}
+
+void CIEHostWindow::OnDownloadComplete()
+{
+	/**
+	 * Refresh() detection code. Note that there are currently no reliable means to do this.
+	 * Main trick is to detect DownloadComplete events after DocumentComplete is fired and 
+	 * at least one request to the main page URL.
+	 */
+	if (!m_bIsRefresh)
+		return;
+
+	m_nObjCounter--;
+	if (m_nObjCounter <= 0 && m_bMainPageDone)
+	{
+		TRACE(_T("[Refresh] OnDownloadComplete: ObjCounter = 0, MainPageDone = 1, Refresh detected!\n"));
+		m_nObjCounter = 0;
+		m_bMainPageDone = false;
+		// Re-apply element hiding styles on refresh
+		// However, since we check before adding the styles, the impact should not be severe.
+		ProcessElemHideStyles();
+		// Should reset find range, too
+		if (m_bFBInProgress)
+			FBResetFindRange();
+	}
+	else
+	{
+		TRACE(_T("[Refresh] OnDownloadComplete: ObjCounter = %d, MainPageDone = %d\n"), m_nObjCounter, m_bMainPageDone);
 	}
 }
 
@@ -1245,13 +1316,6 @@ void CIEHostWindow::ReceiveUserAgent(const CString& userAgent)
 		s_strIEUserAgent = userAgent;
 		m_pPlugin->OnIEUserAgentReceived(userAgent);
 	}
-}
-
-CString CIEHostWindow::GetUserAgentURL()
-{
-	// Arbitrary URL to request (host must exist, while the page does not need to,
-	// since we're not reading anything from the response)
-	return _T("http://www.fireie.org/sites/useragent.php");
 }
 
 const CString CIEHostWindow::s_strSecureLockInfos[] =
@@ -1312,7 +1376,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 	{
 		return favurl;
 	}
-	/** iterate over elements in the document */
+	// iterate over elements in the document
 	for (int i = 0; i < length; i++)
 	{
 		CComVariant index = i;
@@ -1370,7 +1434,7 @@ CString CIEHostWindow::GetFaviconURLFromContent()
 	return favurl;
 }
 
-// 从IE控件的HTML文档中获取UserAgent
+// Fetch UserAgent from the HTML document
 CString CIEHostWindow::GetDocumentUserAgent()
 {
 	CString strUserAgent(_T(""));
@@ -1506,10 +1570,6 @@ void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
 	m_pPlugin = pPlugin;
 }
 
-/** 
-*  这里之所有要使用NewWindow3而不使用NewWindow2，是因为NewWindow3提供了bstrUrlContext参数，
-* 该参数用来设置新打开链接的referrer,一些网站通过检查referrer来防止盗链
-*/
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
 {
 	if (m_pPlugin)

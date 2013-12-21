@@ -1,5 +1,4 @@
 <!ENTITY fireie.switchButton.label "Fire IE">
-
 <!ENTITY fireie.urlbar.switch.tooltip1 "Zmień silnik renderujący">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Nie można zmienić na tej stronie">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Prawy: Pokaż ustawienia Fire IE">
@@ -10,9 +9,7 @@
 <!ENTITY skin.label "Skórki">
 <!ENTITY default.lable "Domyślna">
 <!ENTITY skin.more.lable "Więcej...">
-
 <!ENTITY fireie.options.title "Fire IE - Opcje">
-
 <!ENTITY fireie.options.general.tab "Ogólne">
 <!ENTITY fireie.options.general.pane "Ogólne">
 <!ENTITY fireie.options.switch.caption "Kiedy zmieniać silnik renderujący:">
@@ -56,22 +53,21 @@
 <!ENTITY fireie.options.integration.otherOptions "Inne ustawienia">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Synchronizuj ciasteczka pomiędzy silnikami IE i Firefox">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
-
-<!ENTITY fireie.options.ieoptions.tab  "Silnik IE">
+<!ENTITY fireie.options.ieoptions.tab "Silnik IE">
 <!ENTITY fireie.options.ieoptions.pane "Silnik IE">
 <!ENTITY fireie.options.iecompat.group "Tryb kompatybilności z IE">
-<!ENTITY fireie.options.iecompat.ie7   "IE7 - Tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie8   "IE8 - Tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie8f  "IE8 - Wymuszony tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie9   "IE9 - Tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie9f  "IE9 - Wymuszony tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie10  "IE10 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie7 "IE7 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie8 "IE8 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie8f "IE8 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie9 "IE9 - Tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie9f "IE9 - Wymuszony tryb standardowy">
+<!ENTITY fireie.options.iecompat.ie10 "IE10 - Tryb standardowy">
 <!ENTITY fireie.options.iecompat.ie10f "IE10 - Wymuszony tryb standardowy">
-<!ENTITY fireie.options.iecompat.ie11  "IE11 Mode (Experimental)">
+<!ENTITY fireie.options.iecompat.ie11e "IE11 Edge Mode">
+<!ENTITY fireie.options.iecompat.ie11fe "IE11 Forced Edge Mode">
 <!ENTITY fireie.options.iecompat.notSupported "Twoja wersja IE nie nie wspiera trybu kompatybilności lub zaawansowanych możliwości.">
-<!ENTITY fireie.options.iefeat.group   "Zaawansowane możliwości">
+<!ENTITY fireie.options.iefeat.group "Zaawansowane możliwości">
 <!ENTITY fireie.options.iefeat.gpuRendering "Włącz renderowanie wspomagane sprzętowo">
-
 <!ENTITY fireie.options.apply "Zastosuj">
 <!ENTITY fireie.options.manager "Menedżer ustawień">
 <!ENTITY fireie.options.default "Przywróć domyślne">

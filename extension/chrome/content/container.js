@@ -223,7 +223,7 @@ let FireIEContainer = {};
         if (gFireIE && gFireIE.shouldSwitchBack(url))
         {
           bSwitchEngineInitiated = true;
-          gFireIE.switchEngine(Utils.getTabFromWindow(window), true, url);
+          gFireIE.switchEngine(Utils.getTabFromDocument(document), true, url);
           return true;
         }
       }
@@ -412,6 +412,6 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
-    return gFireIE ? gFireIE.getZoomLevel() : 1;
+    return gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
   }
 })();

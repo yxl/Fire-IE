@@ -542,9 +542,8 @@ let CookieObserver = {
     try
     {
       let {header, url} = JSON.parse(data);
-      let window = subject;
-      let context = window && Prefs.getPrivacyContext(window);
-      let isPrivate = window && Prefs.isPrivateBrowsingWindow(window);
+      let context = subject && Prefs.getPrivacyContext(subject);
+      let isPrivate = subject && Prefs.isPrivateBrowsingWindow(subject);
       IECookieManager.saveFirefoxCookie(url, header, context, isPrivate);
     }
     catch(e)
@@ -562,10 +561,11 @@ let CookieObserver = {
     {
       let cookies = JSON.parse(data);
       let context = subject && Prefs.getPrivacyContext(subject);
+      let isPrivate = subject && Prefs.isPrivateBrowsingWindow(subject);
       cookies.forEach(function(cookie)
       {
         let {header, url} = cookie;
-        IECookieManager.saveFirefoxCookie(url, header, context);
+        IECookieManager.saveFirefoxCookie(url, header, context, isPrivate);
       });
     }
     catch(e)

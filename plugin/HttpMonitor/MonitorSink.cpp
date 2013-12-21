@@ -13,7 +13,7 @@
 namespace HttpMonitor
 {
 	
-	/** 1x1 的空白透明 GIF 文件, 用来过滤图片 */
+	// 1x1 transparent GIF for blocking images
 	static const BYTE  TRANSPARENT_GIF_1x1 [] =
 	{
 		0x47,0x49,0x46,0x38,0x39,0x61,0x01,0x00,/**/ 0x01,0x00,0x91,0x00,0x00,0x00,0x00,0x00,
@@ -22,7 +22,7 @@ namespace HttpMonitor
 		0x3b
 	};
 	static const DWORD  TRANSPARENT_GIF_1x1_LENGTH = sizeof(TRANSPARENT_GIF_1x1);
-	/** 空白 HTML, 用来过滤网页 */
+	// Empty HTML page for blocking webpages
 	static const BYTE   BLANK_HTML []= "<HTML></HTML>";
 	static const DWORD  BLANK_HTML_LENGTH = sizeof(BLANK_HTML)-1;
 
@@ -131,19 +131,23 @@ namespace HttpMonitor
 			spHttpNegotiate->BeginningTransaction(szURL, szHeaders,
 			dwReserved, pszAdditionalHeaders) : E_UNEXPECTED;
 
-		// BeginningTransaction() 是本对象最开始被调用的方法, 在这里记下调用的 URL
+		// BeginningTransaction() is the first function called for this sink object.
+		// Record its URL here.
 		m_strURL = szURL;
 
 		ExtractReferer(pszAdditionalHeaders);
 
-		// 查询请求所对应的 CIEHostWindow 对象, 后面随时会用到
+		// Query the associated CIEHostWindow object for later use.
 		QueryIEHostWindow();
 
 		// Abort everything the utils window requests
 		if (m_pIEHostWindow && m_pIEHostWindow->IsUtils() && m_bIsSubRequest)
 			return E_ABORT;
 
-		// 设置自定义header，如DNT等
+		if (m_pIEHostWindow && !m_bIsSubRequest)
+			m_pIEHostWindow->SetMainPageDone();
+
+		// Append additonal headers, such as DNT
 		SetCustomHeaders(pszAdditionalHeaders);
 		
 		return hr;
@@ -184,10 +188,10 @@ namespace HttpMonitor
 					if ((ContentType::TYPE_DOCUMENT == aContentType) && m_bIsSubRequest)
 						aContentType = ContentType::TYPE_SUBDOCUMENT;
 
-					// 只检查子请求：主页面始终应该被加载
+					// Check sub-requests only. The main page is always allowed to be loaded.
 					if (m_bIsSubRequest && !CanLoadContent(aContentType))
 					{
-						// 被过滤了就不用导入 Cookie 了
+						// No need to export cookies if it's blocked
 						bExportCookies = false;
 
 						switch (aContentType)
@@ -216,7 +220,7 @@ namespace HttpMonitor
 								break;
 							}
 							//{
-							//	// 对于其它类型的文件, 直接终止即可
+							//	// For other types of content, abort immediately
 							//	hr = E_ABORT;
 							//}
 						}
@@ -262,24 +266,25 @@ namespace HttpMonitor
 
 	void MonitorSink::QueryIEHostWindow()
 	{
-		// 查询发出请求是哪个 IE 窗口
+		// Query the IE window that initiated the request
 		CComPtr<IWindowForBindingUI> spWindowForBindingUI;
 		if ( SUCCEEDED(QueryServiceFromClient(&spWindowForBindingUI)) && spWindowForBindingUI )
 		{
 			HWND hwndIEServer = NULL;
 			if ( SUCCEEDED(spWindowForBindingUI->GetWindow(IID_IHttpSecurity, &hwndIEServer)) && IsWindow(hwndIEServer))
 			{
-				// 这里得到的 hwndIEServer 情况很复杂, 当 Internet Explorer_Server 窗口还没有来得及建立的时候(刚发出浏览请求的时候),
-				// hwndIEServer 是 Shell Embedding 窗口的句柄; 之后多数情况是 Internet Explorer_Server 窗口的句柄, 有时候也会是
-				// Shell DocObject View 窗口的句柄
+				// Here hwndIEServer could be different handles in different scenarios.
+				// When Internet Explorer_Server window is not created yet (when the request is just initiated),
+				// hwndIEServer is the handle to the Shell Embedding window; After that it is most likely a handle
+				// to the Internet Explorer_Server, and sometimes it could be the Shell DocObject View window as well.
 
-				// 基于上面的情况, 这里就从 hwndIEServer 一直往上找, 直到找到了 CIEHostWindow 的 ATL Host 窗口为止. 为了安全起见, 最多
-				// 往上找 5 层
+				// Based on the above information, we look for the CIEHostWindow by traversing up in the window
+				// hierarchy. For security reasons, we only traverse up for 5 layers of windows.
 				m_pIEHostWindow = CIEHostWindow::FromChildWindow(hwndIEServer);
 			}
 		}
 
-		// 根据 URL 来识别是否是页面内的子请求
+		// Determine whether it's a sub-request by comparing request URL to the page URL
 		m_bIsSubRequest = !(m_pIEHostWindow && FuzzyUrlCompare(m_pIEHostWindow->GetLoadingURL(), m_strURL));
 	}
 
@@ -383,18 +388,18 @@ namespace HttpMonitor
 				{
 					if (nDNTLen)
 					{
-						// 已经有DNT头了，不用再加
+						// Already has DNT header
 						hasDNT = true;
 					}
 					if (lpDNT) Utils::HTTP::FreeFieldValue(lpDNT);
 				}
-				// 增加 DoNotTrack (DNT) 头
+				// Append DoNotTrack (DNT) header
 				if (!hasDNT)
 					strHeaders.AppendFormat(L"DNT: %d\r\n", nDNTValue);
 			}
 
 			if (strHeaders.GetLength() == nOrigLen)
-				return; // 没改过，直接返回
+				return; // Not modified, return immediately
 
 			size_t nLen = strHeaders.GetLength() + 2;
 			if (*pszAdditionalHeaders = (LPWSTR)CoTaskMemRealloc(*pszAdditionalHeaders, nLen * sizeof(WCHAR)))
@@ -416,7 +421,7 @@ namespace HttpMonitor
 			 
 		case BINDSTATUS_REDIRECTING:
 			{
-				// 重定向了, 更新记录的 URL
+				// Redirected, record redirected URL
 				if (!m_bIsSubRequest)
 				{
 					if (m_pIEHostWindow)
@@ -426,16 +431,18 @@ namespace HttpMonitor
 					m_strURL = szStatusText;
 				}
 
-				// 很多网站登录的时候会在302跳转时设置Cookie, 例如Gmail, 所以我们在这里也要处理 Cookie
+				// Many websites send cookies during 302 Redirect (e.g. Gmail).
+				// We should also handle cookies here.
 				CComPtr<IWinInetHttpInfo> spWinInetHttpInfo;
 				if (SUCCEEDED(m_spTargetProtocol->QueryInterface(&spWinInetHttpInfo)) && spWinInetHttpInfo )
 				{
-					CHAR szRawHeader[8192];		// IWinInetHttpInfo::QueryInfo() 返回的 Raw Header 不是 Unicode 的
+					CHAR szRawHeader[8192];		// Raw headers returned by IWinInetHttpInfo::QueryInfo() is not Unicode
 					DWORD dwBuffSize = ARRAYSIZE(szRawHeader);
 
 					if (SUCCEEDED(spWinInetHttpInfo->QueryInfo(HTTP_QUERY_RAW_HEADERS, szRawHeader, &dwBuffSize, 0, NULL)))
 					{
-						// 注意 HTTP_QUERY_RAW_HEADERS 返回的 Raw Header 是 \0 分隔的, 以 \0\0 作为结束, 所以这里要做转换
+						// Raw headers returned from HTTP_QUERY_RAW_HEADERS is '\0'-separated and ends with "\0\0".
+						// Use HttpRawHeader2CrLfHeader to convert.
 						CString strHeader;
 						Utils::HTTP::HttpRawHeader2CrLfHeader(szRawHeader, strHeader);
 
