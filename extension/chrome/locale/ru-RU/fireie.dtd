@@ -1,5 +1,4 @@
 <!ENTITY fireie.switchButton.label "Fire IE">
-
 <!ENTITY fireie.urlbar.switch.tooltip1 "Переключить движок">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Не возможно переключить на данной странице">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Правый клик - Настройки Fire IE">
@@ -10,9 +9,7 @@
 <!ENTITY skin.label "Скины">
 <!ENTITY default.lable "По умолчанию">
 <!ENTITY skin.more.lable "Другие...">
-
 <!ENTITY fireie.options.title "Настройки Fire IE">
-
 <!ENTITY fireie.options.general.tab "Основные">
 <!ENTITY fireie.options.general.pane "Основные">
 <!ENTITY fireie.options.switch.caption "Переключение режима движка:">
@@ -56,22 +53,21 @@
 <!ENTITY fireie.options.integration.otherOptions "Other Options">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Sync cookies between IE and Firefox engines">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
-
-<!ENTITY fireie.options.ieoptions.tab  "Настройки IE">
+<!ENTITY fireie.options.ieoptions.tab "Настройки IE">
 <!ENTITY fireie.options.ieoptions.pane "Навтройки IE">
 <!ENTITY fireie.options.iecompat.group "Режим совсметимости IE">
-<!ENTITY fireie.options.iecompat.ie7   "Режим IE7 Standards">
-<!ENTITY fireie.options.iecompat.ie8   "Режим IE8 Standards">
-<!ENTITY fireie.options.iecompat.ie8f  "Форсированный режим IE8 Standards">
-<!ENTITY fireie.options.iecompat.ie9   "Режим IE9 Standards">
-<!ENTITY fireie.options.iecompat.ie9f  "Форсированный режим IE9 Standards">
-<!ENTITY fireie.options.iecompat.ie10  "Режим IE10 Standards">
+<!ENTITY fireie.options.iecompat.ie7 "Режим IE7 Standards">
+<!ENTITY fireie.options.iecompat.ie8 "Режим IE8 Standards">
+<!ENTITY fireie.options.iecompat.ie8f "Форсированный режим IE8 Standards">
+<!ENTITY fireie.options.iecompat.ie9 "Режим IE9 Standards">
+<!ENTITY fireie.options.iecompat.ie9f "Форсированный режим IE9 Standards">
+<!ENTITY fireie.options.iecompat.ie10 "Режим IE10 Standards">
 <!ENTITY fireie.options.iecompat.ie10f "Форсированный режим IE10 Standards">
-<!ENTITY fireie.options.iecompat.ie11  "IE11 Mode (Experimental)">
+<!ENTITY fireie.options.iecompat.ie11e "IE11 Edge Mode">
+<!ENTITY fireie.options.iecompat.ie11fe "IE11 Forced Edge Mode">
 <!ENTITY fireie.options.iecompat.notSupported "Ваша версия IE не подерживает режим совместимости.">
-<!ENTITY fireie.options.iefeat.group   "Дополнительные настройки">
+<!ENTITY fireie.options.iefeat.group "Дополнительные настройки">
 <!ENTITY fireie.options.iefeat.gpuRendering "Включить режим аппартного ускорения">
-
 <!ENTITY fireie.options.apply "Применить">
 <!ENTITY fireie.options.manager "Менеджер настроек">
 <!ENTITY fireie.options.default "Восстановить умолчания">

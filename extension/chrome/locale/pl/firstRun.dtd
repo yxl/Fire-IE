@@ -1,7 +1,7 @@
-<!ENTITY dialog.title               "Instalacja Fire IE zakończona">
-<!ENTITY confirmation               "Dziękujemy za zainstalowanie Fire IE. Od tej chwili silnik IE jest dostępny. Baw się dobrze!">
-<!ENTITY advancedSection            "Ustawienia zaawansowane">
-<!ENTITY listSelection1             "Ustawiono następującą listę reguł do automatycznego zmieniania silnika:">
-<!ENTITY noList                     "Brak list reguł">
-<!ENTITY visitHomepage.label        "Odwiedź stronę z listami reguł (po angielsku)">
-<!ENTITY listSelection2             "Można zawsze zmienić ten wybór w You can change this selection at any time in the [link]ustawieniach reguł[/link].">
+<!ENTITY dialog.title "Instalacja Fire IE zakończona">
+<!ENTITY confirmation "Dziękujemy za zainstalowanie Fire IE. Od tej chwili silnik IE jest dostępny. Baw się dobrze!">
+<!ENTITY advancedSection "Ustawienia zaawansowane">
+<!ENTITY listSelection1 "Ustawiono następującą listę reguł do automatycznego zmieniania silnika:">
+<!ENTITY noList "Brak list reguł">
+<!ENTITY visitHomepage.label "Odwiedź stronę z listami reguł (po angielsku)">
+<!ENTITY listSelection2 "Można zawsze zmienić ten wybór w You can change this selection at any time in the [link]ustawieniach reguł[/link].">
