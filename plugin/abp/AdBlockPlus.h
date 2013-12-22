@@ -29,6 +29,7 @@ class CFile;
 
 namespace abp {
 
+class INIParser;
 class AdBlockPlus {
 public:
 	// main control routines, should only be called from main thread
@@ -37,6 +38,7 @@ public:
 	static void clearFilters();
 	static void enable();
 	static void disable();
+	static void setAdditionalFilters(std::wstring additionalFilters);
 
 	// performance monitoring
 	static int getNumberOfFilters();
@@ -46,6 +48,7 @@ public:
 	static bool isEnabled() { return s_bEnabled; }
 	static bool isLoading() { return s_bLoading; }
 	static const std::wstring& getLoadedFile() { return s_strFilterFile; }
+	static const std::wstring& getAdditionalFilters() { return s_strAdditionalFilters; }
 
 	// query routines
 	// Should we load the resource?
@@ -74,10 +77,14 @@ private:
 	static CombinedMatcher regexpMatcher;
 	static ElemHideMatcher elemhideMatcher;
 
+	// Additional filters to be loaded by the system
+	static std::wstring s_strAdditionalFilters;
+
 	static void clearFiltersInternal(bool reload = false);
 
 	// asynchronous filter loading
-	static unsigned int asyncLoader(void* ppathname);
+	static unsigned int asyncLoader(void* vpparam);
+	static void loadContent(INIParser& parser, const std::wstring& content);
 
 	// should be called on main thread
 	static void filterLoadedCallback(bool loaded);

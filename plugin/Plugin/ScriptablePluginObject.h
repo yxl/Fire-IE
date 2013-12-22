@@ -87,6 +87,7 @@ namespace Plugin
 		NPI_DEF(ABPDisable);
 		NPI_DEF(ABPLoad);
 		NPI_DEF(ABPClear);
+		NPI_DEF(ABPSetAdditionalFilters);
 
 		// properties
 		NPI_DEF(URL);
@@ -115,6 +116,7 @@ namespace Plugin
 		NPI_DEF(ABPIsEnabled);
 		NPI_DEF(ABPIsLoading);
 		NPI_DEF(ABPLoadedFile);
+		NPI_DEF(ABPAdditionalFilters);
 	public:
 		ScriptablePluginObject(NPP npp)
 			: ScriptablePluginObjectBase(npp)
@@ -167,6 +169,7 @@ namespace Plugin
 			NPN_GSI_M(ABPDisable);
 			NPN_GSI_M(ABPLoad);
 			NPN_GSI_M(ABPClear);
+			NPN_GSI_M(ABPSetAdditionalFilters);
 
 			// properties
 			NPN_GSI_P(URL);
@@ -193,6 +196,7 @@ namespace Plugin
 			NPN_GSI_P(ABPIsEnabled);
 			NPN_GSI_P(ABPIsLoading);
 			NPN_GSI_P(ABPLoadedFile);
+			NPN_GSI_P(ABPAdditionalFilters);
 		}
 
 		virtual bool HasMethod(NPIdentifier name);

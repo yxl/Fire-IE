@@ -39,6 +39,7 @@ ElemHideMatcher AdBlockPlus::elemhideMatcher;
 
 wstring AdBlockPlus::s_strFilterFile = L"";
 wstring AdBlockPlus::s_strLoadingFile = L"";
+wstring AdBlockPlus::s_strAdditionalFilters = L"";
 
 bool AdBlockPlus::s_bEnabled = false;
 bool AdBlockPlus::s_bLoading = false;
@@ -81,10 +82,22 @@ void AdBlockPlus::disable()
 	s_bEnabled = false;
 }
 
+void AdBlockPlus::setAdditionalFilters(wstring additionalFilters)
+{
+	s_strAdditionalFilters = additionalFilters;
+}
+
 void AdBlockPlus::reloadFilterFile()
 {
 	loadFilterFile(s_strFilterFile);
 }
+
+namespace abp {
+	struct AsyncLoaderParam {
+		wstring pathname;
+		wstring additionalFilters;
+	};
+} // namespace abp
 
 void AdBlockPlus::loadFilterFile(const wstring& pathname)
 {
@@ -92,8 +105,10 @@ void AdBlockPlus::loadFilterFile(const wstring& pathname)
 	disable();
 	s_strLoadingFile = pathname;
 	s_bLoading = true;
-	wstring* pstr = new wstring(pathname);
-	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pstr));
+	AsyncLoaderParam* pparam = new AsyncLoaderParam;
+	pparam->pathname = pathname;
+	pparam->additionalFilters = s_strAdditionalFilters;
+	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pparam));
 }
 
 void AdBlockPlus::filterLoadedCallback(bool loaded)
@@ -287,10 +302,22 @@ namespace abp {
 							}
 						}
 					}
+					subscriptionDisabled = false;
 				}
 			}
 
-			if (eof) return;
+			// Do clean-up
+			curSection = OTHER;
+			if (wantObj)
+				curObj.clear();
+			else
+				curList.clear();
+
+			if (eof)
+			{
+				subscriptionDisabled = false;
+				return;
+			}
 
 			auto iter = sectionMapper.find(strSection);
 			if (iter != sectionMapper.end())
@@ -302,29 +329,50 @@ namespace abp {
 				case PATTERN:
 				case SUBSCRIPTION:
 					wantObj = true;
-					curObj.clear();
 					break;
 				case SUBSCRIPTION_FILTERS:
 				case SUBSCRIPTION_PATTERNS:
 				case USER_PATTERNS:
 				default:
 					wantObj = false;
-					curList.clear();
 				}
 			}
 		}
-		else if (!wantObj && line.length())
+		else if (!wantObj && line.length() && !subscriptionDisabled)
 		{
 			curList.push_back(replace(line, re3, strLeftBracket));
 		}
 	}
 }
 
-unsigned int AdBlockPlus::asyncLoader(void* ppathname)
+void AdBlockPlus::loadContent(INIParser& parser, const std::wstring& content)
 {
-	wstring* pstr = reinterpret_cast<wstring*>(ppathname);
-	wstring pathname = *pstr;
-	delete pstr;
+	// split content into lines, process with INIParser one by one
+	size_t lastPos = 0;
+	wchar_t lastCh = 0;
+	for (size_t i = 0; i < content.length(); i++)
+	{
+		wchar_t ch = content[i];
+		// accept CR, LF and CRLF sequence
+		if (ch == L'\r' || (ch == L'\n' && lastCh != L'\r'))
+		{
+			parser.process(content.substr(lastPos, i - lastPos), false);
+		}
+		if (ch == L'\r' || ch == L'\n')
+			lastPos = i + 1;
+		lastCh = ch;
+	}
+	if (lastPos < content.length())
+		parser.process(content.substr(lastPos, content.length() - lastPos), false);
+	parser.process(L"", true);
+}
+
+unsigned int AdBlockPlus::asyncLoader(void* vpparam)
+{
+	AsyncLoaderParam* pparam = reinterpret_cast<AsyncLoaderParam*>(vpparam);
+	wstring pathname = std::move(pparam->pathname);
+	wstring additionalFilters = std::move(pparam->additionalFilters);
+	delete pparam;
 
 	bool loaded = false;
 
@@ -341,25 +389,8 @@ unsigned int AdBlockPlus::asyncLoader(void* ppathname)
 			clearFiltersInternal(true);
 
 			INIParser parser;
-			
-			// split content into lines, process with INIParser one by one
-			size_t lastPos = 0;
-			wchar_t lastCh = 0;
-			for (size_t i = 0; i < content.length(); i++)
-			{
-				wchar_t ch = content[i];
-				// accept CR, LF and CRLF sequence
-				if (ch == L'\r' || (ch == L'\n' && lastCh != L'\r'))
-				{
-					parser.process(content.substr(lastPos, i - lastPos), false);
-				}
-				if (ch == L'\r' || ch == L'\n')
-					lastPos = i + 1;
-				lastCh = ch;
-			}
-			if (lastPos < content.length())
-				parser.process(content.substr(lastPos, content.length() - lastPos), false);
-			parser.process(L"", true);
+			loadContent(parser, content);
+			loadContent(parser, additionalFilters);
 
 			// put everything in INIParser::filters into the matcher
 			for (auto iter = parser.filters.begin(); iter != parser.filters.end(); ++iter)

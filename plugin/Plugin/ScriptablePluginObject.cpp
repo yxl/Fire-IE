@@ -208,6 +208,13 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(file), *result);
 			return true;
 		}
+		// readonly property {String} ABPAdditionalFilters
+		else if (name == NPI_ID(ABPAdditionalFilters))
+		{
+			CString additionalFilters = abp::AdBlockPlus::getAdditionalFilters().c_str();
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(additionalFilters), *result);
+			return true;
+		}
 
 		VOID_TO_NPVARIANT(*result);
 		return true;
@@ -706,6 +713,22 @@ namespace Plugin
 			TRACE ("ABPClear called!\n");
 			
 			abp::AdBlockPlus::clearFilters();
+			return true;
+		}
+		// void ABPSetAdditionalFilters({String} additionalFilters)
+		else if (name = NPI_ID(ABPSetAdditionalFilters))
+		{
+			TRACE ("ABPSetAdditionalFilters called!\n");
+			
+			if (argCount < 1) return false;
+
+			CString additionalFilters = _T("");
+			if (NPVARIANT_IS_STRING(args[0]))
+				additionalFilters = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+			else
+				return false;
+
+			abp::AdBlockPlus::setAdditionalFilters(additionalFilters.GetString());
 			return true;
 		}
 		return false;

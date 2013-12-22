@@ -129,6 +129,13 @@ function queryFilterNotifier()
     abp.FilterNotifier = adblocker.getFilterNotifier();
 }
 
+let abpAdditionalFilters = [
+  // Compatibility filters for IE
+  "[Subscription]",
+  "[Subscription filters]",
+  "#@#.like_share.left" // Issue #112
+].join("\r\n");
+
 let ABPStatus = {
   NotDetected: 0,
   Enabled: 1,
@@ -205,6 +212,7 @@ let ABPObserver = {
             
       this._registerListeners();
       
+      UtilsPluginManager.addPrefSetter(this._setAdditionalFilters.bind(this));
       UtilsPluginManager.addPrefSetter(this.updateState.bind(this));
     }, this, []);
   },
@@ -629,9 +637,17 @@ let ABPObserver = {
     Utils.cancelAsyncTimeout(this._clearTimer);
     this._clearTimer = null;
     Utils.LOG("[ABP] Canceled previous clear schedule.");
+  },
+  
+  _setAdditionalFilters: function()
+  {
+    let plugin = UtilsPluginManager.getPlugin();
+    if (!plugin) return;
+    let additionalFilters = Prefs.abpAdditionalFiltersEnabled ? abpAdditionalFilters : "";
+    plugin.ABPSetAdditionalFilters(additionalFilters);
   }
 };
-  
+
 /**
  * Filter load handler: enables ABP support if necessary
  */
@@ -675,6 +691,12 @@ function onFireIEPrefChanged(name)
   {
     let self = ABPObserver;
     self._onPrefChanged();
+  }
+  else if (name == "abpAdditionalFiltersEnabled")
+  {
+    let self = ABPObserver;
+    self._setAdditionalFilters();
+    self.reloadUpdate();
   }
 }
 
