@@ -57,7 +57,7 @@ let EasyRuleCreator = {
     while (submenu)
     {
       let nextsubmenu = submenu.nextSibling;
-      if (submenu.className == className && submenu.getAttribute("id") != idToKeep)
+      if (submenu.classList.contains(className) && submenu.getAttribute("id") != idToKeep)
         menu.removeChild(submenu);
       submenu = nextsubmenu;
     }
