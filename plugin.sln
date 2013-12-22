@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin", "plugin\Plugin.vcxproj", "{E86D2430-709C-46DC-9464-E9F1572B765C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuleMaker", "RuleMaker\RuleMaker.csproj", "{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}"
@@ -24,11 +24,9 @@ Global
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Win32.ActiveCfg = Debug|x86
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|Win32.Build.0 = Debug|x86
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x64.ActiveCfg = Debug|x86
-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Debug|x64.Build.0 = Debug|x86
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Win32.ActiveCfg = Release|x86
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|Win32.Build.0 = Release|x86
 		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x64.ActiveCfg = Release|x86
-		{4C78DF1A-0C4C-4E39-BA77-5024E5B94CDF}.Release|x64.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
