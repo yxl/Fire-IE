@@ -120,7 +120,7 @@ bool File::readANSI(CFile& file, wstring& content)
 bool File::readUTF8(CFile& file, wstring& content, bool skipBOM)
 {
 	ULONGLONG contentLength = (file.GetLength() - (skipBOM ? 3 : 0));
-	if (contentLength <= 0)
+	if (contentLength == 0)
 	{
 		content = L"";
 		return true;
@@ -152,7 +152,7 @@ bool File::readUTF8(CFile& file, wstring& content, bool skipBOM)
 
 bool File::readUnicode(CFile& file, wstring& content)
 {
-	ASSERT(sizeof(wchar_t) == 2); // required by UTF16
+	_STATIC_ASSERT(sizeof(wchar_t) == 2); // required by UTF16
 
 	ULONGLONG contentLength = (file.GetLength() - 2) / sizeof(wchar_t);
 	if (contentLength <= 0)
@@ -173,7 +173,7 @@ bool File::readUnicode(CFile& file, wstring& content)
 
 bool File::readUnicodeBigEndian(CFile& file, wstring& content)
 {
-	ASSERT(sizeof(wchar_t) == 2); // required by UTF16
+	_STATIC_ASSERT(sizeof(wchar_t) == 2); // required by UTF16
 
 	ULONGLONG contentLength = (file.GetLength() - 2) / sizeof(wchar_t);
 	if (contentLength <= 0)
