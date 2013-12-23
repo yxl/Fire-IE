@@ -195,6 +195,7 @@ let FireIEContainer = {};
   {
     syncURL();
     syncFavicon();
+    syncHistory();
   }
   
   function onIEProgressChange(event)
@@ -265,6 +266,32 @@ let FireIEContainer = {};
       {
         Favicon.setIcon(document, faviconURL);
       }
+    }
+  }
+  
+  let syncHistoryURL = "";
+  
+  /** Synchronize with Firefox history */
+  function syncHistory()
+  {
+    // Private browsing, don't record history
+    if (gFireIE && gFireIE.isPrivateBrowsing())
+      return;
+      
+    // Check pref
+    if (!Prefs.historyEnabled)
+      return;
+    
+    let po = E(Utils.containerPluginId);
+    if (!po) return;
+    
+    let url = po.URL;
+    if (!url) return;
+    
+    if (url != syncHistoryURL)
+    {
+      syncHistoryURL = url;
+      Utils.addVisitHistory(url, Prefs.historyPrefix + (document.title || url));
     }
   }
   

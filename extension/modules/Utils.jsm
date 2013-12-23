@@ -1035,6 +1035,26 @@ var Utils = {
     {
       return true;
     }
+  },
+  
+  addVisitHistory: function(url, title)
+  {
+    // See http://hg.mozilla.org/mozilla-central/annotate/81dd97739fa1/browser/base/content/test/head.js#l200
+    var asyncHistory = Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory);
+    this.addVisitHistory = function(url, title)
+    {
+      let placeInfo = {
+        uri: this.makeURI(url),
+        title: (title || url),
+        visits: [{
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+          visitDate: Date.now() * 1000,
+          refererURI: null
+        }]
+      };
+      asyncHistory.updatePlaces(placeInfo);
+    };
+    return this.addVisitHistory(url, title);
   }
 };
 
