@@ -199,7 +199,7 @@ var PolicyPrivate = {
     {
       browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
     }
-    catch (ex) { }
+    catch (ex) {}
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
     // User has manually switched engine

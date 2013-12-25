@@ -139,7 +139,7 @@ Initializer.prototype = {
         // Also clear the sub-directories
         file.remove(true);
       }
-    } catch (ex) { }
+    } catch (ex) {}
   },
   
   /**

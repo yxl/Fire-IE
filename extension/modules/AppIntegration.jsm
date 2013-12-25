@@ -1142,7 +1142,7 @@ WindowWrapper.prototype = {
     {
       newTab.linkedBrowser.loadURIWithFlags(Utils.toContainerUrl(url), flags);
     }
-    catch (ex) { }
+    catch (ex) {}
   },
 
   _onIESetSecureLockIcon: function(event)
@@ -2081,7 +2081,7 @@ WindowWrapper.prototype = {
           {
             newTab.linkedBrowser.loadURIWithFlags(url, flags);
           }
-          catch (ex) { }
+          catch (ex) {}
         }
       }
     }
@@ -2375,9 +2375,9 @@ ProgressListener.prototype = {
   },
  
   onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {}, 
-  onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },
-  onSecurityChange: function(aWebProgress, aRequest, aState) { },
+  onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) {},
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {},
+  onSecurityChange: function(aWebProgress, aRequest, aState) {},
 
   onLocationChange: function(aProgress, aRequest, aURI)
   {

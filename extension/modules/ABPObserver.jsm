@@ -71,7 +71,7 @@ let adblockerMap = (function generateAdblockers()
           Cu.import(abpURL.spec + "FilterNotifier.jsm", obj);
           return obj.FilterNotifier;
         }
-        catch (ex) { }
+        catch (ex) {}
       }
 
       // ABP 2.1+
@@ -83,7 +83,7 @@ let adblockerMap = (function generateAdblockers()
           return FilterNotifier;
         }
       }
-      catch (ex) { }
+      catch (ex) {}
     }
   }, {
     name: "Adblock Edge",
@@ -102,7 +102,7 @@ let adblockerMap = (function generateAdblockers()
           return FilterNotifier;
         }
       }
-      catch (ex) { }
+      catch (ex) {}
     }
   }];
   

@@ -376,6 +376,11 @@ let IECookieManager = {
   
   changeIETempDirectorySetting: function()
   {
+    // Disable cookie & cache folder redirection for IE10+
+    // For details, see GitHub issue #94 and #98
+    if (Utils.ieMajorVersion >= 10)
+      return;
+
     // safe guard: do not attempt to change after already changed
     if (this._bTmpDirChanged) return;
     
@@ -386,23 +391,18 @@ let IECookieManager = {
     let cookiesDir = ieTempDir + "\\cookies";
     let cacheDir = ieTempDir + "\\cache";
 
-    // Disable cookie & cache folder redirection for IE10+
-    // For details, see GitHub issue #94 and #98
-    if (Utils.ieMajorVersion < 10)
+    let originalCookies = getIECtrlRegString("Cookies");
+    // Backup the cookie directory setting if needed.
+    if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
     {
-      let originalCookies = getIECtrlRegString("Cookies");
-      // Backup the cookie directory setting if needed.
-      if (getIECtrlRegString("Cookies_fireie") || setIECtrlRegString("Cookies_fireie", originalCookies))
-      {
-        setIECtrlRegString("Cookies", cookiesDir);
-      }
+      setIECtrlRegString("Cookies", cookiesDir);
+    }
 
-      let originalCache = getIECtrlRegString("Cache");
-      // Backup the cache directory setting if needed.
-      if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
-      {
-        setIECtrlRegString("Cache", cacheDir);
-      }
+    let originalCache = getIECtrlRegString("Cache");
+    // Backup the cache directory setting if needed.
+    if (getIECtrlRegString("Cache_fireie") || setIECtrlRegString("Cache_fireie", originalCache))
+    {
+      setIECtrlRegString("Cache", cacheDir);
     }
     
     this._bTmpDirChanged = true;
