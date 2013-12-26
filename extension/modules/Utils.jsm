@@ -30,9 +30,6 @@ var Utils = {
   _ieUserAgent: null,
   _userAgent: null,
 
-  _ffMajorVersion: 6,
-  _ieMajorVersion: 6,
-  
   /** nsITimer's */
   _timers: [],
 
@@ -57,21 +54,69 @@ var Utils = {
    */
   get firefoxMajorVersion()
   {
-    return this._ffMajorVersion;
+    let version = 6; // Minimum supported version
+    
+    try
+    {
+      let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
+        .getService(Components.interfaces.nsIXULAppInfo);
+
+      let versionString = versionInfo.version;
+      Utils.LOG("Host app version: " + versionString);
+      version = parseInt(versionString, 10);
+      Utils.LOG("Host app major version: " + version);
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to get host app version: " + e);
+    }
+    
+    Utils.__defineGetter__("firefoxMajorVersion", function() version);
+    return version;
   },
   
+  /**
+   * Returns IE's major version
+   */
   get ieMajorVersion()
   {
-    return this._ieMajorVersion;
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+    let version = 6;
+    try
+    {
+      wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+      let versionString = wrk.readStringValue("version");
+      version = parseInt(versionString, 10);
+      // for IE 10, version equals to "9.10.*.*", which should be handled specially
+      if (version == 9)
+      {
+        versionString = wrk.readStringValue("svcVersion");
+        version = parseInt(versionString, 10);
+      }
+      Utils.LOG("IE version: " + versionString);
+      Utils.LOG("IE major version: " + version);
+    }
+    catch (e)
+    {
+      Utils.LOG("Failed to get IE version from registry: " + e);
+    }
+    finally
+    {
+      wrk.close();
+      wrk = null;
+    }
+    
+    Utils.__defineGetter__("ieMajorVersion", function() version);
+    return version;
   },
 
   /**
-   * Returns the VCS revision used for this Adblock Plus build
+   * Original ABP code. No build info available here -_-
+   * Used by public API thus better not remove it.
    */
   get addonBuild()
   {
-    let build = "3394";
-    return (build[0] == "{" ? "" : build);
+    return "";
   },
 
   /**
@@ -81,7 +126,7 @@ var Utils = {
   {
     let id = Services.appinfo.ID;
     Utils.__defineGetter__("appID", function() id);
-    return Utils.appID;
+    return id;
   },
 
   /**
@@ -99,7 +144,7 @@ var Utils = {
       Cu.reportError(e);
     }
     Utils.__defineGetter__("appLocale", function() locale);
-    return Utils.appLocale;
+    return locale;
   },
 
   /**
@@ -109,7 +154,7 @@ var Utils = {
   {
     let platformVersion = Services.appinfo.platformVersion;
     Utils.__defineGetter__("platformVersion", function() platformVersion);
-    return Utils.platformVersion;
+    return platformVersion;
   },
 
   /**
@@ -146,7 +191,7 @@ var Utils = {
     Cu.import(baseURL.spec + "Prefs.jsm");
     
     Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
-    return this.esrUserAgent;
+    return Prefs.esr_user_agent;
   },
   
   get ieTempDir()
@@ -1083,45 +1128,6 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   });
   _addonVersionCallbacks = null;
 });
-
-(function FetchFirefoxMajorVersion() {
-  let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
-    .getService(Components.interfaces.nsIXULAppInfo);
-
-  let version = versionInfo.version;
-  Utils.LOG("Host app version: " + version);
-  let major = version.substring(0, version.indexOf('.'));
-  Utils.LOG("Host app major version: " + major);
-
-  Utils._ffMajorVersion = major;
-})();
-
-(function FetchIEMajorVersion() {
-  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
-  let version = 6;
-  try
-  {
-    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
-    let versionString = wrk.readStringValue("version");
-    version = parseInt(versionString, 10);
-    // for IE 10, version equals to "9.10.*.*", which should be handled specially
-    if (version == 9)
-    {
-      versionString = wrk.readStringValue("svcVersion");
-      version = parseInt(versionString, 10);
-    }
-    Utils.LOG("IE major version: " + version);
-  }
-  catch (e)
-  {
-    Utils.LOG("Failed to get IE version from registry: " + e);
-  }
-  finally
-  {
-    wrk.close();
-  }
-  Utils._ieMajorVersion = version;
-})();
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
