@@ -25,7 +25,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugin.h"
 #include "URL.h"
 #include "abp/AdBlockPlus.h"
-#include "re/strutils.h"
+#include "String.h"
 #include "OS.h"
 #include "App.h"
 #include "WindowMessageHook.h"
@@ -34,8 +34,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace UserMessage;
 using namespace Utils;
+using namespace Utils::String;
 using namespace abp;
-using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow
 
@@ -1628,36 +1628,6 @@ void CIEHostWindow::ProcessElemHideStyles()
 	}
 }
 
-void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
-{
-	// first retrieve the head node
-	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
-	if (!pDoc3) return;
-
-	CComPtr<IHTMLElementCollection> pcolHead;
-	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
-		return;
-
-	long length;
-	if (FAILED(pcolHead->get_length(&length)) || length < 1)
-		return; // no head = =|
-
-	CComPtr<IDispatch> pDisp;
-	CComVariant varindex = 0;
-	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
-		return;
-
-	CComQIPtr<IHTMLElement> pHeadElement = pDisp;
-	if (!pHeadElement) return;
-
-	CComBSTR bstrInnerHTML;
-	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)) || !bstrInnerHTML)
-		return;
-
-	wstring html(bstrInnerHTML);
-	html.c_str();
-}
-
 void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
 {
 	if (!IfAlreadyHaveElemHideStyles(pDoc))
@@ -1681,7 +1651,6 @@ void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& p
 			}
 			break;
 		}
-		//DumpInnerHTML(pDoc);
 	}
 
 	CComPtr<IHTMLFramesCollection2> pFrames;

@@ -20,27 +20,18 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // TLD.h : Effective Top-Level-Domain Service
 //
 
-namespace Utils {
-	class TLD {
-	public:
-		/* 
-		 * get effective domain from full-qualified domain
-		 * guaranteed to return something if domain is valid
-		 * (no error-checking at caller side is needed)
-		 * Return values:
-		 * 1) <tld> if ingoingDomain is a TLD
-		 * 2) the registered domain name if TLD is known
-		 * 3) just <domain>.<tld> if <tld> is unknown
-		 *    This case was added to support new TLDs in outdated reg-dom libs
-		 *    by a certain likelihood. This fallback method is implemented in the
-		 *    last conversion step and can be simply commented out. 
-		 */
-		static CString getEffectiveDomain(const CString& domain);
-	private:
-		static class TLDInit {
-		public:
-			TLDInit();
-			~TLDInit();
-		} init;
-	};
-} // namespace Utils
+namespace Utils { namespace TLD {
+	/* 
+	 * get effective domain from full-qualified domain
+	 * guaranteed to return something if domain is valid
+	 * (no error-checking at caller side is needed)
+	 * Return values:
+	 * 1) <tld> if ingoingDomain is a TLD
+	 * 2) the registered domain name if TLD is known
+	 * 3) just <domain>.<tld> if <tld> is unknown
+	 *    This case was added to support new TLDs in outdated reg-dom libs
+	 *    by a certain likelihood. This fallback method is implemented in the
+	 *    last conversion step and can be simply commented out. 
+	 */
+	CString getEffectiveDomain(const CString& domain);
+} } // namespace Utils::TLD

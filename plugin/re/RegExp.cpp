@@ -22,11 +22,12 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RegExp.h"
 #include "jscre\JSRegExp.h"
-#include "strutils.h"
+#include "String.h"
 
 using namespace re;
 using namespace jscre;
-using namespace strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 static void* (*jscre_malloc)(size_t size) = malloc;
 static void (*jscre_free)(void* address) = free;

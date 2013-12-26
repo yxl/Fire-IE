@@ -264,7 +264,6 @@ buildxpi64.bat</Command>
     <ClCompile Include="abp\ElemHideMatcher.cpp" />
     <ClCompile Include="abp\FilterClasses.cpp" />
     <ClCompile Include="abp\Matcher.cpp" />
-    <ClCompile Include="abp\RAIILock.cpp" />
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
     <ClCompile Include="BrowserHook\GestureHandler.cpp" />
     <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp" />
@@ -326,7 +325,6 @@ buildxpi64.bat</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="re\RegExp.cpp" />
-    <ClCompile Include="re\strutils.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -347,6 +345,8 @@ buildxpi64.bat</Command>
     <ClCompile Include="Utils\HTTP.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
     <ClCompile Include="Utils\PointerHash.cpp" />
+    <ClCompile Include="Utils\RAIILock.cpp" />
+    <ClCompile Include="Utils\String.cpp" />
     <ClCompile Include="Utils\TLD.cpp" />
     <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
@@ -356,7 +356,6 @@ buildxpi64.bat</Command>
     <ClInclude Include="abp\FilterClasses.h" />
     <ClInclude Include="abp\FilterContentType.h" />
     <ClInclude Include="abp\Matcher.h" />
-    <ClInclude Include="abp\RAIILock.h" />
     <ClInclude Include="abp\TList.h" />
     <ClInclude Include="abp\TriBool.h" />
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
@@ -380,7 +379,6 @@ buildxpi64.bat</Command>
     <ClInclude Include="regdom-libs\dkim-regdom.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="re\RegExp.h" />
-    <ClInclude Include="re\strutils.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="np\npapi.h" />
@@ -405,6 +403,8 @@ buildxpi64.bat</Command>
     <ClInclude Include="Utils\HTTP.h" />
     <ClInclude Include="Utils\OS.h" />
     <ClInclude Include="Utils\PointerHash.h" />
+    <ClInclude Include="Utils\RAIILock.h" />
+    <ClInclude Include="Utils\String.h" />
     <ClInclude Include="Utils\TLD.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>

@@ -20,20 +20,21 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 
-#include "TLD.h"
 #include "regdom-libs/dkim-regdom.h"
 #include "App.h"
 #include "File.h"
 
-namespace Utils {
-	static const regdom::tldnode* rootTLDNode = NULL;
-}
+namespace Utils { namespace TLD {
 
-using namespace Utils;
+static const regdom::tldnode* rootTLDNode = NULL;
 
-TLD::TLDInit TLD::init;
+static class TLDInit {
+public:
+	TLDInit();
+	~TLDInit();
+} init;
 
-TLD::TLDInit::TLDInit()
+TLDInit::TLDInit()
 {
 	CFile file;
 	if (file.Open(App::GetModulePath() + _T("tldstring.txt"), CFile::modeRead | CFile::shareDenyWrite))
@@ -48,13 +49,15 @@ TLD::TLDInit::TLDInit()
 	}
 }
 
-TLD::TLDInit::~TLDInit()
+TLDInit::~TLDInit()
 {
 	freeTldTree(rootTLDNode);
 }
 
-CString TLD::getEffectiveDomain(const CString& domain)
+CString getEffectiveDomain(const CString& domain)
 {
 	const wchar_t* utf8Result = regdom::getRegisteredDomain(domain, rootTLDNode);
 	return utf8Result ? utf8Result : domain;
 }
+
+} } // namespace Utils::TLD

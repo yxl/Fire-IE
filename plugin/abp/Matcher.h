@@ -104,7 +104,7 @@ namespace abp {
 		// TODO: implement result cache with minimal locking overhead
 		std::unordered_map<std::wstring, RegExpFilter*> resultCache;
 		size_t cacheEntries;
-		Mutex mtCache;
+		Utils::Mutex mtCache;
 
 		bool queryResultCache(const std::wstring& key, RegExpFilter*& result) const;
 		void putResultCache(const std::wstring& key, RegExpFilter* result);

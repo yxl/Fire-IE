@@ -22,7 +22,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RAIILock.h"
 
-using namespace abp;
+using namespace Utils;
 
 Mutex::Mutex()
 {
@@ -46,7 +46,7 @@ void Mutex::unlock() const
 	LeaveCriticalSection(m_pcs);
 }
 
-namespace abp {
+namespace Utils {
 	class Monitor {
 	public:
 		Monitor() {}

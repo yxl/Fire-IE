@@ -90,7 +90,7 @@ private:
 	static void filterLoadedCallback(bool loaded);
 
 	// used internally for synchronization
-	static ReaderWriterMutex s_mutex;
+	static Utils::ReaderWriterMutex s_mutex;
 
 	static const std::vector<std::wstring> vEmpty;
 };

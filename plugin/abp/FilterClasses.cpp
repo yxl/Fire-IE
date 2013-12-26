@@ -21,11 +21,12 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "StdAfx.h"
 
 #include "FilterClasses.h"
-#include "re/strutils.h"
+#include "String.h"
 
 using namespace abp;
 using namespace re;
-using namespace re::strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 static const wstring strEmpty = L"";
 
@@ -583,7 +584,7 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 		if (attrRules.length())
 		{
 			RegExpMatch match;
-			strutils::match(match, attrRules, re1);
+			String::match(match, attrRules, re1);
 			for (size_t i = 0; i < match.substrings.size(); i++)
 			{
 				wstring rule = match.substrings[i];

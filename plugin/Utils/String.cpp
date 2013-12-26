@@ -20,9 +20,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "StdAfx.h"
 
-#include "RegExp.h"
+#include "re/RegExp.h"
 
-namespace re { namespace strutils {
+using namespace re;
+
+namespace Utils { namespace String {
 
 // See https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/String/replace#Specifying_a_string_as_a_parameter
 // Some tricky test cases:
@@ -184,4 +186,4 @@ bool match(RegExpMatch& match, const std::wstring& base, const RegExp& re)
 	return true;
 }
 
-} } // namespace re::strutils
+} } // namespace Utils::String

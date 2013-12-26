@@ -24,7 +24,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "Matcher.h"
 #include "FilterClasses.h"
 #include "re/RegExp.h"
-#include "re/strutils.h"
+#include "String.h"
 #include "URL.h"
 #include "File.h"
 #include "IEHostWindow.h"
@@ -32,7 +32,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace abp;
 using namespace re;
-using namespace strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 CombinedMatcher AdBlockPlus::regexpMatcher;
 ElemHideMatcher AdBlockPlus::elemhideMatcher;
