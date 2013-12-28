@@ -302,8 +302,11 @@ void CIEHostWindow::UninitIE()
 	 * 
 	 * Note: we can't use put_Silent on page load, or plugin installation prompts
 	 * would be blocked as well.
+	 *
+	 * Added IE version check to workaround crash while closing certain pages in IE6.
+	 * Test case: https://github.com/yxl/Fire-IE/commit/fffb6211577e34b1bc0cc4312b0fcf23cfc35367
 	 */
-	if (m_ie.GetSafeHwnd())
+	if (OS::GetIEVersion() >= 7 && m_ie.GetSafeHwnd())
 		m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();
