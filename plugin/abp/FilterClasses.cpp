@@ -21,7 +21,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "StdAfx.h"
 
 #include "FilterClasses.h"
-#include "String.h"
+#include "StringUtils.h"
 
 using namespace abp;
 using namespace re;

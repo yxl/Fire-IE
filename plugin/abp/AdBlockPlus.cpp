@@ -24,7 +24,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "Matcher.h"
 #include "FilterClasses.h"
 #include "re/RegExp.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "URL.h"
 #include "File.h"
 #include "IEHostWindow.h"

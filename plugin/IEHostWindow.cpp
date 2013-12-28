@@ -25,7 +25,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugin.h"
 #include "URL.h"
 #include "abp/AdBlockPlus.h"
-#include "String.h"
+#include "StringUtils.h"
 #include "OS.h"
 #include "App.h"
 #include "WindowMessageHook.h"

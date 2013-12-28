@@ -346,7 +346,7 @@ buildxpi64.bat</Command>
     <ClCompile Include="Utils\OS.cpp" />
     <ClCompile Include="Utils\PointerHash.cpp" />
     <ClCompile Include="Utils\RAIILock.cpp" />
-    <ClCompile Include="Utils\String.cpp" />
+    <ClCompile Include="Utils\StringUtils.cpp" />
     <ClCompile Include="Utils\TLD.cpp" />
     <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
@@ -404,7 +404,7 @@ buildxpi64.bat</Command>
     <ClInclude Include="Utils\OS.h" />
     <ClInclude Include="Utils\PointerHash.h" />
     <ClInclude Include="Utils\RAIILock.h" />
-    <ClInclude Include="Utils\String.h" />
+    <ClInclude Include="Utils\StringUtils.h" />
     <ClInclude Include="Utils\TLD.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>

@@ -22,7 +22,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "RegExp.h"
 #include "jscre\JSRegExp.h"
-#include "String.h"
+#include "StringUtils.h"
 
 using namespace re;
 using namespace jscre;
