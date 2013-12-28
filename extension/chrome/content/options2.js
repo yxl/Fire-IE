@@ -72,34 +72,38 @@ Options.apply = function(quiet)
 {
   let requiresRestart = false;
 
-  //general
+  // General
   Prefs.handleUrlBar = E("handleurl").checked;
   Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
+
   let newKey = E("shortcut-key").value;
   if (Prefs.shortcut_key != newKey)
-  {
     requiresRestart = true;
-  }
   Prefs.shortcut_key = newKey;
+
   let newModifiers = E("shortcut-modifiers").value;
   if (Prefs.shortcut_modifiers != newModifiers)
-  {
     requiresRestart = true;
-  }
   Prefs.shortcut_modifiers = newModifiers;
+
   Prefs.shortcutEnabled = E("shortcutEnabled").checked;
   Prefs.privatebrowsingwarning = E("privatebrowsingwarning").checked;
+  
+  // UI
+  Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
+  Prefs.fxLabel = E("fxLabel").value;
+  Prefs.ieLabel = E("ieLabel").value;
   Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
+  
+  // Integration
   Prefs.forceMGSupport = E("forceMGSupport").checked;
   Prefs.abpSupportEnabled = E("abpSupportEnabled").checked;
   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
   Prefs.privateCookieSyncEnabled = E("privateCookieSyncEnabled").checked;
-  Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
-  Prefs.fxLabel = E("fxLabel").value;
-  Prefs.ieLabel = E("ieLabel").value;
+  Prefs.historyEnabled = E("historyEnabled").checked;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -373,48 +377,45 @@ Options.updateIECompatDescription = function()
 
 Options.initDialog = function(restore)
 {
-  // options for general features
+  // General
   E("handleurl").checked = Prefs.handleUrlBar;
   E("disableAutoSwitch").checked = !Prefs.autoswitch_enabled;
+  E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
-  E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("privatebrowsingwarning").checked = Prefs.privatebrowsingwarning;
-  E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
-  E("showTooltipText").checked = Prefs.showTooltipText;
-  E("showStatusText").checked = Prefs.showStatusText;
-  E("forceMGSupport").checked = Prefs.forceMGSupport;
-  E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
-  E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
-  E("privateCookieSyncEnabled").checked = Prefs.privateCookieSyncEnabled;
+
+  // UI
   E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
+  E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
   E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
-  
+  E("showTooltipText").checked = Prefs.showTooltipText;
+  E("showStatusText").checked = Prefs.showStatusText;
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
   E("statusBarGroup").hidden = ifHide;
 
+  // Integration
+  E("forceMGSupport").checked = Prefs.forceMGSupport;
+  E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
+  E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
+  E("privateCookieSyncEnabled").checked = Prefs.privateCookieSyncEnabled;
+  E("historyEnabled").checked = Prefs.historyEnabled;
   // disable MGS checkbox if we already detected some gesture extension
-  //E("integration-tab").hidden = GesturePrefObserver.hasGestureExtension();
   if (GesturePrefObserver.hasGestureExtension())
-  {
     E("forceMGSupport").disabled = true;
-  }
   else
-  {
     E("alreadyEnabledMGSupportLabel").hidden = true;
-  }
-  
-  Options.updateCustomLabelsUI();
-  Options.updateABPStatus();
-
-  // updateStatus
-  Options.updateApplyButton(false);
-  Options.handleShortcutEnabled();
 
   // IE Compatibility Mode
   Options.updateIEModeTab(restore);
+
+  // updateStatus
+  Options.handleShortcutEnabled();
+  Options.updateCustomLabelsUI();
+  Options.updateABPStatus();
+  Options.updateApplyButton(false);
 };
 
 Options.setIconDisplayValue = function(value)
