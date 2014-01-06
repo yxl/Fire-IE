@@ -709,7 +709,7 @@ var gFireIE = null;
       }
       else
       {
-        Utils.runAsync(gFireIE._updateButtonStatus, gFireIE);
+        Utils.runAsync(gFireIE.updateButtonStatus, gFireIE);
       }
     });
   }

@@ -385,7 +385,7 @@ WindowWrapper.prototype = {
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    this.window.gURLBar.addEventListener("input", this._bindMethod(this._updateButtonStatus), false);
+    this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
@@ -444,14 +444,17 @@ WindowWrapper.prototype = {
         this._updateFaviconForTab(mTabs[i]);
   },
   
-  _updateButtonStatus: function()
+  updateButtonStatus: function()
   {
+    // Only update when we are on a firefox-only page
     let url = this.getURL();
-
+    if (!Utils.isFirefoxOnly(url))
+      return;
+      
     // disable engine switch for firefox-only urls
     let urlbarButton = this.E("fireie-urlbar-switch");
-    urlbarButton.disabled = Utils.isFirefoxOnly(url) &&
-      (!Utils.isValidUrl(this.window.gURLBar.value) || Utils.isFirefoxOnly(this.window.gURLBar.value));
+    urlbarButton.disabled = !Utils.isValidUrl(this.window.gURLBar.value) ||
+                            Utils.isFirefoxOnly(this.window.gURLBar.value);
 
     let tooltip = this.E("fireie-urlbar-switch-tooltip");
     tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
