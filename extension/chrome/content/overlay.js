@@ -689,7 +689,7 @@ var gFireIE = null;
   {
     if (!aURLBar) aURLBar = document.getElementById("urlbar");
     if (!aURLBar) return;
-    aURLBar.onclick = function(e)
+    aURLBar.addEventListener("click", function(e)
     {
       let pluginObject = gFireIE.getContainerPlugin();
       if (pluginObject)
@@ -697,7 +697,7 @@ var gFireIE = null;
         gFireIE.goDoCommand("HandOverFocus");
         aURLBar.focus();
       }
-    }
+    }, false);
     HM.hookProp(aURLBar, "value", null, function()
     {
       let isIEEngine = arguments[0] && (arguments[0].substr(0, Utils.containerUrl.length) == Utils.containerUrl);
@@ -706,6 +706,10 @@ var gFireIE = null;
         arguments[0] = Utils.fromContainerUrl(arguments[0]);
         if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
+      }
+      else
+      {
+        Utils.runAsync(gFireIE._updateButtonStatus, gFireIE);
       }
     });
   }

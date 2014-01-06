@@ -590,7 +590,7 @@ var Utils = {
    * Translates a string URI into its nsIURI representation, will return null for
    * invalid URIs.
    */
-  makeURI: function( /**String*/ url) /**nsIURI*/
+  makeURI: function( /**String*/ url, /**Boolean*/ silent) /**nsIURI*/
   {
     try
     {
@@ -603,14 +603,15 @@ var Utils = {
     }
     catch (e)
     {
-      Utils.ERROR(e + ": " + url);
+      if (!silent)
+        Utils.ERROR(e + ": " + url);
       return null;
     }
   },
 
   isValidUrl: function(url)
   {
-    return Utils.makeURI(url) != null;
+    return !!url && Utils.makeURI(url, true) != null;
   },
 
   isValidDomainName: function(domainName)

@@ -385,6 +385,7 @@ WindowWrapper.prototype = {
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    this.window.gURLBar.addEventListener("input", this._bindMethod(this._updateButtonStatus), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
@@ -441,6 +442,24 @@ WindowWrapper.prototype = {
     for (let i = 0; i < mTabs.length; i++)
       if (mTabs[i].localName == "tab")
         this._updateFaviconForTab(mTabs[i]);
+  },
+  
+  _updateButtonStatus: function()
+  {
+    let url = this.getURL();
+
+    // disable engine switch for firefox-only urls
+    let urlbarButton = this.E("fireie-urlbar-switch");
+    urlbarButton.disabled = Utils.isFirefoxOnly(url) &&
+      (!Utils.isValidUrl(this.window.gURLBar.value) || Utils.isFirefoxOnly(this.window.gURLBar.value));
+
+    let tooltip = this.E("fireie-urlbar-switch-tooltip");
+    tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
+
+    // If there exists a tool button of FireIE, make it's status the same with that on the URL bar.
+    let toolbarButton = this.E("fireie-toolbar-palette-button");
+    if (toolbarButton)
+      toolbarButton.disabled = urlbarButton.disabled;
   },
   
   /**
@@ -532,7 +551,9 @@ WindowWrapper.prototype = {
 
       // Update the engine button on the URL bar
       let urlbarButton = this.E("fireie-urlbar-switch");
-      urlbarButton.disabled = Utils.isFirefoxOnly(url); // disable engine switch for firefox-only urls
+      // disable engine switch for firefox-only urls
+      urlbarButton.disabled = Utils.isFirefoxOnly(url) &&
+        (!Utils.isValidUrl(this.window.gURLBar.value) || Utils.isFirefoxOnly(this.window.gURLBar.value));
       urlbarButton.style.visibility = "visible";
       let tooltip = this.E("fireie-urlbar-switch-tooltip");
       tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
@@ -906,6 +927,18 @@ WindowWrapper.prototype = {
   /** Override new url by providing the 3rd argument */
   switchEngine: function(tab, automatic, overrideUrl)
   {
+    // Switch engine on current tab, must check user-typed URL
+    if (!tab || tab == this.window.gBrowser.mCurrentTab)
+    {
+      let url = this.getURL();
+      if (Utils.isFirefoxOnly(url))
+      {
+        url = this.window.gURLBar.value;
+        if (Utils.isFirefoxOnly(url) || !Utils.isValidUrl(url))
+          return;
+        overrideUrl = url;
+      }
+    }
     this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic, overrideUrl);
   },
 
