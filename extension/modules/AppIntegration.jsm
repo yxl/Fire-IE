@@ -409,7 +409,7 @@ WindowWrapper.prototype = {
     if (!target) return false;
     let doc = target.ownerDocument;
     if (!doc) return false;
-    let allow = Utils.startsWith(doc.location.href, Utils.containerUrl);
+    let allow = Utils.isIEEngine(doc.location.href);
     if (!allow) Utils.LOG("Blocked content event: " + event.type);
     return allow;
   },
@@ -710,7 +710,7 @@ WindowWrapper.prototype = {
   getContainerPlugin: function(aTab)
   {
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
+    if (aBrowser && aBrowser.currentURI && Utils.isIEEngine(aBrowser.currentURI.spec))
     {
       return this.getContainerPluginFromBrowser(aBrowser);
     }
@@ -735,7 +735,7 @@ WindowWrapper.prototype = {
   getStatusBar: function(aTab)
   {
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
+    if (aBrowser && aBrowser.currentURI && Utils.isIEEngine(aBrowser.currentURI.spec))
     {
       if (aBrowser.contentDocument)
       {
@@ -754,14 +754,18 @@ WindowWrapper.prototype = {
   {
     let tab = aTab || null;
     let aBrowser = (tab ? tab.linkedBrowser : this.window.gBrowser);
-    let url = Utils.fromContainerUrl(aBrowser.currentURI.spec);
+    let url = aBrowser.currentURI.spec;
+        
+    // Is it an IE engine container url?
     let pluginObject = this.getContainerPlugin(tab);
     let pluginURL = pluginObject ? pluginObject.URL : null;
     if (pluginURL && pluginURL != "")
     {
       url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginURL)) : pluginURL);
+      return Utils.fromContainerUrl(url);
     }
-    return Utils.fromContainerUrl(url);
+    
+    return Utils.fromAnyPrefixedUrl(url);
   },
 
 
@@ -775,7 +779,7 @@ WindowWrapper.prototype = {
     {
       let docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
       let wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-      if (wNav.currentURI && Utils.startsWith(wNav.currentURI.spec, Utils.containerUrl))
+      if (wNav.currentURI && Utils.isIEEngine(wNav.currentURI.spec))
       {
         let pluginObject = wNav.document.getElementById(Utils.containerPluginId);
         if (pluginObject)
@@ -807,7 +811,19 @@ WindowWrapper.prototype = {
   {
     let tab = aTab || this.window.gBrowser.mCurrentTab;
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.startsWith(aBrowser.currentURI.spec, Utils.containerUrl))
+    if (aBrowser && aBrowser.currentURI && Utils.isIEEngine(aBrowser.currentURI.spec))
+    {
+      return true;
+    }
+    return false;
+  },
+  
+  /** Check whether current page is a switch jumper.*/
+  isSwitchJumper: function(aTab)
+  {
+    let tab = aTab || this.window.gBrowser.mCurrentTab;
+    let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
+    if (aBrowser && aBrowser.currentURI && Utils.isSwitchJumper(aBrowser.currentURI.spec))
     {
       return true;
     }
@@ -862,9 +878,10 @@ WindowWrapper.prototype = {
           this.goDoCommand("Stop");
         }
 
-        // Switch to Firefox engine by loading blank page
+        // Switch to Firefox engine by loading the switch jumper page
         const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
-        if (aTab.linkedBrowser) aTab.linkedBrowser.loadURIWithFlags("about:blank", flags);
+        if (aTab.linkedBrowser)
+          aTab.linkedBrowser.loadURIWithFlags(Utils.toSwitchJumperUrl(url), flags);
       }
 
       // firefox-only urls can only be handled by firefox(gecko) engine
@@ -876,8 +893,11 @@ WindowWrapper.prototype = {
       {
         Utils.runAsyncTimeout(function()
         {
-          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-          aTab.linkedBrowser.loadURIWithFlags(url, flags);
+          if (isIEEngineAfterSwitch)
+          {
+            const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+            aTab.linkedBrowser.loadURIWithFlags(url, flags);
+          }
           if (aTab === this.window.gBrowser.selectedTab)
             this.window.gURLBar.value = url;
           this._updateInterface();
@@ -931,7 +951,7 @@ WindowWrapper.prototype = {
   switchEngine: function(tab, automatic, overrideUrl)
   {
     // Switch engine on current tab, must check user-typed URL
-    if (!tab || tab == this.window.gBrowser.mCurrentTab)
+    if (!tab || tab === this.window.gBrowser.mCurrentTab)
     {
       let url = this.getURL();
       if (Utils.isFirefoxOnly(url))
@@ -2115,6 +2135,12 @@ WindowWrapper.prototype = {
           const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
           try
           {
+            if (!Utils.isIEEngine(url))
+            {
+              // switch back, use the jumper instead
+              url = Utils.toSwitchJumperUrl(url);
+              flags = flags | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+            }
             newTab.linkedBrowser.loadURIWithFlags(url, flags);
           }
           catch (ex) {}
@@ -2181,7 +2207,8 @@ WindowWrapper.prototype = {
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
 
-    if (doc.defaultView.location.href == "about:blank")
+    let url = doc.defaultView.location.href;
+    if (url == "about:blank" || Utils.isSwitchJumper(url))
     {
       // might be the switch jumper from IE to FF, ignore zooming on this page
       return;

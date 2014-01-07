@@ -78,7 +78,7 @@ var gFireIE = null;
     // Check the container page
     let doc = plugin.ownerDocument;
     let url = doc.location.href;
-    if (!Utils.startsWith(url, Utils.containerUrl))
+    if (!Utils.isIEEngine(url))
       return;
     
     // The plugin binding fires this event when it is created.
@@ -142,6 +142,7 @@ var gFireIE = null;
   
     //hook properties
     hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
+    hookURLBarSetter(gURLBar);
   }
   
   function initListeners()
@@ -185,7 +186,7 @@ var gFireIE = null;
       identityBox.addEventListener("keypress", displaySecurityInfoHandler, true);
       identityBox.addEventListener("dragstart", function(event)
       {
-        if (gFireIE.isIEEngine())
+        if (gFireIE.isIEEngine() || gFireIE.isSwitchJumper())
         {
           if (gURLBar.getAttribute("pageproxystate") != "valid") {
             return;
@@ -215,7 +216,7 @@ var gFireIE = null;
     // caused by the new hook mechanism
     let delayedCheckTab = function(tab)
     {
-      setTimeout(function() { if (gFireIE.isIEEngine(tab)) doLazyHooks(); }, 0);
+      setTimeout(function() { if (gFireIE.isIEEngine(tab) || gFireIE.isSwitchJumper(tab)) doLazyHooks(); }, 0);
     };
     let lazyHookTabOpenHandler = function(e)
     {
@@ -229,6 +230,7 @@ var gFireIE = null;
     };
     // add listeners
     window.addEventListener("IEContentPluginInitialized", doLazyHooks, true);
+    window.addEventListener("PBWShown", doLazyHooks, true);
     window.addEventListener("IEDocumentComplete", lazyHookDocumentCompleteHandler, true);
     let container = gBrowser.tabContainer;
     container.addEventListener("TabOpen", lazyHookTabOpenHandler, true);
@@ -236,6 +238,7 @@ var gFireIE = null;
     let removeLazyHookHandlers = function()
     {
       window.removeEventListener("IEContentPluginInitialized", doLazyHooks, true);
+      window.removeEventListener("PBWShown", doLazyHooks, true);
       window.removeEventListener("IEDocumentComplete", lazyHookDocumentCompleteHandler, true);
       container.removeEventListener("TabOpen", lazyHookTabOpenHandler, true);
     };
@@ -252,9 +255,6 @@ var gFireIE = null;
       
       Utils.LOG("Doing lazy function hooks...");
       
-      //hook properties
-      hookURLBarSetter(gURLBar);
-
       //hook functions
       // Obtain real URL when bookmarking
       HM.hookCodeHeadTail("PlacesCommandHook.bookmarkPage",
@@ -318,7 +318,7 @@ var gFireIE = null;
       {
         let browser = this.getBrowserForTab(aTab);
         if (browser.contentTitle) return;
-        if (browser.currentURI.spec && browser.currentURI.spec.indexOf(gFireIE.Utils.containerUrl) == 0)
+        if (browser.currentURI.spec && Utils.isIEEngine(browser.currentURI.spec))
           return RET.shouldReturn();
       });
 
@@ -353,7 +353,7 @@ var gFireIE = null;
       HM.hookCodeHead("MailIntegration.sendMessage", function()
       {
         let pluginObject = gFireIE.getContainerPlugin();
-        if(pluginObject)
+        if (pluginObject)
         {
           arguments[0] = pluginObject.URL;
           arguments[1] = pluginObject.Title;
@@ -539,9 +539,9 @@ var gFireIE = null;
       {
         if (aBrowser)
           setUseRealURI(aBrowser);
-        if (Utils.startsWith(aURI.spec, Utils.containerUrl))
+        if (Utils.isIEEngine(aURI.spec) || Utils.isSwitchJumper(aURI.spec))
         {
-          arguments[0] = Utils.makeURI(Utils.fromContainerUrl(aURI.spec));
+          arguments[0] = Utils.makeURI(Utils.fromAnyPrefixedUrl(aURI.spec));
           return RET.modifyArguments(arguments);
         }
       },
@@ -638,7 +638,7 @@ var gFireIE = null;
   // save space by reusing function handles
   let currentURIGetter = function(uri)
   {
-    if (Utils.startsWith(uri.spec, Utils.containerUrl))
+    if (Utils.isIEEngine(uri.spec))
     {
       let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
       if (pluginObject)
@@ -646,17 +646,28 @@ var gFireIE = null;
         let pluginURL = pluginObject.URL;
         if (pluginURL)
         {
-          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));     
+          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
           return RET.modifyValue(Utils.makeURI(url));
         }
       }
+      // Failed to get URL from plugin object? Extract from uri.spec directly.
+      if (this.FireIE_bUseRealURI)
+      {
+        let url = Utils.fromContainerUrl(uri.spec);
+        return RET.modifyValue(Utils.makeURI(url));
+      }
+    }
+    else if (Utils.isSwitchJumper(uri.spec) && this.FireIE_bUseRealURI)
+    {
+      let url = Utils.fromSwitchJumperUrl(uri.spec);
+      return RET.modifyValue(Utils.makeURI(url));
     }
   };
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
     let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
-    if (uri && Utils.startsWith(uri.spec, Utils.containerUrl))
+    if (uri && Utils.isIEEngine(uri.spec))
     {
       let entry = history.getEntryAtIndex(history.index, false);
       if (entry.URI.spec != uri.spec)
@@ -700,16 +711,21 @@ var gFireIE = null;
     }, false);
     HM.hookProp(aURLBar, "value", null, function()
     {
-      let isIEEngine = arguments[0] && (arguments[0].substr(0, Utils.containerUrl.length) == Utils.containerUrl);
-      if (isIEEngine)
+      if (!arguments[0]) return;
+      
+      gFireIE.updateInterface();
+
+      if (Utils.isIEEngine(arguments[0]))
       {
         arguments[0] = Utils.fromContainerUrl(arguments[0]);
         if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
       }
-      else
+      else if (Utils.isSwitchJumper(arguments[0]))
       {
-        Utils.runAsync(gFireIE.updateButtonStatus, gFireIE);
+        arguments[0] = Utils.fromSwitchJumperUrl(arguments[0]);
+        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
+        return RET.modifyArguments(arguments);
       }
     });
   }

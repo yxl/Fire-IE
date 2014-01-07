@@ -65,6 +65,9 @@ let FireIEContainer = {};
       // Set tab icon to pbw icon
       Favicon.setIcon(document, "chrome://global/skin/icons/warning-16.png");
       document.title = Utils.getString("fireie.pbw.title");
+      let event = document.createEvent("CustomEvent");
+      event.initCustomEvent("PBWShown", true, true, "");
+      document.dispatchEvent(event);
     }
     else
     {

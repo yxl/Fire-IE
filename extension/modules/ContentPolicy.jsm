@@ -150,7 +150,7 @@ var Policy = {
   isManuallySwitched: function(browserNode, url)
   {
     let hostName = Utils.getEffectiveHost(url);
-    return hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+    return !!hostName && browserNode.getAttribute('manuallySwitched') == hostName;
   },
   
   /**
@@ -225,7 +225,8 @@ var PolicyPrivate = {
       {
         Utils.runAsync(function()
         {
-          browserNode.loadURI(url);
+          browserNode.loadURIWithFlags(Utils.toSwitchJumperUrl(url),
+            Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY);
           // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
           let tab = Utils.getTabFromBrowser(browserNode);
           UtilsPluginManager.checkDanglingNewWindow(tab);

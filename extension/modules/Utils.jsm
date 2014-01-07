@@ -329,17 +329,26 @@ var Utils = {
     return "resource://gre-resources/hiddenWindow.html";
   },
   
+  get switchJumperUrl()
+  {
+    return "chrome://fireie/content/switchJumper.xhtml?url=";
+  },
+  
   /** Whether url is IE engine container url */
   isIEEngine: function(url)
   {
     return Utils.startsWith(url, Utils.containerUrl);
   },
   
-  /** Converts URL into IE Engine URL */
-  toContainerUrl: function(url)
+  isSwitchJumper: function(url)
+  {
+    return Utils.startsWith(url, Utils.switchJumperUrl);
+  },
+  
+  toPrefixedUrl: function(url, prefix)
   {
     url = url.trim();
-    if (Utils.startsWith(url, Utils.containerUrl)) return url;
+    if (Utils.startsWith(url, prefix)) return url;
     if (/^file:\/\/.*/.test(url))
     {
       try
@@ -349,23 +358,22 @@ var Utils = {
       catch (e)
       {}
     }
-    return Utils.containerUrl + encodeURI(url);
+    return prefix + encodeURI(url);
   },
 
-  /** Get real URL from Plugin URL */
-  fromContainerUrl: function(url)
+  fromPrefixedUrl: function(url, prefix)
   {
     if (url && url.length > 0)
     {
-      url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      url = url.trim();
       if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
       if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
-      if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
+      if (url.substr(0, prefix.length) == prefix)
       {
-        url = decodeURI(url.substring(Utils.containerUrl.length));
+        url = decodeURI(url.substring(prefix.length));
         if (!/^[\w\-]+:/.test(url))
         {
           url = "http://" + url;
@@ -373,6 +381,40 @@ var Utils = {
       }
     }
     return url;
+  },
+  
+  fromAnyPrefixedUrl: function(url)
+  {
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl];
+    for (let i = 0, l = prefixes.length; i < l; i++)
+    {
+      let prefix = prefixes[i];
+      if (Utils.startsWith(url, prefix))
+        return Utils.fromPrefixedUrl(url, prefix);
+    }
+    return url;
+  },
+  
+  /** Converts URL into IE Engine URL */
+  toContainerUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.containerUrl);
+  },
+
+  /** Get real URL from Plugin URL */
+  fromContainerUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.containerUrl);
+  },
+  
+  toSwitchJumperUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.switchJumperUrl);
+  },
+  
+  fromSwitchJumperUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.switchJumperUrl);
   },
 
   get containerPluginId()
