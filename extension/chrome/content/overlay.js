@@ -713,7 +713,7 @@ var gFireIE = null;
     {
       if (!arguments[0]) return;
       
-      gFireIE.updateInterface();
+      Utils.runAsync(gFireIE.updateButtonStatus, gFireIE);
 
       if (Utils.isIEEngine(arguments[0]))
       {

@@ -23,7 +23,7 @@
           let browser = Utils.getTabFromDocument(document).linkedBrowser;
           browser.loadURIWithFlags(url,
             Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
-        }, null);
+        });
       }
     ]]></script>
   </head>
