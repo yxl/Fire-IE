@@ -366,10 +366,6 @@ WindowWrapper.prototype = {
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
-    this.E("fireie-urlbar-switch").addEventListener("dragover", this._bindMethod(this._onDragOver), false);
-    this.E("fireie-urlbar-switch").addEventListener("drop", this._bindMethod(this._onDrop), false);
-    this.E("fireie-toolbar-palette-button").addEventListener("dragover", this._bindMethod(this._onDragOver), false);
-    this.E("fireie-toolbar-palette-button").addEventListener("drop", this._bindMethod(this._onDrop), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
@@ -2230,7 +2226,7 @@ WindowWrapper.prototype = {
     return out;
   },
 
-  _onDragOver: function(e)
+  onDragOver: function(e)
   {
     if (this._shouldHandleDrop(e))
     {
@@ -2254,7 +2250,7 @@ WindowWrapper.prototype = {
     this._openInEngine(url, isIEEngine, where);
   },
   
-  _onDrop: function(e)
+  onDrop: function(e)
   {
     let urls = this._getDropUrls(e);
     if (urls.length)

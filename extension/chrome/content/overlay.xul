@@ -17,6 +17,8 @@ xmlns:html="http://www.w3.org/1999/xhtml">
   <textbox id="urlbar">
     <toolbarbutton id="fireie-urlbar-switch" insertbefore="urlbar-go-button"
     onclick="gFireIE.clickSwitchButton(event);"
+    ondragover="gFireIE.onDragOver(event);"
+    ondrop="gFireIE.onDrop(event);"
     tooltip="fireie-urlbar-switch-tooltip"
     fx-icon-url="chrome://fireie/skin/engine-fx.png"
     ie-icon-url="chrome://fireie/skin/engine-ie.png">
@@ -40,6 +42,8 @@ xmlns:html="http://www.w3.org/1999/xhtml">
     label="&fireie.switchButton.label;"
     class="toolbarbutton-1 chromeclass-toolbar-additional"
     onclick="gFireIE.clickSwitchButton(event);"
+    ondragover="gFireIE.onDragOver(event);"
+    ondrop="gFireIE.onDrop(event);"
     tooltip="fireie-urlbar-switch-tooltip" />
   </toolbarpalette>
   <!-- Popup menus -->
