@@ -225,8 +225,7 @@ var PolicyPrivate = {
       {
         Utils.runAsync(function()
         {
-          browserNode.loadURIWithFlags(Utils.toSwitchJumperUrl(url),
-            Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY);
+          browserNode.loadURI(Utils.toSwitchJumperUrl(url));
           // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
           let tab = Utils.getTabFromBrowser(browserNode);
           UtilsPluginManager.checkDanglingNewWindow(tab);

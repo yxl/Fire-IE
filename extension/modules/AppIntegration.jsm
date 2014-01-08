@@ -366,6 +366,10 @@ WindowWrapper.prototype = {
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
+    this.E("fireie-urlbar-switch").addEventListener("dragover", this._bindMethod(this._onDragOver), false);
+    this.E("fireie-urlbar-switch").addEventListener("drop", this._bindMethod(this._onDrop), false);
+    this.E("fireie-toolbar-palette-button").addEventListener("dragover", this._bindMethod(this._onDragOver), false);
+    this.E("fireie-toolbar-palette-button").addEventListener("drop", this._bindMethod(this._onDrop), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
@@ -789,6 +793,41 @@ WindowWrapper.prototype = {
     }
     return false;
   },
+  
+  _addNewTab: function(where, related)
+  {
+    var gBrowser = this.window.gBrowser;
+    // it is highly probable that the new tab is related to current
+    let newTab = gBrowser.addTab("about:blank",
+      { relatedToCurrent: related === undefined || related });
+
+    let loadInBackground = Utils.shouldLoadInBackground();
+    
+    switch (where)
+    {
+    case "window":
+      gBrowser.hideTab(newTab);
+      Utils.runAsync(function()
+      {
+        gBrowser.replaceTabWithWindow(newTab);
+      });
+      break;
+    case "current":
+      gBrowser.selectedTab = newTab;
+      break;
+    case "tabshifted":
+      loadInBackground = !loadInBackground;
+      // fall through
+    case "tab":
+    default:
+      if (!loadInBackground)
+        gBrowser.selectedTab = newTab;
+      // otherwise, A background tab has been opened, nothing else to do here.
+      break;
+    }
+    
+    return newTab;
+  },
 
   /**
    *  Switch the engine of specified tab.
@@ -797,29 +836,33 @@ WindowWrapper.prototype = {
   {
     if (aTab && aTab.localName == "tab")
     {
-
       // getURL retrieves the actual URL from, maybe, container url
       let url = overrideUrl || this.getURL(aTab);
 
       let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
 
-      if (aTab.linkedBrowser)
+      let unprefixedUrl = url;
+      // firefox-only urls can only be handled by firefox(gecko) engine
+      if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
+        url = Utils.toContainerUrl(url);
+      
+      if (!aTab.linkedBrowser || aTab.linkedBrowser.currentURI.spec == url)
+        return;
+
+      let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
+      if (browserNode)
       {
-        let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
-        if (browserNode)
+        if (!automatic)
         {
-          if (!automatic)
-          {
-            // User manually switch engine.
-            // We have to tell ContentPolicy to stop monitoring this tab until user navigates to another website.
-            Policy.setManuallySwitched(browserNode, url);
-          }
-          else
-          {
-            // prevent automatic switching on manuallySwitched tabs, until user navigates to another website.
-            if (Policy.isManuallySwitched(browserNode, url))
-              return;
-          }
+          // User manually switch engine.
+          // We have to tell ContentPolicy to stop monitoring this tab until user navigates to another website.
+          Policy.setManuallySwitched(browserNode, unprefixedUrl);
+        }
+        else
+        {
+          // prevent automatic switching on manuallySwitched tabs, until user navigates to another website.
+          if (Policy.isManuallySwitched(browserNode, unprefixedUrl))
+            return;
         }
       }
 
@@ -828,7 +871,12 @@ WindowWrapper.prototype = {
         zoomLevel: zoomLevel
       });
 
-      if (!isIEEngineAfterSwitch)
+      if (isIEEngineAfterSwitch)
+      {
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+        aTab.linkedBrowser.loadURIWithFlags(url, flags);
+      }
+      else
       {
         // Stop loading and hide the IE plugin if we switch to Firefox engine
         let pluginObject = this.getContainerPlugin(aTab);
@@ -839,50 +887,73 @@ WindowWrapper.prototype = {
         }
 
         // Switch to Firefox engine by loading the switch jumper page
-        const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
         if (aTab.linkedBrowser)
           aTab.linkedBrowser.loadURIWithFlags(Utils.toSwitchJumperUrl(url), flags);
       }
-
-      // firefox-only urls can only be handled by firefox(gecko) engine
-      if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
-      {
-        url = Utils.toContainerUrl(url);
-      }
-      if (aTab.linkedBrowser && aTab.linkedBrowser.currentURI.spec != url)
-      {
-        Utils.runAsyncTimeout(function()
-        {
-          if (isIEEngineAfterSwitch)
-          {
-            const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-            aTab.linkedBrowser.loadURIWithFlags(url, flags);
-          }
-          if (aTab === this.window.gBrowser.selectedTab)
-            this.window.gURLBar.value = url;
-          this._updateInterface();
-        }, this, 100);
-      }
+      
+      if (aTab === this.window.gBrowser.selectedTab)
+        this.window.gURLBar.value = url;
+      this._updateInterface();
     }
   },
-
-  /**
-   *  Get the url after engine switch
-   */
-  _getURLAfterSwitch: function(aTab)
+  
+  _openInCurrentTab: function(url, isIEEngine)
   {
-    // getURL retrieves the actual URL from, maybe, container url
-    let url = this.getURL(aTab);
-
-    let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
-    
-    // firefox-only urls can only be handled by firefox(gecko) engine
-    if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
+    if (this.isIEEngine() != isIEEngine)
+      this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+    else
     {
-      url = Utils.toContainerUrl(url);
-    }
+      if (isIEEngine && !Utils.isFirefoxOnly(url))
+        url = Utils.toContainerUrl(url);
+      
+      let tab = this.window.gBrowser.mCurrentTab;
+      if (tab.linkedBrowser.currentURI.spec == url)
+        return;
 
-    return url;
+      // should load actual url after setting the manuallyswitched flag
+      this._setManuallySwitchFlag(tab, url);
+      
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+      try
+      {
+        tab.linkedBrowser.loadURIWithFlags(url, flags);
+        this.window.gURLBar.value = url;
+        this._updateInterface();
+      }
+      catch (ex) {}
+    }
+  },
+  
+  _openInEngine: function(url, isIEEngine, where)
+  {
+    if (where == "current")
+      this._openInCurrentTab(url, isIEEngine);
+    else
+    {
+      let gBrowser = this.window.gBrowser;
+      if (isIEEngine && !Utils.isFirefoxOnly(url))
+        url = Utils.toContainerUrl(url);
+
+      // should load actual url after setting the manuallyswitched flag
+      let newTab = this._addNewTab(where, true);
+
+      // first set manual switch flags
+      this._setManuallySwitchFlag(newTab, url);
+
+      // and then load the actual url
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+      try
+      {
+        if (!isIEEngine)
+        {
+          // switch back, use the jumper instead
+          url = Utils.toSwitchJumperUrl(url);
+        }
+        newTab.linkedBrowser.loadURIWithFlags(url, flags);
+      }
+      catch (ex) {}
+    }
   },
 
   /**
@@ -904,6 +975,19 @@ WindowWrapper.prototype = {
       }
     }
   },
+  
+  // Check user-typed URL to get a switchable one, if possible
+  _getSwitchableUrl: function()
+  {
+    let url = this.getURL();
+    if (Utils.isFirefoxOnly(url))
+    {
+      url = this.window.gURLBar.value;
+      if (Utils.isFirefoxOnly(url) || !Utils.isValidUrl(url))
+        return null;
+    }
+    return url;
+  },
 
   /** Switch the specified tab's engine, or current tab's engine if tab is not provided*/
   /** If the switch is not initiated by the user, use automatic = true */
@@ -911,16 +995,12 @@ WindowWrapper.prototype = {
   switchEngine: function(tab, automatic, overrideUrl)
   {
     // Switch engine on current tab, must check user-typed URL
-    if (!tab || tab === this.window.gBrowser.mCurrentTab)
+    if (!overrideUrl && (!tab || tab === this.window.gBrowser.mCurrentTab))
     {
-      let url = this.getURL();
-      if (Utils.isFirefoxOnly(url))
-      {
-        url = this.window.gURLBar.value;
-        if (Utils.isFirefoxOnly(url) || !Utils.isValidUrl(url))
-          return;
-        overrideUrl = url;
-      }
+      let url = this._getSwitchableUrl();
+      if (!url)
+        return;
+      overrideUrl = url;
     }
     this._switchTabEngine(tab || this.window.gBrowser.mCurrentTab, automatic, overrideUrl);
   },
@@ -1113,9 +1193,6 @@ WindowWrapper.prototype = {
     let data = JSON.parse(event.detail);
     let url = data.url;
     let id = data.id;
-    var gBrowser = this.window.gBrowser;
-    let newTab = gBrowser.addTab("about:blank",
-      { relatedToCurrent: true }); // it is highly probable that the new tab is related to current
 
     let shift = data.shift;
     let ctrl = data.ctrl;
@@ -1125,35 +1202,16 @@ WindowWrapper.prototype = {
     //    1     0     2    window
     //    1     1     3    tabshifted
     let where = shift ? (ctrl ? "tabshifted" : "window") : (ctrl ? "tab" : "current");
-    let loadInBackground = Utils.shouldLoadInBackground();
 
-    switch (where)
-    {
-    case "window":
-      gBrowser.hideTab(newTab);
-      gBrowser.replaceTabWithWindow(newTab);
-      break;
-    case "current":
-      gBrowser.selectedTab = newTab;
-      break;
-    case "tabshifted":
-      loadInBackground = !loadInBackground;
-      // fall through
-    case "tab":
-    default:
-      if (!loadInBackground)
-        gBrowser.selectedTab = newTab;
-      // otherwise, A background tab has been opened, nothing else to do here.
-      break;
-    }
-
+    let newTab = this._addNewTab(where, true);
+    
     let param = {
       id: id
     };
     Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", param);
     
     // load URI outside of addTab() to supress potential load error message caused by switch back
-    const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
     try
     {
       newTab.linkedBrowser.loadURIWithFlags(Utils.toContainerUrl(url), flags);
@@ -2056,62 +2114,20 @@ WindowWrapper.prototype = {
     }
     else
     {
+      // Must check user-typed URL
+      let url = this._getSwitchableUrl();
+      if (!url)
+        return;
+
       // switch behavior similar to the reload button
       let where = this.window.whereToOpenLink(e, false, true);
-      let loadInBackground = Utils.shouldLoadInBackground();
-      
-      if (where == "current")
-        this.switchEngine();
-      else
-      {
-        let gBrowser = this.window.gBrowser;
-        if (!Utils.isFirefoxOnly(this.getURL(gBrowser.currentTab)))
-        {
-          let url = this._getURLAfterSwitch(gBrowser.selectedTab);
-          // should load actual url after setting the manuallyswitched flag
-          let newTab = gBrowser.addTab("about:blank",
-            { relatedToCurrent: true });
-          // first set manual switch flags
-          this._setManuallySwitchFlag(newTab, url);
-          
-          // determine the tab location
-          switch (where)
-          {
-          case "window":
-            gBrowser.hideTab(newTab);
-            gBrowser.replaceTabWithWindow(newTab);
-            break;
-          case "tabshifted":
-            loadInBackground = !loadInBackground;
-            // fall through
-          case "tab":
-            if (!loadInBackground)
-              gBrowser.selectedTab = newTab;
-            // otherwise, A background tab has been opened, nothing else to do here.
-            break;
-          }
-
-          // and then load the actual url
-          const flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
-          try
-          {
-            if (!Utils.isIEEngine(url))
-            {
-              // switch back, use the jumper instead
-              url = Utils.toSwitchJumperUrl(url);
-              flags = flags | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
-            }
-            newTab.linkedBrowser.loadURIWithFlags(url, flags);
-          }
-          catch (ex) {}
-        }
-      }
+      this._openInEngine(url, !this.isIEEngine(), where);
     }
     
     e.preventDefault();
     e.stopPropagation();
   },
-
+  
   // process click events inside the URL bar (mainly to stop propagation
   // in order to resolve multiple-caret problems)
   _onClickInsideURLBar: function(e)
@@ -2131,7 +2147,133 @@ WindowWrapper.prototype = {
     // Focus the content plugin on TabSelect
     this._delayedFocusPlugin();
   },
+  
+  _shouldHandleDrop: function(e)
+  {
+    let dt = e.dataTransfer;
+    let mozUrl = dt.getData("text/x-moz-url");
+    if (mozUrl)
+    {
+      let urls = mozUrl.split("\n");
+      for (let i = 0; i < urls.length; i += 2)
+      {
+        let url = urls[i];
+        if (Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          return true;
+      }
+    }
+    let uriList = dt.getData("text/uri-list");
+    if (uriList)
+    {
+      let urls = uriList.split("\n");
+      for (let i = 0; i < urls.length; i++)
+      {
+        let url = urls[i].trim();
+        if (url[0] != "#" && Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          return true;
+      }
+    }
+    let text = dt.getData("text/plain");
+    if (text)
+    {
+      let urls = text.split("\n");
+      for (let i = 0, l = urls.length; i < l; i++)
+      {
+        let url = urls[i].trim();
+        if (Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          return true;
+      }
+    }
+    return false;
+  },
+  
+  _getDropUrls: function(e)
+  {
+    let out = [];
+    let dt = e.dataTransfer;
+    let mozUrl = dt.getData("text/x-moz-url");
+    if (mozUrl)
+    {
+      let urls = mozUrl.split("\n");
+      for (let i = 0, l = urls.length; i < l; i += 2)
+      {
+        let url = urls[i].trim();
+        if (Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          out.push(url);
+      }
+      return out;
+    }
+    let uriList = dt.getData("text/uri-list");
+    if (uriList)
+    {
+      let urls = uriList.split("\n");
+      for (let i = 0, l = urls.length; i < l; i++)
+      {
+        let url = urls[i].trim();
+        if (url[0] != "#" && Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          out.push(url);
+      }
+      return out;
+    }
+    let text = dt.getData("text/plain");
+    if (text)
+    {
+      let urls = text.split("\n");
+      for (let i = 0, l = urls.length; i < l; i++)
+      {
+        let url = urls[i].trim();
+        if (Utils.isValidUrl(url) && !Utils.isFirefoxOnly(url))
+          out.push(url);
+      }
+      return out;
+    }
+    return out;
+  },
 
+  _onDragOver: function(e)
+  {
+    if (this._shouldHandleDrop(e))
+    {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  },
+  
+  _openDropUrl: function(url, isIEEngine, where)
+  {
+    try
+    {
+      this.window.urlSecurityCheck(url,
+        this.window.gBrowser.contentPrincipal,
+        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+    }
+    catch (ex)
+    {
+      return;
+    }
+    this._openInEngine(url, isIEEngine, where);
+  },
+  
+  _onDrop: function(e)
+  {
+    let urls = this._getDropUrls(e);
+    if (urls.length)
+    {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+      
+      let where = this.window.whereToOpenLink(e, false, true);
+      let isIEEngine = !this.isIEEngine();
+      this._openDropUrl(urls[0], isIEEngine, where);
+
+      where = Utils.shouldLoadInBackground() ? "tab" : "tabshifted";
+      for (let i = 1, l = urls.length; i < l; i++)
+      {
+        this._openDropUrl(urls[i], isIEEngine, where);
+      }
+    }
+  },
 
   /**
    * Since IE don't support Text-Only Zoom, consider only Full Zoom

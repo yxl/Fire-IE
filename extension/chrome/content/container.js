@@ -33,11 +33,11 @@ let FireIEContainer = {};
   {
     Utils, Prefs, Favicon, LightweightTheme
   } = jsm;
-  let gFireIE = (function()
+  function getGFireIE()
   {
     let win = Utils.getChromeWindowFrom(window);
     return win && win.gFireIE;
-  })();
+  }
   
   /**
    * Shortcut for document.getElementById(id)
@@ -71,7 +71,7 @@ let FireIEContainer = {};
     }
     else
     {
-      gFireIE.clearResumeFromPBW();
+      getGFireIE().clearResumeFromPBW();
       container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
       registerEventHandler();
     }
@@ -79,6 +79,7 @@ let FireIEContainer = {};
 
   function needPrivateBrowsingWarning()
   {
+    let gFireIE = getGFireIE();
     let need = gFireIE && gFireIE.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !gFireIE.isResumeFromPBW();
     // If we have fireieNavigateParams.id, the tab is a new window opened from IE
     // We should attach to it as soon as possible, ignoring privatebrowsingwarning
@@ -223,6 +224,7 @@ let FireIEContainer = {};
       let containerUrl = Utils.toContainerUrl(url);
       if (window.location.href != containerUrl)
       {
+        let gFireIE = getGFireIE();
         // Issue #51: check if we need to switch back to Firefox engine
         if (gFireIE && gFireIE.shouldSwitchBack(url))
         {
@@ -277,6 +279,8 @@ let FireIEContainer = {};
   /** Synchronize with Firefox history */
   function syncHistory()
   {
+    let gFireIE = getGFireIE();
+
     // Private browsing, don't record history
     if (gFireIE && gFireIE.isPrivateBrowsing())
       return;
@@ -442,6 +446,7 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
+    let gFireIE = getGFireIE();
     return gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
   }
 })();

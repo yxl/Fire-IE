@@ -139,6 +139,9 @@ var gFireIE = null;
     {
       HM.redirectSPHNameFunc("Tabmix.newCode", 0, 1);
     }
+    
+    // Allow drag'n'drop on url bar button
+    hookURLBarDragDrop();
   
     //hook properties
     hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
@@ -728,6 +731,19 @@ var gFireIE = null;
         return RET.modifyArguments(arguments);
       }
     });
+  }
+  
+  function hookURLBarDragDrop()
+  {
+    // gURLBar uses capturing hooks, thus our handlers can't override gURLBar's.
+    // Hence the hook
+    function checkURLBarButton(e)
+    {
+      if (e.target.id == "fireie-urlbar-switch")
+        return RET.shouldReturn();
+    }
+    HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
+    HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
   }
   
   let loadListener = function()

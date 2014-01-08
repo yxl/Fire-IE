@@ -83,12 +83,13 @@ HookManager.prototype = {
   _recycleFunc: function(func)
   {
     let idx = func.FireIE_orgFuncIdx;
-    if (idx == this._hookFunctions.length - 1)
-      this._hookFunctions.pop();
+    let HM = func.FireIE_hookManager;
+    if (idx == HM._hookFunctions.length - 1)
+      HM._hookFunctions.pop();
     else
     {
-      this._hookFunctions[idx] = null;
-      this._recycledIndices.push(idx);
+      HM._hookFunctions[idx] = null;
+      HM._recycledIndices.push(idx);
     }
   },
   
