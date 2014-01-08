@@ -686,7 +686,6 @@ var Utils = {
   getEffectiveHost: function( /**String*/ url) /**String*/
   {
     // Cache the eTLDService if this is our first time through
-    // Do not cache to gIdentityHandler, thus minimizing the impact
     var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
     var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
     this.getEffectiveHost = function(u)

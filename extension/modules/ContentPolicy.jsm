@@ -149,8 +149,8 @@ var Policy = {
    */
   isManuallySwitched: function(browserNode, url)
   {
-    let hostName = Utils.getEffectiveHost(url);
-    return !!hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+    let hostName = Utils.getEffectiveHost(url) || "";
+    return browserNode.getAttribute("manuallySwitched") == hostName;
   },
   
   /**
@@ -160,7 +160,7 @@ var Policy = {
    */
   setManuallySwitched: function(browserNode, url)
   {
-    browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
+    browserNode.setAttribute("manuallySwitched", Utils.getEffectiveHost(url) || "");
   }
 };
 
