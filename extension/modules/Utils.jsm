@@ -32,6 +32,9 @@ var Utils = {
 
   /** nsITimer's */
   _timers: [],
+  
+  /** throttled updates */
+  _throttledUpdates: new WeakMap(),
 
   /**
    * Returns the add-on ID used by Adblock Plus
@@ -1143,6 +1146,49 @@ var Utils = {
       asyncHistory.updatePlaces(placeInfo);
     };
     return this.addVisitHistory(url, title);
+  },
+  
+  _doThrottledUpdate: function(update, updateFunc, thisPtr)
+  {
+    update.delaying = false;
+    if (update.scheduled)
+    {
+      update.scheduled = false;
+      update.updating = true;
+      try
+      {
+        updateFunc.call(thisPtr);
+      }
+      finally
+      {
+        update.updating = false;
+        update.delaying = true;
+        update.scheduled = false;
+        Utils.runAsyncTimeout(this._doThrottledUpdate, this, 100,
+                              update, updateFunc, thisPtr);
+      }
+    }
+  },
+  
+  // Schedule throttled (no 2 updates shall happen in 100 ms) updates
+  scheduleThrottledUpdate: function(updateFunc, thisPtr)
+  {
+    // Fetch the corresponding update object
+    let thisPtrUpdates = this._throttledUpdates.get(thisPtr);
+    if (!thisPtrUpdates)
+      this._throttledUpdates.set(thisPtr, thisPtrUpdates = new WeakMap());
+    let update = thisPtrUpdates.get(updateFunc);
+    if (!update)
+      thisPtrUpdates.set(updateFunc, update = {});
+    
+    // Do schedule
+    if (update.updating || update.scheduled)
+      return;
+    
+    update.scheduled = true;
+    if (!update.delaying)
+      Utils.runAsync(this._doThrottledUpdate, this,
+                     update, updateFunc, thisPtr);
   }
 };
 

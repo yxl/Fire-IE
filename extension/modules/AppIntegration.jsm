@@ -281,26 +281,6 @@ WindowWrapper.prototype = {
   Utils: null,
 
   /**
-   * Whether the UI is updating.
-   * @type Boolean
-   */
-  _isUpdating: false,
-  
-  /**
-   * Whether the UI is scheduled to update at a later time.
-   * This is to prevent too frequent updates eating up CPU time.
-   * @type Boolean
-   */
-  _hasScheduledUpdate: false,
-  
-  /**
-   * Whether we are in delayed update period.
-   * This is to prevent too frequent updates eating up CPU time.
-   * @type Boolean
-   */
-  _isDelayingUpdate: false,
-  
-  /**
    * Reference to the progress listener
    */
   _progressListener: null,
@@ -446,11 +426,16 @@ WindowWrapper.prototype = {
   
   updateButtonStatus: function()
   {
+    Utils.scheduleThrottledUpdate(this._updateButtonStatusCore, this);
+  },
+  
+  _updateButtonStatusCore: function()
+  {
     // Only update when we are on a firefox-only page
     let url = this.getURL();
     if (!Utils.isFirefoxOnly(url))
       return;
-      
+    
     // disable engine switch for firefox-only urls
     let urlbarButton = this.E("fireie-urlbar-switch");
     urlbarButton.disabled = !Utils.isValidUrl(this.window.gURLBar.value) ||
@@ -466,32 +451,14 @@ WindowWrapper.prototype = {
   },
   
   /**
-   * Run the delayed update UI action if there's any
-   */
-  _delayedUpdateInterface: function()
-  {
-    this._isDelayingUpdate = false;
-    if (this._hasScheduledUpdate)
-    {
-      this._hasScheduledUpdate = false;
-      this._updateInterfaceCore();
-    }
-  },
-
-  /**
    * Updates the UI for an application window.
-   * Note that UI is not immediately updated until the queued update code is run,
+   * Note that UI is not immediately updated until the scheduled update code is run,
    * so don't rely on any UI state after the update
    */
   updateInterface: function() { this._updateInterface(); },
   _updateInterface: function()
   {
-    if (this._isUpdating || this._hasScheduledUpdate)
-      return;
-
-    this._hasScheduledUpdate = true;
-    if (!this._isDelayingUpdate)
-      Utils.runAsync(this._delayedUpdateInterface, this);
+    Utils.scheduleThrottledUpdate(this._updateInterfaceCore, this);
   },
   _updateInterfaceCore: function()
   {
@@ -582,13 +549,6 @@ WindowWrapper.prototype = {
     catch (e)
     {
       Utils.ERROR(e);
-    }
-    finally
-    {
-      this._isUpdating = false;
-      this._isDelayingUpdate = true;
-      this._hasScheduledUpdate = false;
-      Utils.runAsyncTimeout(this._delayedUpdateInterface, this, 100);
     }
   },
 
