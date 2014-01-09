@@ -464,8 +464,6 @@ WindowWrapper.prototype = {
   {
     try
     {
-      this._isUpdating = true;
-
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
       let isIEEngine = this.isIEEngine();

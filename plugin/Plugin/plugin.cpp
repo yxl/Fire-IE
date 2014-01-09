@@ -164,20 +164,7 @@ namespace Plugin
 
 		m_bInitialized = TRUE;
 
-		if (m_strId == RES_UTILS_OBJECT_T)
-		{
-			// cannot directly fire the event since the plugin is not fully constructed 
-			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([this] { OnUtilsPluginInit(); });
-		}
-		else
-		{
-			// content IE window, should fire IEContentPluginIntialized event
-
-			// cannot directly fire the event since the plugin is not fully constructed 
-			// - we are still in the initializer
-			m_pIEHostWindow->RunAsync([this] { OnContentPluginInit(); });
-		}
+		// Init event is fired when the scriptable plugin object is created
 
 		return TRUE;
 	}
@@ -276,6 +263,14 @@ namespace Plugin
 		return m_bInitialized;
 	}
 
+	void CPlugin::FireInitEvent()
+	{
+		if (m_strId == RES_UTILS_OBJECT_T)
+			OnUtilsPluginInit();
+		else
+			OnContentPluginInit();
+	}
+
 	NPObject *CPlugin::GetScriptableObject()
 	{
 		if (!m_pScriptableObject) 
@@ -283,6 +278,8 @@ namespace Plugin
 			m_pScriptableObject =
 				NPN_CreateObject(m_pNPInstance,
 				GET_NPOBJECT_CLASS(ScriptablePluginObject));
+			if (m_pIEHostWindow)
+				m_pIEHostWindow->RunAsync([this] { FireInitEvent(); });
 		}
 
 		if (m_pScriptableObject) 

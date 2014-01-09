@@ -375,10 +375,6 @@ let FireIEContainer = {};
     mouseScrollBubbleProtect = true;
 
     try {
-      // constants from Win API
-      const SCROLL_PAGE_DOWN = 32768;
-      const SCROLL_PAGE_UP = -32768;
-      
       // If it's a plain mouse wheel scroll, set focus on the IE control
       // in order to let user scroll the content
       if (event.axis == event.VERTICAL_AXIS
