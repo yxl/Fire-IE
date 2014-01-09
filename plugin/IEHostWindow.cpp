@@ -140,11 +140,11 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 	{
 		// The CIEHostWindow has been created that we needn't recreate it.
 		s_csNewIEWindowMap.Lock();
-		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(ulId);
+		pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 		if (pIEHostWindow)
 		{
 			pIEHostWindow->m_bUtils = isUtils;
-			CIEHostWindow::s_NewIEWindowMap.Remove(ulId);
+			s_NewIEWindowMap.Remove(ulId);
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
@@ -1577,13 +1577,14 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 {
 	if (m_pPlugin)
 	{
-		s_csNewIEWindowMap.Lock();
 
 		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
 			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
+			s_csNewIEWindowMap.Lock();
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
+			s_csNewIEWindowMap.Unlock();
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
 
 			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
@@ -1608,7 +1609,6 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			}
 			*Cancel = TRUE;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 }
 
