@@ -149,6 +149,7 @@ let FireIEContainer = {};
 
   function registerEventHandler()
   {
+    window.addEventListener("IEContentPluginInitialized", onPluginInitialized, false);
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
@@ -163,6 +164,7 @@ let FireIEContainer = {};
 
   function unregisterEventHandler()
   {
+    window.removeEventListener("IEContentPluginInitialized", onPluginInitialized, false);
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
@@ -173,7 +175,15 @@ let FireIEContainer = {};
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
     E("container").removeEventListener("DOMMouseScroll", onDOMMouseScroll, false);
   }
+  
+  /** Handler for the IE content plugin initialized event */
 
+  function onPluginInitialized(event)
+  {
+    syncURL();
+    syncFavicon();
+    syncTitle();
+  }
 
   /** Handler for the IE title change event */
 
@@ -300,6 +310,13 @@ let FireIEContainer = {};
       syncHistoryURL = url;
       Utils.addVisitHistory(url, Prefs.historyPrefix + (document.title || url));
     }
+  }
+  
+  function syncTitle()
+  {
+    let po = E(Utils.containerPluginId);
+    if (po)
+      document.title = po.Title;
   }
   
   let statusHideTimeout = 0;

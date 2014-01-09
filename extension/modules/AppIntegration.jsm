@@ -2039,6 +2039,12 @@ WindowWrapper.prototype = {
   {
     try
     {
+      if (this.isSwitchJumper())
+      {
+        this._setSecureLockIcon("Unsecure");
+        return true;
+      }
+      
       let pluginObject = this.getContainerPlugin();
       if (pluginObject == null)
       {
