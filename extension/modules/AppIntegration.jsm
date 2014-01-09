@@ -2245,6 +2245,7 @@ WindowWrapper.prototype = {
     }
     catch (ex)
     {
+      Utils.LOG("[Drag'n'Drop] Security check for URL failed: " + url + "\n" + ex);
       return;
     }
     this._openInEngine(url, isIEEngine, where);
@@ -2259,14 +2260,14 @@ WindowWrapper.prototype = {
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
       
-      let where = this.window.whereToOpenLink(e, false, true);
-      let isIEEngine = !this.isIEEngine();
-      this._openDropUrl(urls[0], isIEEngine, where);
+      let where = Utils.shouldLoadInBackground() ? "tab" : "tabshifted";
+      let isIEEngine = true;
 
-      where = Utils.shouldLoadInBackground() ? "tab" : "tabshifted";
-      for (let i = 1, l = urls.length; i < l; i++)
+      for (let i = 0, l = urls.length; i < l; i++)
       {
-        this._openDropUrl(urls[i], isIEEngine, where);
+        // Add http:// if not present
+        let url = Utils.makeURI(urls[i]).spec;
+        this._openDropUrl(url, isIEEngine, where);
       }
     }
   },
