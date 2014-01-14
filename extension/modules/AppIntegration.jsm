@@ -1068,6 +1068,11 @@ WindowWrapper.prototype = {
       if (/^file:\/\/.*/.test(url))
         url = decodeURI(url);
       var args = [url];
+
+      // Private browsing mode - launch IE in InPrivate mode
+      if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
+        args.push("-private");
+
       process.init(file);
       // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
       process.runw(false, args, args.length);
