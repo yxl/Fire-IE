@@ -132,6 +132,39 @@ CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
 	return NULL;
 }
 
+CIEHostWindow* CIEHostWindow::FromWindowHierarchy(HWND hwndChild, const TCHAR* szWindowHierarchy[], UINT nWindowHierarchy)
+{
+	CString strClassName;
+	GetClassName(hwndChild, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	strClassName.ReleaseBuffer();
+
+	// Find index in the hierarchy
+	UINT nIndex;
+	for (nIndex = nWindowHierarchy; nIndex; nIndex--)
+	{
+		if (strClassName == szWindowHierarchy[nIndex - 1])
+			break;
+	}
+
+	// Traverse up the hierarchy
+	HWND hwnd = hwndChild;
+	for (UINT i = 0; i < nIndex; i++)
+		hwnd = ::GetParent(hwnd);
+
+	// Verify
+	if (hwnd != hwndChild)
+	{
+		GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+		strClassName.ReleaseBuffer();
+	}
+	if (strClassName != STR_WINDOW_CLASS_NAME)
+		return NULL;
+
+	// Fetch CIEHostWindow pointer from GWLP_USERDATA
+	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return pInstance;
+}
+
 CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
