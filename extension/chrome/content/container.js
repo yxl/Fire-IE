@@ -183,6 +183,7 @@ let FireIEContainer = {};
     syncURL();
     syncFavicon();
     syncTitle();
+    syncHistory();
   }
 
   /** Handler for the IE title change event */
@@ -301,6 +302,10 @@ let FireIEContainer = {};
     
     let po = E(Utils.containerPluginId);
     if (!po) return;
+    
+    // Don't sync while still loading stuff
+    if (!po.IsDocumentComplete)
+      return;
     
     let url = po.URL;
     if (!url) return;

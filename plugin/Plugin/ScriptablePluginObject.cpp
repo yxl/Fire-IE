@@ -180,7 +180,14 @@ namespace Plugin
 			BOOLEAN_TO_NPVARIANT(value, *result);
 			return true;
 		}
-		// readonly property {bool} ProcessName
+		// readonly property {bool} IsDocumentComplete
+		else if (name == NPI_ID(IsDocumentComplete))
+		{
+			BOOL value = pMainWindow->IsDocumentComplete();
+			BOOLEAN_TO_NPVARIANT(value, *result);
+			return true;
+		}
+		// readonly property {string} ProcessName
 		else if (name == NPI_ID(ProcessName))
 		{
 			CString name = Utils::App::GetProcessName();

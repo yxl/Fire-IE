@@ -1589,6 +1589,12 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 	return false;
 }
 
+BOOL CIEHostWindow::IsDocumentComplete()
+{
+	// Refresh detection code already kept track for this
+	return m_bIsRefresh;
+}
+
 BOOL CIEHostWindow::DestroyWindow()
 {
 	UninitIE();

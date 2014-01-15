@@ -249,6 +249,7 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
+	BOOL IsDocumentComplete();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);
