@@ -494,8 +494,6 @@ WindowWrapper.prototype = {
       {
         // udpate current tab's favicon
         this._updateFaviconForTab();
-        // update current tab's secure lock info
-        this.checkIdentity();
         // update status text
         this.updateIEStatusText();
         // update current tab's title
@@ -503,6 +501,11 @@ WindowWrapper.prototype = {
         if (title && title != "")
           this.window.gBrowser.contentDocument.title = title;
       }
+
+      // update current tab's secure lock info
+      // also hides the "Secure Firefox page" indicator
+      // for switchJumper.xhtml and PBW pages
+      this.checkIdentity();
 
       // Update the star button indicating whether current page is bookmarked.
       if (this.window.PlacesStarButton && this.window.PlacesStarButton.updateState)
@@ -2051,7 +2054,16 @@ WindowWrapper.prototype = {
       let pluginObject = this.getContainerPlugin();
       if (pluginObject == null)
       {
-        return false;
+        if (this.isIEEngine() && this.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !this.isResumeFromPBW())
+        {
+          // Most probably, we're on the PBW page
+          this._setSecureLockIcon("Unsecure");
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       }
       this._setSecureLockIcon(pluginObject.SecureLockInfo);
       return true;
