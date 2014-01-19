@@ -1294,7 +1294,7 @@ WindowWrapper.prototype = {
   },
 
   /**
-   * Sets the status text (for XP/2003 only)
+   * Sets the status text
    */
   _onIEStatusChanged: function(event)
   {
