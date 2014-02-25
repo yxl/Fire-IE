@@ -1199,9 +1199,22 @@ var Utils = {
 {
   XPCOMUtils.defineLazyGetter(Utils, aName, function()
   {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    let jsm = {};
+    try
+    {
+      Components.utils.import("resource://gre/modules/AddonLogging.jsm", jsm);
+      if (!jsm.LogManager)
+        throw "LogManager not found in resource://gre/modules/AddonLogging.jsm";
+    }
+    catch (e)
+    {
+      // Nightly 20140225
+      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
+      if (!jsm.LogManager)
+        throw "LogManager not found in resource://gre/modules/(addons/)AddonLogging.jsm";
+    }
     let logger = {};
-    LogManager.getLogger("[fireie]", logger);
+    jsm.LogManager.getLogger("[fireie]", logger);
     return logger[aName];
   });
 });
