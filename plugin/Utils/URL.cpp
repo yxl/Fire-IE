@@ -22,11 +22,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "URL.h"
 #include "TLD.h"
 #include "re/RegExp.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 
 using namespace Utils;
+using namespace Utils::String;
 using namespace re;
-using namespace re::strutils;
 
 namespace Utils {
 

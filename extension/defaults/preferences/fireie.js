@@ -41,6 +41,9 @@ pref("extensions.fireie.abpSupportEnabled", true);
 pref("extensions.fireie.cookieSyncEnabled", true);
 pref("extensions.fireie.fontSyncEnabled", true);
 pref("extensions.fireie.privateCookieSyncEnabled", false);
+pref("extensions.fireie.abpAdditionalFiltersEnabled", true);
+pref("extensions.fireie.historyEnabled", true);
+pref("extensions.fireie.historyPrefix", "[Fire IE] ");
 
 // IE Options
 pref("extensions.fireie.compatMode", "ie7mode");

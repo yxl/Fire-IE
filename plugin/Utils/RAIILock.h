@@ -20,7 +20,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 // RAIILock.h : RAII lock, mutex and condition mechanism
 //
 
-namespace abp
+namespace Utils
 {
 	class Lock;
 	class Mutex

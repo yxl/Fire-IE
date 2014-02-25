@@ -25,7 +25,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "plugin.h"
 #include "URL.h"
 #include "abp/AdBlockPlus.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 #include "OS.h"
 #include "App.h"
 #include "WindowMessageHook.h"
@@ -34,8 +34,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace UserMessage;
 using namespace Utils;
+using namespace Utils::String;
 using namespace abp;
-using namespace re::strutils;
 
 // Initilizes the static member variables of CIEHostWindow
 
@@ -132,6 +132,39 @@ CIEHostWindow* CIEHostWindow::FromChildWindow(HWND hwndChild)
 	return NULL;
 }
 
+CIEHostWindow* CIEHostWindow::FromWindowHierarchy(HWND hwndChild, const TCHAR* szWindowHierarchy[], UINT nWindowHierarchy)
+{
+	CString strClassName;
+	GetClassName(hwndChild, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+	strClassName.ReleaseBuffer();
+
+	// Find index in the hierarchy
+	UINT nIndex;
+	for (nIndex = nWindowHierarchy; nIndex; nIndex--)
+	{
+		if (strClassName == szWindowHierarchy[nIndex - 1])
+			break;
+	}
+
+	// Traverse up the hierarchy
+	HWND hwnd = hwndChild;
+	for (UINT i = 0; i < nIndex; i++)
+		hwnd = ::GetParent(hwnd);
+
+	// Verify
+	if (hwnd != hwndChild)
+	{
+		GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
+		strClassName.ReleaseBuffer();
+	}
+	if (strClassName != STR_WINDOW_CLASS_NAME)
+		return NULL;
+
+	// Fetch CIEHostWindow pointer from GWLP_USERDATA
+	CIEHostWindow* pInstance = reinterpret_cast<CIEHostWindow* >(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return pInstance;
+}
+
 CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
@@ -140,11 +173,11 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 	{
 		// The CIEHostWindow has been created that we needn't recreate it.
 		s_csNewIEWindowMap.Lock();
-		pIEHostWindow = CIEHostWindow::s_NewIEWindowMap.Lookup(ulId);
+		pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 		if (pIEHostWindow)
 		{
 			pIEHostWindow->m_bUtils = isUtils;
-			CIEHostWindow::s_NewIEWindowMap.Remove(ulId);
+			s_NewIEWindowMap.Remove(ulId);
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
@@ -302,8 +335,11 @@ void CIEHostWindow::UninitIE()
 	 * 
 	 * Note: we can't use put_Silent on page load, or plugin installation prompts
 	 * would be blocked as well.
+	 *
+	 * Added IE version check to workaround crash while closing certain pages in IE6.
+	 * Test case: https://github.com/yxl/Fire-IE/commit/fffb6211577e34b1bc0cc4312b0fcf23cfc35367
 	 */
-	if (m_ie.GetSafeHwnd())
+	if (OS::GetIEVersion() >= 7 && m_ie.GetSafeHwnd())
 		m_ie.put_Silent(TRUE);
 
 	s_csIEWindowMap.Lock();
@@ -1553,6 +1589,12 @@ BOOL CIEHostWindow::ShouldPreventStatusFlash()
 	return false;
 }
 
+BOOL CIEHostWindow::IsDocumentComplete()
+{
+	// Refresh detection code already kept track for this
+	return m_bIsRefresh;
+}
+
 BOOL CIEHostWindow::DestroyWindow()
 {
 	UninitIE();
@@ -1574,13 +1616,14 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 {
 	if (m_pPlugin)
 	{
-		s_csNewIEWindowMap.Lock();
 
 		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
 			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
+			s_csNewIEWindowMap.Lock();
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
+			s_csNewIEWindowMap.Unlock();
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
 
 			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
@@ -1605,7 +1648,6 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 			}
 			*Cancel = TRUE;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 }
 
@@ -1626,36 +1668,6 @@ void CIEHostWindow::ProcessElemHideStyles()
 
 		ProcessElemHideStylesForDoc(pDoc);
 	}
-}
-
-void DumpInnerHTML(const CComPtr<IHTMLDocument2>& pDoc)
-{
-	// first retrieve the head node
-	CComQIPtr<IHTMLDocument3> pDoc3 = pDoc;
-	if (!pDoc3) return;
-
-	CComPtr<IHTMLElementCollection> pcolHead;
-	if (FAILED(pDoc3->getElementsByTagName(_T("head"), &pcolHead)) || !pcolHead)
-		return;
-
-	long length;
-	if (FAILED(pcolHead->get_length(&length)) || length < 1)
-		return; // no head = =|
-
-	CComPtr<IDispatch> pDisp;
-	CComVariant varindex = 0;
-	if (FAILED(pcolHead->item(varindex, varindex, &pDisp)) || !pDisp)
-		return;
-
-	CComQIPtr<IHTMLElement> pHeadElement = pDisp;
-	if (!pHeadElement) return;
-
-	CComBSTR bstrInnerHTML;
-	if (FAILED(pHeadElement->get_innerHTML(&bstrInnerHTML)) || !bstrInnerHTML)
-		return;
-
-	wstring html(bstrInnerHTML);
-	html.c_str();
 }
 
 void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDoc)
@@ -1681,7 +1693,6 @@ void CIEHostWindow::ProcessElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& p
 			}
 			break;
 		}
-		//DumpInnerHTML(pDoc);
 	}
 
 	CComPtr<IHTMLFramesCollection2> pFrames;

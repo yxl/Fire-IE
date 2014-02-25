@@ -21,11 +21,12 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "StdAfx.h"
 
 #include "FilterClasses.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 
 using namespace abp;
 using namespace re;
-using namespace re::strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 static const wstring strEmpty = L"";
 
@@ -342,7 +343,7 @@ namespace abp { namespace funcStatic { namespace RegExpFilter_generateRegExp {
 
 	// process separator placeholders (all ANSI charaters but alphanumeric characters and _%.-)
 	static const RegExp re5 = L"/\\\\\\^/g";
-	static const wstring ws5 = L"(?:[\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x80]|$)";
+	static const wstring ws5 = L"(?:[\\x00-\\x24\\x26-\\x2C\\x2F\\x3A-\\x40\\x5B-\\x5E\\x60\\x7B-\\x7F]|$)";
 
 	// process extended anchor at expression start
 	static const RegExp re6 = L"/^\\\\\\|\\\\\\|/";
@@ -366,10 +367,6 @@ void RegExpFilter::generateRegExp(const wstring& regexpSource)
 
 	// Remove multiple wildcards
 	wstring source = replace(regexpSource, re1, ws1);
-	// Remove leading wildcards
-	if (startsWithChar(source, L'*')) source = source.substr(1);
-	// Remove trailing wildcards
-	if (endsWithChar(source, L'*')) source = source.substr(0, source.length() - 1);
 
 	// remove anchors & other 6 operations (see above)
 	source = replace(source, re2, ws2);
@@ -379,6 +376,11 @@ void RegExpFilter::generateRegExp(const wstring& regexpSource)
 	source = replace(source, re6, ws6);
 	source = replace(source, re7, ws7);
 	source = replace(source, re8, ws8);
+
+	// Remove leading wildcards
+	if (startsWith(source, L".*")) source = source.substr(2);
+	// Remove trailing wildcards
+	if (endsWith(source, L".*")) source = source.substr(0, source.length() - 2);
 
 	// wrap to regexp syntax
 	source.insert(source.begin(), L'/');
@@ -583,7 +585,7 @@ Filter* ElemHideBase::fromText(const wstring& text, const wstring& domain, bool 
 		if (attrRules.length())
 		{
 			RegExpMatch match;
-			strutils::match(match, attrRules, re1);
+			String::match(match, attrRules, re1);
 			for (size_t i = 0; i < match.substrings.size(); i++)
 			{
 				wstring rule = match.substrings[i];

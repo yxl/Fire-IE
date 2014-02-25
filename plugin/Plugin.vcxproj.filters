@@ -75,13 +75,7 @@
     <ClCompile Include="abp\FilterClasses.cpp">
       <Filter>abp</Filter>
     </ClCompile>
-    <ClCompile Include="re\strutils.cpp">
-      <Filter>re</Filter>
-    </ClCompile>
     <ClCompile Include="abp\Matcher.cpp">
-      <Filter>abp</Filter>
-    </ClCompile>
-    <ClCompile Include="abp\RAIILock.cpp">
       <Filter>abp</Filter>
     </ClCompile>
     <ClCompile Include="abp\AdBlockPlus.cpp">
@@ -120,6 +114,12 @@
     </ClCompile>
     <ClCompile Include="HttpMonitor\UserAgentListener.cpp">
       <Filter>HttpMonitor</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\RAIILock.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\StringUtils.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -214,9 +214,6 @@
     <ClInclude Include="abp\FilterClasses.h">
       <Filter>abp</Filter>
     </ClInclude>
-    <ClInclude Include="re\strutils.h">
-      <Filter>re</Filter>
-    </ClInclude>
     <ClInclude Include="abp\TriBool.h">
       <Filter>abp</Filter>
     </ClInclude>
@@ -227,9 +224,6 @@
       <Filter>abp</Filter>
     </ClInclude>
     <ClInclude Include="abp\TList.h">
-      <Filter>abp</Filter>
-    </ClInclude>
-    <ClInclude Include="abp\RAIILock.h">
       <Filter>abp</Filter>
     </ClInclude>
     <ClInclude Include="abp\AdBlockPlus.h">
@@ -272,6 +266,12 @@
     </ClInclude>
     <ClInclude Include="HttpMonitor\UserAgentListener.h">
       <Filter>HttpMonitor</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\RAIILock.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\StringUtils.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

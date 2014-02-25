@@ -33,11 +33,11 @@ let FireIEContainer = {};
   {
     Utils, Prefs, Favicon, LightweightTheme
   } = jsm;
-  let gFireIE = (function()
+  function getGFireIE()
   {
     let win = Utils.getChromeWindowFrom(window);
     return win && win.gFireIE;
-  })();
+  }
   
   /**
    * Shortcut for document.getElementById(id)
@@ -65,10 +65,13 @@ let FireIEContainer = {};
       // Set tab icon to pbw icon
       Favicon.setIcon(document, "chrome://global/skin/icons/warning-16.png");
       document.title = Utils.getString("fireie.pbw.title");
+      let event = document.createEvent("CustomEvent");
+      event.initCustomEvent("PBWShown", true, true, "");
+      document.dispatchEvent(event);
     }
     else
     {
-      gFireIE.clearResumeFromPBW();
+      getGFireIE().clearResumeFromPBW();
       container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
       registerEventHandler();
     }
@@ -76,6 +79,7 @@ let FireIEContainer = {};
 
   function needPrivateBrowsingWarning()
   {
+    let gFireIE = getGFireIE();
     let need = gFireIE && gFireIE.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !gFireIE.isResumeFromPBW();
     // If we have fireieNavigateParams.id, the tab is a new window opened from IE
     // We should attach to it as soon as possible, ignoring privatebrowsingwarning
@@ -145,6 +149,7 @@ let FireIEContainer = {};
 
   function registerEventHandler()
   {
+    window.addEventListener("IEContentPluginInitialized", onPluginInitialized, false);
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
@@ -159,6 +164,7 @@ let FireIEContainer = {};
 
   function unregisterEventHandler()
   {
+    window.removeEventListener("IEContentPluginInitialized", onPluginInitialized, false);
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
@@ -169,7 +175,16 @@ let FireIEContainer = {};
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
     E("container").removeEventListener("DOMMouseScroll", onDOMMouseScroll, false);
   }
+  
+  /** Handler for the IE content plugin initialized event */
 
+  function onPluginInitialized(event)
+  {
+    syncURL();
+    syncFavicon();
+    syncTitle();
+    syncHistory();
+  }
 
   /** Handler for the IE title change event */
 
@@ -195,6 +210,7 @@ let FireIEContainer = {};
   {
     syncURL();
     syncFavicon();
+    syncHistory();
   }
   
   function onIEProgressChange(event)
@@ -219,6 +235,7 @@ let FireIEContainer = {};
       let containerUrl = Utils.toContainerUrl(url);
       if (window.location.href != containerUrl)
       {
+        let gFireIE = getGFireIE();
         // Issue #51: check if we need to switch back to Firefox engine
         if (gFireIE && gFireIE.shouldSwitchBack(url))
         {
@@ -266,6 +283,45 @@ let FireIEContainer = {};
         Favicon.setIcon(document, faviconURL);
       }
     }
+  }
+  
+  let syncHistoryURL = "";
+  
+  /** Synchronize with Firefox history */
+  function syncHistory()
+  {
+    let gFireIE = getGFireIE();
+
+    // Private browsing, don't record history
+    if (gFireIE && gFireIE.isPrivateBrowsing())
+      return;
+      
+    // Check pref
+    if (!Prefs.historyEnabled)
+      return;
+    
+    let po = E(Utils.containerPluginId);
+    if (!po) return;
+    
+    // Don't sync while still loading stuff
+    if (!po.IsDocumentComplete)
+      return;
+    
+    let url = po.URL;
+    if (!url) return;
+    
+    if (url != syncHistoryURL)
+    {
+      syncHistoryURL = url;
+      Utils.addVisitHistory(url, Prefs.historyPrefix + (document.title || url));
+    }
+  }
+  
+  function syncTitle()
+  {
+    let po = E(Utils.containerPluginId);
+    if (po)
+      document.title = po.Title;
   }
   
   let statusHideTimeout = 0;
@@ -324,10 +380,6 @@ let FireIEContainer = {};
     mouseScrollBubbleProtect = true;
 
     try {
-      // constants from Win API
-      const SCROLL_PAGE_DOWN = 32768;
-      const SCROLL_PAGE_UP = -32768;
-      
       // If it's a plain mouse wheel scroll, set focus on the IE control
       // in order to let user scroll the content
       if (event.axis == event.VERTICAL_AXIS
@@ -412,6 +464,7 @@ let FireIEContainer = {};
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
+    let gFireIE = getGFireIE();
     return gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
   }
 })();

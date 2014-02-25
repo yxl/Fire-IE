@@ -29,7 +29,6 @@ namespace abp {
 		public:
 			TList() : count(0) { } 
 			explicit TList(const T& t) : t(t), count(1) { }
-			explicit TList(T&& t) : t(std::move(t)), count(1) { }
 			TList(const std::vector<T>& ts)
 			{
 				count = (unsigned int)ts.size();
@@ -40,7 +39,7 @@ namespace abp {
 			{
 				count = (unsigned int)ts.size();
 				if (count > 1) pts = new std::vector<T>(std::move(ts));
-				else if (count) t = std::move(ts[0]);
+				else if (count) t = ts[0];
 			}
 			TList(const TList& tl)
 			{
@@ -95,7 +94,7 @@ namespace abp {
 				else if (count == 2)
 				{
 					std::vector<T>* pts = new std::vector<T>();
-					pts->push_back(std::move(this->t));
+					pts->push_back(this->t);
 					pts->push_back(t);
 					this->pts = pts;
 				}
@@ -121,9 +120,9 @@ namespace abp {
 						pts->erase(iter);
 						if (--count == 1)
 						{
-							T tmpt = std::move((*pts)[0]);
+							T tmpt = (*pts)[0];
 							delete pts;
-							this->t = std::move(tmpt);
+							this->t = tmpt;
 						}
 					}
 				}

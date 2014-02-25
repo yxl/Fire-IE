@@ -213,6 +213,7 @@
                   oncommand="Options.onCookieSyncChanged()" />
         <checkbox id="privateCookieSyncEnabled" label="&fireie.options.integration.privateCookieSyncEnabled;" class="indent"
                   oncommand="Options.onPrivateCookieSyncChanged()" />
+        <checkbox id="historyEnabled" label="&fireie.options.integration.historyEnabled;" />
       </groupbox>
     </vbox>
   </prefpane>

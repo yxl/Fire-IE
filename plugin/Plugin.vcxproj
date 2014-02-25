@@ -17,14 +17,6 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Template|Win32">
-      <Configuration>Template</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Template|x64">
-      <Configuration>Template</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E86D2430-709C-46DC-9464-E9F1572B765C}</ProjectGuid>
@@ -61,12 +53,6 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v110_xp</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
-    <PlatformToolset>v110_xp</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
-    <PlatformToolset>v110_xp</PlatformToolset>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -101,12 +87,6 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Template|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
-    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" />
-    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Template|x64'" />
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">npfireie$(PlatformArchitecture)</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">npfireie$(PlatformArchitecture)</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">npfireie$(PlatformArchitecture)</TargetName>
@@ -117,24 +97,16 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)extension\plugins\</OutDir>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PostBuildEvent</CustomBuildAfterTargets>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PostBuildEvent</CustomBuildAfterTargets>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Configuration)\$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\$(PlatformName)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Configuration)\$(PlatformName)\$(ProjectName)\</IntDir>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PostBuildEvent</CustomBuildAfterTargets>
     <CustomBuildAfterTargets Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PostBuildEvent</CustomBuildAfterTargets>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Template|x64'">$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">$(SolutionDir)extension\plugins\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Template|x64'">$(SolutionDir)extension\plugins\</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">npfireie$(PlatformArchitecture)</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Template|x64'">npfireie$(PlatformArchitecture)</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">.dll</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Template|x64'">.dll</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -287,32 +259,11 @@ buildxpi64.bat</Command>
       <Outputs>$(SolutionDir)fireie64.xpi</Outputs>
     </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
-    <Link />
-    <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
-      <AdditionalLibraryDirectories>.\jsoncpp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
-    <Link />
-    <ClCompile>
-      <AdditionalIncludeDirectories>.\np\;.\HttpMonitor;.\PassthroughAPP;.\Plugin;.\Plugin\Scriptable;.\Utils;.\;.\BrowserHook;.\jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
-      <AdditionalLibraryDirectories>.\jsoncpp\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="abp\AdBlockPlus.cpp" />
     <ClCompile Include="abp\ElemHideMatcher.cpp" />
     <ClCompile Include="abp\FilterClasses.cpp" />
     <ClCompile Include="abp\Matcher.cpp" />
-    <ClCompile Include="abp\RAIILock.cpp" />
     <ClCompile Include="BrowserHook\AtlDepHook.cpp" />
     <ClCompile Include="BrowserHook\GestureHandler.cpp" />
     <ClCompile Include="BrowserHook\GestureHandlerImpl.cpp" />
@@ -374,7 +325,6 @@ buildxpi64.bat</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="re\RegExp.cpp" />
-    <ClCompile Include="re\strutils.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -395,6 +345,8 @@ buildxpi64.bat</Command>
     <ClCompile Include="Utils\HTTP.cpp" />
     <ClCompile Include="Utils\OS.cpp" />
     <ClCompile Include="Utils\PointerHash.cpp" />
+    <ClCompile Include="Utils\RAIILock.cpp" />
+    <ClCompile Include="Utils\StringUtils.cpp" />
     <ClCompile Include="Utils\TLD.cpp" />
     <ClCompile Include="Utils\URL.cpp" />
   </ItemGroup>
@@ -404,7 +356,6 @@ buildxpi64.bat</Command>
     <ClInclude Include="abp\FilterClasses.h" />
     <ClInclude Include="abp\FilterContentType.h" />
     <ClInclude Include="abp\Matcher.h" />
-    <ClInclude Include="abp\RAIILock.h" />
     <ClInclude Include="abp\TList.h" />
     <ClInclude Include="abp\TriBool.h" />
     <ClInclude Include="BrowserHook\AtlDepHook.h" />
@@ -428,7 +379,6 @@ buildxpi64.bat</Command>
     <ClInclude Include="regdom-libs\dkim-regdom.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="re\RegExp.h" />
-    <ClInclude Include="re\strutils.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="np\npapi.h" />
@@ -453,6 +403,8 @@ buildxpi64.bat</Command>
     <ClInclude Include="Utils\HTTP.h" />
     <ClInclude Include="Utils\OS.h" />
     <ClInclude Include="Utils\PointerHash.h" />
+    <ClInclude Include="Utils\RAIILock.h" />
+    <ClInclude Include="Utils\StringUtils.h" />
     <ClInclude Include="Utils\TLD.h" />
     <ClInclude Include="Utils\URL.h" />
   </ItemGroup>

@@ -149,8 +149,8 @@ var Policy = {
    */
   isManuallySwitched: function(browserNode, url)
   {
-    let hostName = Utils.getEffectiveHost(url);
-    return hostName && browserNode.getAttribute('manuallySwitched') == hostName;
+    let hostName = Utils.getEffectiveHost(url) || "";
+    return browserNode.getAttribute("manuallySwitched") == hostName;
   },
   
   /**
@@ -160,7 +160,7 @@ var Policy = {
    */
   setManuallySwitched: function(browserNode, url)
   {
-    browserNode.setAttribute('manuallySwitched', Utils.getEffectiveHost(url));
+    browserNode.setAttribute("manuallySwitched", Utils.getEffectiveHost(url) || "");
   }
 };
 
@@ -199,7 +199,7 @@ var PolicyPrivate = {
     {
       browserNode = node ? node.QueryInterface(Ci.nsIDOMNode) : null;
     }
-    catch (ex) { }
+    catch (ex) {}
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
 
     // User has manually switched engine
@@ -225,7 +225,7 @@ var PolicyPrivate = {
       {
         Utils.runAsync(function()
         {
-          browserNode.loadURI(url);
+          browserNode.loadURI(Utils.toSwitchJumperUrl(url));
           // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
           let tab = Utils.getTabFromBrowser(browserNode);
           UtilsPluginManager.checkDanglingNewWindow(tab);

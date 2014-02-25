@@ -50,6 +50,9 @@ public:
 	static CIEHostWindow* FromInternetExplorerServer(HWND hwndIEServer);
 	// Similar to FromInternetExplorerServer, but involves a lookup routine
 	static CIEHostWindow* FromChildWindow(HWND hwndChild);
+	// Similar to FromInternetExplorerServer, but involves a lookup routine and only use a specific window hierarchy
+	// The window hierarchy goes down from parent to child, starting from the child window of CIEHostWindow
+	static CIEHostWindow* FromWindowHierarchy(HWND hwndChild, const TCHAR* szWindowHierarchy[], UINT nWindowHierarchy);
 
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
@@ -246,6 +249,7 @@ public:
 	CString GetStatusText();
 	BOOL ShouldShowStatusOurselves();
 	BOOL ShouldPreventStatusFlash();
+	BOOL IsDocumentComplete();
 
 	// plugin events
 	void OnTitleChanged(const CString& title);

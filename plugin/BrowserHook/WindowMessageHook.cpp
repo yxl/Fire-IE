@@ -103,22 +103,17 @@ namespace BrowserHook
 			}
 
 			// Check if it is an IE control window by its window class name
-			CString strClassName;
-			GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
-			strClassName.ReleaseBuffer(); 
-			if (WM_KEYDOWN == pMsg->message && VK_TAB == pMsg->wParam && strClassName == _T("Internet Explorer_TridentCmboBx"))
-			{
-				hwnd = ::GetParent(hwnd);
-				GetClassName(hwnd, strClassName.GetBuffer(MAX_PATH), MAX_PATH);
-				strClassName.ReleaseBuffer(); 
-			}
-			if (strClassName != _T("Internet Explorer_Server"))
-			{
-				goto Exit;
-			}
+			static const TCHAR* s_szWindowClassHierarchy[] = {
+				_T("Shell Embedding"),
+				_T("Shell DocObject View"),
+				_T("Internet Explorer_Server"),
+				_T("Internet Explorer_TridentCmboBx")
+			};
+			static const UINT s_nWindowClassHierarchy = ARRAYSIZE(s_szWindowClassHierarchy);
 
-			// Get CIEHostWindow object from its window handle
-			CIEHostWindow* pIEHostWindow = CIEHostWindow::FromInternetExplorerServer(hwnd);
+			// Get CIEHostWindow object from the window hierarchy
+			CIEHostWindow* pIEHostWindow = CIEHostWindow::FromWindowHierarchy(hwnd, s_szWindowClassHierarchy, 
+				(WM_KEYDOWN == pMsg->message && VK_TAB == pMsg->wParam) ? s_nWindowClassHierarchy : s_nWindowClassHierarchy - 1);
 			if (pIEHostWindow == NULL) 
 			{
 				goto Exit;

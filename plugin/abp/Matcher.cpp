@@ -22,11 +22,12 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "FilterClasses.h"
 #include "Matcher.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 
 using namespace abp;
 using namespace re;
-using namespace re::strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 static const wstring strEmpty = L"";
 
@@ -96,7 +97,7 @@ wstring Matcher::findKeyword(RegExpFilter* filter) const
 	if (startsWith(text, strAtAt))
 		text = text.substr(2);
 
-	if (!strutils::match(match, toLowerCase(text), re1))
+	if (!String::match(match, toLowerCase(text), re1))
 		return defaultResult;
 
 	const std::vector<wstring>& candidates = match.substrings;

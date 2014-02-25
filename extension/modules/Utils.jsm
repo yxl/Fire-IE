@@ -30,11 +30,11 @@ var Utils = {
   _ieUserAgent: null,
   _userAgent: null,
 
-  _ffMajorVersion: 6,
-  _ieMajorVersion: 6,
-  
   /** nsITimer's */
   _timers: [],
+  
+  /** throttled updates */
+  _throttledUpdates: new WeakMap(),
 
   /**
    * Returns the add-on ID used by Adblock Plus
@@ -57,21 +57,69 @@ var Utils = {
    */
   get firefoxMajorVersion()
   {
-    return this._ffMajorVersion;
+    let version = 6; // Minimum supported version
+    
+    try
+    {
+      let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
+        .getService(Components.interfaces.nsIXULAppInfo);
+
+      let versionString = versionInfo.version;
+      Utils.LOG("Host app version: " + versionString);
+      version = parseInt(versionString, 10);
+      Utils.LOG("Host app major version: " + version);
+    }
+    catch (e)
+    {
+      Utils.ERROR("Failed to get host app version: " + e);
+    }
+    
+    Utils.__defineGetter__("firefoxMajorVersion", function() version);
+    return version;
   },
   
+  /**
+   * Returns IE's major version
+   */
   get ieMajorVersion()
   {
-    return this._ieMajorVersion;
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+    let version = 6;
+    try
+    {
+      wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
+      let versionString = wrk.readStringValue("version");
+      version = parseInt(versionString, 10);
+      // for IE 10, version equals to "9.10.*.*", which should be handled specially
+      if (version == 9)
+      {
+        versionString = wrk.readStringValue("svcVersion");
+        version = parseInt(versionString, 10);
+      }
+      Utils.LOG("IE version: " + versionString);
+      Utils.LOG("IE major version: " + version);
+    }
+    catch (e)
+    {
+      Utils.LOG("Failed to get IE version from registry: " + e);
+    }
+    finally
+    {
+      wrk.close();
+      wrk = null;
+    }
+    
+    Utils.__defineGetter__("ieMajorVersion", function() version);
+    return version;
   },
 
   /**
-   * Returns the VCS revision used for this Adblock Plus build
+   * Original ABP code. No build info available here -_-
+   * Used by public API thus better not remove it.
    */
   get addonBuild()
   {
-    let build = "3394";
-    return (build[0] == "{" ? "" : build);
+    return "";
   },
 
   /**
@@ -81,7 +129,7 @@ var Utils = {
   {
     let id = Services.appinfo.ID;
     Utils.__defineGetter__("appID", function() id);
-    return Utils.appID;
+    return id;
   },
 
   /**
@@ -99,7 +147,7 @@ var Utils = {
       Cu.reportError(e);
     }
     Utils.__defineGetter__("appLocale", function() locale);
-    return Utils.appLocale;
+    return locale;
   },
 
   /**
@@ -109,7 +157,7 @@ var Utils = {
   {
     let platformVersion = Services.appinfo.platformVersion;
     Utils.__defineGetter__("platformVersion", function() platformVersion);
-    return Utils.platformVersion;
+    return platformVersion;
   },
 
   /**
@@ -146,7 +194,7 @@ var Utils = {
     Cu.import(baseURL.spec + "Prefs.jsm");
     
     Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
-    return this.esrUserAgent;
+    return Prefs.esr_user_agent;
   },
   
   get ieTempDir()
@@ -284,17 +332,26 @@ var Utils = {
     return "resource://gre-resources/hiddenWindow.html";
   },
   
+  get switchJumperUrl()
+  {
+    return "chrome://fireie/content/switchJumper.xhtml?url=";
+  },
+  
   /** Whether url is IE engine container url */
   isIEEngine: function(url)
   {
     return Utils.startsWith(url, Utils.containerUrl);
   },
   
-  /** Converts URL into IE Engine URL */
-  toContainerUrl: function(url)
+  isSwitchJumper: function(url)
+  {
+    return Utils.startsWith(url, Utils.switchJumperUrl);
+  },
+  
+  toPrefixedUrl: function(url, prefix)
   {
     url = url.trim();
-    if (Utils.startsWith(url, Utils.containerUrl)) return url;
+    if (Utils.startsWith(url, prefix)) return url;
     if (/^file:\/\/.*/.test(url))
     {
       try
@@ -304,23 +361,22 @@ var Utils = {
       catch (e)
       {}
     }
-    return Utils.containerUrl + encodeURI(url);
+    return prefix + encodeURI(url);
   },
 
-  /** Get real URL from Plugin URL */
-  fromContainerUrl: function(url)
+  fromPrefixedUrl: function(url, prefix)
   {
     if (url && url.length > 0)
     {
-      url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      url = url.trim();
       if (!/^[\w\-]+:/.test(url))
       {
         url = "http://" + url;
       }
       if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
-      if (url.substr(0, Utils.containerUrl.length) == Utils.containerUrl)
+      if (url.substr(0, prefix.length) == prefix)
       {
-        url = decodeURI(url.substring(Utils.containerUrl.length));
+        url = decodeURI(url.substring(prefix.length));
         if (!/^[\w\-]+:/.test(url))
         {
           url = "http://" + url;
@@ -328,6 +384,40 @@ var Utils = {
       }
     }
     return url;
+  },
+  
+  fromAnyPrefixedUrl: function(url)
+  {
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl];
+    for (let i = 0, l = prefixes.length; i < l; i++)
+    {
+      let prefix = prefixes[i];
+      if (Utils.startsWith(url, prefix))
+        return Utils.fromPrefixedUrl(url, prefix);
+    }
+    return url;
+  },
+  
+  /** Converts URL into IE Engine URL */
+  toContainerUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.containerUrl);
+  },
+
+  /** Get real URL from Plugin URL */
+  fromContainerUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.containerUrl);
+  },
+  
+  toSwitchJumperUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.switchJumperUrl);
+  },
+  
+  fromSwitchJumperUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.switchJumperUrl);
   },
 
   get containerPluginId()
@@ -545,7 +635,7 @@ var Utils = {
    * Translates a string URI into its nsIURI representation, will return null for
    * invalid URIs.
    */
-  makeURI: function( /**String*/ url) /**nsIURI*/
+  makeURI: function( /**String*/ url, /**Boolean*/ silent) /**nsIURI*/
   {
     try
     {
@@ -558,14 +648,15 @@ var Utils = {
     }
     catch (e)
     {
-      Utils.ERROR(e + ": " + url);
+      if (!silent)
+        Utils.ERROR(e + ": " + url);
       return null;
     }
   },
 
   isValidUrl: function(url)
   {
-    return Utils.makeURI(url) != null;
+    return !!url && Utils.makeURI(url, true) != null;
   },
 
   isValidDomainName: function(domainName)
@@ -595,7 +686,6 @@ var Utils = {
   getEffectiveHost: function( /**String*/ url) /**String*/
   {
     // Cache the eTLDService if this is our first time through
-    // Do not cache to gIdentityHandler, thus minimizing the impact
     var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
     var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
     this.getEffectiveHost = function(u)
@@ -1035,6 +1125,69 @@ var Utils = {
     {
       return true;
     }
+  },
+  
+  addVisitHistory: function(url, title)
+  {
+    // See http://hg.mozilla.org/mozilla-central/annotate/81dd97739fa1/browser/base/content/test/head.js#l200
+    var asyncHistory = Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory);
+    this.addVisitHistory = function(url, title)
+    {
+      let placeInfo = {
+        uri: this.makeURI(url),
+        title: (title || url),
+        visits: [{
+          transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
+          visitDate: Date.now() * 1000,
+          refererURI: null
+        }]
+      };
+      asyncHistory.updatePlaces(placeInfo);
+    };
+    return this.addVisitHistory(url, title);
+  },
+  
+  _doThrottledUpdate: function(update, updateFunc, thisPtr)
+  {
+    update.delaying = false;
+    if (update.scheduled)
+    {
+      update.scheduled = false;
+      update.updating = true;
+      try
+      {
+        updateFunc.call(thisPtr);
+      }
+      finally
+      {
+        update.updating = false;
+        update.delaying = true;
+        update.scheduled = false;
+        Utils.runAsyncTimeout(this._doThrottledUpdate, this, 100,
+                              update, updateFunc, thisPtr);
+      }
+    }
+  },
+  
+  // Schedule throttled (no 2 updates shall happen in 100 ms) updates
+  scheduleThrottledUpdate: function(updateFunc, thisPtr)
+  {
+    // Fetch the corresponding update object
+    let thisPtrUpdates = this._throttledUpdates.get(thisPtr);
+    if (!thisPtrUpdates)
+      this._throttledUpdates.set(thisPtr, thisPtrUpdates = new WeakMap());
+    let update = thisPtrUpdates.get(updateFunc);
+    if (!update)
+      thisPtrUpdates.set(updateFunc, update = {});
+    
+    // Do schedule
+    if (update.updating || update.scheduled)
+      return;
+    
+    update.scheduled = true;
+    if (!update.delaying)
+      Utils.runAsync(this._doThrottledUpdate, this,
+                     update, updateFunc, thisPtr);
   }
 };
 
@@ -1046,9 +1199,22 @@ var Utils = {
 {
   XPCOMUtils.defineLazyGetter(Utils, aName, function()
   {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    let jsm = {};
+    try
+    {
+      Components.utils.import("resource://gre/modules/AddonLogging.jsm", jsm);
+      if (!jsm.LogManager)
+        throw "LogManager not found in resource://gre/modules/AddonLogging.jsm";
+    }
+    catch (e)
+    {
+      // Nightly 20140225
+      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
+      if (!jsm.LogManager)
+        throw "LogManager not found in resource://gre/modules/(addons/)AddonLogging.jsm";
+    }
     let logger = {};
-    LogManager.getLogger("[fireie]", logger);
+    jsm.LogManager.getLogger("[fireie]", logger);
     return logger[aName];
   });
 });
@@ -1063,45 +1229,6 @@ AddonManager.getAddonByID(Utils.addonID, function(addon)
   });
   _addonVersionCallbacks = null;
 });
-
-(function FetchFirefoxMajorVersion() {
-  let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
-    .getService(Components.interfaces.nsIXULAppInfo);
-
-  let version = versionInfo.version;
-  Utils.LOG("Host app version: " + version);
-  let major = version.substring(0, version.indexOf('.'));
-  Utils.LOG("Host app major version: " + major);
-
-  Utils._ffMajorVersion = major;
-})();
-
-(function FetchIEMajorVersion() {
-  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
-  let version = 6;
-  try
-  {
-    wrk.create(wrk.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Internet Explorer", wrk.ACCESS_READ);
-    let versionString = wrk.readStringValue("version");
-    version = parseInt(versionString, 10);
-    // for IE 10, version equals to "9.10.*.*", which should be handled specially
-    if (version == 9)
-    {
-      versionString = wrk.readStringValue("svcVersion");
-      version = parseInt(versionString, 10);
-    }
-    Utils.LOG("IE major version: " + version);
-  }
-  catch (e)
-  {
-    Utils.LOG("Failed to get IE version from registry: " + e);
-  }
-  finally
-  {
-    wrk.close();
-  }
-  Utils._ieMajorVersion = version;
-})();
 
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
 XPCOMUtils.defineLazyServiceGetter(Utils, "clipboardHelper", "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");

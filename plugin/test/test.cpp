@@ -20,13 +20,13 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef DEBUG
 
 #include "test.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 #include "re/RegExp.h"
 #include "Utils/TLD.h"
 
 using namespace re;
-using namespace re::strutils;
 using namespace Utils;
+using namespace Utils::String;
 
 namespace test {
 	void testReplace()

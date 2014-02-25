@@ -147,41 +147,7 @@ HRESULT CIEControlSite::XHTMLOMWindowServices::window_call(const char * methodNa
 
 	HRESULT hr = S_FALSE;
 
-	// Suggested by Sonja's boodschappenlijst (jeepeenl@gmail.com):
-	// Tools -> Options -> Content -> Enable Javascript [Advanced] -> Allow scripts to “Move or resize existing windows”.
 	if ( ! pThis->m_dlg ) return S_OK;
-	/*
-	if (nsConfigManager::isClassicMode || m_pParent->m_pPluginInstance->getConfigManager()->getBoolPref("dom.disable_window_move_resize")) return S_OK;
-
-	HRESULT hr = E_FAIL;
-
-	do 
-	{
-	if ( ! m_pParent ) break;
-	if ( ! m_pParent->m_pPluginInstance ) break;
-
-	NPP npp = m_pParent->m_pPluginInstance->instance();
-
-	NPObject * window_object_ = NULL;
-	if ( NPN_GetValue(npp, NPNVWindowNPObject, &window_object_) != NPERR_NO_ERROR ) break;
-
-	NPIdentifier id_method = NPN_GetStringIdentifier(methodName);
-	if ( !id_method ) break;
-
-	NPVariant pt[2];
-	INT32_TO_NPVARIANT(x, pt[0]);
-	INT32_TO_NPVARIANT(y, pt[1]);
-	NPVariant result;
-	NULL_TO_NPVARIANT(result);
-	if ( NPN_Invoke(npp, window_object_, id_method, pt, 2, &result) )
-	{
-	NPN_ReleaseVariantValue(&result);
-	}
-
-	hr = S_OK;
-
-	} while(false);
-	*/
 
 	return hr;
 }
@@ -211,26 +177,6 @@ STDMETHODIMP CIEControlSite::XDocHostUIHandler::ShowContextMenu(
 {
 	METHOD_PROLOGUE_EX_(CIEControlSite, DocHostUIHandler);
 	return S_FALSE;
-
-	// 点击右键添加到收藏夹
-	HWND hwnd;
-	CComPtr<IOleCommandTarget> spCT;
-	CComPtr<IOleWindow> spWnd;
-
-	HRESULT hr = pcmdTarget->QueryInterface(IID_IOleCommandTarget, (void**)&spCT);
-	if ( FAILED(hr) )
-		return S_FALSE;
-
-	hr = pcmdTarget->QueryInterface(IID_IOleWindow, (void**)&spWnd);
-	if ( FAILED(hr) )
-		return S_FALSE;
-
-	hr = spWnd->GetWindow(&hwnd);
-
-#define ID_IE_ID_ADDFAV 2261
-	::SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(LOWORD(ID_IE_ID_ADDFAV), 0x0), 0 );
-
-	return S_OK;
 }
 
 STDMETHODIMP CIEControlSite::XDocHostUIHandler::GetHostInfo(

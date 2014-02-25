@@ -83,6 +83,9 @@ namespace Plugin
 
 		// Clear all the paramters for IECtrl::Navigate
 		void RemoveNavigateParams();
+
+		// Fire initialization event
+		void FireInitEvent();
 	public:
 
 		// Set the plugin status text, which will be shown in the Firefox status bar

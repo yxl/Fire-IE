@@ -22,10 +22,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ElemHideMatcher.h"
 #include "FilterClasses.h"
-#include "re/strutils.h"
+#include "StringUtils.h"
 
 using namespace abp;
-using namespace re::strutils;
+using namespace Utils;
+using namespace Utils::String;
 
 const size_t ElemHideMatcher::maxCacheEntries = 1000;
 const wstring ElemHideMatcher::hidingStyle = L"{display:none!important;}";
