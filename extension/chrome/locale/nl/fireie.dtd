@@ -53,6 +53,7 @@
 <!ENTITY fireie.options.integration.otherOptions "Overige opties">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Cookies tussen IE- en Firefox-engines synchroniseren">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "Cookies in privénavigatiemodus synchroniseren">
+<!ENTITY fireie.options.integration.historyEnabled "Navigatiegeschiedenis IE-engine vastleggen">
 <!ENTITY fireie.options.ieoptions.tab "IE-opties">
 <!ENTITY fireie.options.ieoptions.pane "IE-opties">
 <!ENTITY fireie.options.iecompat.group "IE-compatibiliteitsmodus">

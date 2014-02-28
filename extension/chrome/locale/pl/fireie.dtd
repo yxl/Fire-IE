@@ -53,6 +53,7 @@
 <!ENTITY fireie.options.integration.otherOptions "Inne ustawienia">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "Synchronizuj ciasteczka pomiędzy silnikami IE i Firefox">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "Sync cookies in private browsing mode">
+<!ENTITY fireie.options.integration.historyEnabled "Record IE engine browsing history">
 <!ENTITY fireie.options.ieoptions.tab "Silnik IE">
 <!ENTITY fireie.options.ieoptions.pane "Silnik IE">
 <!ENTITY fireie.options.iecompat.group "Tryb kompatybilności z IE">
