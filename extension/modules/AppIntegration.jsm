@@ -364,7 +364,8 @@ WindowWrapper.prototype = {
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
+    if (this.E("star-button")) // Nightly 20140304 removed this
+      this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
     
     // Listen to plugin events
