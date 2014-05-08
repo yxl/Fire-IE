@@ -200,6 +200,9 @@ var Utils = {
   get ieTempDir()
   {
     let dir = Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+    // Relocate to system temp directory if local profile & roaming profile are the same
+    if (dir == Services.dirsvc.get("ProfD", Ci.nsIFile).path + "\\fireie")
+      dir = Services.dirsvc.get("TmpD", Ci.nsIFile).path + "\\fireie";
     
     Utils.__defineGetter__("ieTempDir", function() dir);
     return dir;
