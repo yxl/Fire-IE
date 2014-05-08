@@ -378,7 +378,7 @@ let IECookieManager = {
   {
     // Disable cookie & cache folder redirection for IE10+
     // For details, see GitHub issue #94 and #98
-    if (Utils.ieMajorVersion >= 10)
+    if (Utils.ieMajorVersion >= 10 || Prefs.disableFolderRedirection)
       return;
 
     // safe guard: do not attempt to change after already changed
