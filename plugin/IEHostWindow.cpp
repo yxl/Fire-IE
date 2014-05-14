@@ -1787,7 +1787,7 @@ void CIEHostWindow::ApplyElemHideStylesForDoc(const CComPtr<IHTMLDocument2>& pDo
 		if (FAILED(pDoc->createStyleSheet(_T(""), -1, &pStyleSheet)) || !pStyleSheet)
 			continue;
 
-		if (FAILED(pStyleSheet->put_cssText(CString(style.c_str()).AllocSysString())))
+		if (FAILED(pStyleSheet->put_cssText(CComBSTR(CString(style.c_str())))))
 			continue;
 
 		CComPtr<IHTMLElement> pElem;
