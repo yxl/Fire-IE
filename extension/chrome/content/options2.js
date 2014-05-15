@@ -412,10 +412,12 @@ Options.initDialog = function(restore)
   else
     E("alreadyEnabledMGSupportLabel").hidden = true;
   E("disableFolderRedirection").checked = Prefs.disableFolderRedirection;
-  if (Options.getIEMainVersion() >= 10) {
+  if (Options.getIEMainVersion() >= 10)
+  {
     E("disableFolderRedirection").hidden = true;
   }
-  if (E("disableFolderRedirection").hidden) {
+  if (E("disableFolderRedirection").hidden)
+  {
     E("integrationRestartDescr").hidden = true;
   }
 

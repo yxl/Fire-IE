@@ -244,6 +244,20 @@ var Utils = {
     Utils.__defineGetter__("iePath", function() path);
     return path;
   },
+  
+  /**
+   * Get system DPI scaling, useful for setting zoom levels
+   */
+  get DPIScaling()
+  {
+    let domWindowUtils = Utils.getChromeWindow().QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    let scaling = domWindowUtils.screenPixelsPerCSSPixel || 1;
+    
+    // Will not change before user logs off...
+    Utils.__defineGetter__("DPIScaling", function() scaling);
+    return scaling;
+  },
 
   /**
    * Retrieves a string from global.properties string bundle, will throw if string isn't found.

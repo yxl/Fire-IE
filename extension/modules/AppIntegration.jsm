@@ -1681,7 +1681,7 @@ WindowWrapper.prototype = {
       "Zoom": function(pluginObject)
       {
         let zoomLevel = this.getZoomLevel();
-        pluginObject.Zoom(zoomLevel);
+        pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
         return true;
       },
       "DisplaySecurityInfo": function(pluginObject)
