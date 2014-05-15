@@ -476,6 +476,7 @@ WindowWrapper.prototype = {
       let isLoading = this.window.gBrowser.mIsBusy;
       this._updateObjectDisabledStatus("Browser:Back", canBack);
       this._updateObjectDisabledStatus("Browser:Forward", canForward);
+      this._updateObjectOccludedStatus("Browser:Forward", canForward);
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
 
@@ -554,7 +555,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** chang the disable status of specified DOM object*/
+  /** change the disable status of specified DOM object*/
   _updateObjectDisabledStatus: function(objId, isEnabled)
   {
     let obj = (typeof(objId) == "object" ? objId : this.E(objId));
@@ -567,6 +568,16 @@ WindowWrapper.prototype = {
         else obj.setAttribute("disabled", true);
       }
     }
+  },
+  
+  /** change the occluded status of specified DOM object*/
+  _updateObjectOccludedStatus: function(objId, isVisible)
+  {
+    if (!isVisible)
+      return;
+    let obj = (typeof(objId) == "object" ? objId : this.E(objId));
+    if (obj && obj.hasAttribute("occluded-by-urlbar"))
+      obj.removeAttribute("occluded-by-urlbar");
   },
 
   // update the disabled status of cmd_cut, cmd_copy and cmd_paste menu items in the main menu
