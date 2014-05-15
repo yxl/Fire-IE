@@ -1098,10 +1098,7 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 	if (m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
-		if (fabs(level - 1.0) > 0.01) 
-		{
-			Zoom(level);
-		}
+		Zoom(level);
 	}
 }
 
@@ -1197,10 +1194,7 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	if (!m_bUtils && m_pPlugin)
 	{
 		double level = m_pPlugin->GetZoomLevel();
-		if (fabs(level - 1.0) > 0.01) 
-		{
-			Zoom(level);
-		}
+		Zoom(level);
 	}
 
 	// Filter non-http protocols
