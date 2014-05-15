@@ -1280,10 +1280,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 		if (m_pPlugin)
 		{
 			double level = m_pPlugin->GetZoomLevel();
-			if (fabs(level - 1.0) > 0.01) 
-			{
-				Zoom(level);
-			}
+			Zoom(level);
 		}
 
 		// Cache Favicon URL
