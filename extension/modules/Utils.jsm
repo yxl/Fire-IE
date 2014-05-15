@@ -583,6 +583,11 @@ var Utils = {
     return Utils.getTabFromDocument(aWindow.document);
   },
   
+  isRootWindow: function(win)
+  {
+    return !win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow);
+  },
+  
   generatorFromEnumerator: function(enumerator, nsInterface)
   {
     while (enumerator.hasMoreElements())

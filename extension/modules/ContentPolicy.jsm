@@ -273,7 +273,7 @@ var PolicyPrivate = {
             subject.setRequestHeader("user-agent", userAgent, false);
         }
 
-        if (Prefs.autoswitch_enabled)
+        if (Prefs.autoswitch_enabled && wnd && Utils.isRootWindow(wnd))
         {
           // Checks whether we need switch to IE 
           let isWindowURI = subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
