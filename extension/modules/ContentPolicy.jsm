@@ -150,7 +150,8 @@ var Policy = {
   isManuallySwitched: function(browserNode, url)
   {
     let hostName = Utils.getEffectiveHost(url) || "";
-    return browserNode.getAttribute("manuallySwitched") == hostName;
+    return browserNode.hasAttribute("manuallySwitched")
+        && browserNode.getAttribute("manuallySwitched") == hostName;
   },
   
   /**
