@@ -200,6 +200,9 @@ var Utils = {
   get ieTempDir()
   {
     let dir = Services.dirsvc.get("ProfLD", Ci.nsIFile).path + "\\fireie";
+    // Relocate to system temp directory if local profile & roaming profile are the same
+    if (dir == Services.dirsvc.get("ProfD", Ci.nsIFile).path + "\\fireie")
+      dir = Services.dirsvc.get("TmpD", Ci.nsIFile).path + "\\fireie";
     
     Utils.__defineGetter__("ieTempDir", function() dir);
     return dir;
@@ -240,6 +243,20 @@ var Utils = {
     
     Utils.__defineGetter__("iePath", function() path);
     return path;
+  },
+  
+  /**
+   * Get system DPI scaling, useful for setting zoom levels
+   */
+  get DPIScaling()
+  {
+    let domWindowUtils = Utils.getChromeWindow().QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    let scaling = domWindowUtils.screenPixelsPerCSSPixel || 1;
+    
+    // Will not change before user logs off...
+    Utils.__defineGetter__("DPIScaling", function() scaling);
+    return scaling;
   },
 
   /**
@@ -564,6 +581,11 @@ var Utils = {
     if (!aWindow || !aWindow.document) return null;
 
     return Utils.getTabFromDocument(aWindow.document);
+  },
+  
+  isRootWindow: function(win)
+  {
+    return !win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow);
   },
   
   generatorFromEnumerator: function(enumerator, nsInterface)

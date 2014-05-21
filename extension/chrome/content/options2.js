@@ -104,6 +104,10 @@ Options.apply = function(quiet)
   Prefs.cookieSyncEnabled = E("cookieSyncEnabled").checked;
   Prefs.privateCookieSyncEnabled = E("privateCookieSyncEnabled").checked;
   Prefs.historyEnabled = E("historyEnabled").checked;
+  let newRedirect = E("disableFolderRedirection").checked;
+  if (Prefs.disableFolderRedirection != newRedirect)
+    requiresRestart = true;
+  Prefs.disableFolderRedirection = newRedirect;
   
   // IE compatibility mode
   let newMode = "ie7mode";
@@ -407,6 +411,15 @@ Options.initDialog = function(restore)
     E("forceMGSupport").disabled = true;
   else
     E("alreadyEnabledMGSupportLabel").hidden = true;
+  E("disableFolderRedirection").checked = Prefs.disableFolderRedirection;
+  if (Options.getIEMainVersion() >= 10)
+  {
+    E("disableFolderRedirection").hidden = true;
+  }
+  if (E("disableFolderRedirection").hidden)
+  {
+    E("integrationRestartDescr").hidden = true;
+  }
 
   // IE Compatibility Mode
   Options.updateIEModeTab(restore);

@@ -1,8 +1,8 @@
 <!ENTITY fireie.switchButton.label "解雇IE">
 
-<!ENTITY fireie.urlbar.switch.tooltip1 "切換瀏覽模式">
+<!ENTITY fireie.urlbar.switch.tooltip1 "左鍵點擊: 切換瀏覽引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "無法在該頁面進行切換">
-<!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊設定 解雇IE 選項">
+<!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊: 設定 解雇IE 選項">
 <!ENTITY urlbar.switchRules.label "切換規則">
 <!ENTITY internetProperties.lable "IE的Internet 選項">
 <!ENTITY fireie.autoswitch.disable "全局禁用自動切換">
@@ -57,6 +57,7 @@
 <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之間同步 Cookie">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隱私瀏覽模式下啟用 Cookie 同步">
 <!ENTITY fireie.options.integration.historyEnabled "記錄IE引擎的瀏覽歷史">
+<!ENTITY fireie.options.integration.disableFolderRedirection "不要重定向IE的暫存檔案和 Cookie">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE引擎選項">
 <!ENTITY fireie.options.ieoptions.pane "IE引擎選項">

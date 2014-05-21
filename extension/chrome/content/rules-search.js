@@ -154,7 +154,9 @@ RuleSearch.fakeBrowser =
     removeResultListener: function() {},
     highlight: function() {},
     focusContent: function () {},
-    removeSelection: function () {}
+    removeSelection: function () {},
+    requestMatchesCount: function() {},
+    enableSelection: function() {}
   },
   currentURI: Utils.makeURI("http://example.com/"),
   contentWindow:
@@ -178,7 +180,7 @@ RuleSearch.fakeBrowser =
       throw Cr.NS_NOINTERFACE;
     },
     get screenPixelsPerCSSPixel() {
-      return 1.0;
+      return Utils.DPIScaling;
     }
   },
 

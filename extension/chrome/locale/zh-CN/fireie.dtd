@@ -1,8 +1,8 @@
 <!ENTITY fireie.switchButton.label "解雇IE">
 
-<!ENTITY fireie.urlbar.switch.tooltip1 "切换浏览模式">
+<!ENTITY fireie.urlbar.switch.tooltip1 "左键点击: 切换浏览引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "无法在该页面进行切换">
-<!ENTITY fireie.urlbar.switch.tooltip3 "右键点击设置 解雇IE 选项">
+<!ENTITY fireie.urlbar.switch.tooltip3 "右键点击: 设置 解雇IE 选项">
 <!ENTITY urlbar.switchRules.label "切换规则">
 <!ENTITY internetProperties.lable "IE的Internet 选项">
 <!ENTITY fireie.autoswitch.disable "全局禁用自动切换">
@@ -57,6 +57,7 @@
 <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之间同步 Cookie">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隐私浏览模式下启用 Cookie 同步">
 <!ENTITY fireie.options.integration.historyEnabled "记录IE引擎的浏览历史">
+<!ENTITY fireie.options.integration.disableFolderRedirection "不要重定向IE的临时文件和 Cookie">
 
 <!ENTITY fireie.options.ieoptions.tab  "IE引擎选项">
 <!ENTITY fireie.options.ieoptions.pane "IE引擎选项">

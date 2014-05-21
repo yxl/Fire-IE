@@ -465,6 +465,7 @@ let FireIEContainer = {};
   FireIEContainer.getZoomLevel = function()
   {
     let gFireIE = getGFireIE();
-    return gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
+    let zoomLevel = gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
+    return zoomLevel * Utils.DPIScaling;
   }
 })();

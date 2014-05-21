@@ -268,7 +268,6 @@ var gFireIE = null;
         HM.hookCodeHeadTail("PlacesControllerDragHelper.onDrop",
           function(ip, dt)
           {
-            browsers = [];
             let dropCount = dt.mozItemCount;
             for (let i = 0; i < dropCount; ++i)
             {
@@ -288,6 +287,7 @@ var gFireIE = null;
             {
               unsetUseRealURI(browser);
             });
+            browsers = [];
           });
       }
 

@@ -44,6 +44,7 @@ pref("extensions.fireie.privateCookieSyncEnabled", false);
 pref("extensions.fireie.abpAdditionalFiltersEnabled", true);
 pref("extensions.fireie.historyEnabled", true);
 pref("extensions.fireie.historyPrefix", "[Fire IE] ");
+pref("extensions.fireie.disableFolderRedirection", false);
 
 // IE Options
 pref("extensions.fireie.compatMode", "ie7mode");

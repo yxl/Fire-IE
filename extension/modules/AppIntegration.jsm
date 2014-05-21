@@ -478,6 +478,10 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Forward", canForward);
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
+      // Fix for Australis forward button
+      if (this.window.CombinedBackForward) {
+        this.window.CombinedBackForward.setForwardButtonOcclusion(!canForward);
+      }
 
       // Update the content of the URL bar.
       if (this.window.gURLBar && isIEEngine)
@@ -554,7 +558,7 @@ WindowWrapper.prototype = {
     }
   },
 
-  /** chang the disable status of specified DOM object*/
+  /** change the disable status of specified DOM object*/
   _updateObjectDisabledStatus: function(objId, isEnabled)
   {
     let obj = (typeof(objId) == "object" ? objId : this.E(objId));
@@ -1681,7 +1685,7 @@ WindowWrapper.prototype = {
       "Zoom": function(pluginObject)
       {
         let zoomLevel = this.getZoomLevel();
-        pluginObject.Zoom(zoomLevel);
+        pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
         return true;
       },
       "DisplaySecurityInfo": function(pluginObject)

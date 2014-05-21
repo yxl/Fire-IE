@@ -44,7 +44,7 @@
       </groupbox>
       <!-- Sets Shortcut key -->
       <groupbox id="shortcut">
-        <caption label="&fireie.options.shorcut.caption;" />
+        <caption label="&fireie.options.shorcut.caption;*" />
         <hbox>
           <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
           <menulist id="shortcut-modifiers">
@@ -110,15 +110,13 @@
             </menupopup>
           </menulist>
         </hbox>
-        <hbox>
-          <label class="descr" value="&fireie.options.restart.descr;" />
-        </hbox>
       </groupbox>
       <groupbox>
         <caption label="&fireie.options.private.caption;"/>
         <description class="descr">&fireie.options.private.descr;</description>
         <checkbox id="privatebrowsingwarning" label="&fireie.options.private.privatebrowsingwarning;" class="indent" />
       </groupbox>
+      <label class="descr" value="*&fireie.options.restart.descr;" />
     </vbox>
   </prefpane>
   
@@ -214,7 +212,9 @@
         <checkbox id="privateCookieSyncEnabled" label="&fireie.options.integration.privateCookieSyncEnabled;" class="indent"
                   oncommand="Options.onPrivateCookieSyncChanged()" />
         <checkbox id="historyEnabled" label="&fireie.options.integration.historyEnabled;" />
+        <checkbox id="disableFolderRedirection" label="&fireie.options.integration.disableFolderRedirection;*" />
       </groupbox>
+      <label id="integrationRestartDescr" class="descr" value="*&fireie.options.restart.descr;" />
     </vbox>
   </prefpane>
 
@@ -224,7 +224,7 @@
       <label id="iemodeNotSupported" class="descr" style="margin-top:20px;">
         &fireie.options.iecompat.notSupported;</label>
       <groupbox id="iecompat" hidden="true">
-        <caption label="&fireie.options.iecompat.group;" />
+        <caption label="&fireie.options.iecompat.group;*" />
         <menulist id="iemode-menulist">
           <menupopup>
             <menuitem id="ie7mode-menuitem" label="&fireie.options.iecompat.ie7;"
@@ -250,11 +250,11 @@
         <label id="iemode-descr" class="descr" />
       </groupbox>
       <groupbox id="ieFeatures" hidden="true">
-        <caption label="&fireie.options.iefeat.group;" />
+        <caption label="&fireie.options.iefeat.group;*" />
         <checkbox id="gpuRendering" label="&fireie.options.iefeat.gpuRendering;" hidden="true" />
       </groupbox>
-      <label id="iemodeRestartDescr" class="descr" style="margin-top:20px;" hidden="true">
-        &fireie.options.restart.descr;</label>
+      <label id="iemodeRestartDescr" class="descr" style="margin-top:20px;" hidden="true"
+             value="*&fireie.options.restart.descr;"/>
     </vbox>
   </prefpane>
 
