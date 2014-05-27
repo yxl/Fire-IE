@@ -329,12 +329,30 @@ var gFireIE = null;
       if (typeof(getShortcutOrURI) !== "undefined")
         HM.hookCodeTail("getShortcutOrURI", function(ret) RET.modifyValue(gFireIE.getHandledURL(ret)));
       else if (typeof(getShortcutOrURIAndPostData) !== "undefined")
-        HM.hookCodeTail("getShortcutOrURIAndPostData", function(ret)
+        HM.hookCodeHeadTail("getShortcutOrURIAndPostData",
+        function(aURL, aCallback)
         {
+          // FF32?
+          // getShortcutOrURIAndPostData now takes a callback parameter instead of returning a promise
+          if (aCallback)
+          {
+            let oldCallback = aCallback;
+            aCallback = function(obj)
+            {
+              obj.url = gFireIE.getHandledURL(obj.url);
+              return oldCallback(obj);
+            };
+            return RET.modifyArguments(arguments);
+          }
+        },
+        function(ret, aURL, aCallback)
+        {
+          if (aCallback) return;
           // FF25+
           // getShortcutOrURIAndPostData returns a promise that resolves to a url/postData structure
           // Should wrap the promise into another promise so we can handle the URL
           let promise = ret;
+          if (!promise) return;
           let newPromise = promise.then(function(data)
           {
             if (data.url)
