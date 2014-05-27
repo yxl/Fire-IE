@@ -436,7 +436,7 @@ let EasyRuleCreator = {
       }
       let rule = rules[0];
       let subscription = RuleStorage.getGroupForRule(rule);
-      if (!subscription || !subscription.isDefaultFor(rule))
+      if (!subscription || subscription.disabled || !subscription.isDefaultFor(rule))
       {
         subscription = SpecialSubscription.createForRule(rule);
         RuleStorage.addSubscription(subscription);
