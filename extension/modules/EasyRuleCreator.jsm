@@ -223,9 +223,6 @@ let EasyRuleCreator = {
   
   _makeSiteCheckbox: function(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable, mustexist)
   {
-    // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com^' is active.
-    if (!this._isActive(hostRule())) host = host.replace(/^www\./, '');
-    
     let hostRuleTexts = [];
     
     while (true)
