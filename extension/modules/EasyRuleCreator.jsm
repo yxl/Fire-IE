@@ -65,15 +65,16 @@ let EasyRuleCreator = {
   
   _setUARuleMenuItems: function(ctx)
   {
+    let uaESRSiteRuleTexts =
+      this._makeSiteCheckboxIfExist(ctx, "##||", Utils.getString("fireie.erc.uaESROnSite"),
+        ctx.effHost, ctx.effHost, "$SPECIAL-UA=ESR", "");
     let uaSiteRuleTexts =
       this._makeSiteCheckbox(ctx, "##||", Utils.getString("fireie.erc.uaOnSite"),
-        ctx.effHost, ctx.effHost, "", "$SPECIAL-UA=ESR")
-      .concat(
-      this._makeSiteCheckbox(ctx, "##||", Utils.getString("fireie.erc.uaESROnSite"),
-        ctx.effHost, ctx.effHost, "$SPECIAL-UA=ESR", "", true));
+        ctx.effHost, ctx.effHost, "", "$SPECIAL-UA=ESR", true).concat(uaESRSiteRuleTexts);
     
-    ctx.curItem.setAttribute("tooltiptext", Utils.esrUserAgent);
-    ctx.curItem.nextSibling.setAttribute("tooltiptext", Utils.ieUserAgent);
+    ctx.curItem.setAttribute("tooltiptext", Utils.ieUserAgent);
+    if (uaESRSiteRuleTexts.length)
+      ctx.curItem.nextSibling.setAttribute("tooltiptext", Utils.esrUserAgent);
     
     let uaRule = UserAgentMatcher.matchesAny(ctx.url);
     if (uaRule && !this._isExceptional(uaRule)
@@ -85,15 +86,15 @@ let EasyRuleCreator = {
         true).setAttribute("tooltiptext",
                            this._isESR(uaRule) ? Utils.esrUserAgent : Utils.ieUserAgent);
     }
-    
+
     let tmpItem = ctx.curItem;
-    uaSiteRuleTexts = this._makeSiteCheckbox(ctx, "@@##||",
+    let uaExceptionalSiteRuleTexts = this._makeSiteCheckbox(ctx, "@@##||",
       Utils.getString("fireie.erc.uaDefaultOnSite"), ctx.effHost, ctx.effHost);
     if (ctx.curItem !== tmpItem)
       ctx.curItem.setAttribute("tooltiptext", Utils.userAgent);
     
     if (uaRule && this._isExceptional(uaRule)
-      && uaSiteRuleTexts.every(function(t) t != uaRule.text))
+      && uaExceptionalSiteRuleTexts.every(function(t) t != uaRule.text))
     {
       this._addCheckbox(ctx, [uaRule],
         Utils.getString("fireie.erc.uaDefaultOnPage")
@@ -215,7 +216,12 @@ let EasyRuleCreator = {
     }
   },
 
-  _makeSiteCheckbox: function(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable)
+  _makeSiteCheckboxIfExist: function(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable)
+  {
+    return this._makeSiteCheckbox(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable, true);
+  },
+  
+  _makeSiteCheckbox: function(ctx, prefix, description, host, effHost, suffix, opSuffix, nodisable, mustexist)
   {
     // for host 'www.xxx.com', ignore 'www' unless rule '||www.xxx.com^' is active.
     if (!this._isActive(hostRule())) host = host.replace(/^www\./, '');
@@ -224,20 +230,24 @@ let EasyRuleCreator = {
     
     while (true)
     {
-      let rule = hostRule();
-      let rules = [rule].concat(relatedHostRules());
-      let opRules = typeof(opSuffix) == "string" ? 
-        [hostOpRule()].concat(relatedHostOpRules()) : null;
-      let active = rules.some(this._isActive);
-      if (active || !this._isExceptional(rule))
+      let rule = hostRule(mustexist);
+      let rules = (rule ? [rule] : []).concat(relatedHostRules(mustexist));
+      if (rules.length)
       {
-        let label = description.replace(/--/, host);
-        this._addCheckbox(ctx, rules, label, active, nodisable, opRules);
-        Array.prototype.splice.apply(hostRuleTexts,
-          [hostRuleTexts.length, 0].concat(rules.map(function(r) r.text)));
+        let active = rules.some(this._isActive);
+        if (active || !this._isExceptional(rules[0]))
+        {
+          let opRule = typeof(opSuffix) == "string" ? hostOpRule(true) : null;
+          let opRules = typeof(opSuffix) == "string" ? 
+            (opRule ? [opRule] : []).concat(relatedHostOpRules(true)) : null;
+          let label = description.replace(/--/, host);
+          this._addCheckbox(ctx, rules, label, active, nodisable, opRules);
+          hostRuleTexts = hostRuleTexts.concat(rules.map(function(r) r.text));
+        }
       }
+      
+      // stop at effective host
       if (host == effHost || host.length < effHost.length) break;
-
       // strip sub domain
       host = host.replace(/^[^\.]+\./, '');
       // com
@@ -248,24 +258,36 @@ let EasyRuleCreator = {
     
     return hostRuleTexts;
 
-    function hostRule()
+    function hostRule(mustexist)
     {
-      return Rule.fromText(prefix + host + "^" + (suffix || ""));
+      let text = prefix + host + "^" + (suffix || "");
+      if (mustexist && !Rule.exist(text))
+        return null;
+      return Rule.fromText(text);
     }
     
-    function relatedHostRules()
+    function relatedHostRules(mustexist)
     {
-      return [prefix + host + "/" + (suffix || ""), prefix + host + (suffix || "")].map(Rule.fromText);
+      let texts = [prefix + host + "/" + (suffix || ""), prefix + host + (suffix || "")];
+      if (mustexist)
+        texts = texts.filter(function(t) Rule.exist(t));
+      return texts.map(Rule.fromText);
     }
     
-    function hostOpRule()
+    function hostOpRule(mustexist)
     {
-      return Rule.fromText(prefix + host + "^" + (opSuffix || ""));
+      let text = prefix + host + "^" + (opSuffix || "");
+      if (mustexist && !Rule.exist(text))
+        return null;
+      return Rule.fromText(text);
     }
     
-    function relatedHostOpRules()
+    function relatedHostOpRules(mustexist)
     {
-      return [prefix + host + "/" + (opSuffix || ""), prefix + host + (opSuffix || "")].map(Rule.fromText);
+      let texts = [prefix + host + "/" + (opSuffix || ""), prefix + host + (opSuffix || "")];
+      if (mustexist)
+        texts = texts.filter(function(t) Rule.exist(t));
+      return texts.map(Rule.fromText);
     }
   },
 

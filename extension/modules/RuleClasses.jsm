@@ -109,6 +109,18 @@ Rule.fromText = function(text)
 }
 
 /**
+ * Check whether a rule exists in the known rules
+ *
+ * @param {String} text   as in Rule()
+ * @return {Boolean} true if rule exists, false otherwise
+ */
+Rule.exist = function(text)
+{
+  return text in Rule.knownRules &&
+    Rule.knownRules[text].subscriptions.some(function(s) !s.disabled);
+}
+
+/**
  * Deserializes a rule
  *
  * @param {Object}  obj map of serialized properties and their values
