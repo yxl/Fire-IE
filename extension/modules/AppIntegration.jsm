@@ -1320,19 +1320,21 @@ WindowWrapper.prototype = {
       
       if (Prefs.showStatusText)
       {
-        let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
-        event.initEvent("SetStatusText", false, false);
-        event.setData("statusText", pluginObject.StatusText);
-        event.setData("preventFlash", AppIntegration.shouldPreventStatusFlash());
+        let event = this.window.gBrowser.contentDocument.createEvent("CustomEvent");
+        event.initCustomEvent("SetStatusText", false, false, {
+          "statusText": pluginObject.StatusText,
+          "preventFlash": AppIntegration.shouldPreventStatusFlash()
+        });
         statusBar.dispatchEvent(event);
       }
       else if (!statusBar.hidden && !Prefs.showStatusText)
       {
         // event to notify content doc to hide status text
-        let event = this.window.gBrowser.contentDocument.createEvent("DataContainerEvent");
-        event.initEvent("SetStatusText", false, false);
-        event.setData("statusText", "");
-        event.setData("preventFlash", AppIntegration.shouldPreventStatusFlash());
+        let event = this.window.gBrowser.contentDocument.createEvent("CustomEvent");
+        event.initCustomEvent("SetStatusText", false, false, {
+          "statusText": "",
+          "preventFlash": AppIntegration.shouldPreventStatusFlash()
+        });
         statusBar.dispatchEvent(event);
       }
     }

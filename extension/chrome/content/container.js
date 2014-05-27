@@ -330,10 +330,10 @@ let FireIEContainer = {};
   function onSetStatusText(event)
   {
     let statusbar = E(Utils.statusBarId);
-    let statustext = event.getData("statusText");
+    let statustext = event.detail["statusText"];
     if (typeof(statustext) == "undefined")
       statustext = "";
-    let prevent = event.getData("preventFlash");
+    let prevent = event.detail["preventFlash"];
     let pretext = "";
     if (statusbar.firstChild)
     {
