@@ -245,6 +245,13 @@ var Utils = {
     return path;
   },
   
+  get systemPath()
+  {
+    let path = Services.dirsvc.get("SysD", Ci.nsIFile).path;
+    Utils.__defineGetter__("systemPath", function() path);
+    return path;
+  },
+  
   /**
    * Get system DPI scaling, useful for setting zoom levels
    */

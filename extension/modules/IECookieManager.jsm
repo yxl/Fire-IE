@@ -63,18 +63,44 @@ let InternetSetCookieExW = null;
  * in  DWORD dwBufferLength
  * );
  */
- let InternetSetOptionW = null;
+let InternetSetOptionW = null;
 
 // NULL pointer
 const NULL = 0;
 
 const INTERNET_COOKIE_HTTPONLY = 0x00002000;
 const INTERNET_OPTION_END_BROWSER_SESSION = 42;
+const CLEAR_MY_TRACKS_TEMPORARY_FILES = 8;
+const CLEAR_MY_TRACKS_COOKIES = 2;
 
 const wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
 const SUB_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
 
 const cookieSvc = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
+
+function ClearMyTracksByProcess(flags)
+{
+  if (Utils.ieMajorVersion < 7)
+    return; // Minimum required IE version is IE7
+  
+  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+  var rundllPath = Utils.systemPath + "\\rundll32.exe";
+  file.initWithPath(rundllPath);
+  if (!file.exists()) {
+    Utils.ERROR("Cannot ClearMyTracksByProcess, file not found: " + rundllPath);
+    return;
+  }
+  var args = ["InetCpl.cpl,ClearMyTracksByProcess", flags.toString()];
+  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+  try {
+    process.init(file);
+    // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
+    process.runw(false, args, args.length);
+  }
+  catch (ex) {
+    Utils.ERROR("Cannot ClearMyTracksByProcess, process creation failed.");
+  }
+}
 
 // use a system-wide mutex to protect the process of changing IE temp dir
 let mutex = null;
@@ -164,6 +190,7 @@ let IECookieManager = {
   wininetDll: null,
   _ieCookieMap: {},
   _bTmpDirChanged: false,
+  _redirectionDisabled: false,
   
   /**
    * Called on module startup.
@@ -378,7 +405,8 @@ let IECookieManager = {
   {
     // Disable cookie & cache folder redirection for IE10+
     // For details, see GitHub issue #94 and #98
-    if (Utils.ieMajorVersion >= 10 || Prefs.disableFolderRedirection)
+    this._redirectionDisabled = Utils.ieMajorVersion >= 10 || Prefs.disableFolderRedirection;
+    if (this._redirectionDisabled)
       return;
 
     // safe guard: do not attempt to change after already changed
@@ -429,6 +457,11 @@ let IECookieManager = {
     this._bTmpDirChanged = false;
     this.releaseMutex();
   },
+  
+  get redirectionDisabled()
+  {
+    return this._redirectionDisabled;
+  },
 
   _getExpiresString: function(expiresInSeconds)
   {
@@ -446,6 +479,7 @@ let CookieObserver = {
     Services.obs.addObserver(this, "cookie-changed", false);
     Services.obs.addObserver(this, "private-cookie-changed", false);
     Services.obs.addObserver(this, "fireie-clear-cookies", false);
+    Services.obs.addObserver(this, "fireie-clear-cache", false);
     Services.obs.addObserver(this, "fireie-set-cookie", false);
     Services.obs.addObserver(this, "fireie-batch-set-cookie", false);
   },
@@ -455,6 +489,7 @@ let CookieObserver = {
     Services.obs.removeObserver(this, "cookie-changed");
     Services.obs.removeObserver(this, "private-cookie-changed");
     Services.obs.removeObserver(this, "fireie-clear-cookies");
+    Services.obs.removeObserver(this, "fireie-clear-cache");
     Services.obs.removeObserver(this, "fireie-set-cookie");
     Services.obs.removeObserver(this, "fireie-batch-set-cookie");
   },
@@ -472,6 +507,12 @@ let CookieObserver = {
       break;
     case 'fireie-clear-cookies':
       IECookieManager.clearIESessionCookies();
+      if (IECookieManager.redirectionDisabled && Prefs.clearIETracks)
+        ClearMyTracksByProcess(CLEAR_MY_TRACKS_COOKIES);
+      break;
+    case "fireie-clear-cache":
+      if (IECookieManager.redirectionDisabled && Prefs.clearIETracks)
+        ClearMyTracksByProcess(CLEAR_MY_TRACKS_TEMPORARY_FILES);
       break;
     case 'fireie-set-cookie':
       this.onIECookieChanged(subject, data);
