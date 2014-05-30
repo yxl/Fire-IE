@@ -1217,6 +1217,26 @@ var Utils = {
     if (!update.delaying)
       Utils.runAsync(this._doThrottledUpdate, this,
                      update, updateFunc, thisPtr);
+  },
+  
+  // launch process with specified arguments
+  launchProcess: function(exePath, args, description)
+  {
+    description = description || exePath;
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(exePath);
+    if (!file.exists()) {
+      Utils.ERROR("Cannot launch " + description + ", file not found: " + exePath);
+      return;
+    }
+    var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    try {
+      process.init(file);
+      process.runw(false, args, args.length);
+    }
+    catch (ex) {
+      Utils.ERROR("Cannot launch " + description + ", process creation failed: " + ex);
+    }
   }
 };
 

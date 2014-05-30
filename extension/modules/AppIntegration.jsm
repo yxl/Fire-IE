@@ -1028,66 +1028,24 @@ WindowWrapper.prototype = {
    */
   openInternetPropertiesDialog: function()
   {
-    /**
-     * http://forums.mozillazine.org/viewtopic.php?f=23&t=2059667
-     * anfilat2: 
-     * ctypes.winapi_abi works in Firefox 32bit version only and it don't works in
-     * 64bit.
-     */
-    let WinABI = ctypes.winapi_abi;
-    if (ctypes.size_t.size == 8)
-    {
-      WinABI = ctypes.default_abi;
-    }
-    try
-    {
-
-      let lib = ctypes.open("shell32.dll");
-      const SW_SHOW = 5;
-      const NULL = 0;
-      let ShellExecuteW = lib.declare("ShellExecuteW", WinABI, ctypes.int32_t, /* HINSTANCE (return) */
-      ctypes.int32_t, /* HWND hwnd */
-      ctypes.jschar.ptr, /* LPCTSTR lpOperation */
-      ctypes.jschar.ptr, /* LPCTSTR lpFile */
-      ctypes.jschar.ptr, /* LPCTSTR lpParameters */
-      ctypes.jschar.ptr, /* LPCTSTR lpDirectory */
-      ctypes.int32_t /* int nShowCmd */ );
-      ShellExecuteW(NULL, "open", "rundll32.exe", "shell32.dll,Control_RunDLL inetcpl.cpl", "", SW_SHOW);
-      lib.close();
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
+    Utils.launchProcess(Utils.systemPath + "\\rundll32.exe", [
+      "shell32.dll,Control_RunDLL", "InetCpl.cpl"
+    ], "Internet Properties");
   },
   
   openInIE: function()
   {
-    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(Utils.iePath);
-    if (!file.exists()) {
-      Utils.ERROR("Cannot launch IE, file not found: " + Utils.iePath);
-      return;
-    }
-    var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    try {
-      var url = this.getURL();
-      // file:// urls should be decoded, otherwise IE won't recognize
-      if (/^file:\/\/.*/.test(url))
-        url = decodeURI(url);
-      var args = [url];
+    var url = this.getURL();
+    // file:// urls should be decoded, otherwise IE won't recognize
+    if (/^file:\/\/.*/.test(url))
+      url = decodeURI(url);
+    var args = [url];
 
-      // Private browsing mode - launch IE in InPrivate mode
-      if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
-        args.push("-private");
+    // Private browsing mode - launch IE in InPrivate mode
+    if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
+      args.push("-private");
 
-      process.init(file);
-      // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
-      process.runw(false, args, args.length);
-    }
-    catch (ex) {
-      Utils.ERROR("Cannot launch IE, process creation failed: " + Utils.iePath);
-    }
+    Utils.launchProcess(Utils.iePath, args, "IE");
   },
 
   getHandledURL: function(url, isModeIE)

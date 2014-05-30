@@ -83,23 +83,9 @@ function ClearMyTracksByProcess(flags)
   if (Utils.ieMajorVersion < 7)
     return; // Minimum required IE version is IE7
   
-  var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-  var rundllPath = Utils.systemPath + "\\rundll32.exe";
-  file.initWithPath(rundllPath);
-  if (!file.exists()) {
-    Utils.ERROR("Cannot ClearMyTracksByProcess, file not found: " + rundllPath);
-    return;
-  }
-  var args = ["InetCpl.cpl,ClearMyTracksByProcess", flags.toString()];
-  var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-  try {
-    process.init(file);
-    // Use runw to pass utf-16 arguments (for file:// URIs, specifically)
-    process.runw(false, args, args.length);
-  }
-  catch (ex) {
-    Utils.ERROR("Cannot ClearMyTracksByProcess, process creation failed.");
-  }
+  Utils.launchProcess(Utils.systemPath + "\\rundll32.exe", [
+    "InetCpl.cpl,ClearMyTracksByProcess", flags.toString()
+  ], "ClearMyTracksByProcess");
 }
 
 // use a system-wide mutex to protect the process of changing IE temp dir
