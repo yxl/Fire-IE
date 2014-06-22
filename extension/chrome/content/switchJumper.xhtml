@@ -14,7 +14,7 @@
       let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
       Cu.import(baseURL.spec + "Utils.jsm");
 
-      let url = Utils.fromSwitchJumperUrl(location.href);
+      let url = Utils.isSwitchJumper(location.href) ? Utils.fromSwitchJumperUrl(location.href) : null;
       if (url)
       {
         document.title = url;
