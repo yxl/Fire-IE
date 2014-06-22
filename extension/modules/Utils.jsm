@@ -930,7 +930,9 @@ var Utils = {
         }
       }
       Services.ww.openWindow(null, "chrome://fireie/content/options2.xul", "_blank", "chrome,titlebar,toolbar,centerscreen,dialog=yes", {
-        openFromUtils: true
+        wrappedJSObject: {
+          openFromUtils: true
+        }
       });
     }
   },

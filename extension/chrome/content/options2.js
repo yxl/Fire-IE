@@ -475,7 +475,8 @@ Options.sizeToContent = function()
 
 Options.init = function()
 {
-  if (!window.arguments || !window.arguments[0] || !window.arguments[0].openFromUtils)
+  if (!window.arguments || !window.arguments[0] || !window.arguments[0].wrappedJSObject
+      || !window.arguments[0].wrappedJSObject.openFromUtils)
   {
     // not opened from Utils.openOptionsDialog, check if we have the correct instantApply pref
     try
@@ -488,13 +489,18 @@ Options.init = function()
         {
           Utils.runAsync(Utils.openOptionsDialog, Utils);
         });
+        return;
       }
     } catch (ex) {}
   }
+  else
+  {
+    // notify Utils
+    Utils.openOptionsDialogComplete();
+  }
   
-  // notify Utils
-  Utils.openOptionsDialogComplete();
-
+  E("fireie-options").hidden = false;
+  
   function addEventListenerByTagName(tag, type, listener)
   {
     let objs = document.getElementsByTagName(tag);

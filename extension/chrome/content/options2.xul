@@ -19,6 +19,7 @@
             xmlns:html="http://www.w3.org/1999/xhtml"
             autosize="true" resizable="no" persist="screenX screenY"
             buttons="accept,cancel,extra1"
+            hidden="true"
             onload="Options.init();"
             onclose="Options.close();"
             ondialogaccept="Options.apply(false);"
