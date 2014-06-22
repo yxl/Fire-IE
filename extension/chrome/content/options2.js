@@ -475,6 +475,26 @@ Options.sizeToContent = function()
 
 Options.init = function()
 {
+  if (!window.arguments || !window.arguments[0] || !window.arguments[0].openFromUtils)
+  {
+    // not opened from Utils.openOptionsDialog, check if we have the correct instantApply pref
+    try
+    {
+      if (Services.prefs.getBoolPref("browser.preferences.instantApply"))
+      {
+        // Nope, have to close and reopen
+        window.close();
+        window.addEventListener("unload", function()
+        {
+          Utils.runAsync(Utils.openOptionsDialog, Utils);
+        });
+      }
+    } catch (ex) {}
+  }
+  
+  // notify Utils
+  Utils.openOptionsDialogComplete();
+
   function addEventListenerByTagName(tag, type, listener)
   {
     let objs = document.getElementsByTagName(tag);

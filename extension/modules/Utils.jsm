@@ -35,6 +35,9 @@ var Utils = {
   
   /** throttled updates */
   _throttledUpdates: new WeakMap(),
+  
+  /** original value of browser.preferences.instantApply before we override it */
+  _instantApply: null,
 
   /**
    * Returns the add-on ID used by Adblock Plus
@@ -897,6 +900,59 @@ var Utils = {
       Services.ww.openWindow(null, "chrome://fireie/content/rules.xul", "_blank", "chrome,centerscreen,resizable,dialog=no", {
         wrappedJSObject: rule
       });
+    }
+  },
+  
+  /**
+   * Opens Fire IE options dialog or focuses an already open dialog.
+   * We do a dirty hack to address the "instantApply" problem in Nightly 32
+   * Although it is not best practice to use a global preference to fix a local problem,
+   * (http://blogs.msdn.com/b/oldnewthing/archive/2008/12/11/9193695.aspx),
+   * I don't think there're better alternatives right now.
+   */
+  openOptionsDialog: function()
+  {
+    let wnd = Services.wm.getMostRecentWindow("fireie:options");
+    if (wnd) wnd.focus();
+    else
+    {
+      if (this._instantApply === null)
+      {
+        try
+        {
+          this._instantApply = Services.prefs.getBoolPref("browser.preferences.instantApply");
+          Services.prefs.setBoolPref("browser.preferences.instantApply", false);
+        }
+        catch (ex)
+        {
+          Utils.LOG("Cannot read or temporary override browser.preferences.instantApply perf.");
+          this._instantApply = false;
+        }
+      }
+      Services.ww.openWindow(null, "chrome://fireie/content/options2.xul", "_blank", "chrome,titlebar,toolbar,centerscreen,dialog=yes", {
+        openFromUtils: true
+      });
+    }
+  },
+  
+  
+  /**
+   * Notifies that opening the options dialog has completed.
+   */
+  openOptionsDialogComplete: function()
+  {
+    if (this._instantApply === null) return;
+    try
+    {
+      Services.prefs.setBoolPref("browser.preferences.instantApply", this._instantApply);
+    }
+    catch (ex)
+    {
+      Utils.LOG("Cannot revert browser.preferences.instantApply override.");
+    }
+    finally
+    {
+      this._instantApply = null;
     }
   },
   

@@ -1010,10 +1010,7 @@ WindowWrapper.prototype = {
   /** Show the options dialog */
   openOptionsDialog: function(url)
   {
-    if (!url) url = this.getURL();
-    let wnd = Services.wm.getMostRecentWindow("fireie:options");
-    if (wnd) wnd.focus();
-    else this.window.openDialog("chrome://fireie/content/options2.xul", "fireieOptionsDialog", "chrome,titlebar,toolbar,centerscreen,dialog=yes", Utils.getHostname(url));
+    Utils.openOptionsDialog();
   },
 
   /** Show the rules dialog */
