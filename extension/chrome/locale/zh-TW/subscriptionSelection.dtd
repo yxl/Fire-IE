@@ -1,7 +1,7 @@
 <!ENTITY dialog.title "新增規則訂閱">
-<!ENTITY subscriptionSelector.label "從清單中選擇規則訂閱(這些規則用於智能切換內核和同步Cookie)：">
+<!ENTITY subscriptionSelector.label "從清單中選擇規則訂閱（這些規則用於自動切換核心與同步 Cookie）：">
 <!ENTITY viewList.label "檢視規則">
-<!ENTITY visitHomepage.label "檢視主頁">
+<!ENTITY visitHomepage.label "檢視首頁">
 <!ENTITY addSubscription.label "新增訂閱">
 <!ENTITY list.download.failed "獲取訂閱清單失敗。">
 <!ENTITY list.download.retry "重試">
@@ -11,6 +11,8 @@
 <!ENTITY title.accesskey "T">
 <!ENTITY location.label "規則清單位置:">
 <!ENTITY location.accesskey "L">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
 <!ENTITY supplementMessage "該規則訂閱會同時新增 &quot;?1?&quot; 。">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
 <!ENTITY addMain.label "同時新增規則訂閱&quot;?1?&quot;">
 <!ENTITY addMain.accesskey "s">

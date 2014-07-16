@@ -1,10 +1,9 @@
-<!ENTITY dialog.title               "解雇IE 外掛程式未能載入">
-<!ENTITY pluginNotFound1            "解雇IE 檢測到 &quot;Fire IE DLL&quot; 外掛程式未能成功載入。">
-<!ENTITY pluginNotFound2            "您可能安裝了錯誤版本的解雇IE。">
-<!ENTITY correctVersion             "根據您的配置，您應該使用[bit]位版本。">
-<!ENTITY homepage                   "http://fireie.org/zh-CN">
-<!ENTITY visitHomepage              "請至 [link][host][/link] 下載安裝。">
-
-<!ENTITY pluginNotFound3            "您可能安裝了錯誤版本的解雇IE；外掛程式可能被移除，或者在附加元件管理員中被禁用。">
-<!ENTITY makeSure                   "請確認在 [link]附加元件管理員[/link] 中已啟用了 &quot;Fire IE DLL&quot; 。">
-<!ENTITY reinstall                  "或者，您也可嘗試從 [link][host][/link] 重新安裝解雇IE。">
+<!ENTITY dialog.title "解雇 IE 外掛程式未能載入">
+<!ENTITY pluginNotFound1 "解雇 IE 偵測到 &quot;Fire IE DLL&quot; 外掛程式未能成功載入。">
+<!ENTITY pluginNotFound2 "您可能安裝了錯誤版本的解雇 IE。">
+<!ENTITY correctVersion "根據您的配置，您應該使用 [bit] 位元版本。">
+<!ENTITY homepage "http://fireie.org/zh-CN">
+<!ENTITY visitHomepage "請至 [link][host][/link] 下載安裝。">
+<!ENTITY pluginNotFound3 "您可能安裝了錯誤版本的解雇 IE；外掛程式可能被移除，或者在附加元件管理員中被禁用。">
+<!ENTITY makeSure "請確認在 [link]附加元件管理員[/link] 中已啟用了 &quot;Fire IE DLL&quot; 。">
+<!ENTITY reinstall "或者，您也可嘗試從 [link][host][/link] 重新安裝解雇 IE。">

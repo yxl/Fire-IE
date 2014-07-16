@@ -1,27 +1,41 @@
-<!ENTITY about.longDesc.label     "關於此附加元件：">
-<!ENTITY about.why.label          "開發此附加元件的緣由：">
-<!ENTITY about.whatsNext.label    "此附加元件的下一步計畫：">
-<!ENTITY about.links.label        "連結：">
+<!ENTITY about.longDesc.label "關於此附加元件：">
+<!ENTITY about.why.label "開發此附加元件的緣由：">
+<!ENTITY about.whatsNext.label "此附加元件的下一步計劃：">
+<!ENTITY about.links.label "鏈結：">
+<!--    To embed html tags in the description, use [tag][/tag] or [tag/];    To embed entities in the description, use [.entity], e.g. [.amp] stands for "&amp;"(&), and [.quot] stands for "&quot;"(");    To embed links, use [link href='url']link_text[/link].-->
+<!ENTITY about.longDesc "[p]解雇 IE (Fire IE) 是一個 Firefox 的雙核心瀏覽擴充套件，可以讓 Firefox 瀏覽器額外使用 Internet Explorer (IE) 核心瀏覽網頁。只需滑鼠輕輕一點，即可在 Firefox 和 IE 瀏覽引擎之間進行切換。[/p]
 
-<!ENTITY about.longDesc           "[p]解雇IE(Fire IE)是一個火狐瀏覽器雙核瀏覽拓展，可以讓火狐瀏覽器額外使用 Internet Explorer (IE) 內核瀏覽網頁。只需滑鼠輕輕一點，即可在Firefox和IE內核之間進行切換。[/p]
-                                   [p]使用解雇IE，您可以編寫自動切換規則，這樣在訪問特定網站時解雇IE可以自動切換到IE引擎。類似於 Adblock Plus，您也可以訂閱現有的切換規則清單。我們目前維護一個針對中文網站的切換規則清單。[/p]
-                                   [p]解雇IE會保持IE內核和Firefox內核的Cookie同步，因此切換內核瀏覽時無需重複登陸。大多數快速鍵和功能在IE內核下仍然起作用，比如“Ctrl +”和“Ctrl -”縮放頁面，“Ctrl F”搜索文本，“Ctrl D”保存書簽等。[/p]
-                                   [p]拓展還支援在IE內核下使用滑鼠手勢，只要您安裝了 FireGestures、All-in-One Gestures 或類似的拓展，就可以同樣在IE內核下使用它們。[/p]
-                                   [p]拓展已支援 Adblock Plus，您將不再被IE引擎下的廣告所打擾。[/p]
-                                   [p]從0.3.3版本起，32位和64位拓展已合併，我們不再單獨提供64位拓展。[/p]">
 
-<!ENTITY about.why                "[p]解雇IE主要目的是為了解決火狐瀏覽器在中國市場的網頁相容問題。中國大陸及臺灣地區存在大量僅支援IE瀏覽器網站，解雇IE可以讓用戶在火狐瀏覽器下無障礙地訪問這些網站。[/p]">
+                                   [p]使用解雇 IE，您可以編寫自動切換規則，這樣在訪問特定網站時解雇 IE 可以自動切換到 IE 引擎。類似於 Adblock Plus，您也可以訂閱現有的切換規則清單。我們目前維護一個針對中文網站的切換規則清單。[/p]
 
-<!ENTITY about.whatsNext          "[p]智能切換功能。[/p]">
+                                   [p]解雇 IE 會保持 IE 核心和 Firefox 核心的 Cookie 同步，因此切換核心時無需重新登錄。大多數快捷鍵和功能在 IE 核心下依然能夠使用，例如 Ctrl + +/- 縮放頁面，Ctrl + F 搜尋文字，Ctrl + D 加入書籤等。[/p]
 
-<!ENTITY about.links              "[p]項目主頁： [link href='http://fireie.org/zh-CN'][/link][/p]
+                                   [p]本擴充套件還支援在 IE 核心下使用滑鼠手勢，只要您安裝了 FireGestures、All-in-One Gestures 或類似的擴充套件，就可以同樣在 IE 核心下使用它們。[/p]
+
+                                   [p]本擴充套件已支援 Adblock Plus，您將不再被 IE 引擎下的廣告所打擾。[/p]
+
+                                   [p]從版本 0.3.3 起，32 位和 64 位元版本已合併，我們不再單獨提供 64 位元版本的擴充套件。[/p]">
+<!ENTITY about.why "[p]解雇 IE 主要目的是為了解決 Firefox 在中國市場的網頁相容問題。中國大陸及台灣地區存在大量僅支援 IE 瀏覽器的網站，解雇 IE 可以讓使用者在 Firefox 下無障礙地訪問這些網站。[/p]">
+<!ENTITY about.whatsNext "[p]智能切換功能。[/p]">
+<!ENTITY about.links "[p]項目首頁： [link href='http://fireie.org/zh-CN'][/link][/p]
+
+
                                    [p]常見問題： [link href='http://fireie.org/zh-CN/faq'][/link][br/]
+
                                       更換面板： [link href='http://fireie.org/zh-CN/skins'][/link][br/]
+
                                       如何編寫切換規則： [link href='http://fireie.org/zh-CN/switch_rules'][/link]
+
                                    [/p]
+
                                    [p]原始程式碼： [link href='https://github.com/yxl/Fire-IE'][/link][br/]
-                                      您可以通過下列URL回饋問題、提出建議或是提供翻譯：
+
+                                      您可以通過下列 URL 回饋問題、提出建議或是提供翻譯：
+
                                    [ul][li][link href='https://g.mozest.com/forum-83-1'][/link] (中文支援論壇)[/li]
+
                                        [li][link href='https://github.com/yxl/Fire-IE/issues'][/link] (GitHub issue 列表)[/li]
+
                                    [/ul]
+
                                    [/p]">
