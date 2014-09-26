@@ -21,6 +21,6 @@ A Firefox add-on that lets you switch to IE engine in one click and give up your
 
 Build
 ==================
-Open plugin.sln with Visual Studio 2012 and build the solution.
+Open plugin.sln with Visual Studio 2013 and build the solution.
 After successful building, you will get the add-on file of the name fireie32(64).xpi.
 To build a unified xpi containing both x86 and x64 binaries, run tools/buildxpi-unified.bat after both builds are done.
