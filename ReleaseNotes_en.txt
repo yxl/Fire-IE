@@ -1,0 +1,185 @@
+Fire-IE 0.4.0 @ September 26, 2014
+Enhancements:
+* Remove seldom-used "ESR UA" option from user-agent options.
+* Clearing Fire IE temporary files / cookies will also clear them for the system IE.
+* Allow creating rules starting with "www.".
+* No longer depends on SSE2 instructions.
+* Update zh-TW translations by Merci chao.
+
+Bug fixes:
+* Rules created by the right-click menu may not function if it already exists in a disabled rule list.
+* "Always use current engine to open a new URL" doesn't work in newer Firefox versions.
+* Fix missing OK/Cancel buttons in options dialog for the latest Nightly versions.
+
+Fire-IE 0.3.9 @ June 9, 2014
+Enhancements:
+* Improved zooming support for high DPI settings.
+
+Bug fixes:
+* "Backup all rules and subscriptions" should work properly now.
+* Allow disabling redirection of IE Temporary Files and Cookies, which resolves some rendering glitches.
+* Resolve the issue that sometimes the profile folder cannot be deleted when using a portable version of Firefox with redirection of IE Temporary Files and Cookies enabled.
+* ABP support: resolved a memory leak issue in processing of element hiding rules.
+* Switch rules will no longer affect the "Get Add-ons" tab in the Add-ons Manager.
+* Fixed: forward button not shown in Firefox 29.
+* Fixed: switch rules don't work for URLs without a host name.
+
+Fire-IE 0.3.8 @ March 12, 2014
+Enhancements:
+* Support recording IE engine's browsing history.
+* You can switch to compatibility mode directly for URLs typed on new tabs.
+
+Bug fixes:
+* [ABP] Some sites don't display correctly when using Fanboy's Social Blocking List.
+* Crash on closing certain pages with IE6 engine.
+* Can't use Firefox shortcut keys after opening a new tab in background from IE engine.
+* Compatibility with March Nightly versions.
+
+Fire-IE 0.3.7 @ January 7, 2014
+Enhancements:
+* Support per-site zooming.
+* Support Adblock Edge.
+* Support IE11 compatibility modes.
+
+Bug fixes:
+* Fix the bug that element hiding rules are not applied after refreshing the page.
+* You can now scroll the page using up/down arrow keys after switching tabs.
+* "Open in IE" compatible with file:// URIs that contain unicode characters.
+* Fix rare crashes when using a higher version of IE.
+* "View Source" context menu will now work in IE10 or higher.
+* Compatible with Menu Icons Plus.
+
+Fire-IE 0.3.6 @ December 2, 2013
+Enhancements:
+* Added EXPERIMENTAL support for IE11 compatibility mode.
+* Added Dutch(nl) locale by markh from babelzilla.org.
+
+Bug fixes:
+* User-agent of IE8/9 Standards Mode is now correctly fetched.
+* Option "Always use current engine to open a new URL" is now compatible with Firefox 25 or higher.
+* Hide the plugin prompt in the URL bar while browsing with IE engine.
+* Fix potential hang during text search after refreshing the page.
+
+Fire-IE 0.3.5 @ October 13, 2013
+Bug fixes:
+* Fix compatibility with per-window findbar in Firefox 26+.
+* Allow syncing private browsing cookies to IE engine (opt-in).
+* Fix missing "Fire-IE" group in "Settings for Clearing History" dialog.
+* Form data are now correctly posted when auto-switch to IE engine.
+* Fix "multiple popup dialogs" issue while using certain commands, including Print, Page Setup and Save As.
+
+Fire-IE 0.3.4 @ July 9, 2013
+Enhancements:
+* Auto switch back to Firefox engine upon whitelist rule match.
+* Added Polish locale(pl-PL) by piotrex.
+* Support the new "Do-Not-Track value" feature.
+* Added F1~F12 to available shortcut keys.
+
+Bug fixes and performance:
+* Fire-IE now respects Firefox's options about new tab locations.
+* Tooltip of the URL bar button now correctly shows the (un)switchable state.
+* Improve the performance of ABP support.
+* Fix the problem that IE10 can't save synchronized cookies.
+* Fire-IE no longer loses focus when you release the AltGr key.
+* Fix URL bar icon issue with Nightly 2013-07-01.
+
+Fire-IE 0.3.3 @ April 28, 2013
+Enhancements:
+* Support Firefox's Do-Not-Track feature.
+* Added "Open Current Page in IE" feature.
+
+Bug fixes:
+* Support private browsing warning in per-window private browsing mode (FF20+).
+* Fix the bug that textbox loses focus when trying to switch IME by Ctrl+Shift.
+* Improve compatibility with Nightly version >= Mar 6, 2013
+* Fix the bug that tooltip is not shown on toolbar button when you hide the URL bar button.
+* 32-bit and 64-bit versions are combined, allowing 64-bit users to update through AMO.
+
+Fire-IE 0.3.2 @ January 25, 2013
+Enhancements:
+* Separate options for cleaning temporary files and cookies.
+* Provide switch for cookie syncing.
+* Move IE temporary files out of the profile folder.
+* Add more customization options, including tab icons and URL bar button's label.
+* Rendering and Enhancements are closer to the real IE browser.
+
+Bug fixes and performance enhancements:
+* Improve the performance of displaying status text.
+* Slightly improves performance of cookie syncing.
+* Support F6 and F10 shortcut keys.
+* Support page zooming through Ctrl + mouse wheel.
+* Rocker gestures are no longer triggered multiple times.
+* Fix the bug that tab titles are not correctly displayed.
+* Improve compatibility with click-to-play.
+* Fix the problem that one cannot change the location of IE temp folder.
+
+Fire-IE 0.3.1.1 @ December 12, 2012
+Enhancements:
+* Added Russian (ru-RU) locale by Alexander Gvaramiya.
+
+Fire-IE 0.3.1 @ November 29, 2012
+Enhancements:
+* Support blocking ads in IE engine using filters from Adblock Plus.
+* Support hardware accelerated rendering (opt-in, requires IE9 or higher).
+
+Bug fixes:
+* Title may not get updated after the page finishes loading.
+* For IE7 or lower, mouse focus is not correct on context menus.
+
+Fire-IE 0.3.0 @ October 23, 2012
+Enhancements:
+* Minor improvements to status text display.
+* Provide an entry to switch rules preferences in the options dialog.
+* Support IE10 compatibility modes.
+* Support setting compatibility mode for Pale Moon(palemoon.exe) and OOPP(plugin-container.exe).
+
+Bug fixes:
+* Fix bug: cannot log in to tmall.com (cookie sync bug)
+* Reduce title flashing during page load.
+
+Fire-IE 0.2.9 @ September 29, 2012
+Bug fixes and performance enhancements:
+* Some performance improvements.
+* Fix bug: Nightly shows a white bar at bottom when launched full-screen.
+* Fix bug: URL bar text may be different from the actual URL.
+* Fix bug: Status information does not disappear after tab switch.
+* Improve detection of plugin load failure.
+* Fix bug: URL icon sometimes shows incorrect (un)switchable state.
+* Fix startup failure after fresh install or version upgrade.
+* Improve compatibility with Nightly 18.0a1.
+
+Fire-IE 0.2.8 @ August 25, 2012
+Enhancements:
+* Quickly add rules from URL bar button's right click menu.
+* UA rules now support using Firefox ESR's UA (currently FF10 is used).
+
+Bug fixes:
+* Drag'n'drop mht docs no longer results in a blank page.
+* Fix bugs in rule matching.
+* Fix issues when you switch engine before the page is fully loaded.
+* Some security improvements.
+
+Fire-IE 0.2.7 @ August 6, 2012
+Bug fixes:
+* Improve compatibility with click-to-play.
+* Improve reliability and compatibility of new hook routines.
+* Fix crash when using the find bar after page refresh.
+* Sometimes new tab titles are stuck at "Connecting...". This has been fixed.
+* Enable some useful shortcuts(e.g. Scratchpad) from the IE engine.
+* Resolve compatibility with Nightly version >= July 21, 2012.
+* Fix a problem that prevented IE mode status info from showing.
+* Fix IE mode's zoom bug.
+* Fire IE no longer adds default subscription when you delete all rules.
+* Ctrl+Left/Right Arrow(move to prev/next word) does not work in IE mode. This has been fixed.
+* "Disable Auto-switch" no longer affects User-Agent rules.
+
+Fire-IE 0.2.5 @ July 2, 2012
+Enhancements:
+* You can now scroll page after tab switch without first clicking to gain focus.
+* Support middle clicking, Shift- or Ctrl-clicking URL bar icon to switch engine in a new tab or window.
+* Support new favicon design in Firefox 14 or higher.
+
+Bug fixes:
+* Incorrect caret display when clicking some of the icons in the URL bar.
+
+Fire-IE 0.2.4 @ May 21, 2012
