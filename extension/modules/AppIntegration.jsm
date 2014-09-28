@@ -70,7 +70,8 @@ function init()
   {
     if (name == "showUrlBarLabel" || name == "hideUrlBarButton" || name == "showTooltipText"
       || name == "shortcut_key" || name == "shortcut_modifiers" || name == "shortcutEnabled"
-      || name == "currentTheme" || name == "fxLabel" || name == "ieLabel")
+      || name == "currentTheme" || name == "fxLabel" || name == "ieLabel"
+      || name == "showUrlBarButtonOnlyForIE")
     {
       reloadPrefs();
     }
@@ -341,7 +342,7 @@ WindowWrapper.prototype = {
   _setupUrlBarButton: function()
   {
     this.E("fireie-urlbar-switch-label").hidden = !Prefs.showUrlBarLabel;
-    this.E("fireie-urlbar-switch").hidden = Prefs.hideUrlBarButton;
+    this.E("fireie-urlbar-switch").hidden = Prefs.hideUrlBarButton || (Prefs.showUrlBarButtonOnlyForIE && !this.isIEEngine());
     this.E("fireie-urlbar-switch-tooltip").hidden = !Prefs.showTooltipText;
   },
 
@@ -526,6 +527,8 @@ WindowWrapper.prototype = {
       }
 
       // Update the engine button on the URL bar
+      if (Prefs.showUrlBarButtonOnlyForIE)
+        this._setupUrlBarButton();
       let urlbarButton = this.E("fireie-urlbar-switch");
       // disable engine switch for firefox-only urls
       urlbarButton.disabled = Utils.isFirefoxOnly(url) &&

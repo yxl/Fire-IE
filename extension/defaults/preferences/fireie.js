@@ -35,6 +35,7 @@ pref("extensions.fireie.showStatusText", true);
 pref("extensions.fireie.showSiteFavicon", true);
 pref("extensions.fireie.fxLabel", "");
 pref("extensions.fireie.ieLabel", "");
+pref("extensions.fireie.showUrlBarButtonOnlyForIE", false);
 
 // Integration
 pref("extensions.fireie.forceMGSupport", false);
