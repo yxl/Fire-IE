@@ -93,6 +93,7 @@ Options.apply = function(quiet)
   Prefs.showSiteFavicon = E("favicon").value == "faviconSite";
   Prefs.showUrlBarLabel = (E("iconDisplay").value == "iconAndText");
   Prefs.hideUrlBarButton = (E("iconDisplay").value == "iconHidden");
+  Prefs.showUrlBarButtonOnlyForIE = E("showUrlBarButtonOnlyForIE").checked;
   Prefs.fxLabel = E("fxLabel").value;
   Prefs.ieLabel = E("ieLabel").value;
   Prefs.showTooltipText = E("showTooltipText").checked;
@@ -369,6 +370,8 @@ Options.updateABPStatus = function()
 Options.updateCustomLabelsUI = function()
 {
   E("customLabels").hidden = (E("iconDisplay").value != "iconAndText");
+  E("showUrlBarButtonOnlyForIE").hidden = (E("iconDisplay").value == "iconHidden");
+  E("fxLabel").disabled = E("showUrlBarButtonOnlyForIE").checked;
   Options.sizeToContent();
 };
 
@@ -392,6 +395,7 @@ Options.initDialog = function(restore)
   // UI
   E("favicon").value = Prefs.showSiteFavicon ? "faviconSite" : "faviconIE";
   E("iconDisplay").value = Prefs.hideUrlBarButton ? "iconHidden" : (Prefs.showUrlBarLabel ? "iconAndText" : "iconOnly");
+  E("showUrlBarButtonOnlyForIE").checked = Prefs.showUrlBarButtonOnlyForIE;
   E("fxLabel").value = Prefs.fxLabel; E("fxLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.fx");
   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
   E("showTooltipText").checked = Prefs.showTooltipText;
@@ -521,6 +525,7 @@ Options.init = function()
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
   
   E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
+  E("showUrlBarButtonOnlyForIE").addEventListener("command", Options.updateCustomLabelsUI, false);
   E("iemode-menulist").addEventListener("command", Options.updateIECompatDescription, false);
 
   ABPObserver.addListener(Options.updateABPStatus);

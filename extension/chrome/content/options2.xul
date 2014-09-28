@@ -158,6 +158,7 @@
               </hbox>
             </radiogroup>
           </vbox>
+          <checkbox label="&fireie.options.ui.showUrlBarButtonOnlyForIE;" id="showUrlBarButtonOnlyForIE" class="indent"/>
           <vbox id="customLabels">
             <label>&fireie.options.ui.customLabelLabel;</label>
             <hbox class="indent" align="center">

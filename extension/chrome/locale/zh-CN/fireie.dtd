@@ -38,6 +38,7 @@
 <!ENTITY fireie.options.ui.faviconSite "使用网站图标">
 <!ENTITY fireie.options.ui.faviconIE "使用IE引擎图标">
 <!ENTITY fireie.options.ui.customLabelLabel "自定义标签：">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "仅在使用IE引擎时显示该按钮">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
