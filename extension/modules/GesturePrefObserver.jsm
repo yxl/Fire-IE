@@ -223,7 +223,7 @@ let GesturePrefObserver = {
         break;
       }
 
-      plugin.SetEnabledGestures(gestures);
+      plugin.SetEnabledGestures(UtilsPluginManager.convertObject(gestures));
       Utils.LOG("Gesture state: [" + this.mainGestureExtension + "][" + gestures.toString() + "]");
       return true;
     }

@@ -92,6 +92,16 @@ let UtilsPluginManager = {
   },
   
   /**
+   * Convert the object so that it can be safely passed to the plugin
+   */
+  convertObject: function(obj)
+  {
+    if (Cu.cloneInto)
+      return Cu.cloneInto(obj, Utils.getHiddenWindow());
+    return obj;
+  },
+  
+  /**
    * Retrieves the window where utils plugin sits in
    */
   getWindow: function()
