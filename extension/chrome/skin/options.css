@@ -1,6 +1,10 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+prefwindow {
+  -moz-binding: url("chrome://fireie/content/bindings.xml#myprefwindow") !important;
+}
+
 .descr {
   width: 300px;
 }

@@ -479,32 +479,6 @@ Options.sizeToContent = function()
 
 Options.init = function()
 {
-  if (!window.arguments || !window.arguments[0] || !window.arguments[0].wrappedJSObject
-      || !window.arguments[0].wrappedJSObject.openFromUtils)
-  {
-    // not opened from Utils.openOptionsDialog, check if we have the correct instantApply pref
-    try
-    {
-      if (Services.prefs.getBoolPref("browser.preferences.instantApply"))
-      {
-        // Nope, have to close and reopen
-        window.close();
-        window.addEventListener("unload", function()
-        {
-          Utils.runAsync(Utils.openOptionsDialog, Utils);
-        });
-        return;
-      }
-    } catch (ex) {}
-  }
-  else
-  {
-    // notify Utils
-    Utils.openOptionsDialogComplete();
-  }
-  
-  E("fireie-options").hidden = false;
-  
   function addEventListenerByTagName(tag, type, listener)
   {
     let objs = document.getElementsByTagName(tag);

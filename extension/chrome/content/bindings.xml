@@ -1,0 +1,25 @@
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <binding id="myprefwindow" extends="chrome://global/content/bindings/preferences.xml#prefwindow">
+    <implementation>
+      <constructor>
+      <![CDATA[
+        if (this.instantApply) {
+          this.instantApply = false;
+          // Undo the "harm" caused by the original prefwindow
+          var docElt = document.documentElement;
+          var acceptButton = docElt.getButton("accept");
+          acceptButton.hidden = false;
+          var cancelButton = docElt.getButton("cancel");
+          cancelButton.setAttribute("icon", "cancel");
+          cancelButton.setAttribute("label", this.mStrBundle.GetStringFromName("button-cancel"));
+          var accessKey = this.mStrBundle.GetStringFromName("accesskey-cancel");
+          if (accessKey)
+            cancelButton.setAttribute("accesskey", accessKey);
+        }
+      ]]>
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>
