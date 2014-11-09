@@ -104,6 +104,25 @@ let adblockerMap = (function generateAdblockers()
       }
       catch (ex) {}
     }
+  }, {
+    name: "Adblock Plus (Pale Moon Pseudo-Static)",
+    id: "{016acf6d-e5c0-4768-9376-3763d1ad1978}",
+    prefsBranch: "extensions.adblockplus.",
+    filterFilePath: "adblockplus/patterns.ini",
+    priority: 75,
+    getFilterNotifier: function()
+    {
+      // ABP 2.1+
+      try
+      {
+        let { FilterNotifier } = requireGeneric("filterNotifier", "adblockplus-require");
+        if (FilterNotifier)
+        {
+          return FilterNotifier;
+        }
+      }
+      catch (ex) {}
+    }
   }];
   
   let map = {};
@@ -249,7 +268,7 @@ let ABPObserver = {
   
   getAdblockerName: function()
   {
-    return adblocker.name;
+    return adblocker.localizedName || adblocker.name;
   },
   
   addListener: function(listener)
@@ -351,8 +370,8 @@ let ABPObserver = {
         if (installed)
         {
           adblocker = adblockerMap[id];
-          // Replace name with localized one
-          adblocker.name = addon.name;
+          // Record localized name
+          adblocker.localizedName = addon.name;
           self._onABPEnable();
           return;
         }
@@ -735,8 +754,8 @@ let ABPAddonListener = {
     if (blocker && !ABPObserver.isInstalled())
     {
       adblocker = blocker;
-      // Replace name with localized one
-      adblocker.name = addon.name;
+      // Record localized name
+      adblocker.localizedName = addon.name;
       Utils.runAsync(function()
       {
         ABPObserver._onABPEnable();
