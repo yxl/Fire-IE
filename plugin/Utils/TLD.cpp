@@ -36,6 +36,7 @@ public:
 
 TLDInit::TLDInit()
 {
+	// The tldstring is downloadable from http://www.agitos.de/regdom-lib-downloads/
 	CFile file;
 	if (file.Open(App::GetModulePath() + _T("tldstring.txt"), CFile::modeRead | CFile::shareDenyWrite))
 	{
