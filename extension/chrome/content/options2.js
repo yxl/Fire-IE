@@ -409,6 +409,7 @@ Options.initDialog = function(restore)
   E("abpSupportEnabled").checked = Prefs.abpSupportEnabled;
   E("cookieSyncEnabled").checked = Prefs.cookieSyncEnabled;
   E("privateCookieSyncEnabled").checked = Prefs.privateCookieSyncEnabled;
+  E("privateCookieSyncEnabled").disabled = !Prefs.cookieSyncEnabled;
   E("historyEnabled").checked = Prefs.historyEnabled;
   // disable MGS checkbox if we already detected some gesture extension
   if (GesturePrefObserver.hasGestureExtension())
