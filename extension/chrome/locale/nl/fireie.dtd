@@ -35,6 +35,7 @@
 <!ENTITY fireie.options.ui.faviconSite "Favicon van website gebruiken">
 <!ENTITY fireie.options.ui.faviconIE "Pictogram IE-engine gebruiken">
 <!ENTITY fireie.options.ui.customLabelLabel "Labels aanpassen:">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Knop alleen bij gebruik IE-engine weergeven">
 <!ENTITY fireie.options.integration.tab "Integratie">
 <!ENTITY fireie.options.integration.pane "Integratie">
 <!ENTITY fireie.options.integration.mgCaption "Ondersteuning muisbewegingen">

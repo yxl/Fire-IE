@@ -35,6 +35,7 @@
 <!ENTITY fireie.options.ui.faviconSite "使用網站圖示">
 <!ENTITY fireie.options.ui.faviconIE "使用 IE 引擎圖示">
 <!ENTITY fireie.options.ui.customLabelLabel "自訂標籤：">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "只在使用 IE 引擎時顯示按鈕">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">

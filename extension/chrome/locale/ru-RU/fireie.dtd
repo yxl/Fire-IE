@@ -35,6 +35,7 @@
 <!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
 <!ENTITY fireie.options.ui.customLabelLabel "Customize labels:">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Show the button only when using IE engine">
 <!ENTITY fireie.options.integration.tab "Интеграция">
 <!ENTITY fireie.options.integration.pane "Интеграция">
 <!ENTITY fireie.options.integration.mgCaption "Поддержка жестов мышью">
