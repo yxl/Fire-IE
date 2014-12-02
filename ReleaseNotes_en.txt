@@ -1,3 +1,11 @@
+Fire-IE 0.4.1 @ December 2, 2014
+Enhancements:
+* Added an option that allows the URL bar button to display only when IE engine is used.
+* Support Adblock Latitude (Pale Moon version of Adblock Plus).
+
+Bug fixes:
+* Fixed bugs in Mouse Gestures support.
+
 Fire-IE 0.4.0 @ September 26, 2014
 Enhancements:
 * Remove seldom-used "ESR UA" option from user-agent options.
