@@ -1051,6 +1051,7 @@ void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
 {
+	if (m_bUtils) return;
 	if (m_strStatusText != message)
 	{
 		m_strStatusText = message;
@@ -1229,6 +1230,7 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 			CString strUserAgent = GetDocumentUserAgent();
 			if (strUserAgent.GetLength())
 			{
+				s_bUserAgentProccessed = true;
 				ReceiveUserAgent(strUserAgent);
 				if (OS::GetIEVersion() >= 9)
 				{
@@ -1253,12 +1255,12 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 						CIEHostWindow* pWindow = GetAnyUtilsWindow();
 						if (pWindow)
 						{
+							pWindow->Navigate(_T("about:blank"), _T(""), _T(""));
 							pWindow->ReceiveUserAgent(userAgent);
 						}
 						delete uaListener;
 					});
 				}
-				s_bUserAgentProccessed = true;
 			}
 		}
 
