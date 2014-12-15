@@ -25,16 +25,20 @@ namespace RuleMaker
 			if (dlg.ShowDialog() == DialogResult.OK)
 			{
 				ChinaList list = new ChinaList(dlg.FileName);
-				list.Update();
 				try
 				{
+				    list.Update();
 					list.Validate();
-					MessageBox.Show("Succeeded!");
+                    MessageBox.Show("Succeeded!", "", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				}
-				catch (Exception ex)
+				catch (CustomError ex)
 				{
-					MessageBox.Show(ex.ToString(), "error");
+					MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
 			}
 		}
 	}

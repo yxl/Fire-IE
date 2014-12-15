@@ -9,8 +9,14 @@ using Microsoft.VisualBasic;
 
 namespace RuleMaker
 {
+  class CustomError : Exception
+  {
+    public CustomError(string message) : base(message) { }
+  };
+
   class ChinaList
   {
+    private const string FIRSTLINE_REGX = @"\[fireie(?:\s*([\d\.]+)?)?\]";
     private const string CHECKSUM_REGX = @"^\s*!\s*checksum[\s\-:]+([\w\+\/=]+).*\n";
     private const string URL_REGX = @"([a-z0-9][a-z0-9\-]*?\.(?:com|edu|cn|net|org|gov|im|info|la|co|tv|biz|mobi)(?:\.(?:cn|tw))?)";
 
@@ -31,12 +37,14 @@ namespace RuleMaker
     public void Update()
     {
       string content = ReadList();
+      ValidateFirstLine(content);
       content = UpdateTime(content);
       content = RemoveChecksum(content);
 
       string result = UpdateCheckSum(content);
       Save(FileName, result);
     }
+
 
     /// <summary>
     /// validate list
@@ -47,11 +55,14 @@ namespace RuleMaker
       string error = "";
 
       string content = ReadList();
+
+      ValidateFirstLine(content);
+
       string checkSum = FindCheckSum(content);
       if (string.IsNullOrEmpty(checkSum))
       {
         error = string.Format("Couldn't find a checksum in the file {0}", FileName);
-        throw new Exception(error);
+        throw new CustomError(error);
       }
 
       content = RemoveChecksum(content);
@@ -60,7 +71,7 @@ namespace RuleMaker
       if (!checkSum.Equals(genearteCheckSum))
       {
         error = string.Format("Wrong checksum [{0}] found in the file {1}, expected is [{2}]", checkSum, FileName, genearteCheckSum);
-        throw new Exception(error);
+        throw new CustomError(error);
       }
     }
 
@@ -120,6 +131,31 @@ namespace RuleMaker
       }
 
       return content;
+    }
+
+    /// <summary>
+    /// Is the format of first line valid?
+    /// </summary>
+    private static bool IsFirstLineValid(string content)
+    {
+      int firstLineFeed = content.IndexOf('\n');
+      if (firstLineFeed == -1) firstLineFeed = content.Length;
+      string firstLine = content.Substring(0, firstLineFeed);
+      Regex regex = new Regex(FIRSTLINE_REGX, RegexOptions.IgnoreCase);
+      return regex.IsMatch(firstLine);
+    }
+
+    /// <summary>
+    /// Validate the format of first line
+    /// </summary>
+    private void ValidateFirstLine(string content) {
+      if (!IsFirstLineValid(content)) {
+        string error = string.Format("Wrong format in the file {0}.\n"
+          + "The first line should be of the form \"[fireie {1}]\",\n"
+          + "where \"{1}\" should be replaced by the minimum required\n"
+          + "version of Fire IE to read this subscription list.", FileName, "{version}");
+        throw new CustomError(error);
+      }
     }
 
     /// <summary>
