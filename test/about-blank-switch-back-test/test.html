@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>about:blank switch back test</title>
+    <meta charset="utf-8"/>
+    <script>
+      function testOpenNewTab(nav) {
+        var winRef = window.open("about:blank", "_blank","");
+        if (nav) {
+          setTimeout(function() {
+            winRef.location = "http://www.baidu.com/";
+          }, 2000);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <button onclick="testOpenNewTab(true);">Open</button>
+    <button onclick="testOpenNewTab(false);">Open without navigate</button>
+  </body>
+</html>
