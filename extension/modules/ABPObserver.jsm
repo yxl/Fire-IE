@@ -123,6 +123,28 @@ let adblockerMap = (function generateAdblockers()
       }
       catch (ex) {}
     }
+  }, {
+    name: "Pan",
+    id: "{A065A84F-95B6-433A-A0C8-4C040B77CE8A}",
+    prefsBranch: "extensions.pan.",
+    filterFilePath: "pan/patterns.ini",
+    priority: 25,
+    getFilterNotifier: function()
+    {
+      // ABP 2.1+
+      try
+      {
+        let { FilterNotifier } = requireGeneric("filterNotifier", "pan-require");
+        if (FilterNotifier)
+        {
+          return FilterNotifier;
+        }
+      }
+      catch (ex) {}
+    },
+    options: {
+      excludedSubscriptionsRegex: "/^\\[proxy\\]/"
+    }
   }];
   
   let map = {};
@@ -493,7 +515,8 @@ let ABPObserver = {
     {
       try
       {
-        UtilsPluginManager.getPlugin().ABPLoad(pathname);
+        UtilsPluginManager.getPlugin().ABPLoad(pathname, UtilsPluginManager.convertObject(
+          adblocker.options || {}));
         this._setStatus(ABPStatus.Loading);
         Utils.LOG("[ABP] Loading filters from \"" + pathname + "\"...");
       }

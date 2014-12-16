@@ -193,3 +193,36 @@ CString NPStringToCString(NPString npstr)
 	}
 	return str;
 }
+
+CString NPIdentifierToCString(NPIdentifier npid)
+{
+	NPUTF8* putf8IdName = NPN_UTF8FromIdentifier(npid);
+	NPString npstrIdName = { putf8IdName, strlen(putf8IdName) };
+	CString idName = NPStringToCString(npstrIdName);
+	NPN_MemFree(putf8IdName);
+	return idName;
+}
+
+unordered_map<wstring, wstring> NPObjectToUnorderedMap(NPP npp, NPObject* npobj)
+{
+	unordered_map<wstring, wstring> result;
+
+	NPIdentifier* pIdentifiers = NULL;
+	uint32_t nIdentifiers = 0;
+	if (NPN_Enumerate(npp, npobj, &pIdentifiers, &nIdentifiers)) {
+		for (uint32_t i = 0; i < nIdentifiers; i++) {
+			NPIdentifier npid = pIdentifiers[i];
+			CString idName = NPIdentifierToCString(npid);
+			NPVariant npvValue;
+			if (NPN_GetProperty(npp, npobj, npid, &npvValue)) {
+				if (NPVARIANT_IS_STRING(npvValue)) {
+					result[idName.GetString()] = NPStringToCString(NPVARIANT_TO_STRING(npvValue)).GetString();
+				}
+				NPN_ReleaseVariantValue(&npvValue);
+			}
+		}
+		NPN_MemFree(pIdentifiers);
+	}
+
+	return result;
+}

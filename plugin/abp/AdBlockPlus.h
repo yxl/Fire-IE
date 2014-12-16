@@ -34,6 +34,7 @@ class AdBlockPlus {
 public:
 	// main control routines, should only be called from main thread
 	static void loadFilterFile(const std::wstring& pathname);
+	static void loadFilterFile(const std::wstring& pathname, const std::unordered_map<std::wstring, std::wstring>& options);
 	static void reloadFilterFile();
 	static void clearFilters();
 	static void enable();

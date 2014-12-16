@@ -615,11 +615,12 @@ namespace Plugin
 							for (int i = 0; i < length; i++)
 							{
 								NPVariant npvName;
-								if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetIntIdentifier(i), &npvName) && NPVARIANT_IS_STRING(npvName))
+								if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetIntIdentifier(i), &npvName))
 								{
-									strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
+									if (NPVARIANT_IS_STRING(npvName))
+										strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
+									NPN_ReleaseVariantValue(&npvName);
 								}
-								NPN_ReleaseVariantValue(&npvName);
 							}
 
 							BrowserHook::GestureHandler::setEnabledGestures(strGestures, length);
@@ -711,7 +712,15 @@ namespace Plugin
 			else
 				return false;
 
-			abp::AdBlockPlus::loadFilterFile(pathname.GetString());
+			unordered_map<wstring, wstring> options;
+
+			if (argCount >= 2 && NPVARIANT_IS_OBJECT(args[1]))
+			{
+				NPObject* npvOptions = NPVARIANT_TO_OBJECT(args[1]);
+				options = NPObjectToUnorderedMap(mNpp, npvOptions);
+			}
+
+			abp::AdBlockPlus::loadFilterFile(pathname.GetString(), options);
 			return true;
 		}
 		// void ABPClear()
