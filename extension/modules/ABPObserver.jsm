@@ -105,7 +105,7 @@ let adblockerMap = (function generateAdblockers()
       catch (ex) {}
     }
   }, {
-    name: "Adblock Plus (Pale Moon Pseudo-Static)",
+    name: "Adblock Latitude",
     id: "{016acf6d-e5c0-4768-9376-3763d1ad1978}",
     prefsBranch: "extensions.adblockplus.",
     filterFilePath: "adblockplus/patterns.ini",
