@@ -406,6 +406,12 @@ let ABPObserver = {
   _setStatus: function(status)
   {
     this._status = status;
+    this._triggerClearTimers();
+    this._triggerListeners("statusChanged", status);
+  },
+  
+  _triggerClearTimers: function()
+  {
     switch (this._status)
     {
     case ABPStatus.NotDetected:
@@ -418,7 +424,6 @@ let ABPObserver = {
       this._cancelClearTimer();
       break;
     }
-    this._triggerListeners("statusChanged", status);
   },
   
   _triggerListeners: function(topic, data)
@@ -603,6 +608,10 @@ let ABPObserver = {
           if (this._needReload || pathname != this._getFilterFile())
             this._loadFilters();
           else this._enable();
+        }
+        else
+        {
+          this._triggerClearTimers();
         }
       }
     }
