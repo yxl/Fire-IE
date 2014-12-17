@@ -1,3 +1,7 @@
+Fire-IE 0.4.2 @ December 17, 2014
+Bug fixes:
+* Fix high CPU usage in special circumstances.
+
 Fire-IE 0.4.1 @ December 2, 2014
 Enhancements:
 * Added an option that allows the URL bar button to display only when IE engine is used.
