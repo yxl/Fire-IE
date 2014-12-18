@@ -37,7 +37,7 @@ var Utils = {
   _throttledUpdates: new WeakMap(),
   
   /**
-   * Returns the add-on ID used by Adblock Plus
+   * Returns the add-on ID used by Fire-IE
    */
   get addonID()
   {
