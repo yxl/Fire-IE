@@ -556,22 +556,19 @@ var Utils = {
     if (!aBrowser.getBrowserIndexForDocument) return null;
     try
     {
-      let tab = null;
       let targetBrowserIndex = aBrowser.getBrowserIndexForDocument(doc);
 
       if (targetBrowserIndex != -1)
-      {
-        tab = aBrowser.tabContainer.childNodes[targetBrowserIndex];
-        return tab;
-      }
+        return aBrowser.tabContainer.childNodes[targetBrowserIndex];
+      else
+        return null;
     }
     catch (err)
     {
-      Utils.ERROR(err);
+      return null;
     }
-    return null;
   },
-
+  
   getTabFromWindow: function(win)
   {
     function getRootWindow(win)

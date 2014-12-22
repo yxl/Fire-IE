@@ -59,6 +59,15 @@ let FireIEContainer = {};
       Utils.ERROR('Cannot find container to insert fireie-object.');
       return;
     }
+    
+    // must be loaded into a tab.. anything else is disallowed, such as the sidebar
+    if (!Utils.getTabFromDocument(document))
+    {
+      container.innerHTML = '<strong style="font-size: 36px; color: red;">ERROR: Fire IE plugin can only be loaded in a tab.</strong>';
+      Utils.ERROR("Fire IE plugin can only be loaded in a tab.");
+      return;
+    }
+    
     if (needPrivateBrowsingWarning())
     {
       container.innerHTML = '<iframe src="PrivateBrowsingWarning.xhtml" width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="no" allowtransparency="yes"></iframe>';
