@@ -2282,15 +2282,15 @@ WindowWrapper.prototype = {
   /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
-    this._updateInterface();
-
     let doc = e.originalTarget;
     
     // e.originalTarget may not always be a HTMLDocument
-    if (!doc.defaultView) return;
+    if (!doc.defaultView || doc.defaultView === this.window) return;
 
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
+
+    this._updateInterface();
 
     let url = doc.defaultView.location.href;
     if (url == "about:blank" || Utils.isSwitchJumper(url))
