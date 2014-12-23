@@ -1251,6 +1251,19 @@ var Utils = {
     catch (ex) {
       Utils.ERROR("Cannot launch " + description + ", process creation failed: " + ex);
     }
+  },
+  
+  // create an object with the desired prototype and own enumerable properties
+  createObjectWithPrototype: function(proto, props)
+  {
+    let obj = Object.create(proto);
+    [].forEach.call(Object.keys(props), function(key)
+    {
+      let desc = Object.getOwnPropertyDescriptor(props, key);
+      if (desc !== undefined)
+        Object.defineProperty(obj, key, desc);
+    });
+    return obj;
   }
 };
 

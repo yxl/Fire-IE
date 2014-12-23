@@ -72,9 +72,7 @@ Rule.prototype = {
  * Cache for known rules, maps string representation to rule objects.
  * @type Object
  */
-Rule.knownRules = {
-  __proto__: null
-};
+Rule.knownRules = Object.create(null);
 
 /**
  * Regular expression that RegExp rules specified as RegExps should match
@@ -173,9 +171,7 @@ function InvalidRule(text, reason)
 
   this.reason = reason;
 }
-InvalidRule.prototype = {
-  __proto__: Rule.prototype,
-
+InvalidRule.prototype = Utils.createObjectWithPrototype(Rule.prototype, {
   /**
    * Reason why this rule is invalid
    * @type String
@@ -187,7 +183,7 @@ InvalidRule.prototype = {
    */
   serialize: function(buffer)
   {}
-};
+});
 
 /**
  * Class for comments
@@ -199,15 +195,13 @@ function CommentRule(text)
 {
   Rule.call(this, text);
 }
-CommentRule.prototype = {
-  __proto__: Rule.prototype,
-
+CommentRule.prototype = Utils.createObjectWithPrototype(Rule.prototype, {
   /**
    * See Rule.serialize()
    */
   serialize: function(buffer)
   {}
-};
+});
 
 /**
  * Abstract base class for rules that can get hits
@@ -226,9 +220,7 @@ function ActiveRule(text, domains)
     this.__defineGetter__("domains", this._getDomains);
   }
 }
-ActiveRule.prototype = {
-  __proto__: Rule.prototype,
-
+ActiveRule.prototype = Utils.createObjectWithPrototype(Rule.prototype, {
   _disabled: false,
   _hitCount: 0,
   _lastHit: 0,
@@ -321,10 +313,9 @@ ActiveRule.prototype = {
     if (domains.length == 1 && domains[0][0] != "~")
     {
       // Fast track for the common one-domain scenario
-      this.domains = {
-        __proto__: null,
+      this.domains = Utils.createObjectWithPrototype(null, {
         "": false
-      };
+      });
       this.domains[domains[0]] = true;
     }
     else
@@ -347,9 +338,7 @@ ActiveRule.prototype = {
           hasIncludes = true;
         }
 
-        if (!this.domains) this.domains = {
-          __proto__: null
-        };
+        if (!this.domains) this.domains = Object.create(null);
 
         this.domains[domain] = include;
       }
@@ -409,7 +398,7 @@ ActiveRule.prototype = {
       if (this._lastHit) buffer.push("lastHit=" + this._lastHit);
     }
   }
-};
+});
 
 /**
  * Abstract base class for RegExp-based rules
@@ -438,9 +427,7 @@ function RegExpRule(text, regexpSource, matchCase, domains)
     this.__defineGetter__("regexp", this._generateRegExp);
   }
 }
-RegExpRule.prototype = {
-  __proto__: ActiveRule.prototype,
-  
+RegExpRule.prototype = Utils.createObjectWithPrototype(ActiveRule.prototype, {
   /**
    * Indicates whether the rule is an exceptional rule
    * @type Boolean
@@ -509,7 +496,7 @@ RegExpRule.prototype = {
 
     return false;
   }
-};
+});
 
 /**
  * Creates a RegExp rule from its text representation
@@ -599,10 +586,9 @@ function EngineRule(text, regexpSource, matchCase, domains)
 {
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
 }
-EngineRule.prototype = {
-  __proto__: RegExpRule.prototype,
+EngineRule.prototype = Utils.createObjectWithPrototype(RegExpRule.prototype, {
   isExceptional: false
-};
+});
 
 /**
  * Class for user agent switch rules
@@ -620,10 +606,9 @@ function UserAgentRule(text, regexpSource, matchCase, domains, specialUA)
   if (specialUA)
     this.specialUA = specialUA;
 }
-UserAgentRule.prototype = {
-  __proto__: RegExpRule.prototype,
+UserAgentRule.prototype = Utils.createObjectWithPrototype(RegExpRule.prototype, {
   isExceptional: false
-};
+});
 
 /**
  * Class for engine exceptional rules
@@ -638,10 +623,9 @@ function EngineExceptionalRule(text, regexpSource, matchCase, domains)
 {
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
 }
-EngineExceptionalRule.prototype = {
-  __proto__: RegExpRule.prototype,
+EngineExceptionalRule.prototype = Utils.createObjectWithPrototype(RegExpRule.prototype, {
   isExceptional: true
-}
+});
 
 /**
  * Class for user agent exceptional rules
@@ -656,7 +640,6 @@ function UserAgentExceptionalRule(text, regexpSource, matchCase, domains)
 {
   RegExpRule.call(this, text, regexpSource, matchCase, domains);
 }
-UserAgentExceptionalRule.prototype = {
-  __proto__: RegExpRule.prototype,
+UserAgentExceptionalRule.prototype = Utils.createObjectWithPrototype(RegExpRule.prototype, {
   isExceptional: true
-}
+});

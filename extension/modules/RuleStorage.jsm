@@ -86,9 +86,7 @@ var RuleStorage = {
    * Map of properties listed in the rule storage file before the sections
    * start. Right now this should be only the format version.
    */
-  fileProperties: {
-    __proto__: null
-  },
+  fileProperties: Object.create(null),
 
   /**
    * List of rule subscriptions containing all rules
@@ -100,9 +98,7 @@ var RuleStorage = {
    * Map of subscriptions already on the list, by their URL/identifier
    * @type Object
    */
-  knownSubscriptions: {
-    __proto__: null
-  },
+  knownSubscriptions: Object.create(null),
 
   /**
    * Finds the rule group that a rule should be added to by default. Will
@@ -338,12 +334,8 @@ var RuleStorage = {
 
     if (!silent)
     {
-      Rule.knownRules = {
-        __proto__: null
-      };
-      Subscription.knownSubscriptions = {
-        __proto__: null
-      };
+      Rule.knownRules = Object.create(null);
+      Subscription.knownSubscriptions = Object.create(null);
     }
 
     let explicitFile = true;
@@ -366,9 +358,7 @@ var RuleStorage = {
     while (true)
     {
       RuleStorage.subscriptions = [];
-      RuleStorage.knownSubscriptions = {
-        __proto__: null
-      };
+      RuleStorage.knownSubscriptions = Object.create(null);
 
       try
       {
@@ -491,9 +481,7 @@ var RuleStorage = {
       buf.splice(0, buf.length);
     }
 
-    let saved = {
-      __proto__: null
-    };
+    let saved = Object.create(null);
 
     // Save rule data
     for each(let subscription in RuleStorage.subscriptions)

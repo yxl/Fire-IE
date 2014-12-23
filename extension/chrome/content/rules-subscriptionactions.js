@@ -504,11 +504,10 @@ var SelectSubscription =
           continue;
 
         let localePrefix = Utils.checkLocalePrefixMatch(subscription.getAttribute("prefixes"));
-        let node = Templater.process(template, {
-          __proto__: null,
+        let node = Templater.process(template, Utils.createObjectWithPrototype(null, {
           node: subscription,
           localePrefix: localePrefix
-        });
+        }));
         parent.appendChild(node);
         listedSubscriptions.push(subscription);
       }

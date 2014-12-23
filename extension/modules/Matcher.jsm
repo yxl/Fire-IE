@@ -28,6 +28,7 @@ const Cu = Components.utils;
 
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import(baseURL.spec + "RuleClasses.jsm");
+Cu.import(baseURL.spec + "Utils.jsm");
 
 /**
  * Switch rule matching
@@ -56,12 +57,8 @@ Matcher.prototype = {
    */
   clear: function()
   {
-    this.ruleByKeyword = {
-      __proto__: null
-    };
-    this.keywordByRule = {
-      __proto__: null
-    };
+    this.ruleByKeyword = Object.create(null);
+    this.keywordByRule = Object.create(null);
   },
 
   /**
@@ -266,16 +263,13 @@ Matcher.prototype = {
    */
   fromCache: function( /**Object*/ cache)
   {
-    this.ruleByKeyword = cache.ruleByKeyword;
-    this.ruleByKeyword.__proto__ = null;
+    this.ruleByKeyword = Utils.createObjectWithPrototype(null, cache.ruleByKeyword);
 
     // We don't want to initialize keywordByRule yet, do it when it is needed
     delete this.keywordByRule;
     this.__defineGetter__("keywordByRule", function()
     {
-      let result = {
-        __proto__: null
-      };
+      let result = Object.create(null);
       for (let k in this.ruleByKeyword)
       {
         let list = this.ruleByKeyword[k];
@@ -302,9 +296,7 @@ function CombinedMatcher()
 {
   this.blacklist = new Matcher();
   this.whitelist = new Matcher();
-  this.resultCache = {
-    __proto__: null
-  };
+  this.resultCache = Object.create(null);
 }
 
 /**
@@ -345,9 +337,7 @@ CombinedMatcher.prototype = {
   {
     this.blacklist.clear();
     this.whitelist.clear();
-    this.resultCache = {
-      __proto__: null
-    };
+    this.resultCache = Object.create(null);
     this.cacheEntries = 0;
   },
 
@@ -367,9 +357,7 @@ CombinedMatcher.prototype = {
 
     if (this.cacheEntries > 0)
     {
-      this.resultCache = {
-        __proto__: null
-      };
+      this.resultCache = Object.create(null);
       this.cacheEntries = 0;
     }
   },
@@ -390,9 +378,7 @@ CombinedMatcher.prototype = {
 
     if (this.cacheEntries > 0)
     {
-      this.resultCache = {
-        __proto__: null
-      };
+      this.resultCache = Object.create(null);
       this.cacheEntries = 0;
     }
   },
@@ -474,9 +460,7 @@ CombinedMatcher.prototype = {
 
     if (this.cacheEntries >= CombinedMatcher.maxCacheEntries)
     {
-      this.resultCache = {
-        __proto__: null
-      };
+      this.resultCache = Object.create(null);
       this.cacheEntries = 0;
     }
 

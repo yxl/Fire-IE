@@ -71,13 +71,9 @@ let defaultModules = [
   baseURL.spec + "LightweightTheme.jsm"
 ];
 
-let loadedModules = {
-  __proto__: null
-};
+let loadedModules = Object.create(null);
 
-let lazyLoadModules = {
-  __proto__: null
-};
+let lazyLoadModules = Object.create(null);
 
 // Ensures ordered initialization for lazy loaded modules
 let lazyLoadModulesOrdered = [];
