@@ -267,22 +267,26 @@ Matcher.prototype = {
 
     // We don't want to initialize keywordByRule yet, do it when it is needed
     delete this.keywordByRule;
-    this.__defineGetter__("keywordByRule", function()
-    {
-      let result = Object.create(null);
-      for (let k in this.ruleByKeyword)
+    Object.defineProperty(this, "keywordByRule", {
+      get: function()
       {
-        let list = this.ruleByKeyword[k];
-        if (typeof list == "string") result[list] = k;
-        else for (let i = 0, l = list.length; i < l; i++)
-        result[list[i]] = k;
-      }
-      return this.keywordByRule = result;
-    });
-    this.__defineSetter__("keywordByRule", function(value)
-    {
-      delete this.keywordByRule;
-      return this.keywordByRule = value;
+        let result = Object.create(null);
+        for (let k in this.ruleByKeyword)
+        {
+          let list = this.ruleByKeyword[k];
+          if (typeof list == "string") result[list] = k;
+          else for (let i = 0, l = list.length; i < l; i++)
+          result[list[i]] = k;
+        }
+        return this.keywordByRule = result;
+      },
+      set: function(value)
+      {
+        delete this.keywordByRule;
+        return this.keywordByRule = value;
+      },
+      enumerable: true,
+      configurable: true
     });
   }
 };

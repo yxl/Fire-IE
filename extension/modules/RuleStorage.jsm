@@ -78,7 +78,9 @@ var RuleStorage = {
 
     if (!file) Cu.reportError("Fire-IE: Failed to resolve rule file location.");
 
-    this.__defineGetter__("sourceFile", function() file);
+    Object.defineProperty(this, "sourceFile", {
+      get: function() file
+    });
     return this.sourceFile;
   },
 

@@ -91,23 +91,27 @@ var RuleListener = {
           {
             var origValue = obj[prop];
             delete obj[prop];
-            obj.__defineGetter__(prop, function()
-            {
-              delete obj[prop];
-              obj[prop] = origValue;
-              if (!loadDone)
+            Object.defineProperty(obj, prop, {
+              get: function()
               {
+                delete obj[prop];
+                obj[prop] = origValue;
+                if (!loadDone)
+                {
 
-                loadDone = true;
-                RuleStorage.loadFromDisk(null, true);
+                  loadDone = true;
+                  RuleStorage.loadFromDisk(null, true);
 
-              }
-              return obj[prop];
-            });
-            obj.__defineSetter__(prop, function(value)
-            {
-              delete obj[prop];
-              return obj[prop] = value;
+                }
+                return obj[prop];
+              },
+              set: function(value)
+              {
+                delete obj[prop];
+                return obj[prop] = value;
+              },
+              enumerable: true,
+              configurable: true
             });
           }
 

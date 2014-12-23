@@ -217,7 +217,11 @@ function ActiveRule(text, domains)
   if (domains)
   {
     this.domainSource = domains;
-    this.__defineGetter__("domains", this._getDomains);
+    Object.defineProperty(this, "domains", {
+      get: this._getDomains,
+      enumerable: true,
+      configurable: true
+    });
   }
 }
 ActiveRule.prototype = Utils.createObjectWithPrototype(Rule.prototype, {
@@ -424,7 +428,11 @@ function RegExpRule(text, regexpSource, matchCase, domains)
   {
     // No need to convert this rule to regular expression yet, do it on demand
     this.regexpSource = regexpSource;
-    this.__defineGetter__("regexp", this._generateRegExp);
+    Object.defineProperty(this, "regexp", {
+      get: this._generateRegExp,
+      enumerable: true,
+      configurable: true
+    });
   }
 }
 RegExpRule.prototype = Utils.createObjectWithPrototype(ActiveRule.prototype, {
