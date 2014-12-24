@@ -51,12 +51,16 @@ GestureState GestureHandler::getState() const
 	return m_state;
 }
 
-bool GestureHandler::shouldUsePost()
+bool GestureHandler::shouldUsePost(HWND hTarget)
 {
-	// When OOPP is on, forwarding to firefox must use PostMessage to avoid deadlocks
 	// IE8 or higher does not suffer from issue #80
-	static bool bUsePost = App::GetApplication() == App::OOPP || OS::GetIEVersion() >= 8;
-	return bUsePost;
+	static bool bIsIEOKWithPost = OS::GetIEVersion() >= 8;
+	if (bIsIEOKWithPost) return true;
+
+	// When OOPP is on, forwarding to firefox must use PostMessage to avoid deadlocks
+	DWORD processId = 0;
+	GetWindowThreadProcessId(hTarget, &processId);
+	return processId != GetCurrentProcessId();
 }
 
 void GestureHandler::forwardAllOrigin(HWND hOrigin)
@@ -79,13 +83,14 @@ void GestureHandler::forwardAllOrigin(HWND hOrigin)
 void GestureHandler::forwardAllTarget(HWND hOrigin, HWND hTarget)
 {
 	_ASSERT(hOrigin != NULL && hTarget != NULL);
+	bool bShouldUsePost = shouldUsePost(hTarget);
 	for (std::vector<MSG>::iterator iter = m_vMessages.begin();
 		iter != m_vMessages.end(); ++iter)
 	{
 		CPoint pt(iter->lParam);
 		ClientToScreen(hOrigin, &pt);
 		ScreenToClient(hTarget, &pt);
-		if (shouldUsePost())
+		if (bShouldUsePost)
 			::PostMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
 		else
 			::SendMessage(hTarget, iter->message, iter->wParam, MAKELPARAM(pt.x, pt.y));
@@ -132,7 +137,7 @@ void GestureHandler::forwardTarget(MSG* pMsg, HWND hTarget)
 	CPoint pt(pMsg->lParam);
 	ClientToScreen(pMsg->hwnd, &pt);
 	ScreenToClient(hTarget, &pt);
-	if (shouldUsePost())
+	if (shouldUsePost(hTarget))
 		::PostMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
 	else
 		::SendMessage(hTarget, pMsg->message, pMsg->wParam, MAKELPARAM(pt.x, pt.y));
