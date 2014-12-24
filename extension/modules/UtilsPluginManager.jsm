@@ -74,8 +74,7 @@ let UtilsPluginManager = {
     if (this._isInitCalled) return;
     this._isInitCalled = true;
     
-    let ipcPrefName = "dom.ipc.plugins.enabled.npfireie" + (Utils.is64bit ? "64" : "32") + ".dll";
-    this._isRunningOOP = Services.prefs.getBoolPref(ipcPrefName);
+    this._isRunningOOP = Utils.isOOPP;
     this._handlePluginEvents();
     this._install();
     this._registerHandlers();

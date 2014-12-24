@@ -167,6 +167,12 @@ var Utils = {
   {
     return Services.appinfo.XPCOMABI.indexOf('64') != -1;
   },
+  
+  get isOOPP()
+  {
+    let ipcPrefName = "dom.ipc.plugins.enabled.npfireie" + (Utils.is64bit ? "64" : "32") + ".dll";
+    return Services.prefs.getBoolPref(ipcPrefName);
+  },
 
   get ieUserAgent()
   {

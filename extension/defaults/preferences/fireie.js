@@ -18,6 +18,7 @@ pref("extensions.fireie.savestats", true);
 pref("extensions.fireie.logCookies", false);
 pref("extensions.fireie.clearIETracks", true);
 pref("extensions.fireie.OOPP_crashCheckIntervalMillis", 5000);
+pref("extensions.fireie.OOPP_remoteSetCookie", true);
 
 // General
 pref("extensions.fireie.handleUrlBar", false);

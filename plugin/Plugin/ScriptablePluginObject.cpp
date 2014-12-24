@@ -689,6 +689,32 @@ namespace Plugin
 			PrefManager::instance().setDNTValue(value);
 			return true;
 		}
+		// void SetCookie({String}url, {String}cookieData)
+		else if (name == NPI_ID(SetCookie))
+		{
+			TRACE("SetCookie called!\n");
+			if (argCount < 2) return false;
+
+			bool ret = false;
+
+			CString url, cookieData;
+			if (NPVARIANT_IS_STRING(args[0]) && NPVARIANT_IS_STRING(args[1]))
+			{
+				url = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+				cookieData = NPStringToCString(NPVARIANT_TO_STRING(args[1]));
+				if (InternetSetCookie(url, NULL, cookieData))
+					ret = true;
+				else if (InternetSetCookieEx(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL))
+					ret = true;
+				else
+				{
+					TRACE(_T("InternetSetCookieExW failed with ERROR %d url: %s data: %s"),
+						  GetLastError(), url.GetString(), cookieData.GetString());
+				}
+			}
+
+			return ret;
+		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))
 		{

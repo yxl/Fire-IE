@@ -183,6 +183,11 @@ let IECookieManager = {
    */
   startup: function()
   {
+    // To avoid cyclic import, we have to do it here
+    let jsm = {};
+    Cu.import(baseURL.spec + "UtilsPluginManager.jsm", jsm);
+    this._upm = jsm.UtilsPluginManager;
+    
     try
     {
       mutex = new WinMutex("fireie@fireie.org::IECookieManager");
@@ -263,14 +268,22 @@ let IECookieManager = {
     {
       cookieData +="; httponly";
     }
-    let ret = InternetSetCookieW(url, null, cookieData); 
-    if (!ret)
+    
+    if (Prefs.OOPP_remoteSetCookie && Utils.isOOPP)
     {
-      let ret = InternetSetCookieExW(url, null, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
+      this._upm.getPlugin().SetCookie(url, cookieData);
+    }
+    else
+    {
+      let ret = InternetSetCookieW(url, null, cookieData); 
       if (!ret)
       {
-        let errCode = ctypes.winLastError || 0;
-        Utils.LOG('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
+        let ret = InternetSetCookieExW(url, null, cookieData, INTERNET_COOKIE_HTTPONLY, NULL);
+        if (!ret)
+        {
+          let errCode = ctypes.winLastError || 0;
+          Utils.LOG('InternetSetCookieExW failed with ERROR ' + errCode + ' url:' + url + ' data:' + cookieData);
+        }
       }
     }
   },
