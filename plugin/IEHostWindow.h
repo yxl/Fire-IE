@@ -57,6 +57,7 @@ public:
 	static void AddUtilsIEWindow(CIEHostWindow *pWnd);
 
 	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext);
+	static bool SetIECookie(const CString& url, const CString& cookieData);
 
 	static HWND GetAnyUtilsHWND();
 	static CIEHostWindow* GetAnyUtilsWindow();
