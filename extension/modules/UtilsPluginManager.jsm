@@ -50,6 +50,11 @@ let UtilsPluginManager = {
   _isInitCalled: false,
   
   /**
+   * Whether our plugin is running out-of-process
+   */
+  _isRunningOOP: false,
+  
+  /**
    * Keep a list of pref setters, which will be called upon plugin initialization
    */
   _prefSetters: [],
@@ -69,6 +74,8 @@ let UtilsPluginManager = {
     if (this._isInitCalled) return;
     this._isInitCalled = true;
     
+    let ipcPrefName = "dom.ipc.plugins.enabled.npfireie" + (Utils.is64bit ? "64" : "32") + ".dll";
+    this._isRunningOOP = Services.prefs.getBoolPref(ipcPrefName);
     this._handlePluginEvents();
     this._install();
     this._registerHandlers();
@@ -159,6 +166,11 @@ let UtilsPluginManager = {
     window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
+    if (this._isRunningOOP)
+    {
+      Services.obs.addObserver(checkPluginCrash, "plugin-crashed", false);
+      this._checkPluginCrashInterval = window.setInterval(checkPluginCrash, Prefs.OOPP_crashCheckIntervalMillis);
+    }
     
     // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
     window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
@@ -175,6 +187,11 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
+    if (this._isRunningOOP)
+    {
+      Services.obs.removeObserver(checkPluginCrash, "plugin-crashed");
+      window.clearInterval(this._checkPluginCrashInterval);
+    }
 
     window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
@@ -194,13 +211,8 @@ let UtilsPluginManager = {
       this._setPluginPrefs();
     }, this, [], true);
 
-    let doc = Utils.getHiddenWindow().document;
-    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
-    embed.setAttribute("id", Utils.utilsPluginId);
-    embed.setAttribute("type", "application/fireie");
-    embed.style.visibility = "collapse";
-    doc.body.appendChild(embed);
-
+    this._installPlugin();
+    
     // Check after 30 sec whether the plugin is initialized yet
     Utils.runAsyncTimeout(function()
     {
@@ -211,6 +223,39 @@ let UtilsPluginManager = {
     // Pref setter for cookie sync and DNT
     this.addPrefSetter(setCookieSyncPref);
     this.addPrefSetter(setDNTPref);
+  },
+  
+  _installPlugin: function()
+  {
+    let doc = Utils.getHiddenWindow().document;
+    let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
+    embed.setAttribute("id", Utils.utilsPluginId);
+    embed.setAttribute("type", "application/fireie");
+    embed.style.visibility = "collapse";
+    doc.body.appendChild(embed);
+  },
+  
+  /**
+   * Reinstall the plugin in case of a crash
+   */
+  reinstall: function()
+  {
+    this.isPluginInitialized = false;
+    
+    this.fireAfterInit(function()
+    {
+      this.isPluginInitialized = true;
+      this._setPluginPrefs();
+    }, this, [], true);
+    
+    this._reinstallPlugin();
+  },
+  
+  _reinstallPlugin: function()
+  {
+    let plugin = this.getPlugin();
+    plugin.parentElement.removeChild(plugin);
+    this._installPlugin();
   },
   
   _registerHandlers: function()
@@ -408,6 +453,15 @@ function(event)
 {
   loadFailureSubHandler();
 });
+
+function checkPluginCrash()
+{
+  if (!UtilsPluginManager.isPluginInitialized || UtilsPluginManager.getPlugin().Alive)
+    return;
+
+  Utils.ERROR("Plugin crashed, attempting to resume...");
+  UtilsPluginManager.reinstall();
+}
 
 /** Handler for receiving IE UserAgent from the plugin object */
 function onIEUserAgentReceived(event)

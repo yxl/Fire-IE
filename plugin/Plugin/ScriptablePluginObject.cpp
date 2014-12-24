@@ -194,6 +194,12 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
 			return true;
 		}
+		// readonly property {bool} Alive
+		else if (name == NPI_ID(Alive))
+		{
+			BOOLEAN_TO_NPVARIANT(true, *result);
+			return true;
+		}
 		// readonly property {bool} ABPIsEnabled
 		else if (name == NPI_ID(ABPIsEnabled))
 		{

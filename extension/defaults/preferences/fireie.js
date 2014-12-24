@@ -17,6 +17,7 @@ pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) 
 pref("extensions.fireie.savestats", true);
 pref("extensions.fireie.logCookies", false);
 pref("extensions.fireie.clearIETracks", true);
+pref("extensions.fireie.OOPP_crashCheckIntervalMillis", 5000);
 
 // General
 pref("extensions.fireie.handleUrlBar", false);
