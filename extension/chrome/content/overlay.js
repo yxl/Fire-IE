@@ -753,7 +753,7 @@ var gFireIE = null;
   
   function hookURLBarDragDrop()
   {
-    // gURLBar uses capturing hooks, thus our handlers can't override gURLBar's.
+    // gURLBar uses capturing listeners, thus our handlers can't override gURLBar's.
     // Hence the hook
     function checkURLBarButton(e)
     {
