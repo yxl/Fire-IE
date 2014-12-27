@@ -65,7 +65,6 @@ let defaultModules = [
   baseURL.spec + "ContentPolicy.jsm",
   baseURL.spec + "Synchronizer.jsm",
   baseURL.spec + "IECookieManager.jsm",
-  baseURL.spec + "FontObserver.jsm",
   baseURL.spec + "UtilsPluginManager.jsm",
   baseURL.spec + "ABPObserver.jsm",
   baseURL.spec + "LightweightTheme.jsm"

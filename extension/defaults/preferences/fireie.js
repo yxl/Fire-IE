@@ -43,7 +43,6 @@ pref("extensions.fireie.showUrlBarButtonOnlyForIE", false);
 pref("extensions.fireie.forceMGSupport", false);
 pref("extensions.fireie.abpSupportEnabled", true);
 pref("extensions.fireie.cookieSyncEnabled", true);
-pref("extensions.fireie.fontSyncEnabled", true);
 pref("extensions.fireie.privateCookieSyncEnabled", false);
 pref("extensions.fireie.abpAdditionalFiltersEnabled", true);
 pref("extensions.fireie.historyEnabled", true);
