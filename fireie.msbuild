@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+         DefaultTargets="unified">
+  <ItemGroup>
+   <SolutionFile Include="plugin.sln" />
+  </ItemGroup>
+  <Target Name="clean">
+    <Exec Command="del /f/q *.xpi" />
+    <MSBuild Projects="@(SolutionFile)" Targets="Clean" Properties="Configuration=Release;Platform=Win32" />
+    <MSBuild Projects="@(SolutionFile)" Targets="Clean" Properties="Configuration=Release;Platform=x64" />
+  </Target>
+  <Target Name="unified" DependsOnTargets="clean">
+    <MSBuild Projects="@(SolutionFile)" Targets="Build" Properties="Configuration=Release;Platform=Win32" />
+    <MSBuild Projects="@(SolutionFile)" Targets="Build" Properties="Configuration=Release;Platform=x64" />
+    <Exec Command="cd tools &amp; buildxpi-unified.bat" />
+  </Target>
+</Project>
