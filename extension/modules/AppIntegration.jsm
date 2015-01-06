@@ -543,10 +543,13 @@ WindowWrapper.prototype = {
       this.E("fireie-urlbar-switch").style.listStyleImage = engineIconCSS;
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
-      urlbarButtonLabel.value = isIEEngine ? (Prefs.ieLabel || Utils.getString("fireie.urlbar.switch.label.ie"))
-                                           : (Prefs.fxLabel || Utils.getString("fireie.urlbar.switch.label.fx"));
+      urlbarButtonLabel.setAttribute("value",
+        isIEEngine ? (Prefs.ieLabel || Utils.getString("fireie.urlbar.switch.label.ie"))
+                   : (Prefs.fxLabel || Utils.getString("fireie.urlbar.switch.label.fx")));
       let urlbarButtonTooltip = this.E("fireie-urlbar-switch-tooltip2");
-      urlbarButtonTooltip.value = Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie" : "fireie.urlbar.switch.tooltip2.fx");
+      urlbarButtonTooltip.setAttribute("value",
+        Utils.getString(isIEEngine ? "fireie.urlbar.switch.tooltip2.ie"
+                                   : "fireie.urlbar.switch.tooltip2.fx"));
 
       // If there exists a tool button of FireIE, make it's status the same with that on the URL bar.
       let toolbarButton = this.E("fireie-toolbar-palette-button");
