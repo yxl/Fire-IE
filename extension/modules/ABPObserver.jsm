@@ -105,7 +105,7 @@ let adblockerMap = (function generateAdblockers()
       catch (ex) {}
     }
   }, {
-    name: "Adblock Plus (Pale Moon Pseudo-Static)",
+    name: "Adblock Latitude",
     id: "{016acf6d-e5c0-4768-9376-3763d1ad1978}",
     prefsBranch: "extensions.adblockplus.",
     filterFilePath: "adblockplus/patterns.ini",
@@ -122,6 +122,28 @@ let adblockerMap = (function generateAdblockers()
         }
       }
       catch (ex) {}
+    }
+  }, {
+    name: "Pan",
+    id: "{A065A84F-95B6-433A-A0C8-4C040B77CE8A}",
+    prefsBranch: "extensions.pan.",
+    filterFilePath: "pan/patterns.ini",
+    priority: 25,
+    getFilterNotifier: function()
+    {
+      // ABP 2.1+
+      try
+      {
+        let { FilterNotifier } = requireGeneric("filterNotifier", "pan-require");
+        if (FilterNotifier)
+        {
+          return FilterNotifier;
+        }
+      }
+      catch (ex) {}
+    },
+    options: {
+      excludedSubscriptionsRegex: "/^\\[proxy\\]/"
     }
   }];
   
@@ -384,6 +406,12 @@ let ABPObserver = {
   _setStatus: function(status)
   {
     this._status = status;
+    this._triggerClearTimers();
+    this._triggerListeners("statusChanged", status);
+  },
+  
+  _triggerClearTimers: function()
+  {
     switch (this._status)
     {
     case ABPStatus.NotDetected:
@@ -396,7 +424,6 @@ let ABPObserver = {
       this._cancelClearTimer();
       break;
     }
-    this._triggerListeners("statusChanged", status);
   },
   
   _triggerListeners: function(topic, data)
@@ -493,7 +520,8 @@ let ABPObserver = {
     {
       try
       {
-        UtilsPluginManager.getPlugin().ABPLoad(pathname);
+        UtilsPluginManager.getPlugin().ABPLoad(pathname, UtilsPluginManager.convertObject(
+          adblocker.options || {}));
         this._setStatus(ABPStatus.Loading);
         Utils.LOG("[ABP] Loading filters from \"" + pathname + "\"...");
       }
@@ -580,6 +608,10 @@ let ABPObserver = {
           if (this._needReload || pathname != this._getFilterFile())
             this._loadFilters();
           else this._enable();
+        }
+        else
+        {
+          this._triggerClearTimers();
         }
       }
     }

@@ -17,6 +17,8 @@ pref("extensions.fireie.esr_user_agent", "Mozilla/5.0 (Windows NT 6.1; rv:10.0) 
 pref("extensions.fireie.savestats", true);
 pref("extensions.fireie.logCookies", false);
 pref("extensions.fireie.clearIETracks", true);
+pref("extensions.fireie.OOPP_crashCheckIntervalMillis", 5000);
+pref("extensions.fireie.OOPP_remoteSetCookie", true);
 
 // General
 pref("extensions.fireie.handleUrlBar", false);
@@ -41,7 +43,6 @@ pref("extensions.fireie.showUrlBarButtonOnlyForIE", false);
 pref("extensions.fireie.forceMGSupport", false);
 pref("extensions.fireie.abpSupportEnabled", true);
 pref("extensions.fireie.cookieSyncEnabled", true);
-pref("extensions.fireie.fontSyncEnabled", true);
 pref("extensions.fireie.privateCookieSyncEnabled", false);
 pref("extensions.fireie.abpAdditionalFiltersEnabled", true);
 pref("extensions.fireie.historyEnabled", true);

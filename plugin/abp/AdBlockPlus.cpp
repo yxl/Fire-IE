@@ -97,10 +97,16 @@ namespace abp {
 	struct AsyncLoaderParam {
 		wstring pathname;
 		wstring additionalFilters;
+		unordered_map<wstring, wstring> options;
 	};
 } // namespace abp
 
 void AdBlockPlus::loadFilterFile(const wstring& pathname)
+{
+	loadFilterFile(pathname, (unordered_map<wstring, wstring>()));
+}
+
+void AdBlockPlus::loadFilterFile(const wstring& pathname, const unordered_map<wstring, wstring>& options)
 {
 	s_loadStartTick = GetTickCount();
 	disable();
@@ -109,6 +115,7 @@ void AdBlockPlus::loadFilterFile(const wstring& pathname)
 	AsyncLoaderParam* pparam = new AsyncLoaderParam;
 	pparam->pathname = pathname;
 	pparam->additionalFilters = s_strAdditionalFilters;
+	pparam->options = options;
 	AfxBeginThread(asyncLoader, reinterpret_cast<void*>(pparam));
 }
 
@@ -203,8 +210,24 @@ namespace abp {
 			USER_PATTERNS
 		};
 
-		INIParser() : wantObj(false), subscriptionDisabled(false),
-			curSection(OTHER) {}
+		INIParser(const unordered_map<wstring, wstring>& options)
+			: wantObj(false), subscriptionDisabled(false),
+			  curSection(OTHER)
+		{
+			auto iter = options.find(L"excludedSubscriptionsRegex");
+			hasExcludedSubscriptions = iter != options.end();
+			if (hasExcludedSubscriptions)
+			{
+				try
+				{
+					reExcludedSubscriptions = iter->second;
+				}
+				catch (const RegExpCompileError&)
+				{
+					hasExcludedSubscriptions = false;
+				}
+			}
+		}
 		void process(const wstring& line, bool eof);
 		unordered_set<ActiveFilter*, ActiveFilter::Hasher, ActiveFilter::EqualTo> filters;
 
@@ -229,10 +252,14 @@ namespace abp {
 
 		bool wantObj;
 		bool subscriptionDisabled;
+		bool subscriptionExcluded;
 		Section curSection;
 		map<wstring, wstring> curObj;
 		vector<wstring> curList;
 		unordered_set<Filter*, Filter::Hasher, Filter::EqualTo> persistedFilters;
+		// resolved options
+		bool hasExcludedSubscriptions;
+		RegExp reExcludedSubscriptions;
 	};
 
 	map<wstring, INIParser::Section> INIParser::sectionMapper;
@@ -244,6 +271,7 @@ namespace abp {
 		static const RegExp re2 = L"/^\\s*\\[(.+)\\]\\s*$/";
 		static const RegExp re3 = L"/\\\\\\[/g";
 
+		static const wstring strTitle = L"title";
 		static const wstring strDisabled = L"disabled";
 		static const wstring strTrue = L"true";
 		static const wstring strLeftBracket = L"[";
@@ -279,12 +307,23 @@ namespace abp {
 						auto iter = curObj.find(strDisabled);
 						subscriptionDisabled =
 							iter != curObj.end() && iter->second == strTrue;
+
+						if (hasExcludedSubscriptions)
+						{
+							auto iterTitle = curObj.find(strTitle);
+							subscriptionExcluded = iterTitle != curObj.end() &&
+								reExcludedSubscriptions.test(iterTitle->second);
+						}
+						else
+						{
+							subscriptionExcluded = false;
+						}
 					}
 					break;
 				case SUBSCRIPTION_FILTERS:
 				case SUBSCRIPTION_PATTERNS:
 				case USER_PATTERNS:
-					if (!subscriptionDisabled)
+					if (!subscriptionDisabled && !subscriptionExcluded)
 					{
 						for (size_t i = 0; i < curList.size(); i++)
 						{
@@ -304,6 +343,7 @@ namespace abp {
 						}
 					}
 					subscriptionDisabled = false;
+					subscriptionExcluded = false;
 				}
 			}
 
@@ -317,6 +357,7 @@ namespace abp {
 			if (eof)
 			{
 				subscriptionDisabled = false;
+				subscriptionExcluded = false;
 				return;
 			}
 
@@ -339,7 +380,7 @@ namespace abp {
 				}
 			}
 		}
-		else if (!wantObj && line.length() && !subscriptionDisabled)
+		else if (!wantObj && line.length() && !subscriptionDisabled && !subscriptionExcluded)
 		{
 			curList.push_back(replace(line, re3, strLeftBracket));
 		}
@@ -373,6 +414,7 @@ unsigned int AdBlockPlus::asyncLoader(void* vpparam)
 	AsyncLoaderParam* pparam = reinterpret_cast<AsyncLoaderParam*>(vpparam);
 	wstring pathname = std::move(pparam->pathname);
 	wstring additionalFilters = std::move(pparam->additionalFilters);
+	unordered_map<wstring, wstring> options = std::move(pparam->options);
 	delete pparam;
 
 	bool loaded = false;
@@ -389,7 +431,7 @@ unsigned int AdBlockPlus::asyncLoader(void* vpparam)
 			WriterLock wl(s_mutex);
 			clearFiltersInternal(true);
 
-			INIParser parser;
+			INIParser parser(options);
 			loadContent(parser, content);
 			loadContent(parser, additionalFilters);
 

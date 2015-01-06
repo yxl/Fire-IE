@@ -489,9 +489,10 @@ WindowWrapper.prototype = {
       {
         if (!this.window.gBrowser.userTypedValue)
         {
-          if (url == "about:blank") url = "";
-          if (this.window.gURLBar.value != url) {
-            this.window.gURLBar.value = url;
+          let displayURL = url;
+          if (displayURL == "about:blank") displayURL = "";
+          if (this.window.gURLBar.value != displayURL) {
+            this.window.gURLBar.value = displayURL;
           }
         }
       }
@@ -1060,15 +1061,14 @@ WindowWrapper.prototype = {
 
     if (isModeIE) return Utils.toContainerUrl(url);
 
-    if (this.isIEEngine() && !Utils.startsWith(url, "about:"))
+    if (this.isIEEngine())
     {
       if (Utils.isValidUrl(url) || Utils.isValidDomainName(url))
       {
         let originalURL = this.getURL();
-        let isBlank = (originalURL == "about:blank");
         let handleUrlBar = Prefs.handleUrlBar;
         let isSimilar = Utils.getEffectiveHost(originalURL) == Utils.getEffectiveHost(url);
-        if (isBlank || handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
+        if (handleUrlBar || isSimilar) return Utils.toContainerUrl(url);
       }
     }
 
@@ -2090,6 +2090,9 @@ WindowWrapper.prototype = {
   // Handler for click event on engine switch button
   clickSwitchButton: function(e)
   {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (e.button == 2)
     {
       this.E("fireie-switch-button-context-menu").openPopup(e.target, "after_start", 0, 0, true, false);
@@ -2105,9 +2108,6 @@ WindowWrapper.prototype = {
       let where = this.window.whereToOpenLink(e, false, true);
       this._openInEngine(url, !this.isIEEngine(), where);
     }
-    
-    e.preventDefault();
-    e.stopPropagation();
   },
   
   // process click events inside the URL bar (mainly to stop propagation
@@ -2282,15 +2282,15 @@ WindowWrapper.prototype = {
   /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
-    this._updateInterface();
-
     let doc = e.originalTarget;
     
     // e.originalTarget may not always be a HTMLDocument
-    if (!doc.defaultView) return;
+    if (!doc.defaultView || doc.defaultView === this.window) return;
 
     let tab = Utils.getTabFromDocument(doc);
     if (!tab) return;
+
+    this._updateInterface();
 
     let url = doc.defaultView.location.href;
     if (url == "about:blank" || Utils.isSwitchJumper(url))

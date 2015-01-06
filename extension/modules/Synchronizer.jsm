@@ -54,9 +54,7 @@ let timer = null;
  * Map of subscriptions currently being downloaded, all currently downloaded
  * URLs are keys of that map.
  */
-let executing = {
-  __proto__: null
-};
+let executing = Object.create(null);
 
 /**
  * This object is responsible for downloading rule subscriptions whenever

@@ -37,7 +37,7 @@ var Utils = {
   _throttledUpdates: new WeakMap(),
   
   /**
-   * Returns the add-on ID used by Adblock Plus
+   * Returns the add-on ID used by Fire-IE
    */
   get addonID()
   {
@@ -74,7 +74,7 @@ var Utils = {
       Utils.ERROR("Failed to get host app version: " + e);
     }
     
-    Utils.__defineGetter__("firefoxMajorVersion", function() version);
+    Object.defineProperty(Utils, "firefoxMajorVersion", { get: function() version });
     return version;
   },
   
@@ -109,7 +109,7 @@ var Utils = {
       wrk = null;
     }
     
-    Utils.__defineGetter__("ieMajorVersion", function() version);
+    Object.defineProperty(Utils, "ieMajorVersion", { get: function() version });
     return version;
   },
 
@@ -128,7 +128,7 @@ var Utils = {
   get appID()
   {
     let id = Services.appinfo.ID;
-    Utils.__defineGetter__("appID", function() id);
+    Object.defineProperty(Utils, "appID", { get: function() id });
     return id;
   },
 
@@ -146,7 +146,7 @@ var Utils = {
     {
       Cu.reportError(e);
     }
-    Utils.__defineGetter__("appLocale", function() locale);
+    Object.defineProperty(Utils, "appLocale", { get: function() locale });
     return locale;
   },
 
@@ -156,7 +156,7 @@ var Utils = {
   get platformVersion()
   {
     let platformVersion = Services.appinfo.platformVersion;
-    Utils.__defineGetter__("platformVersion", function() platformVersion);
+    Object.defineProperty(Utils, "platformVersion", { get: function() platformVersion });
     return platformVersion;
   },
 
@@ -166,6 +166,12 @@ var Utils = {
   get is64bit()
   {
     return Services.appinfo.XPCOMABI.indexOf('64') != -1;
+  },
+  
+  get isOOPP()
+  {
+    let ipcPrefName = "dom.ipc.plugins.enabled.npfireie" + (Utils.is64bit ? "64" : "32") + ".dll";
+    return Services.prefs.getBoolPref(ipcPrefName);
   },
 
   get ieUserAgent()
@@ -193,7 +199,7 @@ var Utils = {
     let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
     Cu.import(baseURL.spec + "Prefs.jsm");
     
-    Utils.__defineGetter__("esrUserAgent", function() Prefs.esr_user_agent);
+    Object.defineProperty(Utils, "esrUserAgent", { get: function() Prefs.esr_user_agent });
     return Prefs.esr_user_agent;
   },
   
@@ -204,7 +210,7 @@ var Utils = {
     if (dir == Services.dirsvc.get("ProfD", Ci.nsIFile).path + "\\fireie")
       dir = Services.dirsvc.get("TmpD", Ci.nsIFile).path + "\\fireie";
     
-    Utils.__defineGetter__("ieTempDir", function() dir);
+    Object.defineProperty(Utils, "ieTempDir", { get: function() dir });
     return dir;
   },
   
@@ -241,14 +247,14 @@ var Utils = {
     }
     let path = getProgFx86() + "\\Internet Explorer\\iexplore.exe";
     
-    Utils.__defineGetter__("iePath", function() path);
+    Object.defineProperty(Utils, "iePath", { get: function() path });
     return path;
   },
   
   get systemPath()
   {
     let path = Services.dirsvc.get("SysD", Ci.nsIFile).path;
-    Utils.__defineGetter__("systemPath", function() path);
+    Object.defineProperty(Utils, "systemPath", { get: function() path });
     return path;
   },
   
@@ -262,7 +268,7 @@ var Utils = {
     let scaling = domWindowUtils.screenPixelsPerCSSPixel || 1;
     
     // Will not change before user logs off...
-    Utils.__defineGetter__("DPIScaling", function() scaling);
+    Object.defineProperty(Utils, "DPIScaling", { get: function() scaling });
     return scaling;
   },
 
@@ -556,22 +562,19 @@ var Utils = {
     if (!aBrowser.getBrowserIndexForDocument) return null;
     try
     {
-      let tab = null;
       let targetBrowserIndex = aBrowser.getBrowserIndexForDocument(doc);
 
       if (targetBrowserIndex != -1)
-      {
-        tab = aBrowser.tabContainer.childNodes[targetBrowserIndex];
-        return tab;
-      }
+        return aBrowser.tabContainer.childNodes[targetBrowserIndex];
+      else
+        return null;
     }
     catch (err)
     {
-      Utils.ERROR(err);
+      return null;
     }
-    return null;
   },
-
+  
   getTabFromWindow: function(win)
   {
     function getRootWindow(win)
@@ -1254,6 +1257,19 @@ var Utils = {
     catch (ex) {
       Utils.ERROR("Cannot launch " + description + ", process creation failed: " + ex);
     }
+  },
+  
+  // create an object with the desired prototype and own enumerable properties
+  createObjectWithPrototype: function(proto, props)
+  {
+    let obj = Object.create(proto);
+    [].forEach.call(Object.keys(props), function(key)
+    {
+      let desc = Object.getOwnPropertyDescriptor(props, key);
+      if (desc !== undefined)
+        Object.defineProperty(obj, key, desc);
+    });
+    return obj;
   }
 };
 

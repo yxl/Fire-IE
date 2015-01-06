@@ -125,9 +125,7 @@ Subscription.prototype = {
  * Cache for known rule subscriptions, maps URL to subscription objects.
  * @type Object
  */
-Subscription.knownSubscriptions = {
-  __proto__: null
-};
+Subscription.knownSubscriptions = Object.create(null);
 
 /**
  * Returns a subscription from its URL, creates a new one if necessary.
@@ -209,9 +207,7 @@ function SpecialSubscription(url, title)
 {
   Subscription.call(this, url, title);
 }
-SpecialSubscription.prototype = {
-  __proto__: Subscription.prototype,
-
+SpecialSubscription.prototype = Utils.createObjectWithPrototype(Subscription.prototype, {
   /**
    * Rule types that should be added to this subscription by default
    * (entries should correspond to keys in SpecialSubscription.defaultsMap).
@@ -248,15 +244,14 @@ SpecialSubscription.prototype = {
     if (this.defaults && this.defaults.length) buffer.push("defaults=" + this.defaults.filter(function(type) type in SpecialSubscription.defaultsMap).join(" "));
     if (this._lastDownload) buffer.push("lastDownload=" + this._lastDownload);
   }
-};
+});
 
-SpecialSubscription.defaultsMap = {
-  __proto__: null,
+SpecialSubscription.defaultsMap = Utils.createObjectWithPrototype(null, {
   "exceptional": EngineExceptionalRule,
   "custom": EngineRule,
   "ua": UserAgentRule,
   "uaExceptional": UserAgentExceptionalRule
-};
+});
 
 /**
  * Creates a new user-defined rule group.
@@ -301,9 +296,7 @@ function RegularSubscription(url, title)
 {
   Subscription.call(this, url, title || url);
 }
-RegularSubscription.prototype = {
-  __proto__: Subscription.prototype,
-
+RegularSubscription.prototype = Utils.createObjectWithPrototype(Subscription.prototype, {
   _homepage: null,
   _lastDownload: 0,
 
@@ -348,7 +341,7 @@ RegularSubscription.prototype = {
     if (this._homepage) buffer.push("homepage=" + this._homepage);
     if (this._lastDownload) buffer.push("lastDownload=" + this._lastDownload);
   }
-};
+});
 
 /**
  * Class for rule subscriptions updated by externally (by other extension)
@@ -361,9 +354,7 @@ function ExternalSubscription(url, title)
 {
   RegularSubscription.call(this, url, title);
 }
-ExternalSubscription.prototype = {
-  __proto__: RegularSubscription.prototype,
-
+ExternalSubscription.prototype = Utils.createObjectWithPrototype(RegularSubscription.prototype, {
   /**
    * See Subscription.serialize()
    */
@@ -371,7 +362,7 @@ ExternalSubscription.prototype = {
   {
     throw "Unexpected call, external subscriptions should not be serialized";
   }
-};
+});
 
 /**
  * Class for rule subscriptions updated by externally (by other extension)
@@ -384,9 +375,7 @@ function DownloadableSubscription(url, title)
 {
   RegularSubscription.call(this, url, title);
 }
-DownloadableSubscription.prototype = {
-  __proto__: RegularSubscription.prototype,
-
+DownloadableSubscription.prototype = Utils.createObjectWithPrototype(RegularSubscription.prototype, {
   _downloadStatus: null,
   _lastCheck: 0,
   _errors: 0,
@@ -492,4 +481,4 @@ DownloadableSubscription.prototype = {
     if (this.errors) buffer.push("errors=" + this.errors);
     if (this.requiredVersion) buffer.push("requiredVersion=" + this.requiredVersion);
   }
-};
+});

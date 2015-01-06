@@ -223,7 +223,9 @@ var SubscriptionActions =
       else if (accelKey == Ci.nsIDOMKeyEvent.DOM_VK_ALT)
         result = this._altMask;
     } catch(e) {}
-    this.__defineGetter__("_accelMask", function() result);
+    Object.defineProperty(this, "_accelMask", {
+      get: function() result
+    });
     return result;
   },
 
@@ -504,11 +506,10 @@ var SelectSubscription =
           continue;
 
         let localePrefix = Utils.checkLocalePrefixMatch(subscription.getAttribute("prefixes"));
-        let node = Templater.process(template, {
-          __proto__: null,
+        let node = Templater.process(template, Utils.createObjectWithPrototype(null, {
           node: subscription,
           localePrefix: localePrefix
-        });
+        }));
         parent.appendChild(node);
         listedSubscriptions.push(subscription);
       }

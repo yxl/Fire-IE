@@ -107,7 +107,10 @@ var Policy = {
    */
   checkEngineExceptionalRule: function(url)
   {
-    if (Utils.isFirefoxOnly(url)) return true;
+    // Some webpages do something like opening an "about:blank" window
+    // and then changing its URL rather than opening the URL directly.
+    if (Utils.isFirefoxOnly(url) && url.toLowerCase() != "about:blank")
+      return true;
     let docDomain = Utils.getHostname(url);
     let match = EngineMatcher.matchesAny(url, docDomain);
     // While explicitly checking against exceptional rules,
@@ -206,6 +209,11 @@ var PolicyPrivate = {
     // User has manually switched engine
     if (Policy.isManuallySwitched(browserNode, location.spec))
       return Ci.nsIContentPolicy.ACCEPT;
+    
+    // Make sure the request comes from a tab
+    let tab = Utils.getTabFromBrowser(browserNode);
+    if (!tab)
+      return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
     if (Policy.checkEngineRule(location.spec))
@@ -228,7 +236,6 @@ var PolicyPrivate = {
         {
           browserNode.loadURI(Utils.toSwitchJumperUrl(url));
           // Check dangling CIEHostWindow s, as we just skipped attaching them to a plugin Object
-          let tab = Utils.getTabFromBrowser(browserNode);
           UtilsPluginManager.checkDanglingNewWindow(tab);
         }, this);
         return Ci.nsIContentPolicy.REJECT_OTHER;

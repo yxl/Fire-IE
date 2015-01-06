@@ -65,19 +65,14 @@ let defaultModules = [
   baseURL.spec + "ContentPolicy.jsm",
   baseURL.spec + "Synchronizer.jsm",
   baseURL.spec + "IECookieManager.jsm",
-  baseURL.spec + "FontObserver.jsm",
   baseURL.spec + "UtilsPluginManager.jsm",
   baseURL.spec + "ABPObserver.jsm",
   baseURL.spec + "LightweightTheme.jsm"
 ];
 
-let loadedModules = {
-  __proto__: null
-};
+let loadedModules = Object.create(null);
 
-let lazyLoadModules = {
-  __proto__: null
-};
+let lazyLoadModules = Object.create(null);
 
 // Ensures ordered initialization for lazy loaded modules
 let lazyLoadModulesOrdered = [];

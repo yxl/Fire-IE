@@ -127,7 +127,7 @@ var FireIEPublic = {
   },
 
   /**
-   * Returns installed Adblock Plus version
+   * Returns installed Fire-IE version
    */
   getInstalledVersion: function() /**String*/
   {
@@ -135,7 +135,7 @@ var FireIEPublic = {
   },
 
   /**
-   * Returns source code revision this Adblock Plus build was created from (if available)
+   * Returns source code revision this Fire-IE build was created from (if available)
    */
   getInstalledBuild: function() /**String*/
   {

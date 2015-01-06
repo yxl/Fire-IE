@@ -152,6 +152,7 @@ NP_Initialize(NPNetscapeFuncs* pFuncs
   NPNFuncs.getvalueforurl          = pFuncs->getvalueforurl;
   NPNFuncs.getauthenticationinfo   = pFuncs->getauthenticationinfo;
   NPNFuncs.setvalueforurl          = pFuncs->setvalueforurl;
+  NPNFuncs.enumerate               = pFuncs->enumerate;
 #ifdef XP_UNIX
   /*
    * Set up the plugin function table that Netscape will use to

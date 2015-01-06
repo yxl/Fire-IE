@@ -146,7 +146,9 @@ var Prefs =
     {
       Utils.LOG("No PrivateBrowsingUtils.jsm, assuming global private browsing mode only.");
     }
-    this.__defineGetter__("privateBrowsingUtils", function() pbutils);
+    Object.defineProperty(this, "privateBrowsingUtils", {
+      get: function() pbutils
+    });
     return pbutils;
   },
   
@@ -271,28 +273,32 @@ function defineProperty(/**String*/ name, defaultValue, /**Function*/ readFunc, 
       Cu.reportError(e);
     }
   }
-  Prefs.__defineGetter__(name, function() value);
-  Prefs.__defineSetter__(name, function(newValue)
-  {
-    if (value == newValue)
-      return value;
+  Object.defineProperty(Prefs, name, {
+    get: function() value,
+    set: function(newValue)
+    {
+      if (value == newValue)
+        return value;
 
-    try
-    {
-      PrefsPrivate.ignorePrefChanges = true;
-      writeFunc(newValue);
-      value = newValue;
-      triggerListeners(name);
-    }
-    catch(e)
-    {
-      Cu.reportError(e);
-    }
-    finally
-    {
-      PrefsPrivate.ignorePrefChanges = false;
-    }
-    return value;
+      try
+      {
+        PrefsPrivate.ignorePrefChanges = true;
+        writeFunc(newValue);
+        value = newValue;
+        triggerListeners(name);
+      }
+      catch(e)
+      {
+        Cu.reportError(e);
+      }
+      finally
+      {
+        PrefsPrivate.ignorePrefChanges = false;
+      }
+      return value;
+    },
+    enumerable: true,
+    configurable: true
   });
 }
 

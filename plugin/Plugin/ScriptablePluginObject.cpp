@@ -194,6 +194,12 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
 			return true;
 		}
+		// readonly property {bool} Alive
+		else if (name == NPI_ID(Alive))
+		{
+			BOOLEAN_TO_NPVARIANT(true, *result);
+			return true;
+		}
 		// readonly property {bool} ABPIsEnabled
 		else if (name == NPI_ID(ABPIsEnabled))
 		{
@@ -615,11 +621,12 @@ namespace Plugin
 							for (int i = 0; i < length; i++)
 							{
 								NPVariant npvName;
-								if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetIntIdentifier(i), &npvName) && NPVARIANT_IS_STRING(npvName))
+								if (NPN_GetProperty(mNpp, npvNameArray, NPN_GetIntIdentifier(i), &npvName))
 								{
-									strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
+									if (NPVARIANT_IS_STRING(npvName))
+										strGestures[i] = NPStringToCString(NPVARIANT_TO_STRING(npvName));
+									NPN_ReleaseVariantValue(&npvName);
 								}
-								NPN_ReleaseVariantValue(&npvName);
 							}
 
 							BrowserHook::GestureHandler::setEnabledGestures(strGestures, length);
@@ -682,6 +689,25 @@ namespace Plugin
 			PrefManager::instance().setDNTValue(value);
 			return true;
 		}
+		// void SetCookie({String}url, {String}cookieData)
+		else if (name == NPI_ID(SetCookie))
+		{
+			TRACE("SetCookie called!\n");
+			if (argCount < 2) return false;
+
+			CString url, cookieData;
+			if (NPVARIANT_IS_STRING(args[0]) && NPVARIANT_IS_STRING(args[1]))
+			{
+				url = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+				cookieData = NPStringToCString(NPVARIANT_TO_STRING(args[1]));
+				
+				bool success = CIEHostWindow::SetIECookie(url, cookieData);
+				UNUSED(success);
+				return true;
+			}
+
+			return false;
+		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))
 		{
@@ -711,7 +737,15 @@ namespace Plugin
 			else
 				return false;
 
-			abp::AdBlockPlus::loadFilterFile(pathname.GetString());
+			unordered_map<wstring, wstring> options;
+
+			if (argCount >= 2 && NPVARIANT_IS_OBJECT(args[1]))
+			{
+				NPObject* npvOptions = NPVARIANT_TO_OBJECT(args[1]);
+				options = NPObjectToUnorderedMap(mNpp, npvOptions);
+			}
+
+			abp::AdBlockPlus::loadFilterFile(pathname.GetString(), options);
 			return true;
 		}
 		// void ABPClear()

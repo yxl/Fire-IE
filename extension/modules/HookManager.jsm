@@ -63,6 +63,7 @@ HookManager.prototype = {
   get globalScope() { return this._scope; },
   get globalReferencableName() { return this._refName; },
   get utils() { return Utils; },
+  _emptyFunction: function() {},
   
   _addHookFunction: function(hf)
   {
@@ -120,7 +121,7 @@ HookManager.prototype = {
                   + "  let hf = grn._hookFunctions[[idx]];\n"
                   + "  let Utils = grn.utils;\n"
                   + "  let funcName = hf.name;\n"
-                  + "  let orgFunc = hf.orgFunc;\n"
+                  + "  let orgFunc = hf.orgFunc || grn._emptyFunction;\n"
                   + "  let myFuncHead = hf.myFuncHead;\n"
                   + "  let myFuncTail = hf.myFuncTail;\n",
   
@@ -232,6 +233,31 @@ HookManager.prototype = {
     return null;
   },
   
+  _lookupPropertyDescriptor: function(obj, prop)
+  {
+    while (obj !== undefined && obj !== null)
+    {
+      let desc = Object.getOwnPropertyDescriptor(obj, prop);
+      if (desc !== undefined)
+      {
+        if (desc.hasOwnProperty("value"))
+        {
+          // convert this data property into an accessor property
+          let value = desc.value;
+          desc = {
+            get: function() value,
+            set: function(val) { value = val },
+            enumerable: desc.enumerable,
+            configurable: desc.configurable
+          };
+        }
+        return desc;
+      }
+      obj = Object.getPrototypeOf(obj);
+    }
+    return null;
+  },
+  
   // specify hook function return values
   RET: {
     // hook @ head should return without calling orgFunc
@@ -283,6 +309,7 @@ HookManager.prototype = {
     catch (ex)
     {
       Utils.ERROR("Failed to hook function " + orgFuncName + "@head: " + ex);
+      return null;
     }
   },
   
@@ -317,6 +344,7 @@ HookManager.prototype = {
     catch (ex)
     {
       Utils.ERROR("Failed to hook function " + orgFuncName + "@tail: " + ex);
+      return null;
     }
   },
   
@@ -352,6 +380,7 @@ HookManager.prototype = {
     catch (ex)
     {
       Utils.ERROR("Failed to hook function " + orgFuncName + "@head&tail: " + ex);
+      return null;
     }
   },
   
@@ -462,42 +491,32 @@ HookManager.prototype = {
    */
   hookProp: function(parentNode, propName, myGetterBegin, mySetterBegin, myGetterEnd, mySetterEnd)
   {
-    // must set both getter and setter or the other will be missing
-    let oGetter = parentNode.__lookupGetter__(propName);
-    let oSetter = parentNode.__lookupSetter__(propName);
-    if (oGetter && (myGetterBegin || myGetterEnd))
+    try
     {
-      let newGetter = this._wrapFunction(oGetter, myGetterBegin, myGetterEnd, parentNode.toString() + ".get " + propName);
-      try
+      let desc = this._lookupPropertyDescriptor(parentNode, propName);
+
+      let oGetter = desc.get;
+      let oSetter = desc.set;
+      if (myGetterBegin || myGetterEnd)
       {
-        parentNode.__defineGetter__(propName, newGetter);
+        let newGetter = this._wrapFunction(oGetter, myGetterBegin, myGetterEnd, parentNode.toString() + ".get " + propName);
+        desc.get = newGetter;
       }
-      catch (ex)
+      if (mySetterBegin || mySetterEnd)
       {
-        Utils.ERROR("Failed to hook property Getter " + propName + ": " + ex);
+        let newSetter = this._wrapFunction(oSetter, mySetterBegin, mySetterEnd, parentNode.toString() + ".set " + propName);
+        desc.set = newSetter;
       }
+      
+      Object.defineProperty(parentNode, propName, desc);
+      
+      return { getter: oGetter, setter: oSetter };
     }
-    else if (oGetter)
+    catch (ex)
     {
-      parentNode.__defineGetter__(propName, oGetter);
+      Utils.ERROR("Failed to hook property " + propName + ": " + ex);
+      return { getter: null, setter: null };
     }
-    if (oSetter && (mySetterBegin || mySetterEnd))
-    {
-      let newSetter = this._wrapFunction(oSetter, mySetterBegin, mySetterEnd, parentNode.toString() + ".set " + propName);
-      try
-      {
-        parentNode.__defineSetter__(propName, newSetter);
-      }
-      catch (ex)
-      {
-        Utils.ERROR("Failed to hook property Setter " + propName + ": " + ex);
-      }
-    }
-    else if (oSetter)
-    {
-      parentNode.__defineSetter__(propName, oSetter);
-    }
-    return { getter: oGetter, setter: oSetter };
   },
   
   /**
@@ -508,13 +527,14 @@ HookManager.prototype = {
    */
   unhookProp: function(parentNode, propName)
   {
-    // must set both getter and setter or the other will be missing
-    let myGetter = parentNode.__lookupGetter__(propName);
-    let mySetter = parentNode.__lookupSetter__(propName);
+    let desc = this._lookupPropertyDescriptor(parentNode, propName);
+    let myGetter = desc.get;
+    let mySetter = desc.set;
     let oGetter = (myGetter && this._getOriginalFunc(myGetter)) || myGetter;
     let oSetter = (mySetter && this._getOriginalFunc(mySetter)) || mySetter;
-    if (oGetter) parentNode.__defineGetter__(propName, oGetter);
-    if (oSetter) parentNode.__defineSetter__(propName, oSetter);
+    desc.get = oGetter;
+    desc.set = oSetter;
+    Object.defineProperty(parentNode, propName, desc);
     if (oGetter != myGetter) this._recycleFunc(myGetter);
     if (oSetter != mySetter) this._recycleFunc(mySetter);
     return { getter: myGetter, setter: mySetter };

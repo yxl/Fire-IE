@@ -271,6 +271,17 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 	}
 }
 
+bool CIEHostWindow::SetIECookie(const CString& url, const CString& cookieData)
+{
+	if (InternetSetCookie(url, NULL, cookieData))
+		return true;
+	if (InternetSetCookieEx(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL))
+		return true;
+	TRACE(_T("InternetSetCookieExW failed with ERROR %d url: %s data: %s"),
+		  GetLastError(), url.GetString(), cookieData.GetString());
+	return false;
+}
+
 BOOL CIEHostWindow::CreateControlSite(COleControlContainer* pContainer, 
 	COleControlSite** ppSite, UINT nID, REFCLSID clsid)
 {
