@@ -220,8 +220,7 @@ function registerObservers()
   // Observe preferences changes
   try
   {
-    branch.QueryInterface(Ci.nsIPrefBranch2)
-          .addObserver("", PrefsPrivate, true);
+    branch.addObserver("", PrefsPrivate, true);
   }
   catch (e)
   {

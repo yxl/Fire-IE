@@ -107,7 +107,6 @@ let GesturePrefObserver = {
     try
     {
       let self = this;
-      this.gestureBranch.QueryInterface(Ci.nsIPrefBranch2);
       this.gestureBranchObserver =
       {
         /**

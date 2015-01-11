@@ -313,7 +313,6 @@ let ABPObserver = {
     this._abpBranch = Services.prefs.getBranch(adblocker.prefsBranch);
     if (this._abpBranch)
     {
-      this._abpBranch.QueryInterface(Ci.nsIPrefBranch2);
       this._abpBranch.addObserver("", ABPObserverPrivate, false);
     }
 
