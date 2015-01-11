@@ -557,6 +557,7 @@ WindowWrapper.prototype = {
       {
         toolbarButton.disabled = urlbarButton.disabled;
         toolbarButton.style.listStyleImage = engineIconCSS;
+        toolbarButton.label = urlbarButtonLabel.getAttribute("value");
       }
     }
     catch (e)

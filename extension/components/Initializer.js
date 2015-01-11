@@ -34,7 +34,7 @@ Initializer.prototype = {
   observe: function(subject, topic, data)
   {
     let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
+    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch);
 
     switch (topic)
     {

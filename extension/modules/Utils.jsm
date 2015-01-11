@@ -647,7 +647,8 @@ var Utils = {
        Utils.startsWith(url, 'view-source:') ||
        Utils.startsWith(url, 'jar:') ||
        Utils.startsWith(url, 'chrome://') ||
-       Utils.startsWith(url, 'resource://')
+       Utils.startsWith(url, 'resource://') ||
+       Utils.startsWith(url, 'wyciwyg://')
       ));
   },
 
