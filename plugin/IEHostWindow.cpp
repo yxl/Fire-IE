@@ -905,19 +905,14 @@ void CIEHostWindow::OnNavigate()
 			_variant_t vHeader(strHeaders + _T("Cache-control: private\r\n")); 
 			if (!strPost.IsEmpty()) 
 			{
-				// Content-Type in strPost should be appended to headers
-				// in order to let web servers accept post data
-				LPWSTR szContentType = NULL;
-				size_t nCTLen;
-				if (HTTP::ExtractFieldValue(strPost.GetString(), L"Content-Type:", &szContentType, &nCTLen))
-				{
-					vHeader = CString(vHeader) + _T("Content-Type: ") + szContentType + _T("\r\n");
-					HTTP::FreeFieldValue(szContentType);
-				}
-
-				// Skip remaining headers
+				// In the post data, the text before "\r\n\r\n" is the Content-Type and Content-Length info, in order to 
+				// let web server accept the post data, we should move this info to headers.
 				int pos = strPost.Find(_T("\r\n\r\n"));
 
+				// Append Content-Type and Content-Length of the post data to headers.
+				vHeader = CString(vHeader) + strPost.Left(pos) + _T("\r\n");
+
+				// Skip remaining headers in the post data.
 				CString strTrimed = strPost.Right(strPost.GetLength() - pos - 4);
 				int size = WideCharToMultiByte(CP_ACP, 0, strTrimed, -1, 0, 0, 0, 0);
 				char* szPostData = new char[size + 1];
