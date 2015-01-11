@@ -35,8 +35,7 @@ Cu.import(baseURL.spec + "Utils.jsm");
 Cu.import(baseURL.spec + "IECookieManager.jsm");
 Cu.import(baseURL.spec + "Prefs.jsm");
 
-let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch2);
-let dntBranch = prefs.getBranch("privacy.donottrackheader.").QueryInterface(Ci.nsIPrefBranch2);
+let dntBranch = Services.prefs.getBranch("privacy.donottrackheader.");
 
 let UtilsPluginManager = {
   /**
