@@ -133,15 +133,14 @@ let AppIntegration = {
             QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
             observe: function(subject, topic, data)
             {
-              observerService.removeObserver(observer, "sessionstore-windows-restored");
+              Services.obs.removeObserver(observer, "sessionstore-windows-restored");
               timer.cancel();
               timer = null;
               addSubscription();
             }
           };
 
-          let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-          observerService.addObserver(observer, "sessionstore-windows-restored", false);
+          Services.obs.addObserver(observer, "sessionstore-windows-restored", false);
 
           // Just in case, don't wait more than two seconds
           let timer = Cc['@mozilla.org/timer;1'].createInstance(Ci.nsITimer);
