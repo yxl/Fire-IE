@@ -219,6 +219,7 @@ let FireIEContainer = {};
   {
     syncURL();
     syncFavicon();
+    syncTitle();
     syncHistory();
   }
   
