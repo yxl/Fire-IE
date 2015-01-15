@@ -111,7 +111,10 @@ namespace Plugin
 		CString post;
 		CString headers;
 
-		if (m_strId == RES_OBJECTNAME_T)
+		bool bIsContentPlugin = m_strId == RES_OBJECTNAME_T;
+		m_bIsUtilsPlugin = m_strId == RES_UTILS_OBJECT_T;
+
+		if (bIsContentPlugin)
 		{
 			// Fetch the hosting page's URL. The format is chrome://fireie/content/container.xhtml?url=XXX
 			// where XXX is the actual URL to visit
@@ -131,7 +134,7 @@ namespace Plugin
 			headers = GetNavigateHeaders();
 			RemoveNavigateParams();
 		}
-		else if (m_strId == RES_UTILS_OBJECT_T)
+		else if (m_bIsUtilsPlugin)
 		{
 			CString strHostUrl = GetHostURL();
 
@@ -141,13 +144,13 @@ namespace Plugin
 		}
 		else return FALSE;
 
-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, ulId, m_strId == RES_UTILS_OBJECT_T);
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, ulId, m_bIsUtilsPlugin);
 		if (m_pIEHostWindow == NULL)
 		{
 			return FALSE;
 		}
 
-		if (m_strId == RES_UTILS_OBJECT_T)
+		if (m_bIsUtilsPlugin)
 		{
 			CIEHostWindow::AddUtilsIEWindow(m_pIEHostWindow);
 		}
@@ -265,7 +268,7 @@ namespace Plugin
 
 	void CPlugin::FireInitEvent()
 	{
-		if (m_strId == RES_UTILS_OBJECT_T)
+		if (m_bIsUtilsPlugin)
 			OnUtilsPluginInit();
 		else
 			OnContentPluginInit();

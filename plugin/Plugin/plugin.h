@@ -190,6 +190,9 @@ namespace Plugin
 
 		// Plugin ID
 		CString m_strId;
+
+		// Whether this is a utils plugin (or a content plugin)
+		bool m_bIsUtilsPlugin;
 	};
 
 }
