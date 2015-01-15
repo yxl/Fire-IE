@@ -20,6 +20,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IECtrl.h"
 #include "UserMessage.h"
 #include "PointerHash.h"
+#include "RAIILock.h"
+#include <chrono>
 
 namespace Plugin
 {
@@ -145,6 +147,7 @@ protected:
 	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnUserMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnTimer(UINT_PTR id);
 	void OnCommandStateChange(long Command, BOOL Enable);
 	void OnStatusTextChange(LPCTSTR Text);
 	void OnTitleChange(LPCTSTR Text);
@@ -329,18 +332,35 @@ public:
 	typedef std::function<void()> MainThreadFunc;
 
 	// Asynchronously run the specified function on at next message loop
-	void RunAsync(const MainThreadFunc& func)
-	{		
-		m_csFuncs.Lock();
-		m_qFuncs.push_back(func);
-		m_csFuncs.Unlock();
+	void RunAsync(const MainThreadFunc& func);
 
-		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
-	}
+	// Asynchronously run the specified function after a specified timeout
+	void RunAsyncTimeout(const MainThreadFunc& func, unsigned int timeoutMillis);
 private:
 	void OnRunAsyncCall();
+	void OnRunAsyncTimeoutCall();
+
 	std::deque<MainThreadFunc> m_qFuncs;
 	CCriticalSection m_csFuncs;
+
+	static const UINT_PTR IDT_TIMER_RUN_ASYNC_TIMEOUT = 1;
+	static const unsigned int MIN_TIMEOUT_THRESHOLD_MILLIS = 5;
+
+	typedef std::chrono::steady_clock Clock;
+	typedef Clock::time_point TimePoint;
+	typedef Clock::duration Duration;
+	typedef std::chrono::milliseconds Milliseconds;
+	typedef std::pair<TimePoint, MainThreadFunc> TimeoutFuncValueType;
+	class TimeoutFuncPred {
+	public:
+		bool operator()(const TimeoutFuncValueType& v1, const TimeoutFuncValueType& v2) const;
+	};
+	std::priority_queue<TimeoutFuncValueType, std::vector<TimeoutFuncValueType>, TimeoutFuncPred> m_pqTimeoutFuncs;
+	bool m_bActivateTimerScheduled;
+
+	Utils::Mutex m_mtxTimeoutFuncs;
+
+	void ActivateTimer();
 
 	/**
 	 * Used for Refresh() detection, as IE fire neither NavigateComplete2 nor DocumentComplete when Refresh() completes.

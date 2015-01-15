@@ -71,6 +71,7 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_bIsRefresh(false)
 	, m_bMainPageDone(false)
 	, m_nObjCounter(0)
+	, m_bActivateTimerScheduled(false)
 {
 	FBResetFindStatus();
 }
@@ -180,6 +181,7 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 	if (!pIEHostWindow)
 	{
 		pIEHostWindow = new CIEHostWindow();
+		pIEHostWindow->m_bUtils = isUtils;
 		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
 		{
 			if (pIEHostWindow)
@@ -190,7 +192,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		}
 		else
 		{
-			pIEHostWindow->m_bUtils = isUtils;
 			if (opIsNewlyCreated)
 				*opIsNewlyCreated = true;
 		}
@@ -302,6 +303,7 @@ void CIEHostWindow::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CIEHostWindow, CDialog)
 	ON_WM_SIZE()
 	ON_MESSAGE(WM_USER_MESSAGE, OnUserMessage)
+	ON_WM_TIMER()
 	ON_WM_PARENTNOTIFY()
 END_MESSAGE_MAP()
 
@@ -329,6 +331,19 @@ void CIEHostWindow::InitIE()
 
 	// Allow drag'n'drop to open files
 	m_ie.put_RegisterAsDropTarget(TRUE);
+
+#ifdef _DEBUG
+	if (m_bUtils)
+	{
+		for (int i = 100; i >= 0; i--)
+		{
+			RunAsyncTimeout([=]
+			{
+				TRACE("[RunAsyncTimeout] Function body: %d\n", i);
+			}, (unsigned int)(i * 1000));
+		}
+	}
+#endif
 }
 
 
@@ -437,6 +452,16 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
+}
+
+void CIEHostWindow::OnTimer(UINT_PTR id)
+{
+	switch (id)
+	{
+	case IDT_TIMER_RUN_ASYNC_TIMEOUT:
+		OnRunAsyncTimeoutCall();
+		break;
+	}
 }
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
@@ -2494,6 +2519,15 @@ bool CIEHostWindow::FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const C
 	return false;
 }
 
+void CIEHostWindow::RunAsync(const MainThreadFunc& func)
+{
+	m_csFuncs.Lock();
+	m_qFuncs.push_back(func);
+	m_csFuncs.Unlock();
+
+	PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
+}
+
 void CIEHostWindow::OnRunAsyncCall()
 {
 	m_csFuncs.Lock();
@@ -2514,4 +2548,101 @@ void CIEHostWindow::OnRunAsyncCall()
 	{
 		m_csFuncs.Unlock();
 	}
+}
+
+bool CIEHostWindow::TimeoutFuncPred::operator()(const TimeoutFuncValueType& v1, const TimeoutFuncValueType& v2) const
+{
+	return v1.first > v2.first;
+}
+
+void CIEHostWindow::ActivateTimer()
+{
+	KillTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT);
+
+	Duration minDuration;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		m_bActivateTimerScheduled = false;
+		if (!m_pqTimeoutFuncs.size())
+			return;
+		minDuration = m_pqTimeoutFuncs.top().first - Clock::now();
+	}
+
+	if (minDuration <= Milliseconds(MIN_TIMEOUT_THRESHOLD_MILLIS))
+	{
+		OnRunAsyncTimeoutCall();
+	}
+	else
+	{
+		UINT ticks = (UINT)std::chrono::duration_cast<std::chrono::milliseconds>(minDuration).count();
+		SetTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT, ticks, NULL);
+		TRACE("[RunAsyncTimeout] Activate timer, ticks = %d\n", ticks);
+	}
+}
+
+void CIEHostWindow::RunAsyncTimeout(const MainThreadFunc& func, unsigned int timeoutMillis)
+{
+	bool bNeedActivate = false;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		TimePoint tpOld, tpNew;
+		if (!m_bActivateTimerScheduled)
+		{
+			if (m_pqTimeoutFuncs.size() == 0)
+			{
+				bNeedActivate = true;
+				m_bActivateTimerScheduled = true;
+			}
+			else
+				tpOld = m_pqTimeoutFuncs.top().first;
+		}
+		TimeoutFuncValueType newFunc(Clock::now() + Milliseconds(timeoutMillis), func);
+		m_pqTimeoutFuncs.push(newFunc);
+		TRACE("[RunAsyncTimeout] Push item, timeout = %d, target = %lld\n", timeoutMillis,
+			  std::chrono::duration_cast<std::chrono::milliseconds>(newFunc.first.time_since_epoch()).count());
+		if (!m_bActivateTimerScheduled && !bNeedActivate)
+		{
+			tpNew = m_pqTimeoutFuncs.top().first;
+			if (tpOld != tpNew)
+			{
+				bNeedActivate = true;
+				m_bActivateTimerScheduled = true;
+			}
+		}
+	}
+	if (bNeedActivate)
+		RunAsync([=] { ActivateTimer(); });
+}
+
+void CIEHostWindow::OnRunAsyncTimeoutCall()
+{
+	KillTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT);
+
+	MainThreadFunc funcToCall;
+	bool bNeedCall = false;
+	bool bNeedActivate = false;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		if (m_pqTimeoutFuncs.size() && m_pqTimeoutFuncs.top().first <= Clock::now() + Milliseconds(MIN_TIMEOUT_THRESHOLD_MILLIS))
+		{
+			bNeedCall = true;
+			funcToCall = std::move(m_pqTimeoutFuncs.top().second);
+#ifdef _DEBUG
+			long long target = std::chrono::duration_cast<std::chrono::milliseconds>(m_pqTimeoutFuncs.top().first.time_since_epoch()).count();
+			long long now = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+			int diff = (int)(target - now);
+			TRACE("[RunAsyncTimeout] Call func, target = %lld, now = %lld, diff = %d\n", target, now, diff);
+#endif
+			m_pqTimeoutFuncs.pop();
+		}
+		if (!m_bActivateTimerScheduled && m_pqTimeoutFuncs.size())
+		{
+			bNeedActivate = true;
+			m_bActivateTimerScheduled = true;
+		}
+	}
+
+	if (bNeedCall) funcToCall();
+	if (bNeedActivate)
+		RunAsync([=] { ActivateTimer(); });
 }

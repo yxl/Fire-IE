@@ -61,6 +61,7 @@
 #include <set>
 #include <unordered_set>
 #include <deque>
+#include <queue>
 #include <xhash>
 #include <algorithm>
 // std::function
