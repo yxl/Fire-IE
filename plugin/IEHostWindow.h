@@ -41,7 +41,7 @@ class CIEHostWindow : public CDialog
 	DECLARE_MESSAGE_MAP()
 
 public:
-	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils);
+	static CIEHostWindow* CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils, bool* opIsNewlyCreated);
 
 	// Get CIEHostWindow object by its window handle
 	static CIEHostWindow* GetInstance(HWND hwnd);

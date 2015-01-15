@@ -165,7 +165,7 @@ CIEHostWindow* CIEHostWindow::FromWindowHierarchy(HWND hwndChild, const TCHAR* s
 	return pInstance;
 }
 
-CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils)
+CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR ulId, bool isUtils, bool* opIsNewlyCreated)
 {
 	CIEHostWindow *pIEHostWindow = NULL;
 
@@ -178,6 +178,8 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		{
 			pIEHostWindow->m_bUtils = isUtils;
 			s_NewIEWindowMap.Remove(ulId);
+			if (opIsNewlyCreated)
+				*opIsNewlyCreated = false;
 		}
 		s_csNewIEWindowMap.Unlock();
 	}
@@ -195,6 +197,8 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		else
 		{
 			pIEHostWindow->m_bUtils = isUtils;
+			if (opIsNewlyCreated)
+				*opIsNewlyCreated = true;
 		}
 	}
 	return pIEHostWindow;

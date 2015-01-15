@@ -144,7 +144,8 @@ namespace Plugin
 		}
 		else return FALSE;
 
-		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, ulId, m_bIsUtilsPlugin);
+		bool bIsNewlyCreated = true;
+		m_pIEHostWindow = CreateIEHostWindow(m_hWnd, ulId, m_bIsUtilsPlugin, &bIsNewlyCreated);
 		if (m_pIEHostWindow == NULL)
 		{
 			return FALSE;
@@ -155,8 +156,8 @@ namespace Plugin
 			CIEHostWindow::AddUtilsIEWindow(m_pIEHostWindow);
 		}
 
-		// if navId is 0, IEHostWindow is newly created and we should specify its URL
-		if (ulId == 0)
+		// if the IEHostWindow is newly created, we should specify its URL
+		if (bIsNewlyCreated)
 		{
 			m_pIEHostWindow->Navigate(url, post, headers);
 		}
@@ -172,7 +173,7 @@ namespace Plugin
 		return TRUE;
 	}
 
-	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, ULONG_PTR ulId, bool isUtils)
+	CIEHostWindow* CPlugin::CreateIEHostWindow(HWND hParent, ULONG_PTR ulId, bool isUtils, bool* opIsNewlyCreated)
 	{
 		CIEHostWindow *pIEHostWindow = NULL;
 		CWnd parent;
@@ -182,7 +183,7 @@ namespace Plugin
 		}
 		try
 		{
-			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, ulId, isUtils);
+			pIEHostWindow = CIEHostWindow::CreateNewIEHostWindow(&parent, ulId, isUtils, opIsNewlyCreated);
 			if (pIEHostWindow == NULL)
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));
