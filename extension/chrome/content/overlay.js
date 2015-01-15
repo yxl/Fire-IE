@@ -165,6 +165,18 @@ var gFireIE = null;
         // Check dangling new window on tab close
         UtilsPluginManager.checkDanglingNewWindow(tab);
       }, false);
+      
+      // TabClose is not fired when the window is unloading. Make sure we don't leak anything here.
+      window.addEventListener("unload", function()
+      {
+        Array.prototype.forEach.call(container.childNodes, function(tab)
+        {
+          if (tab.localName !== "tab") return;
+          // We don't have to unhook here - the hook manager will be destroyed anyway.
+          // Check dangling new window on tab close
+          UtilsPluginManager.checkDanglingNewWindow(tab);
+        });
+      }, false);
     }
     catch (ex)
     {
