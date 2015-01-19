@@ -1131,6 +1131,7 @@ WindowWrapper.prototype = {
   _onIEContentPluginInitialized: function(event)
   {
     let plugin = event.target;
+    if (!plugin.ownerDocument) return;
     
     // Check if the tab is currently selected
     let tab = Utils.getTabFromDocument(plugin.ownerDocument);
