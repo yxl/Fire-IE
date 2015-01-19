@@ -10,6 +10,8 @@
 <!ENTITY skin.label "Skins">
 <!ENTITY default.lable "Default">
 <!ENTITY skin.more.lable "More...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Open Link in New Tab with IE Engine">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "Open Link in IE Browser">
 
 <!ENTITY fireie.options.title "Fire IE Options">
 

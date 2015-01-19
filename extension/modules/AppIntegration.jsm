@@ -367,6 +367,9 @@ WindowWrapper.prototype = {
     if (this.E("star-button")) // Nightly 20140304 removed this
       this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
+    let contextMenu = this.E("contentAreaContextMenu");
+    if (contextMenu)
+      contextMenu.addEventListener("popupshowing", this._bindMethod(this._onContextMenuShowing), false);
     
     // Listen to plugin events
     this.window.addEventListener("IEContentPluginInitialized", this._bindMethod(this._onIEContentPluginInitialized), false);
@@ -1034,9 +1037,9 @@ WindowWrapper.prototype = {
     ], "Internet Properties");
   },
   
-  openInIE: function()
+  openInIE: function(urlOverride)
   {
-    var url = this.getURL();
+    var url = urlOverride || this.getURL();
     // file:// urls should be decoded, otherwise IE won't recognize
     if (/^file:\/\/.*/.test(url))
       url = decodeURI(url);
@@ -1046,7 +1049,7 @@ WindowWrapper.prototype = {
     if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
       args.push("-private");
 
-    Utils.launchProcess(Utils.iePath, args, "IE");
+    Utils.launchProcess(Utils.iePath, args, "Internet Explorer");
   },
 
   getHandledURL: function(url, isModeIE)
@@ -2421,8 +2424,37 @@ WindowWrapper.prototype = {
   clearResumeFromPBW: function()
   {
     this._pbwResume = false;
-  }
+  },
   
+  /**
+   * Open Link in New Tab with IE Engine
+   */
+  openLinkInIEEngine: function(url)
+  {
+    if (url)
+      this._openInEngine(url, true, "tab");
+  },
+  
+  /**
+   * Open Link in IE Browser
+   */
+  openLinkInIEBrowser: function(url)
+  {
+    this.openInIE(url);
+  },
+  
+  _onContextMenuShowing: function(e)
+  {
+    if (e.target !== this.E("contentAreaContextMenu"))
+      return;
+    
+    let gContextMenu = this.window.gContextMenu;
+    let hidden = (!gContextMenu.onLink && !gContextMenu.onPlainTextLink) ||
+      Utils.isFirefoxOnly(gContextMenu.linkURL);
+    this.E("fireie-context-sep-open").hidden = hidden;
+    this.E("fireie-context-openlinkintabwithieengine").hidden = hidden;
+    this.E("fireie-context-openlinkiniebrowser").hidden = hidden;
+  },
 };
 
 /**

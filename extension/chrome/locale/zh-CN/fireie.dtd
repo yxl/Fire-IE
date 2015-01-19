@@ -10,6 +10,8 @@
 <!ENTITY skin.label "皮肤">
 <!ENTITY default.lable "默认">
 <!ENTITY skin.more.lable "更多...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "在新标签页中以 IE 引擎打开链接">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "在 IE 浏览器中打开链接">
 
 <!ENTITY fireie.options.title "解雇IE 选项">
 

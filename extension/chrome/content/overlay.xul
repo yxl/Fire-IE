@@ -74,4 +74,16 @@ xmlns:html="http://www.w3.org/1999/xhtml">
       </menu>
     </menupopup>
   </popupset>
+  <!-- Main context menu -->
+  <popup id="contentAreaContextMenu">
+    <menuseparator id="fireie-context-sep-open" insertafter="context-sep-open" />
+    <menuitem id="fireie-context-openlinkiniebrowser"
+              label="&fireie.contextMenu.openLinkInIEBrowser;"
+              oncommand="gFireIE.openLinkInIEBrowser(gContextMenu.linkURL)"
+              insertafter="context-sep-open" />
+    <menuitem id="fireie-context-openlinkintabwithieengine"
+              label="&fireie.contextMenu.openLinkInTabWithIEEngine;"
+              oncommand="gFireIE.openLinkInIEEngine(gContextMenu.linkURL)"
+              insertafter="context-sep-open" />
+  </popup>
 </overlay>
