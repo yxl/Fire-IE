@@ -1,4 +1,4 @@
-<!ENTITY dialog.title "解雇IE切换规则参数">
+<!ENTITY dialog.title "解雇IE 切换规则参数">
 <!ENTITY subscriptions.tab.label "已订阅的规则">
 <!ENTITY rules.tab.label "自定义规则">
 <!ENTITY subscription.autoupdate.label "自动更新">
@@ -8,7 +8,7 @@
 <!ENTITY addSubscriptionAdd.label "订阅">
 <!ENTITY addSubscriptionCancel.label "取消">
 <!ENTITY addSubscriptionOther.label "订阅其他规则">
-<!ENTITY noSubscriptions.text "您还没有订阅的规则。解雇IE没有切换规则无法自动切换内核和同步Cookie, 请使用 &quot;订阅新规则&quot;进行添加。">
+<!ENTITY noSubscriptions.text "您还没有订阅的规则。解雇IE 没有切换规则无法自动切换内核和同步 Cookie, 请使用 &quot;订阅新规则&quot;进行添加。">
 <!ENTITY subscription.homepage.label "主页">
 <!ENTITY subscription.external.label "由其他扩展更新">
 <!ENTITY subscription.source.label "切换规则列表">
@@ -82,7 +82,7 @@
 <!ENTITY restore.error "无法处理该文件, 可能该文件不是 解雇IE 的备份文件?">
 <!ENTITY restore.complete.warning "所有的切换规则参数将被替代, 是否继续?">
 <!ENTITY restore.custom.warning "所有的自定义规则将被替代, 是否继续?">
-<!ENTITY restore.minVersion.warning "警告: 该文件由新版本的 解雇IE 创建, 请更新解雇IE。">
+<!ENTITY restore.minVersion.warning "警告: 该文件由新版本的 解雇IE 创建, 请更新 解雇IE。">
 <!ENTITY find.label "查找">
 <!ENTITY find.accesskey "n">
 <!ENTITY close.label "关闭">

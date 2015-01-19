@@ -3,13 +3,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Left-Click: Switch rendering engine">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Cannot switch on this page">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options">
-<!ENTITY urlbar.switchRules.label "Switch Rules">
-<!ENTITY internetProperties.lable "IE's Internet Properties">
-<!ENTITY fireie.autoswitch.disable "Disable Auto-switch Everywhere">
-<!ENTITY openInIE.label "Open Current Page in IE">
-<!ENTITY skin.label "Skins">
-<!ENTITY default.lable "Default">
-<!ENTITY skin.more.lable "More...">
+<!ENTITY fireie.menu.switchRules.label "Switch Rules">
+<!ENTITY fireie.menu.internetProperties.label "Internet Properties (Control Panel)">
+<!ENTITY fireie.menu.autoswitch.disable "Disable Auto-switch Everywhere">
+<!ENTITY fireie.menu.openInIE.label "Open This Page in IE Browser">
+<!ENTITY fireie.menu.skin.label "Skins">
+<!ENTITY fireie.menu.skin.default.label "Default">
+<!ENTITY fireie.menu.skin.more.label "More...">
 <!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Open Link in New Tab with IE Engine">
 <!ENTITY fireie.contextMenu.openLinkInIEBrowser "Open Link in IE Browser">
 

@@ -2,13 +2,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Render-engine wisselen">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Kan niet wisselen op deze pagina">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Rechtsklik: Fire IE-opties weergeven">
-<!ENTITY urlbar.switchRules.label "Wisselregels">
-<!ENTITY internetProperties.lable "Interneteigenschappen IE">
-<!ENTITY fireie.autoswitch.disable "Automatisch wisselen overal uitschakelen">
-<!ENTITY openInIE.label "Huidige pagina in IE openen">
-<!ENTITY skin.label "Skins">
-<!ENTITY default.lable "Standaard">
-<!ENTITY skin.more.lable "Meer…">
+<!ENTITY fireie.menu.switchRules.label "Wisselregels">
+<!ENTITY fireie.menu.internetProperties.label "Interneteigenschappen IE">
+<!ENTITY fireie.menu.autoswitch.disable "Automatisch wisselen overal uitschakelen">
+<!ENTITY fireie.menu.openInIE.label "Huidige pagina in IE openen">
+<!ENTITY fireie.menu.skin.label "Skins">
+<!ENTITY fireie.menu.skin.default.label "Standaard">
+<!ENTITY fireie.menu.skin.more.label "Meer…">
 <!ENTITY fireie.options.title "Fire IE-opties">
 <!ENTITY fireie.options.general.tab "Algemeen">
 <!ENTITY fireie.options.general.pane "Algemeen">

@@ -2,13 +2,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "左鍵點擊：切換瀏覽引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "無法在該頁面進行切換">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊：設定 解雇 IE 選項">
-<!ENTITY urlbar.switchRules.label "切換規則">
-<!ENTITY internetProperties.lable "網際網路選項（IE）">
-<!ENTITY fireie.autoswitch.disable "完全停用自動切換">
-<!ENTITY openInIE.label "在 IE 中開啟目前頁面">
-<!ENTITY skin.label "面板">
-<!ENTITY default.lable "預設">
-<!ENTITY skin.more.lable "更多...">
+<!ENTITY fireie.menu.switchRules.label "切換規則">
+<!ENTITY fireie.menu.internetProperties.label "網際網路選項（IE）">
+<!ENTITY fireie.menu.autoswitch.disable "完全停用自動切換">
+<!ENTITY fireie.menu.openInIE.label "在 IE 中開啟目前頁面">
+<!ENTITY fireie.menu.skin.label "面板">
+<!ENTITY fireie.menu.skin.default.label "預設">
+<!ENTITY fireie.menu.skin.more.label "更多...">
 <!ENTITY fireie.options.title "解雇 IE 選項">
 <!ENTITY fireie.options.general.tab "一般">
 <!ENTITY fireie.options.general.pane "一般">

@@ -1,5 +1,5 @@
-<!ENTITY dialog.title "解雇IE安装完成">
-<!ENTITY confirmation "感谢您安装 解雇IE。今后您可以舍弃IE, 尽情享用强大的火狐。">
+<!ENTITY dialog.title "解雇IE 安装完成">
+<!ENTITY confirmation "感谢您安装 解雇IE。今后您可以舍弃 IE, 尽情享用强大的火狐。">
 <!ENTITY advancedSection "高级选项">
 <!ENTITY listSelection1 "已配置以下规则列表，用于智能切换内核:">
 <!ENTITY noList "无规则列表">

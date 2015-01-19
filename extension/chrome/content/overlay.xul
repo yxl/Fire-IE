@@ -53,22 +53,22 @@ xmlns:html="http://www.w3.org/1999/xhtml">
       <menuitem label="&fireie.options.title;..."
       oncommand="gFireIE.openOptionsDialog();" />
       <menuseparator />
-      <menuitem label="&urlbar.switchRules.label;..."
+      <menuitem label="&fireie.menu.switchRules.label;..."
       oncommand="gFireIE.openRulesDialog();" />
-      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
+      <menuitem id="fireie-menu-item-autoswitch-disabled" label="&fireie.menu.autoswitch.disable;" oncommand="gFireIE.toggleAutoSwitch();gFireIE.setMenuItems();" type="checkbox" autocheck="false" closemenu="none"/>
       <menuseparator id="fireie-erc-start" />
-      <menuitem id="fireie-menu-item-open-in-ie" label="&openInIE.label;" oncommand="gFireIE.openInIE();" />
-      <menuitem label="&internetProperties.lable;..."
+      <menuitem id="fireie-menu-item-open-in-ie" label="&fireie.menu.openInIE.label;" oncommand="gFireIE.openInIE();" />
+      <menuitem label="&fireie.menu.internetProperties.label;..."
       oncommand="gFireIE.openInternetPropertiesDialog();" />
       <menuseparator />
       <!-- Theme sub-menu -->
-      <menu id="fireie-skin-menu" label="&skin.label;">
+      <menu id="fireie-skin-menu" label="&fireie.menu.skin.label;">
         <menupopup id="fireie-skin-menu-popup">
           <menuitem id='fireie-skin-menu-item-default' class="menuitem-iconic"
-          label="&default.lable;"
+          label="&fireie.menu.skin.default.label;"
           oncommand="gFireIE.changeToDefaultTheme();" />
           <menuitem id='fireie-skin-menu-item-more' class="menuitem-iconic"
-          label="&skin.more.lable;"
+          label="&fireie.menu.skin.more.label;"
           oncommand="gFireIE.openMoreThemesPage();" />
         </menupopup>
       </menu>

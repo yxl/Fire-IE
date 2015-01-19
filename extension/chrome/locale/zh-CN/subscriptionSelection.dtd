@@ -1,5 +1,5 @@
 <!ENTITY dialog.title "添加规则订阅">
-<!ENTITY subscriptionSelector.label "从列表中选择规则订阅(这些规则用于智能切换内核和同步Cookie)：">
+<!ENTITY subscriptionSelector.label "从列表中选择规则订阅 (这些规则用于智能切换内核和同步 Cookie)：">
 <!ENTITY viewList.label "查看规则">
 <!ENTITY visitHomepage.label "查看主页">
 <!ENTITY addSubscription.label "添加订阅">

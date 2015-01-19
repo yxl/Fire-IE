@@ -2,13 +2,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Переключить движок">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Не возможно переключить на данной странице">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Правый клик - Настройки Fire IE">
-<!ENTITY urlbar.switchRules.label "Правила переключения">
-<!ENTITY internetProperties.lable "Свойства обозревателя IE">
-<!ENTITY fireie.autoswitch.disable "Отключить авто-переключение">
-<!ENTITY openInIE.label "Open Current Page in IE">
-<!ENTITY skin.label "Скины">
-<!ENTITY default.lable "По умолчанию">
-<!ENTITY skin.more.lable "Другие...">
+<!ENTITY fireie.menu.switchRules.label "Правила переключения">
+<!ENTITY fireie.menu.internetProperties.label "Свойства обозревателя IE">
+<!ENTITY fireie.menu.autoswitch.disable "Отключить авто-переключение">
+<!ENTITY fireie.menu.openInIE.label "Open This Page in IE Browser">
+<!ENTITY fireie.menu.skin.label "Скины">
+<!ENTITY fireie.menu.skin.default.label "По умолчанию">
+<!ENTITY fireie.menu.skin.more.label "Другие...">
 <!ENTITY fireie.options.title "Настройки Fire IE">
 <!ENTITY fireie.options.general.tab "Основные">
 <!ENTITY fireie.options.general.pane "Основные">

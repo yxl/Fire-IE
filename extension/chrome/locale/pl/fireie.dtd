@@ -2,13 +2,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Zmień silnik renderujący">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Nie można zmienić na tej stronie">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Prawy: Pokaż ustawienia Fire IE">
-<!ENTITY urlbar.switchRules.label "Reguły zmieniające silnik">
-<!ENTITY internetProperties.lable "Opcje internetowe IE">
-<!ENTITY fireie.autoswitch.disable "Nie zmieniaj automatycznie nigdzie">
-<!ENTITY openInIE.label "Otwórz tę stronę w IE">
-<!ENTITY skin.label "Skórki">
-<!ENTITY default.lable "Domyślna">
-<!ENTITY skin.more.lable "Więcej...">
+<!ENTITY fireie.menu.switchRules.label "Reguły zmieniające silnik">
+<!ENTITY fireie.menu.internetProperties.label "Opcje internetowe IE">
+<!ENTITY fireie.menu.autoswitch.disable "Nie zmieniaj automatycznie nigdzie">
+<!ENTITY fireie.menu.openInIE.label "Otwórz tę stronę w IE">
+<!ENTITY fireie.menu.skin.label "Skórki">
+<!ENTITY fireie.menu.skin.default.label "Domyślna">
+<!ENTITY fireie.menu.skin.more.label "Więcej...">
 <!ENTITY fireie.options.title "Fire IE - Opcje">
 <!ENTITY fireie.options.general.tab "Ogólne">
 <!ENTITY fireie.options.general.pane "Ogólne">

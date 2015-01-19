@@ -3,13 +3,13 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "左键点击: 切换浏览引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "无法在该页面进行切换">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击: 设置 解雇IE 选项">
-<!ENTITY urlbar.switchRules.label "切换规则">
-<!ENTITY internetProperties.lable "IE的Internet 选项">
-<!ENTITY fireie.autoswitch.disable "全局禁用自动切换">
-<!ENTITY openInIE.label "使用IE浏览当前页面">
-<!ENTITY skin.label "皮肤">
-<!ENTITY default.lable "默认">
-<!ENTITY skin.more.lable "更多...">
+<!ENTITY fireie.menu.switchRules.label "切换规则">
+<!ENTITY fireie.menu.internetProperties.label "Internet 选项 (控制面板)">
+<!ENTITY fireie.menu.autoswitch.disable "全局禁用自动切换">
+<!ENTITY fireie.menu.openInIE.label "使用 IE 浏览器打开当前页面">
+<!ENTITY fireie.menu.skin.label "皮肤">
+<!ENTITY fireie.menu.skin.default.label "默认">
+<!ENTITY fireie.menu.skin.more.label "更多...">
 <!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "在新标签页中以 IE 引擎打开链接">
 <!ENTITY fireie.contextMenu.openLinkInIEBrowser "在 IE 浏览器中打开链接">
 
@@ -24,7 +24,7 @@
 <!ENTITY fireie.options.shorcut.enable "启用">
 <!ENTITY fireie.options.private.caption "隐私浏览模式">
 <!ENTITY fireie.options.private.privatebrowsingwarning "显示隐私浏览模式警告页面">
-<!ENTITY fireie.options.private.descr "IE引擎不支持隐私浏览模式，您可以选择是否在这种情况下显示警告页面。">
+<!ENTITY fireie.options.private.descr "IE 引擎不支持隐私浏览模式，您可以选择是否在这种情况下显示警告页面。">
 <!ENTITY fireie.options.ui.tab "用户界面">
 <!ENTITY fireie.options.ui.pane "用户界面">
 <!ENTITY fireie.options.ui.urlBarButtonCaption "地址栏按钮">
@@ -35,22 +35,22 @@
 <!ENTITY fireie.options.ui.tooltipLabel "悬停提示：">
 <!ENTITY fireie.options.ui.showTooltipText "鼠标悬停时显示引擎状态信息">
 <!ENTITY fireie.options.ui.statusBarCaption "浮动状态栏">
-<!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示IE引擎的状态消息">
+<!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示 IE 引擎的状态消息">
 <!ENTITY fireie.options.ui.faviconCaption "标签页图标">
 <!ENTITY fireie.options.ui.faviconSite "使用网站图标">
-<!ENTITY fireie.options.ui.faviconIE "使用IE引擎图标">
+<!ENTITY fireie.options.ui.faviconIE "使用 IE 引擎图标">
 <!ENTITY fireie.options.ui.customLabelLabel "自定义标签：">
-<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "仅在使用IE引擎时显示该按钮">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "仅在使用 IE 引擎时显示该按钮">
 <!ENTITY fireie.options.ui.contextMenuCaption "右键菜单">
 <!ENTITY fireie.options.ui.showContextMenuItems "显示右键菜单项目 (在 IE 引擎/浏览器中打开链接)">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "鼠标手势支持">
-<!ENTITY fireie.options.integration.mgDescr "解雇IE会自动检测您的鼠标手势扩展和脚本。如果您的鼠标手势扩展或脚本没有被检测到，请尝试启用这个选项。">
-<!ENTITY fireie.options.integration.forceMGSupport "强制启用IE引擎鼠标手势支持">
+<!ENTITY fireie.options.integration.mgDescr "解雇IE 会自动检测您的鼠标手势扩展和脚本。如果您的鼠标手势扩展或脚本没有被检测到，请尝试启用这个选项。">
+<!ENTITY fireie.options.integration.forceMGSupport "强制启用 IE 引擎鼠标手势支持">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已启用鼠标手势支持。">
 <!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支持">
-<!ENTITY fireie.options.integration.abpDescr "在IE引擎中使用 Adblock Plus 的规则来过滤广告。">
+<!ENTITY fireie.options.integration.abpDescr "在 IE 引擎中使用 Adblock Plus 的规则来过滤广告。">
 <!ENTITY fireie.options.integration.abpSupportEnabled "启用 Adblock Plus 支持">
 <!ENTITY fireie.options.integration.abpStatusLabel "当前状态：">
 <!ENTITY fireie.options.integration.abpStatusNotDetected "未检测到 Adblock Plus">
@@ -61,21 +61,21 @@
 <!ENTITY fireie.options.integration.otherOptions "其他选项">
 <!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之间同步 Cookie">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隐私浏览模式下启用 Cookie 同步">
-<!ENTITY fireie.options.integration.historyEnabled "记录IE引擎的浏览历史">
-<!ENTITY fireie.options.integration.disableFolderRedirection "不要重定向IE的临时文件和 Cookie">
+<!ENTITY fireie.options.integration.historyEnabled "记录 IE 引擎的浏览历史">
+<!ENTITY fireie.options.integration.disableFolderRedirection "不要重定向 IE 的临时文件和 Cookie">
 
-<!ENTITY fireie.options.ieoptions.tab  "IE引擎选项">
-<!ENTITY fireie.options.ieoptions.pane "IE引擎选项">
-<!ENTITY fireie.options.iecompat.group "IE兼容模式">
-<!ENTITY fireie.options.iecompat.ie7   "IE7标准模式">
-<!ENTITY fireie.options.iecompat.ie8   "IE8标准模式">
-<!ENTITY fireie.options.iecompat.ie8f  "IE8强制标准模式">
-<!ENTITY fireie.options.iecompat.ie9   "IE9标准模式">
-<!ENTITY fireie.options.iecompat.ie9f  "IE9强制标准模式">
-<!ENTITY fireie.options.iecompat.ie10  "IE10标准模式">
-<!ENTITY fireie.options.iecompat.ie10f "IE10强制标准模式">
-<!ENTITY fireie.options.iecompat.ie11e  "IE11边缘模式">
-<!ENTITY fireie.options.iecompat.ie11fe  "IE11强制边缘模式">
+<!ENTITY fireie.options.ieoptions.tab  "IE 引擎选项">
+<!ENTITY fireie.options.ieoptions.pane "IE 引擎选项">
+<!ENTITY fireie.options.iecompat.group "IE 兼容模式">
+<!ENTITY fireie.options.iecompat.ie7   "IE7 标准模式">
+<!ENTITY fireie.options.iecompat.ie8   "IE8 标准模式">
+<!ENTITY fireie.options.iecompat.ie8f  "IE8 强制标准模式">
+<!ENTITY fireie.options.iecompat.ie9   "IE9 标准模式">
+<!ENTITY fireie.options.iecompat.ie9f  "IE9 强制标准模式">
+<!ENTITY fireie.options.iecompat.ie10  "IE10 标准模式">
+<!ENTITY fireie.options.iecompat.ie10f "IE10 强制标准模式">
+<!ENTITY fireie.options.iecompat.ie11e  "IE11 边缘模式">
+<!ENTITY fireie.options.iecompat.ie11fe  "IE11 强制边缘模式">
 <!ENTITY fireie.options.iecompat.notSupported "您的 IE 版本不支持设置 IE 兼容模式和高级特性。">
 <!ENTITY fireie.options.iefeat.group   "高级特性">
 <!ENTITY fireie.options.iefeat.gpuRendering "启用硬件加速渲染">
