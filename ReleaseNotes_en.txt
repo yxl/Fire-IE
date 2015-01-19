@@ -1,3 +1,19 @@
+Fire-IE 0.4.3 @ January 19, 2015
+Enhancements:
+* Support Pan (adblocker).
+* OOPP: Support cookie sync from Firefox to IE engine.
+* OOPP: implemented automatic crash recovery.
+
+Bug fixes:
+* "View Source" does not work for file:// URLs that match an auto-switch rule.
+* Removed font sync feature (it never worked for IE version 7 and higher).
+* No longer auto-switches back to Firefox engine for "about:blank" URL (better compatibility with some websites).
+* Fix incorrect engine name in tooltip after "Customization".
+
+Fire-IE 0.4.2 @ December 17, 2014
+Bug fixes:
+* Fix high CPU usage in special circumstances.
+
 Fire-IE 0.4.1 @ December 2, 2014
 Enhancements:
 * Added an option that allows the URL bar button to display only when IE engine is used.
