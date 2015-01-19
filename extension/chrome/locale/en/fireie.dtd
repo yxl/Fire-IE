@@ -41,6 +41,8 @@
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
 <!ENTITY fireie.options.ui.customLabelLabel "Customize labels:">
 <!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Show the button only when using IE engine">
+<!ENTITY fireie.options.ui.contextMenuCaption "Context Menu">
+<!ENTITY fireie.options.ui.showContextMenuItems "Show context menu items (open link in IE engine/browser)">
 <!ENTITY fireie.options.integration.tab "Integration">
 <!ENTITY fireie.options.integration.pane "Integration">
 <!ENTITY fireie.options.integration.mgCaption "Mouse Gestures Support">

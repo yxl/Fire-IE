@@ -38,6 +38,7 @@ pref("extensions.fireie.showSiteFavicon", true);
 pref("extensions.fireie.fxLabel", "");
 pref("extensions.fireie.ieLabel", "");
 pref("extensions.fireie.showUrlBarButtonOnlyForIE", false);
+pref("extensions.fireie.showContextMenuItems", true);
 
 // Integration
 pref("extensions.fireie.forceMGSupport", false);

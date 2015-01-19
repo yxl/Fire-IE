@@ -180,6 +180,12 @@
           <checkbox label="&fireie.options.ui.showStatusText;" id="showStatusText" />
         </vbox>
       </groupbox>
+      <groupbox id="contextMenuGroup">
+        <caption label="&fireie.options.ui.contextMenuCaption;" />
+        <vbox>
+          <checkbox label="&fireie.options.ui.showContextMenuItems;" id="showContextMenuItems" />
+        </vbox>
+      </groupbox>
     </vbox>
   </prefpane>
 

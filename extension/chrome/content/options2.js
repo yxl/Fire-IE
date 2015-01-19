@@ -98,6 +98,7 @@ Options.apply = function(quiet)
   Prefs.ieLabel = E("ieLabel").value;
   Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
+  Prefs.showContextMenuItems = E("showContextMenuItems").checked;
   
   // Integration
   Prefs.forceMGSupport = E("forceMGSupport").checked;
@@ -400,6 +401,7 @@ Options.initDialog = function(restore)
   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
   E("showTooltipText").checked = Prefs.showTooltipText;
   E("showStatusText").checked = Prefs.showStatusText;
+  E("showContextMenuItems").checked = Prefs.showContextMenuItems;
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
   E("statusBarGroup").hidden = ifHide;
