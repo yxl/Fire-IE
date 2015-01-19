@@ -1,4 +1,5 @@
 Fire-IE 0.4.3 @ January 19, 2015
+Enhancements:
 * Support Pan (adblocker).
 * OOPP: Support cookie sync from Firefox to IE engine.
 * OOPP: implemented automatic crash recovery.
