@@ -33,6 +33,10 @@
   display: inline;
 }
 
+#fireie-context-openlinkintabwithieengine {
+  list-style-image: url("chrome://fireie/skin/engine-ie.png");
+}
+
 /* treechildren checkbox */
 
 treechildren::-moz-tree-checkbox {

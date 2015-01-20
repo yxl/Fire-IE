@@ -1465,6 +1465,25 @@ WindowWrapper.prototype = {
       urlbarButtonLabel.style.color = "";
     }
 
+    // Style context menu icons
+    function escapeURLForCSS(url)
+    {
+      return url.replace(/[(),\s'"]/g, "\$&");
+    }
+    let openInIEEngineMenuItem = this.E("fireie-context-openlinkintabwithieengine");
+    if (openInIEEngineMenuItem)
+    {
+      openInIEEngineMenuItem.style.listStyleImage = 'url("' + escapeURLForCSS(images.ieURL) + '")';
+    }
+    let openInIEBrowserMenuItem = this.E("fireie-context-openlinkiniebrowser");
+    if (openInIEBrowserMenuItem)
+    {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(Utils.iePath);
+      let iconURL = "moz-icon:" + Services.io.newFileURI(file, null, null).spec + "?size=16";
+      openInIEBrowserMenuItem.style.listStyleImage = 'url("' + escapeURLForCSS(iconURL) + '")';
+    }
+
     this._updateInterface();
     this.updateFavicons();
   },
