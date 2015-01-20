@@ -2413,6 +2413,10 @@ WindowWrapper.prototype = {
     );
     // Hide "open-in-ie" button for firefox-only urls
     this.E("fireie-menu-item-open-in-ie").hidden = Utils.isFirefoxOnly(this.getURL());
+    // Update checked state for "skin" submenu
+    let isDefault = LightweightTheme.isDefaultTheme;
+    this.E("fireie-skin-menu-item-default").setAttribute("checked", isDefault);
+    this.E("fireie-skin-menu-item-more").setAttribute("checked", !isDefault);
   },
 
   /**

@@ -115,6 +115,12 @@ let LightweightTheme = {
   {
     return _appliedTheme.fxURL;
   },
+  
+  /** Are we using the default theme? */
+  get isDefaultTheme()
+  {
+    return this.currentTheme.id === _defaultTheme.id;
+  },
 
   /**
    * Install a theme
