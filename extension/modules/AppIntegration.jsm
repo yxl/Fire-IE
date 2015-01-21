@@ -524,11 +524,6 @@ WindowWrapper.prototype = {
       else if (this.window.BookmarkingUI && this.window.BookmarkingUI.updateStarState)
         this.window.BookmarkingUI.updateStarState();
 
-      function escapeURLForCSS(url)
-      {
-        return url.replace(/[(),\s'"]/g, "\$&");
-      }
-
       // Update the engine button on the URL bar
       if (Prefs.showUrlBarButtonOnlyForIE)
         this._setupUrlBarButton();
@@ -541,7 +536,7 @@ WindowWrapper.prototype = {
       tooltip.className = urlbarButton.disabled ? "btndisabled" : "";
       let fxURL = LightweightTheme.fxIconUrl;
       let ieURL = LightweightTheme.ieIconUrl;
-      let engineIconCSS = 'url("' + escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
+      let engineIconCSS = 'url("' + Utils.escapeURLForCSS(isIEEngine ? ieURL : fxURL) + '")';
       this.E("fireie-urlbar-switch").style.listStyleImage = engineIconCSS;
       this.E("fireie-urlbar-switch-image").style.listStyleImage = engineIconCSS;
       let urlbarButtonLabel = this.E("fireie-urlbar-switch-label");
@@ -620,6 +615,15 @@ WindowWrapper.prototype = {
   _setupTheme: function()
   {
     this._applyTheme(LightweightTheme.currentTheme);
+
+    let openInIEBrowserMenuItem = this.E("fireie-context-openlinkiniebrowser");
+    if (openInIEBrowserMenuItem)
+    {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(Utils.iePath);
+      let iconURL = "moz-icon:" + Services.io.newFileURI(file, null, null).spec + "?size=16";
+      openInIEBrowserMenuItem.style.listStyleImage = 'url("' + Utils.escapeURLForCSS(iconURL) + '")';
+    }
   },
 
   /**
@@ -1465,23 +1469,11 @@ WindowWrapper.prototype = {
       urlbarButtonLabel.style.color = "";
     }
 
-    // Style context menu icons
-    function escapeURLForCSS(url)
-    {
-      return url.replace(/[(),\s'"]/g, "\$&");
-    }
+    // Style context menu icon
     let openInIEEngineMenuItem = this.E("fireie-context-openlinkintabwithieengine");
     if (openInIEEngineMenuItem)
     {
-      openInIEEngineMenuItem.style.listStyleImage = 'url("' + escapeURLForCSS(images.ieURL) + '")';
-    }
-    let openInIEBrowserMenuItem = this.E("fireie-context-openlinkiniebrowser");
-    if (openInIEBrowserMenuItem)
-    {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      file.initWithPath(Utils.iePath);
-      let iconURL = "moz-icon:" + Services.io.newFileURI(file, null, null).spec + "?size=16";
-      openInIEBrowserMenuItem.style.listStyleImage = 'url("' + escapeURLForCSS(iconURL) + '")';
+      openInIEEngineMenuItem.style.listStyleImage = 'url("' + Utils.escapeURLForCSS(images.ieURL) + '")';
     }
 
     this._updateInterface();

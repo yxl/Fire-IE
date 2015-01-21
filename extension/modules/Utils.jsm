@@ -696,6 +696,11 @@ var Utils = {
   {
     return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
   },
+  
+  escapeURLForCSS: function(url)
+  {
+    return url.replace(/[(),\s'"]/g, "\$&");
+  },
 
   /**
    * Extracts the hostname from a URL (might return null).
