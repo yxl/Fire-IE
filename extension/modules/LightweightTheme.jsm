@@ -81,6 +81,15 @@ let LightweightTheme = {
   {
     try
     {
+      // Check to make sure that the themeData has the required fields
+      if (typeof(themeData.id) !== "string" ||
+          !Utils.isValidUrl(themeData.fxURL) ||
+          !Utils.isValidUrl(themeData.ieURL) ||
+          typeof(themeData.textcolor) !== "string")
+      {
+        throw "incorrect theme data format";
+      }
+        
       Prefs.currentTheme = JSON.stringify(themeData);
       this.tryCacheThemeImages(themeData);
     }
@@ -418,18 +427,39 @@ let FileUtils = {
    */
   saveFileFromURL: function(uri, directory, fileName)
   {
+    let jsm = {};
+    try
+    {
+      Cu.import("resource://gre/modules/Downloads.jsm", jsm);
+    }
+    catch (ex)
+    {
+    }
+    
     let file = directory.clone();
     file.append(fileName);
 
-    // create a persist  
-    let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
+    if (jsm.Downloads)
+    {
+      jsm.Downloads.fetch(uri.spec, file.path, {
+        isPrivate: true
+      }).then(null, function(ex)
+      {
+        Utils.ERROR("Failed to download \"" + file.path + "\": " + ex);
+      });
+    }
+    else
+    {
+      // create a persist  
+      let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Ci.nsIWebBrowserPersist);
 
-    // with persist flags if desired. See nsIWebBrowserPersist page for more PERSIST_FLAGS.  
-    const nsIWBP = Ci.nsIWebBrowserPersist;
-    const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-    persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+      // with persist flags if desired. See nsIWebBrowserPersist page for more PERSIST_FLAGS.  
+      const nsIWBP = Ci.nsIWebBrowserPersist;
+      const flags = nsIWBP.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      persist.persistFlags = flags | nsIWBP.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
-    // do the save  
-    persist.saveURI(uri, null, null, null, "", file, null);
+      // do the save  
+      persist.saveURI(uri, null, null, null, "", file, null);
+    }
   }
 };
