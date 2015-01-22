@@ -69,6 +69,45 @@ let ContentUtils = {
   {
     return !win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow);
   },
+
+  /**
+   * Extracts the hostname from a URL (might return null).
+   */
+  getHostname: function( /**String*/ url) /**String*/
+  {
+    try
+    {
+      url = url.replace(/^\s+/g, "").replace(/\s+$/g, "");
+      if (!/^[\w\-]+:/.test(url))
+      {
+        url = "http://" + url;
+      }
+      return this.unwrapURL(url).host;
+    }
+    catch (e)
+    {
+      return null;
+    }
+  },
+  getEffectiveHost: function( /**String*/ url) /**String*/
+  {
+    // Cache the eTLDService if this is our first time through
+    var _eTLDService = Cc["@mozilla.org/network/effective-tld-service;1"].getService(Ci.nsIEffectiveTLDService);
+    var _IDNService = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
+    this.getEffectiveHost = function(u)
+    {
+      let hostname = this.getHostname(u);
+      try {
+        let baseDomain = _eTLDService.getBaseDomainFromHost(hostname);
+        return _IDNService.convertToDisplayIDN(baseDomain, {});
+      } catch (e) {
+        // If something goes wrong (e.g. hostname is an IP address) just fail back
+        // to the full domain.
+        return hostname;
+      }
+    };
+    return this.getEffectiveHost(url);
+  },
 };
 
 /**

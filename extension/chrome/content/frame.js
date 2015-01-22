@@ -32,7 +32,9 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   
   Cu.import(baseURL.spec + "ContentPrefs.jsm");
   Cu.import(baseURL.spec + "ContentProcessContentPolicy.jsm");
-  
+  Cu.import(baseURL.spec + "ContentUtils.jsm");
+  Cu.import(baseURL.spec + "ContentPrefs.jsm");
+ 
   addEventListener("fireie:reloadContainerPage", function(event)
   {
     let containerWindow = event.target;
@@ -50,4 +52,44 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     let locationSpec = event.detail.locationSpec;
     event.detail.result = ChromeBridge.shouldLoadInFrame(this, locationSpec);
   }, false, true);
+  
+  function getThemeDataFromNode(node)
+  {
+    let defValue = null;
+    if (!node.hasAttribute("data-fireietheme")) return defValue;
+    let themeData = defValue;
+    try
+    {
+      themeData = JSON.parse(node.getAttribute("data-fireietheme"));
+    }
+    catch (e)
+    {
+      ContentUtils.ERROR(e);
+      return defValue;
+    }
+    return themeData;
+  }
+  
+  function browserThemeEventHandler(event)
+  {
+    let node = event.target;
+    if (!node) return;
+    let doc = node.ownerDocument;
+    if (!doc) return;
+    let url = doc.location.href;
+    let host = ContentUtils.getEffectiveHost(url);
+    let allow = JSON.parse(Prefs.allowedThemeHosts).some(function(h) h == host);
+    if (!allow)
+    {
+      ContentUtils.LOG("Blocked theme request: untrusted site (" + host + ")");
+      return;
+    }
+    
+    let themeData = getThemeDataFromNode(node);
+    ChromeBridge.handleThemeRequest(this, event.type, themeData);
+  }
+  
+  addEventListener("InstallBrowserTheme", browserThemeEventHandler, false, true);
+  addEventListener("PreviewBrowserTheme", browserThemeEventHandler, false, true);
+  addEventListener("ResetBrowserThemePreview", browserThemeEventHandler, false, true);
 })();

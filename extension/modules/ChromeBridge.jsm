@@ -91,6 +91,11 @@ let ChromeBridge = {
   {
     return frameGlobal.sendSyncMessage("fireie:shouldLoadInFrame", locationSpec);
   },
+  
+  handleThemeRequest: function(frameGlobal, action, themeData)
+  {
+    frameGlobal.sendAsyncMessage("fireie:" + action, JSON.stringify(themeData));
+  }
 };
 
 ChromeBridge.startup();

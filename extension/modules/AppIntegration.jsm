@@ -1378,8 +1378,13 @@ WindowWrapper.prototype = {
 
     if (themeData != null)
     {
-      LightweightTheme.installTheme(themeData);
+      this._installTheme(themeData);
     }
+  },
+  
+  _installTheme: function(themeData)
+  {
+    LightweightTheme.installTheme(themeData);
   },
 
   /**
@@ -1419,8 +1424,13 @@ WindowWrapper.prototype = {
     let themeData = this._getThemeDataFromNode(node);
     if (themeData != null)
     {
-      this._applyTheme(themeData);
+      this._previewTheme(themeData);
     }
+  },
+  
+  _previewTheme: function(themeData)
+  {
+    this._applyTheme(themeData);
   },
 
   /**
@@ -1432,6 +1442,11 @@ WindowWrapper.prototype = {
   _onResetThemePreview: function(event)
   {
     if (!this._checkThemeSite(event.target)) return;
+    this._resetThemePreview();
+  },
+  
+  _resetThemePreview: function()
+  {
     this._applyTheme(LightweightTheme.currentTheme);
   },
 
@@ -2508,6 +2523,9 @@ WindowWrapper.prototype = {
     {
       mm.addMessageListener("fireie:reloadContainerPage", this);
       mm.addMessageListener("fireie:shouldLoadInFrame", this);
+      mm.addMessageListener("fireie:InstallBrowserTheme", this);
+      mm.addMessageListener("fireie:PreviewBrowserTheme", this);
+      mm.addMessageListener("fireie:ResetBrowserThemePreview", this);
       mm.loadFrameScript("chrome://fireie/content/frame.js", true);
     }
   },
@@ -2532,6 +2550,15 @@ WindowWrapper.prototype = {
     case "fireie:shouldLoadInFrame":
       if (browser)
         result = Policy.shouldLoadInBrowser(browser, msg.data);
+      break;
+    case "fireie:InstallBrowserTheme":
+      this._installTheme(JSON.parse(msg.data));
+      break;
+    case "fireie:PreviewBrowserTheme":
+      this._previewTheme(JSON.parse(msg.data));
+      break;
+    case "fireie:ResetBrowserThemePreview":
+      this._resetThemePreview();
       break;
     default:
       Utils.LOG("Unhandled message: " + msg.name);
