@@ -885,10 +885,13 @@ WindowWrapper.prototype = {
       }
 
       let zoomLevel = this.getZoomLevel(aTab.linkedBrowser);
-      Utils.setTabAttributeJSON(aTab, 'zoom', {
-        zoomLevel: zoomLevel
-      });
-
+      if (zoomLevel)
+      {
+        Utils.setTabAttributeJSON(aTab, 'zoom', {
+          zoomLevel: zoomLevel
+        });
+      }
+      
       if (isIEEngineAfterSwitch)
       {
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
@@ -1671,7 +1674,8 @@ WindowWrapper.prototype = {
       "Zoom": function(pluginObject)
       {
         let zoomLevel = this.getZoomLevel();
-        pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
+        if (zoomLevel)
+          pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
         return true;
       },
       "DisplaySecurityInfo": function(pluginObject)
@@ -2289,11 +2293,12 @@ WindowWrapper.prototype = {
    */
   getZoomLevel: function(aBrowser)
   {
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+
     // Are we in e10s window?
-    if (!aBrowser.docShell)
-      return 1;
-    
-    let browser = aBrowser || this.window.gBrowser.selectedBrowser
+    if (!browser.docShell)
+      return null;
+
     let docViewer = browser.markupDocumentViewer;
     let zoomLevel = docViewer.fullZoom;
     return zoomLevel;
@@ -2304,11 +2309,12 @@ WindowWrapper.prototype = {
    */
   _setZoomLevel: function(value, aBrowser)
   {
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+
     // Are we in e10s window?
-    if (!aBrowser.docShell)
+    if (!browser.docShell)
       return;
     
-    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
     let docViewer = browser.markupDocumentViewer;
     docViewer.fullZoom = value;
   },

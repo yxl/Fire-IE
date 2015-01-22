@@ -27,7 +27,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     if (!containerWindow instanceof Ci.nsIDOMWindow) return;
     
     let url = containerWindow.location.href;
-    console.log(url);
     if (url.startsWith("chrome://fireie/content/container.xhtml?url="))
     {
       let detailObj = JSON.parse(event.detail);
