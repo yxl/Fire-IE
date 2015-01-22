@@ -1,6 +1,6 @@
 // OOPP related
-pref("dom.ipc.plugins.enabled.npfireie32.dll", false);
-pref("dom.ipc.plugins.enabled.npfireie64.dll", false);
+pref("dom.ipc.plugins.enabled.npfireie32.dll", true);
+pref("dom.ipc.plugins.enabled.npfireie64.dll", true);
 
 // Miscellaneous
 pref("extensions.fireie.currentVersion", "0.0.9");
