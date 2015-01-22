@@ -149,6 +149,7 @@ protected:
 
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnUserMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnAppCommand(CWnd* pWnd, UINT nCmd, UINT nDevice, UINT nKey);
 	void OnCommandStateChange(long Command, BOOL Enable);
 	void OnStatusTextChange(LPCTSTR Text);
 	void OnTitleChange(LPCTSTR Text);

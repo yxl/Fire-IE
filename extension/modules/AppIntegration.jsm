@@ -380,6 +380,7 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
     this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
     this.window.addEventListener("IEBatchSetCookie", this._bindMethod(this._onIEBatchSetCookie), false);
+    this.window.addEventListener("IEDoAppCommand", this._bindMethod(this._onIEDoAppCommand), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -2521,6 +2522,32 @@ WindowWrapper.prototype = {
       break;
     default:
       Utils.LOG("Unhandled message: " + data.name);
+      break;
+    }
+  },
+  
+  _onIEDoAppCommand: function(event)
+  {
+    let cmd = event.detail;
+    switch (cmd)
+    {
+    case "BrowserBackward":
+      this.window.BrowserBack();
+      break;
+    case "BrowserForward":
+      this.window.BrowserForward();
+      break;
+    case "BrowserRefresh":
+      this.window.BrowserReload();
+      break;
+    case "BrowserStop":
+      this.window.BrowserStop();
+      break;
+    case "Save":
+      this.goDoCommand("SaveAs");
+      break;
+    case "Print":
+      this.goDoCommand("Print");
       break;
     }
   },

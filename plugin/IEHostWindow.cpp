@@ -309,6 +309,7 @@ BEGIN_MESSAGE_MAP(CIEHostWindow, CDialog)
 	ON_WM_SIZE()
 	ON_MESSAGE(WM_USER_MESSAGE, OnUserMessage)
 	ON_WM_PARENTNOTIFY()
+	ON_WM_APPCOMMAND()
 END_MESSAGE_MAP()
 
 
@@ -404,6 +405,44 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
+}
+
+void CIEHostWindow::OnAppCommand(CWnd* pWnd, UINT nCmd, UINT nDevice, UINT nKey)
+{
+	bool bProcessed = false;
+
+	if (m_pPlugin)
+	{
+		CString cmdName = _T("");
+		switch (nCmd) {
+		case APPCOMMAND_BROWSER_BACKWARD:
+			cmdName = _T("BrowserBackward");
+			break;
+		case APPCOMMAND_BROWSER_FORWARD:
+			cmdName = _T("BrowserForward");
+			break;
+		case APPCOMMAND_BROWSER_REFRESH:
+			cmdName = _T("BrowserRefresh");
+			break;
+		case APPCOMMAND_BROWSER_STOP:
+			cmdName = _T("BrowserStop");
+			break;
+		case APPCOMMAND_SAVE:
+			cmdName = _T("Save");
+			break;
+		case APPCOMMAND_PRINT:
+			cmdName = _T("Print");
+			break;
+		}
+
+		if (cmdName.GetLength())
+		{
+			m_pPlugin->FireEvent(_T("IEDoAppCommand"), cmdName);
+			bProcessed = true;
+		}
+	}
+	if (!bProcessed)
+		CDialog::OnAppCommand(pWnd, nCmd, nDevice, nKey);
 }
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
