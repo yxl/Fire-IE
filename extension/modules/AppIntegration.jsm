@@ -331,6 +331,7 @@ WindowWrapper.prototype = {
     Services.obs.notifyObservers(null, "fireie-lazy-init", null);
 
     this._registerEventListeners();
+    this._registerMessageListeners();
 
     this.updateState();
   },
@@ -385,7 +386,7 @@ WindowWrapper.prototype = {
     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
   },
- 
+  
   // security check, do not let malicious sites send fake events
   _checkEventOrigin: function(event)
   {
@@ -917,7 +918,13 @@ WindowWrapper.prototype = {
   _openInCurrentTab: function(url, isIEEngine)
   {
     if (this.isIEEngine() != isIEEngine)
+    {
+      try {
       this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+      } catch (ex) {
+        Utils.ERROR(ex + "\n" + ex.stack);
+      }
+    }
     else
     {
       if (isIEEngine && !Utils.isFirefoxOnly(url))
@@ -2281,6 +2288,10 @@ WindowWrapper.prototype = {
    */
   getZoomLevel: function(aBrowser)
   {
+    // Are we in e10s window?
+    if (!aBrowser.docShell)
+      return 1;
+    
     let browser = aBrowser || this.window.gBrowser.selectedBrowser
     let docViewer = browser.markupDocumentViewer;
     let zoomLevel = docViewer.fullZoom;
@@ -2292,6 +2303,10 @@ WindowWrapper.prototype = {
    */
   _setZoomLevel: function(value, aBrowser)
   {
+    // Are we in e10s window?
+    if (!aBrowser.docShell)
+      return;
+    
     let browser = aBrowser || this.window.gBrowser.selectedBrowser;
     let docViewer = browser.markupDocumentViewer;
     docViewer.fullZoom = value;
@@ -2474,6 +2489,40 @@ WindowWrapper.prototype = {
     this.E("fireie-context-sep-open").hidden = hidden;
     this.E("fireie-context-openlinkintabwithieengine").hidden = hidden;
     this.E("fireie-context-openlinkiniebrowser").hidden = hidden;
+  },
+
+  /**
+   * Attaches message listeners to handle messages from content processes
+   */
+  _registerMessageListeners: function()
+  {
+    let mm = this.window.messageManager;
+    if (mm)
+    {
+      mm.addMessageListener("fireie:reloadContainerPage", this);
+      mm.loadFrameScript("chrome://fireie/content/frame.js", true);
+    }
+  },
+  
+  /**
+   * nsIMessageListener
+   */
+  receiveMessage: function(data)
+  {
+    switch (data.name)
+    {
+    case "fireie:reloadContainerPage":
+      let browser = data.target;
+      if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
+      {
+        browser.loadURIWithFlags(browser.currentURI.spec,
+          Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
+      }
+      break;
+    default:
+      Utils.LOG("Unhandled message: " + data.name);
+      break;
+    }
   },
 };
 

@@ -146,6 +146,16 @@ var gFireIE = null;
     //hook properties
     hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
     hookURLBarSetter(gURLBar);
+    
+    // Hook e10s blacklist
+    if (typeof(E10SUtils) === "object") 
+    {
+      HM.hookCodeHead("E10SUtils.shouldBrowserBeRemote", function(url)
+      {
+        if (Utils.isIEEngine(url) || Utils.isSwitchJumper(url))
+          return RET.shouldReturn(false);
+      });
+    }
   }
   
   function initListeners()

@@ -547,12 +547,12 @@ var Utils = {
   
   getChromeWindowFrom: function(window)
   {
-    let mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+    let mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShellTreeItem)
                            .rootTreeItem
-                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow); 
+                           .QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow); 
     return mainWindow;
   },
   
