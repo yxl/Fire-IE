@@ -165,7 +165,12 @@ var Policy = {
   setManuallySwitched: function(browserNode, url)
   {
     browserNode.setAttribute("manuallySwitched", Utils.getEffectiveHost(url) || "");
-  }
+  },
+  
+  shouldLoadInBrowser: function(browser, locationSpec)
+  {
+    return PolicyPrivate.shouldLoadInBrowser(browser, locationSpec);
+  },
 };
 
 /**
@@ -205,9 +210,14 @@ var PolicyPrivate = {
     }
     catch (ex) {}
     if (!browserNode) return Ci.nsIContentPolicy.ACCEPT;
-
+    
+    return this.shouldLoadInBrowser(browserNode, location.spec);
+  },
+  
+  shouldLoadInBrowser: function(browserNode, locationSpec)
+  {
     // User has manually switched engine
-    if (Policy.isManuallySwitched(browserNode, location.spec))
+    if (Policy.isManuallySwitched(browserNode, locationSpec))
       return Ci.nsIContentPolicy.ACCEPT;
     
     // Make sure the request comes from a tab
@@ -216,18 +226,18 @@ var PolicyPrivate = {
       return Ci.nsIContentPolicy.ACCEPT;
 
     // Check engine switch list
-    if (Policy.checkEngineRule(location.spec))
+    if (Policy.checkEngineRule(locationSpec))
     {
       Utils.runAsync(function()
       {
-        browserNode.loadURI(Utils.toContainerUrl(location.spec));
+        browserNode.loadURI(Utils.toContainerUrl(locationSpec));
       }, this);
       return Ci.nsIContentPolicy.REJECT_OTHER;
     }
     // Check engine switch back list
-    if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(location.spec))
+    if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(locationSpec))
     {
-      let url = Utils.fromContainerUrl(location.spec);
+      let url = Utils.fromContainerUrl(locationSpec);
       if (Policy.isManuallySwitched(browserNode, url))
         return Ci.nsIContentPolicy.ACCEPT;
       if (Policy.checkEngineExceptionalRule(url))
@@ -262,13 +272,10 @@ var PolicyPrivate = {
         if (!(subject instanceof Ci.nsIHttpChannel)) return;
 
         let url = subject.URI.spec;
-        let domain = null;
+        let domain = Utils.getHostname(url);
         let wnd = Utils.getRequestWindow(subject);
-        if (wnd)
-        {
-          domain = Utils.getHostname(wnd.location.href);
-        }
-
+        let browser = Utils.getRequestBrowser(subject);
+        
         // Changes the UserAgent to that of IE if necessary.
         let match;
         if (match = Policy.checkUserAgentRule(url, domain))
@@ -281,13 +288,13 @@ var PolicyPrivate = {
             subject.setRequestHeader("user-agent", userAgent, false);
         }
 
-        if (Prefs.autoswitch_enabled && wnd && Utils.isRootWindow(wnd))
+        if (Prefs.autoswitch_enabled && browser && (!wnd || Utils.isRootWindow(wnd)))
         {
-          // Checks whether we need switch to IE 
+          // Checks whether we need switch to IE
           let isWindowURI = subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
           if (isWindowURI)
           {
-            let tab = Utils.getTabFromWindow(wnd);
+            let tab = Utils.getTabFromBrowser(browser);
             if (!tab || !tab.linkedBrowser) return;
 
             let browserNode = tab.linkedBrowser.QueryInterface(Ci.nsIDOMNode) || null;

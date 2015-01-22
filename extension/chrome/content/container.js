@@ -23,21 +23,12 @@ let FireIEContainer = {};
   let Cr = Components.results;
   let Cu = Components.utils;
   
-  function sendAsyncMessage(name, data)
-  {
-    let event = document.createEvent("CustomEvent");
-    event.initCustomEvent("fireie:sendAsyncMessage", true, true,
-    JSON.stringify({
-      name: name,
-      data: data
-    }));
-    window.dispatchEvent(event);
-  }
-  
-  if (!("@fireie.org/fireie/private;1" in Cc))
+  if (!("@fireie.org/fireie/public;1" in Cc))
   {
     // Might be in a content process, reload the page to get rid of it
-    sendAsyncMessage("fireie:reloadContainerPage");
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent("fireie:reloadContainerPage", true, true, "");
+    window.dispatchEvent(event);
     return;
   }
 

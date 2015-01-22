@@ -595,7 +595,7 @@ var Utils = {
   
   isRootWindow: function(win)
   {
-    return !win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow);
+    return !win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow);
   },
   
   generatorFromEnumerator: function(enumerator, nsInterface)
@@ -817,6 +817,34 @@ var Utils = {
     try
     {
       if (channel.loadGroup && channel.loadGroup.notificationCallbacks) return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+    }
+    catch (e)
+    {}
+
+    return null;
+  },
+  
+  /**
+   * Gets the XUL <browser> associated with a particular request (if any).
+   */
+  getRequestBrowser: function( /**nsIChannel*/ channel) /**nsIDOMWindow*/
+  {
+    try
+    {
+      let loadContext = null;
+      if (channel.notificationCallbacks) 
+        loadContext = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      else if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
+        loadContext = channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      
+      if (loadContext)
+      {
+        if (loadContext.topFrameElement && loadContext.topFrameElement.localName === "browser")
+          return loadContext.topFrameElement;
+        
+        let window = loadContext.associatedWindow;
+        return Utils.getTabFromWindow(window).linkedBrowser;
+      }
     }
     catch (e)
     {}

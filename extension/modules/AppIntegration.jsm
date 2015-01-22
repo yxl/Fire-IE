@@ -2507,6 +2507,7 @@ WindowWrapper.prototype = {
     if (mm)
     {
       mm.addMessageListener("fireie:reloadContainerPage", this);
+      mm.addMessageListener("fireie:shouldLoadInFrame", this);
       mm.loadFrameScript("chrome://fireie/content/frame.js", true);
     }
   },
@@ -2514,22 +2515,30 @@ WindowWrapper.prototype = {
   /**
    * nsIMessageListener
    */
-  receiveMessage: function(data)
+  receiveMessage: function(msg)
   {
-    switch (data.name)
+    let result = undefined;
+    
+    let browser = msg.target;
+    switch (msg.name)
     {
     case "fireie:reloadContainerPage":
-      let browser = data.target;
       if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
       {
         browser.loadURIWithFlags(browser.currentURI.spec,
           Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
       }
       break;
+    case "fireie:shouldLoadInFrame":
+      if (browser)
+        result = Policy.shouldLoadInBrowser(browser, msg.data);
+      break;
     default:
-      Utils.LOG("Unhandled message: " + data.name);
+      Utils.LOG("Unhandled message: " + msg.name);
       break;
     }
+    
+    return result;
   },
   
   _onIEDoAppCommand: function(event)
