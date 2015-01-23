@@ -361,6 +361,9 @@ WindowWrapper.prototype = {
     this.window.addEventListener("resize", this._bindMethod(this._onResize), false);
     this.window.gBrowser.tabContainer.addEventListener("TabSelect", this._bindMethod(this._onTabSelected), false);
     this.E("menu_EditPopup").addEventListener("popupshowing", this._bindMethod(this._updateEditMenuItems), false);
+    let panelUIPopup = this.E("PanelUI-popup");
+    if (panelUIPopup)
+      panelUIPopup.addEventListener("popupshowing", this._bindMethod(this._updatePanelUIItems), false);
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
     this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
@@ -588,6 +591,23 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("cmd_cut", pluginObject.CanCut);
       this._updateObjectDisabledStatus("cmd_copy", pluginObject.CanCopy);
       this._updateObjectDisabledStatus("cmd_paste", pluginObject.CanPaste);
+      this._updateObjectDisabledStatus("cmd_delete", pluginObject.CanDelete);
+      this._updateObjectDisabledStatus("cmd_selectAll", pluginObject.CanSelectAll);
+      this._updateObjectDisabledStatus("cmd_undo", pluginObject.CanUndo);
+      this._updateObjectDisabledStatus("cmd_redo", pluginObject.CanRedo);
+    }
+  },
+  
+  _updatePanelUIItems: function(e)
+  {
+    if (e.originalTarget != this.E("PanelUI-popup")) return;
+    let pluginObject = this.getContainerPlugin();
+    if (pluginObject)
+    {
+      this._updateObjectDisabledStatus("cmd_cut", pluginObject.CanCut);
+      this._updateObjectDisabledStatus("cmd_copy", pluginObject.CanCopy);
+      this._updateObjectDisabledStatus("cmd_paste", pluginObject.CanPaste);
+      this._updateObjectDisabledStatus("cmd_delete", pluginObject.CanDelete);
       this._updateObjectDisabledStatus("cmd_selectAll", pluginObject.CanSelectAll);
       this._updateObjectDisabledStatus("cmd_undo", pluginObject.CanUndo);
       this._updateObjectDisabledStatus("cmd_redo", pluginObject.CanRedo);
@@ -1597,6 +1617,13 @@ WindowWrapper.prototype = {
         if (!this._shouldHandleTextboxCommand())
           return false;
         pluginObject.Paste();
+        return true;
+      },
+      "cmd_delete": function(pluginObject)
+      {
+        if (!this._shouldHandleTextboxCommand())
+          return false;
+        pluginObject.Delete();
         return true;
       },
       "cmd_selectAll": function(pluginObject)

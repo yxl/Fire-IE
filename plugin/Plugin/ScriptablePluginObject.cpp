@@ -111,6 +111,12 @@ namespace Plugin
 			BOOLEAN_TO_NPVARIANT(canPaste, *result);
 			return true;
 		}
+		// readonly property {boolean} CanDelete
+		else if (name == NPI_ID(CanDelete)) {
+			BOOL canDelete = pMainWindow->GetCanDelete();
+			BOOLEAN_TO_NPVARIANT(canDelete, *result);
+			return true;
+		}
 		// readonly property {boolean} CanSelectAll
 		else if (name == NPI_ID(CanSelectAll))
 		{
@@ -323,6 +329,12 @@ namespace Plugin
 		{
 			TRACE ("Paste called!\n");
 			pMainWindow->Paste();
+			return true;
+		}
+		// void Delete()
+		else if (name == NPI_ID(Delete)) {
+			TRACE("Delete called!\n");
+			pMainWindow->Delete();
 			return true;
 		}
 		// void SelectAll()
