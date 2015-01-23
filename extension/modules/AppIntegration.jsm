@@ -2618,6 +2618,33 @@ WindowWrapper.prototype = {
     case "Print":
       this.goDoCommand("Print");
       break;
+    case "SendMail":
+      this.window.goDoCommand("Browser:SendLink");
+      break;
+    case "Copy":
+      this.goDoCommand("cmd_copy");
+      break;
+    case "Cut":
+      this.goDoCommand("cmd_cut");
+      break;
+    case "Paste":
+      this.goDoCommand("cmd_paste");
+      break;
+    case "Undo":
+      this.goDoCommand("cmd_undo");
+      break;
+    case "Redo":
+      this.goDoCommand("cmd_redo");
+      break;
+    case "Close":
+      this.window.goDoCommand("cmd_close");
+      break;
+    case "Find":
+      this.window.goDoCommand("cmd_find");
+      break;
+    default:
+      Utils.LOG("Unhandled App Command: " + cmd);
+      break;
     }
   },
 };

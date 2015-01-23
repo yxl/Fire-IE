@@ -433,6 +433,33 @@ void CIEHostWindow::OnAppCommand(CWnd* pWnd, UINT nCmd, UINT nDevice, UINT nKey)
 		case APPCOMMAND_PRINT:
 			cmdName = _T("Print");
 			break;
+		case APPCOMMAND_SEND_MAIL:
+			cmdName = _T("SendMail");
+			break;
+		case APPCOMMAND_COPY:
+			cmdName = _T("Copy");
+			break;
+		case APPCOMMAND_CUT:
+			cmdName = _T("Cut");
+			break;
+		case APPCOMMAND_DELETE:
+			cmdName = _T("Delete");
+			break;
+		case APPCOMMAND_PASTE:
+			cmdName = _T("Paste");
+			break;
+		case APPCOMMAND_UNDO:
+			cmdName = _T("Undo");
+			break;
+		case APPCOMMAND_REDO:
+			cmdName = _T("Redo");
+			break;
+		case APPCOMMAND_CLOSE:
+			cmdName = _T("Close");
+			break;
+		case APPCOMMAND_FIND:
+			cmdName = _T("Find");
+			break;
 		}
 
 		if (cmdName.GetLength())
