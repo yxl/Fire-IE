@@ -2508,7 +2508,8 @@ WindowWrapper.prototype = {
     let gContextMenu = this.window.gContextMenu;
     let hidden = !Prefs.showContextMenuItems ||
       (!gContextMenu.onLink && !gContextMenu.onPlainTextLink) ||
-      Utils.isFirefoxOnly(gContextMenu.linkURL);
+      Utils.isFirefoxOnly(gContextMenu.linkURL) ||
+      Utils.startsWith(gContextMenu.linkURL, "javascript:");
     this.E("fireie-context-sep-open").hidden = hidden;
     this.E("fireie-context-openlinkintabwithieengine").hidden = hidden;
     this.E("fireie-context-openlinkiniebrowser").hidden = hidden;
