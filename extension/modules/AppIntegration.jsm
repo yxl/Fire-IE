@@ -1135,8 +1135,15 @@ WindowWrapper.prototype = {
             let aWebProgress = mTabs[i].linkedBrowser.webProgress;
             let aRequest = Services.io.newChannelFromURI(mTabs[i].linkedBrowser.currentURI);
             let aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
-            aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-            aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
+            try
+            {
+              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
+              aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
+            }
+            catch (ex)
+            {
+              Utils.ERROR("Error calling WebProgressListeners: " + ex);
+            }
             mTabs[i].mProgress = aCurTotalProgress;
           }
         }
