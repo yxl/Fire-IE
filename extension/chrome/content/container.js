@@ -201,6 +201,9 @@ let FireIEContainer = {};
   {
     let title = event.detail;
     document.title = title;
+    
+    // Issue #140 workaround
+    syncURL();
   }
 
   /** Handler for the IE close tab event */
