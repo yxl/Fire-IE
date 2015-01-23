@@ -387,6 +387,8 @@ let ABPObserver = {
       let id = idArray[index];
       AddonManager.getAddonByID(id, function(addon)
       {
+        if (self._abpInstalled) return;
+        
         let installed = (addon != null && addon.isActive);
         if (installed)
         {
@@ -647,6 +649,7 @@ let ABPObserver = {
     window.addEventListener("IEABPLoadFailure", onABPLoadFailure, false);
     Prefs.addListener(onFireIEPrefChanged);
     AddonManager.addAddonListener(ABPAddonListener);
+    AddonManager.addInstallListener(ABPInstallListener);
   },
   
   _unregisterListeners: function()
@@ -656,6 +659,7 @@ let ABPObserver = {
     window.removeEventListener("IEABPLoadFailure", onABPLoadFailure, false);
     Prefs.removeListener(onFireIEPrefChanged);
     AddonManager.removeAddonListener(ABPAddonListener);
+    AddonManager.removeInstallListener(ABPInstallListener);
   },
   
   _onPrefChanged: function()
@@ -781,38 +785,55 @@ let ABPObserverPrivate = {
 let ABPAddonListener = {
   onEnabled: function(/* in Addon */addon)
   {
-    let blocker = adblockerMap[addon.id];
-    if (blocker && !ABPObserver.isInstalled())
+    Utils.runAsync(function()
     {
-      adblocker = blocker;
-      // Record localized name
-      adblocker.localizedName = addon.name;
-      Utils.runAsync(function()
+      if (!addon.isActive) return;
+      
+      let blocker = adblockerMap[addon.id];
+      if (blocker && !ABPObserver.isInstalled())
       {
+        adblocker = blocker;
+        // Record localized name
+        adblocker.localizedName = addon.name;
         ABPObserver._onABPEnable();
-      }, this);
-    }
+      }
+    }, this);
   },
   
   onDisabled: function(/* in Addon */addon)
   {
-    let blocker = adblockerMap[addon.id];
-    if (blocker && ABPObserver.isInstalled() && adblocker === blocker)
+    Utils.runAsync(function()
     {
-      Utils.runAsync(function()
-      {
+      let blocker = adblockerMap[addon.id];
+      if (blocker && ABPObserver.isInstalled() && adblocker === blocker)
         ABPObserver._onABPDisable();
-      }, this);
-    }
+    }, this);
   },
   
   onInstalled: function(/* in Addon */addon)
   {
-    this.onEnabled(addon);
+    if (addon.isActive)
+      this.onEnabled(addon);
   },
   
   onUninstalled: function(/* in Addon */addon)
   {
     this.onDisabled(addon);
+  }
+};
+
+/**
+ * Listen for addon install events
+ */
+
+let ABPInstallListener = {
+  onInstallEnded: function(/* in AddonInstall */install, /* in Addon */addon)
+  {
+    if (install.existingAddon)
+    {
+      ABPAddonListener.onDisabled(install.existingAddon);
+      if (addon.isActive)
+        ABPAddonListener.onEnabled(addon);
+    }
   }
 };
