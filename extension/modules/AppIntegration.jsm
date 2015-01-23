@@ -1110,23 +1110,34 @@ WindowWrapper.prototype = {
     let mTabs = this.window.gBrowser.mTabContainer.childNodes;
     for (let i = 0; i < mTabs.length; i++)
     {
-      if (mTabs[i].localName == "tab")
+      let tab = mTabs[i];
+      if (tab.localName == "tab")
       {
-        let pluginObject = this.getContainerPlugin(mTabs[i]);
+        let pluginObject = this.getContainerPlugin(tab);
         if (pluginObject)
         {
           let aCurTotalProgress = pluginObject.Progress;
-          if (aCurTotalProgress != mTabs[i].mProgress)
+          if (aCurTotalProgress != tab.mProgress)
           {
             const wpl = Ci.nsIWebProgressListener;
-            let aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
-            let aTabListener = this.window.gBrowser.mTabListeners[mTabs[i]._tPos];
-            let aWebProgress = mTabs[i].linkedBrowser.webProgress;
-            let aRequest = Services.io.newChannelFromURI(mTabs[i].linkedBrowser.currentURI);
-            let aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
-            aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-            aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
-            mTabs[i].mProgress = aCurTotalProgress;
+            let aMaxTotalProgress = 100;
+            let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
+            let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
+            let aWebProgress = tab.linkedBrowser.webProgress;
+            let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
+            let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
+            
+            if (!aStopped && !tab.mProgressStarted)
+              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
+            
+            aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0,
+              aCurTotalProgress == -1 ? 100 : aCurTotalProgress, aMaxTotalProgress);
+              
+            if (aStopped)
+              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
+            
+            tab.mProgress = aCurTotalProgress;
+            tab.mProgressStarted = !aStopped;
           }
         }
       }

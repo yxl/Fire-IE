@@ -1099,10 +1099,8 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 	if (m_bUtils)
 		return;
 
-	if (Progress == -1) 
-		Progress = ProgressMax;
-	if (ProgressMax > 0) 
-		m_iProgress = (100 * Progress) / ProgressMax; 
+	if (Progress >= 0 && ProgressMax > Progress) 
+		m_iProgress = (INT32)((INT64)(100 * Progress) / ProgressMax);
 	else 
 		m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
