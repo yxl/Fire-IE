@@ -201,6 +201,7 @@ public:
 	void Copy();
 	void Cut();
 	void Paste();
+	void Delete();
 	void SelectAll();
 	void Undo();
 	void Redo();
@@ -242,6 +243,7 @@ public:
 	BOOL GetCanCopy(){return IsOleCmdEnabled(OLECMDID_COPY);}
 	BOOL GetCanCut(){return IsOleCmdEnabled(OLECMDID_CUT);}
 	BOOL GetCanPaste(){return IsOleCmdEnabled(OLECMDID_PASTE);}
+	BOOL GetCanDelete(){return IsOleCmdEnabled(OLECMDID_DELETE);}
 	BOOL GetCanSelectAll(){return IsOleCmdEnabled(OLECMDID_SELECTALL);}
 	BOOL GetCanUndo(){return IsOleCmdEnabled(OLECMDID_UNDO);}
 	BOOL GetCanRedo(){return IsOleCmdEnabled(OLECMDID_REDO);}

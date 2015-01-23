@@ -43,6 +43,7 @@ namespace Plugin
 		NPI_DEF(Copy);
 		NPI_DEF(Cut);
 		NPI_DEF(Paste);
+		NPI_DEF(Delete);
 		NPI_DEF(SelectAll);
 		NPI_DEF(Undo);
 		NPI_DEF(Redo);
@@ -101,6 +102,7 @@ namespace Plugin
 		NPI_DEF(CanCopy);
 		NPI_DEF(CanCut);
 		NPI_DEF(CanPaste);
+		NPI_DEF(CanDelete);
 		NPI_DEF(CanSelectAll);
 		NPI_DEF(CanUndo);
 		NPI_DEF(CanRedo);
@@ -134,6 +136,7 @@ namespace Plugin
 			NPN_GSI_M(Copy);
 			NPN_GSI_M(Cut);
 			NPN_GSI_M(Paste);
+			NPN_GSI_M(Delete);
 			NPN_GSI_M(SelectAll);
 			NPN_GSI_M(Undo);
 			NPN_GSI_M(Redo);
@@ -186,6 +189,7 @@ namespace Plugin
 			NPN_GSI_P(CanCopy);
 			NPN_GSI_P(CanCut);
 			NPN_GSI_P(CanPaste);
+			NPN_GSI_P(CanDelete);
 			NPN_GSI_P(CanSelectAll);
 			NPN_GSI_P(CanUndo);
 			NPN_GSI_P(CanRedo);

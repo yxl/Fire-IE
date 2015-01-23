@@ -559,6 +559,11 @@ void CIEHostWindow::Paste()
 	ExecOleCmd(OLECMDID_PASTE);
 }
 
+void CIEHostWindow::Delete()
+{
+	ExecOleCmd(OLECMDID_DELETE);
+}
+
 void CIEHostWindow::SelectAll()
 {
 	ExecOleCmd(OLECMDID_SELECTALL);

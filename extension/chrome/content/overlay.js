@@ -402,7 +402,7 @@ var gFireIE = null;
           arguments[1] = pluginObject.Title;
           return RET.modifyArguments(arguments);
         }
-      }); // @todo Send mail?
+      });
       
       HM.hookCodeHead("PrintUtils.print", function() { if(gFireIE.goDoCommand('Print')) return RET.shouldReturn(); });
       HM.hookCodeHead("PrintUtils.showPageSetup", function() { if (gFireIE.goDoCommand('PrintSetup')) return RET.shouldReturn(); });
