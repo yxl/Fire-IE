@@ -119,6 +119,10 @@ var PolicyPrivate = {
     // Ignore whitelisted schemes
     if (!Policy.isSwitchableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
 
+    // Loading the container page in content process does not work.
+    // Let the page load - it should handle reloading itself.
+    if (ContentUtils.isIEEngine(location.spec)) return Ci.nsIContentPolicy.ACCEPT;
+    
     let window = null;
     try
     {

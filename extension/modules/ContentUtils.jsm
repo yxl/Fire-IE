@@ -30,6 +30,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 let ContentUtils = {
+  get containerUrl()
+  {
+    return "chrome://fireie/content/container.xhtml?url=";
+  },
+
   /**
    * Translates a string URI into its nsIURI representation, will return null for
    * invalid URIs.
@@ -107,6 +112,12 @@ let ContentUtils = {
       }
     };
     return this.getEffectiveHost(url);
+  },
+  
+  /** Whether url is IE engine container url */
+  isIEEngine: function(url)
+  {
+    return url.startsWith(this.containerUrl);
   },
 };
 
