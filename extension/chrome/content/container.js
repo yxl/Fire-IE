@@ -162,6 +162,7 @@ let FireIEContainer = {};
     window.addEventListener("IETitleChanged", onIETitleChanged, false);
     window.addEventListener("CloseIETab", onCloseIETab, false);
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.addEventListener("IERefresh", onIERefresh, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     window.addEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
@@ -177,6 +178,7 @@ let FireIEContainer = {};
     window.removeEventListener("IETitleChanged", onIETitleChanged, false);
     window.removeEventListener("CloseIETab", onCloseIETab, false);
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
+    window.removeEventListener("IERefresh", onIERefresh, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     window.removeEventListener("IEURLChanged", onIEURLChanged, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
@@ -219,6 +221,15 @@ let FireIEContainer = {};
   /** Handler for the IE document complete event */
 
   function onIEDocumentComplete(event)
+  {
+    syncURL();
+    syncFavicon();
+    syncTitle();
+    syncHistory();
+  }
+  
+  /** Handler for the IE refresh event */
+  function onIERefresh(event)
   {
     syncURL();
     syncFavicon();

@@ -1338,6 +1338,9 @@ void CIEHostWindow::OnDownloadComplete()
 		// Should reset find range, too
 		if (m_bFBInProgress)
 			FBResetFindRange();
+		// Notify Firefox
+		if (m_pPlugin)
+			m_pPlugin->OnRefresh();
 	}
 	else
 	{

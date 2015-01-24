@@ -158,6 +158,9 @@ namespace Plugin
 		// Send the page loaded message to the Firefox.
 		void OnDocumentComplete();
 
+		// Send refresh event to Firefox
+		void OnRefresh();
+
 		// Set the security info icon
 		void OnSetSecureLockIcon(const CString& description);
 

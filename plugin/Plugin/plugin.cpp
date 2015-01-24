@@ -719,6 +719,13 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
+	void CPlugin::OnRefresh()
+	{
+		CString strEventType = _T("IERefresh");
+		CString strDetail = _T("");
+		FireEvent(strEventType, strDetail);
+	}
+
 	void CPlugin::OnSetSecureLockIcon(const CString& description)
 	{
 		CString strEventType = _T("IESetSecureLockIcon");
