@@ -482,6 +482,11 @@ void CIEHostWindow::Refresh()
 	RunAsync([=] { OnRefresh(); });
 }
 
+void CIEHostWindow::RefreshSkipCache()
+{
+	RunAsync([=] { OnRefreshSkipCache(); });
+}
+
 void CIEHostWindow::Stop()
 {
 	RunAsync([=] { OnStop(); });
@@ -949,6 +954,22 @@ void CIEHostWindow::OnRefresh()
 		catch(...)
 		{
 			TRACE(_T("CIEHostWindow::Refresh failed!\n"));
+		}
+	}
+}
+
+void CIEHostWindow::OnRefreshSkipCache()
+{
+	if (m_ie.GetSafeHwnd())
+	{
+		try
+		{
+			CComVariant vLevel = REFRESH_COMPLETELY;
+			m_ie.Refresh2(&vLevel);
+		}
+		catch(...)
+		{
+			TRACE(_T("CIEHostWindow::RefreshSkipCache failed!\n"));
 		}
 	}
 }

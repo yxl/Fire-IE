@@ -1584,6 +1584,11 @@ WindowWrapper.prototype = {
         pluginObject.Refresh();
         return true;
       },
+      "RefreshSkipCache": function(pluginObject)
+      {
+        pluginObject.RefreshSkipCache();
+        return true;
+      },
       "SaveAs": function(pluginObject)
       {
         pluginObject.SaveAs();

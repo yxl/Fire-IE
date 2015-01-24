@@ -140,6 +140,7 @@ protected:
 	// Self-defined (asynchronous) browser command callbacks
 	void OnNavigate();
 	void OnRefresh();
+	void OnRefreshSkipCache();
 	void OnStop();
 	void OnBack();
 	void OnForward();
@@ -193,6 +194,7 @@ public:
 	// plugin methods
 	void Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders);
 	void Refresh();
+	void RefreshSkipCache();
 	void Stop();
 	void Back();
 	void Forward();

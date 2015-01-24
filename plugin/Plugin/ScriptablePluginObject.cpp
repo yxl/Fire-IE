@@ -282,6 +282,13 @@ namespace Plugin
 			pMainWindow->Refresh();
 			return true;
 		}
+		// void RefreshSkipCache()
+		else if (name == NPI_ID(RefreshSkipCache))
+		{
+			TRACE ("RefreshSkipCache called!\n");
+			pMainWindow->RefreshSkipCache();
+			return true;
+		}
 		// void Stop()
 		else if (name == NPI_ID(Stop))
 		{

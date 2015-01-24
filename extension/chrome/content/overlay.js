@@ -381,7 +381,7 @@ var gFireIE = null;
       HM.hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return RET.shouldReturn(); });
       HM.hookCodeHead("BrowserStop", function() { if (gFireIE.goDoCommand('Stop')) return RET.shouldReturn(); });
       HM.hookCodeHead("BrowserReload", function() { if (gFireIE.goDoCommand('Refresh')) return RET.shouldReturn(); });
-      HM.hookCodeHead("BrowserReloadSkipCache", function() { if (gFireIE.goDoCommand('Refresh')) return RET.shouldReturn(); });
+      HM.hookCodeHead("BrowserReloadSkipCache", function() { if (gFireIE.goDoCommand('RefreshSkipCache')) return RET.shouldReturn(); });
       HM.hookCodeHead("saveDocument", function() { if (gFireIE.goDoCommand('SaveAs')) return RET.shouldReturn(); });
       HM.hookCodeHead("MailIntegration.sendMessage", function()
       {

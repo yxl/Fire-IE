@@ -36,6 +36,7 @@ namespace Plugin
 		// methods
 		NPI_DEF(Navigate);
 		NPI_DEF(Refresh);
+		NPI_DEF(RefreshSkipCache);
 		NPI_DEF(Stop);
 		NPI_DEF(Back);
 		NPI_DEF(Forward);
@@ -129,6 +130,7 @@ namespace Plugin
 			// methods
 			NPN_GSI_M(Navigate);
 			NPN_GSI_M(Refresh);
+			NPN_GSI_M(RefreshSkipCache);
 			NPN_GSI_M(Stop);
 			NPN_GSI_M(Back);
 			NPN_GSI_M(Forward);
