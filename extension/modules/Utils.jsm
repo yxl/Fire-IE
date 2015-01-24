@@ -367,6 +367,11 @@ var Utils = {
     return "chrome://fireie/content/switchJumper.xhtml?url=";
   },
   
+  get fakeUrl()
+  {
+    return "chrome://fireie/content/fake.html?url=";
+  },
+  
   /** Whether url is IE engine container url */
   isIEEngine: function(url)
   {
@@ -376,6 +381,11 @@ var Utils = {
   isSwitchJumper: function(url)
   {
     return Utils.startsWith(url, Utils.switchJumperUrl);
+  },
+  
+  isFake: function(url)
+  {
+    return Utils.startsWith(url, Utils.fakeUrl);
   },
   
   toPrefixedUrl: function(url, prefix)
@@ -418,7 +428,7 @@ var Utils = {
   
   fromAnyPrefixedUrl: function(url)
   {
-    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl];
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
     for (let i = 0, l = prefixes.length; i < l; i++)
     {
       let prefix = prefixes[i];
@@ -426,6 +436,12 @@ var Utils = {
         return Utils.fromPrefixedUrl(url, prefix);
     }
     return url;
+  },
+  
+  isPrefixedUrl: function(url)
+  {
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
+    return prefixes.some(function(prefix) Utils.startsWith(url, prefix));
   },
   
   /** Converts URL into IE Engine URL */
@@ -448,6 +464,16 @@ var Utils = {
   fromSwitchJumperUrl: function(url)
   {
     return Utils.fromPrefixedUrl(url, Utils.switchJumperUrl);
+  },
+  
+  toFakeUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  fromFakeUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.fakeUrl);
   },
 
   get containerPluginId()

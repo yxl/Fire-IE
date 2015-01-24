@@ -152,7 +152,7 @@ var gFireIE = null;
     {
       HM.hookCodeHead("E10SUtils.shouldBrowserBeRemote", function(url)
       {
-        if (Utils.isIEEngine(url) || Utils.isSwitchJumper(url))
+        if (Utils.isPrefixedUrl(url))
           return RET.shouldReturn(false);
       });
     }
@@ -211,7 +211,7 @@ var gFireIE = null;
       identityBox.addEventListener("keypress", displaySecurityInfoHandler, true);
       identityBox.addEventListener("dragstart", function(event)
       {
-        if (gFireIE.isIEEngine() || gFireIE.isSwitchJumper())
+        if (gFireIE.hasPrefixedUrl())
         {
           if (gURLBar.getAttribute("pageproxystate") != "valid") {
             return;
@@ -241,7 +241,11 @@ var gFireIE = null;
     // caused by the new hook mechanism
     let delayedCheckTab = function(tab)
     {
-      setTimeout(function() { if (gFireIE.isIEEngine(tab) || gFireIE.isSwitchJumper(tab)) doLazyHooks(); }, 0);
+      setTimeout(function()
+      {
+        if (gFireIE.hasPrefixedUrl(tab))
+          doLazyHooks();
+      }, 0);
     };
     let lazyHookTabOpenHandler = function(e)
     {
@@ -582,7 +586,7 @@ var gFireIE = null;
       {
         if (aBrowser)
           setUseRealURI(aBrowser);
-        if (Utils.isIEEngine(aURI.spec) || Utils.isSwitchJumper(aURI.spec))
+        if (Utils.isPrefixedUrl(aURI.spec))
         {
           arguments[0] = Utils.makeURI(Utils.fromAnyPrefixedUrl(aURI.spec));
           return RET.modifyArguments(arguments);
@@ -700,9 +704,9 @@ var gFireIE = null;
         return RET.modifyValue(Utils.makeURI(url));
       }
     }
-    else if (Utils.isSwitchJumper(uri.spec) && this.FireIE_bUseRealURI)
+    else if (this.FireIE_bUseRealURI && (Utils.isSwitchJumper(uri.spec) || Utils.isFake(uri.spec)))
     {
-      let url = Utils.fromSwitchJumperUrl(uri.spec);
+      let url = Utils.fromAnyPrefixedUrl(uri.spec);
       return RET.modifyValue(Utils.makeURI(url));
     }
   };
@@ -758,15 +762,9 @@ var gFireIE = null;
       
       Utils.runAsync(gFireIE.updateButtonStatus, gFireIE);
 
-      if (Utils.isIEEngine(arguments[0]))
+      if (Utils.isPrefixedUrl(arguments[0]))
       {
-        arguments[0] = Utils.fromContainerUrl(arguments[0]);
-        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
-        return RET.modifyArguments(arguments);
-      }
-      else if (Utils.isSwitchJumper(arguments[0]))
-      {
-        arguments[0] = Utils.fromSwitchJumperUrl(arguments[0]);
+        arguments[0] = Utils.fromAnyPrefixedUrl(arguments[0]);
         if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
       }

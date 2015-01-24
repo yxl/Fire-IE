@@ -808,36 +808,51 @@ WindowWrapper.prototype = {
     return Prefs.autoswitch_enabled && Prefs.autoSwitchBackEnabled && Policy.checkEngineExceptionalRule(url);
   },
   
-  /** Check whether current engine is IE.*/
-  isIEEngine: function(aTab)
+  _checkTabURL: function(aTab, checkerFunc)
   {
-    let tab = aTab || this.window.gBrowser.mCurrentTab;
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.isIEEngine(aBrowser.currentURI.spec))
+    if (aBrowser && aBrowser.currentURI && checkerFunc.call(Utils, aBrowser.currentURI.spec))
     {
       return true;
     }
     return false;
+  },
+  
+  /** Check whether current engine is IE.*/
+  isIEEngine: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isIEEngine);
   },
   
   /** Check whether current page is a switch jumper.*/
   isSwitchJumper: function(aTab)
   {
-    let tab = aTab || this.window.gBrowser.mCurrentTab;
-    let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.isSwitchJumper(aBrowser.currentURI.spec))
-    {
-      return true;
-    }
-    return false;
+    return this._checkTabURL(aTab, Utils.isSwitchJumper);
+  },
+  
+  /** Check whether current page is faked.*/
+  isFake: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isFake);
+  },
+  
+  /** Check whether current page has a prefixed URL.*/
+  hasPrefixedUrl: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isPrefixedUrl);
   },
   
   _addNewTab: function(where, related)
   {
     var gBrowser = this.window.gBrowser;
+    
+    // Hack: make sure the new tab is loaded in chrome process, to make e10s nightly happy
+    let url = Utils.toFakeUrl("about:blank");
+    
     // it is highly probable that the new tab is related to current
-    let newTab = gBrowser.addTab("about:blank",
-      { relatedToCurrent: related === undefined || related });
+    let newTab = gBrowser.addTab(url, {
+      relatedToCurrent: related === undefined || related
+    });
 
     let loadInBackground = Utils.shouldLoadInBackground();
     
@@ -989,7 +1004,8 @@ WindowWrapper.prototype = {
       this._setManuallySwitchFlag(newTab, url);
 
       // and then load the actual url
-      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT |
+                  Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
       try
       {
         if (!isIEEngine)
@@ -2089,7 +2105,7 @@ WindowWrapper.prototype = {
   {
     try
     {
-      if (this.isSwitchJumper())
+      if (this.isSwitchJumper() || this.isFake())
       {
         this._setSecureLockIcon("Unsecure");
         return true;
@@ -2382,9 +2398,10 @@ WindowWrapper.prototype = {
     this._updateInterface();
 
     let url = doc.defaultView.location.href;
-    if (url == "about:blank" || Utils.isSwitchJumper(url))
+    if (url == "about:blank" || Utils.isSwitchJumper(url) || Utils.isFake(url))
     {
-      // might be the switch jumper from IE to FF, ignore zooming on this page
+      // might be the switch jumper from IE to FF or our custom faked page,
+      // ignore zooming on this page
       return;
     }
     
