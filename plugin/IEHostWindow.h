@@ -277,6 +277,9 @@ protected:
 	// Cache recent status text
 	CString m_strStatusText;
 
+	// Cache recent page title
+	CString m_strTitle;
+
 	// Find Bar states
 	bool m_bFBInProgress;
 	bool m_bFBHighlight;
