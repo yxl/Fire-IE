@@ -46,6 +46,7 @@
 #include "ScriptablePluginObject.h"
 #include "json/json.h"
 #include "OS.h"
+#include "App.h"
 #include "comfix.h"
 
 #ifdef DEBUG
@@ -783,7 +784,7 @@ namespace Plugin
 #ifdef DEBUG
 		test::doTest();
 #endif
-		if (COMFix::ifNeedFix())
+		if (Utils::App::GetApplication() != Utils::App::OOPP && COMFix::ifNeedFix())
 			COMFix::doFix();
 
 		CString strEventType = _T("IEUtilsPluginInitialized");
