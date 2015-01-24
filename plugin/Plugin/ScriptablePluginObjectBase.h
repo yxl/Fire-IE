@@ -94,6 +94,7 @@ namespace Plugin
 }
 
 char* CStringToNPStringCharacters(const CString &str);
+CString NPStringCharactersToCString(const NPUTF8* npstrchars);
 CString NPStringToCString(NPString npstr);
 CString NPIdentifierToCString(NPIdentifier npid);
 unordered_map<wstring, wstring> NPObjectToUnorderedMap(NPP npp, NPObject* npobj);

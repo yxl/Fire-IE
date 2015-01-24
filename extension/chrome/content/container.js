@@ -486,5 +486,13 @@ let FireIEContainer = {};
     let gFireIE = getGFireIE();
     let zoomLevel = gFireIE ? (gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) || 1) : 1;
     return zoomLevel * Utils.DPIScaling;
-  }
+  };
+  
+  // Fast event dispatching, in order to reduce inter-process communication
+  FireIEContainer.dispatchEvent = function(type, detail)
+  {
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent(type, true, true, detail);
+    E(Utils.containerPluginId).dispatchEvent(event);
+  };
 })();

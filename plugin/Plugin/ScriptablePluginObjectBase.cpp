@@ -177,6 +177,12 @@ char* CStringToNPStringCharacters(const CString &str)
 	return utf8str;
 }
 
+CString NPStringCharactersToCString(const NPUTF8* npstrchars)
+{
+	NPString npstr = { npstrchars, (uint32_t)strlen(npstrchars) };
+	return NPStringToCString(npstr);
+}
+
 CString NPStringToCString(NPString npstr)
 {
 	USES_CONVERSION_EX;

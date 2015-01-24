@@ -132,12 +132,6 @@ namespace Plugin
 		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId);
 
 		/** 
-		 * Sets Firefox Cookie using NPAPI
-		 * @param strCookie Cookie http header string
-		 */
-		void SetURLCookie(const CString& strURL, const CString& strCookie);
-
-		/** 
 		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
 		 * @param ulId The ID of the CIEHostWindow object.
 		 * @param strURL The page URL to be loaded in the new tab.
@@ -193,6 +187,25 @@ namespace Plugin
 
 		// Whether this is a utils plugin (or a content plugin)
 		bool m_bIsUtilsPlugin;
+
+	private:
+		// Caches for commonly-used objects
+		mutable NPObject* m_pWindow;
+		mutable NPObject* m_pContainer;
+		mutable NPObject* m_pDocument;
+		mutable NPObject* m_pPlugin;
+
+		NPObject* GetWindowPropertyObject(const NPUTF8* szPropertyName) const;
+		NPObject* GetEnvironmentObject(NPNVariable variable, const TCHAR* szDescription) const;
+
+		NPObject* GetWindow() const;
+		NPObject* GetContainer() const;
+		NPObject* GetDocument() const;
+		NPObject* GetPlugin() const;
+
+		typedef std::string utf8string;
+		static std::unordered_map<utf8string, NPIdentifier> s_mapIdentifierCache;
+		static NPIdentifier GetIdentifier(const NPUTF8* npcharsId);
 	};
 
 }
