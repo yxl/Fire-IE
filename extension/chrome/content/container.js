@@ -493,6 +493,6 @@ let FireIEContainer = {};
   {
     let event = document.createEvent("CustomEvent");
     event.initCustomEvent(type, true, true, detail);
-    E(Utils.containerPluginId).dispatchEvent(event);
+    return E(Utils.containerPluginId).dispatchEvent(event);
   };
 })();

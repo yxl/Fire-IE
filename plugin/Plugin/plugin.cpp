@@ -67,9 +67,7 @@ namespace Plugin
 		m_pScriptableObject(NULL),
 		m_pIEHostWindow(NULL),
 		m_pWindow(NULL),
-		m_pContainer(NULL),
-		m_pDocument(NULL),
-		m_pPlugin(NULL)
+		m_pContainer(NULL)
 	{
 		USES_CONVERSION_EX;
 		// <html:embed id='fireie-utils-object' type='application/fireie' hidden='true' width='0' height='0'/>
@@ -106,10 +104,6 @@ namespace Plugin
 			NPN_ReleaseObject(m_pWindow);
 		if (m_pContainer)
 			NPN_ReleaseObject(m_pContainer);
-		if (m_pDocument)
-			NPN_ReleaseObject(m_pDocument);
-		if (m_pPlugin)
-			NPN_ReleaseObject(m_pPlugin);
 	}
 
 	NPObject* CPlugin::GetWindowPropertyObject(const NPUTF8* szPropertyName) const
@@ -164,24 +158,6 @@ namespace Plugin
 
 		m_pContainer = GetWindowPropertyObject(RES_CONTAINER);
 		return m_pContainer;
-	}
-
-	NPObject* CPlugin::GetDocument() const
-	{
-		if (m_pDocument)
-			return m_pDocument;
-
-		m_pDocument = GetWindowPropertyObject("document");
-		return m_pDocument;
-	}
-
-	NPObject* CPlugin::GetPlugin() const
-	{
-		if (m_pPlugin)
-			return m_pPlugin;
-
-		m_pPlugin = GetEnvironmentObject(NPNVPluginElementNPObject, _T("plugin element"));
-		return m_pPlugin;
 	}
 
 	NPIdentifier CPlugin::GetIdentifier(const NPUTF8* npcharsId)
@@ -529,9 +505,7 @@ namespace Plugin
 
 	// This function is equivalent to the following JavaScript function:
 	// function FireEvent(strEventType, strDetail) {
-	//   var event = document.createEvent("CustomEvent");
-	//   event.initCustomEvent(strEventType, true, true, strDetail);
-	//   pluginObject.dispatchEvent(event);
+	//   FireIEContainer.dispatchEvent(strEventType, strDetail)
 	// }
 	// 
 	// Uses following JavaScript code to listen to the event fired:
@@ -540,112 +514,40 @@ namespace Plugin
 	// }
 	BOOL CPlugin::FireEvent(const CString &strEventType, const CString &strDetail)
 	{
-		BOOL bOK = FALSE;
-
-		if (!m_bIsUtilsPlugin)
-		{
-			// Fast event dispatching, requires helper function in container object
-			try
-			{
-				// FireIEContainer.dispatchEvent(strEventType, strDetail)
-				NPObject* pContainer = GetContainer();
-				NPVariant args[2];
-				STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strEventType), args[0]);
-				STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strDetail), args[1]);
-				NPVariant vSucceeded;
-				VOID_TO_NPVARIANT(vSucceeded);
-
-				bOK = NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier("dispatchEvent"), args, 2, &vSucceeded);
-				
-				for (int i = 0; i < 2; i++)
-					NPN_ReleaseVariantValue(&args[i]);
-
-				if (!bOK || !NPVARIANT_IS_BOOLEAN(vSucceeded))
-				{
-					NPN_ReleaseVariantValue(&vSucceeded);
-					throw CString(_T("Cannot invoke dispatchEvent"));
-				}
-				bool bSucceeded = NPVARIANT_TO_BOOLEAN(vSucceeded);
-				NPN_ReleaseVariantValue(&vSucceeded);
-				if (!bSucceeded)
-					throw CString(_T("Event dispatch failed"));
-
-				return TRUE;
-			}
-			catch (const CString& strMessage)
-			{
-				UNUSED(strMessage);
-				TRACE(_T("[CPlugin::FireEvent Exception] Fast event dispatching failed: %s\n"), strMessage);
-				return FALSE;
-			}
-		}
-
-		bOK = FALSE;
-		NPVariant vEvent;
-		VOID_TO_NPVARIANT(vEvent);
-		NPObject *pEvent = NULL;
-
+		// Fast event dispatching, requires helper function in container object
 		try
 		{
-			// var event = document.createEvent("CustomEvent");
-			NPObject* pDocument = GetDocument();
-			NPVariant arg;
-			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(_T("CustomEvent")), arg);
-			bOK = NPN_Invoke(m_pNPInstance, pDocument, GetIdentifier("createEvent"), &arg, 1, &vEvent);
-			NPN_ReleaseVariantValue(&arg);
-			if (!NPVARIANT_IS_OBJECT(vEvent) || !bOK)
-			{
-				throw CString(_T("Cannot invoke document.createEvent"));
-			}
-			
-			pEvent = NPVARIANT_TO_OBJECT(vEvent);
-			if (!pEvent)
-				throw CString(_T("event is null"));
-
-			// event.initCustomEvent(strEventType, true, true, strDetail);
-			NPVariant args[4];
+			// FireIEContainer.dispatchEvent(strEventType, strDetail);
+			NPObject* pContainer = GetContainer();
+			NPVariant args[2];
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strEventType), args[0]);
-			BOOLEAN_TO_NPVARIANT(true, args[1]);
-			BOOLEAN_TO_NPVARIANT(true, args[2]);
-			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strDetail), args[3]);
-			NPVariant vResult;
-			VOID_TO_NPVARIANT(vResult);
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strDetail), args[1]);
+			NPVariant vSucceeded;
+			VOID_TO_NPVARIANT(vSucceeded);
 
-			bOK = NPN_Invoke(m_pNPInstance, pEvent, GetIdentifier("initCustomEvent"), args, 4, &vResult);
-
-			for (int i = 0; i < 4; i++)
+			BOOL bOK = NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier("dispatchEvent"), args, 2, &vSucceeded);
+				
+			for (int i = 0; i < 2; i++)
 				NPN_ReleaseVariantValue(&args[i]);
-			NPN_ReleaseVariantValue(&vResult);
 
-			if (!bOK)
-				throw CString(_T("Cannot invoke event.initCustomEvent"));
-
-			// get plugin object
-			NPObject* pPlugin = GetPlugin();
-
-			// pluginObject.dispatchEvent(event);
-			NPVariant vNotCanceled;
-			VOID_TO_NPVARIANT(vNotCanceled);
-			bOK = NPN_Invoke(m_pNPInstance, pPlugin, GetIdentifier("dispatchEvent"), &vEvent, 1, &vNotCanceled);
-			
-			if (!bOK || !NPVARIANT_IS_BOOLEAN(vNotCanceled)) 
+			if (!bOK || !NPVARIANT_IS_BOOLEAN(vSucceeded))
 			{
-				NPN_ReleaseVariantValue(&vNotCanceled);
+				NPN_ReleaseVariantValue(&vSucceeded);
 				throw CString(_T("Cannot invoke dispatchEvent"));
 			}
-			bool bNotCanceled = NPVARIANT_TO_BOOLEAN(vNotCanceled);
-			NPN_ReleaseVariantValue(&vNotCanceled);
-			if (!bNotCanceled)
-				throw CString(_T("Event is canceled"));
+			bool bSucceeded = NPVARIANT_TO_BOOLEAN(vSucceeded);
+			NPN_ReleaseVariantValue(&vSucceeded);
+			if (!bSucceeded)
+				throw CString(_T("Event dispatch failed"));
+
+			return TRUE;
 		}
 		catch (const CString& strMessage)
 		{
 			UNUSED(strMessage);
-			TRACE(_T("[CPlugin::FireEvent Exception] %s\n"), strMessage);
-			bOK = FALSE;
+			TRACE(_T("[CPlugin::FireEvent Exception] Fast event dispatching failed: %s\n"), strMessage);
+			return FALSE;
 		}
-		if (!NPVARIANT_IS_VOID(vEvent))	NPN_ReleaseVariantValue(&vEvent);
-		return bOK;
 	}
 
 	double CPlugin::GetZoomLevel()

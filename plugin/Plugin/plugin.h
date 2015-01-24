@@ -192,16 +192,12 @@ namespace Plugin
 		// Caches for commonly-used objects
 		mutable NPObject* m_pWindow;
 		mutable NPObject* m_pContainer;
-		mutable NPObject* m_pDocument;
-		mutable NPObject* m_pPlugin;
 
 		NPObject* GetWindowPropertyObject(const NPUTF8* szPropertyName) const;
 		NPObject* GetEnvironmentObject(NPNVariable variable, const TCHAR* szDescription) const;
 
 		NPObject* GetWindow() const;
 		NPObject* GetContainer() const;
-		NPObject* GetDocument() const;
-		NPObject* GetPlugin() const;
 
 		typedef std::string utf8string;
 		static std::unordered_map<utf8string, NPIdentifier> s_mapIdentifierCache;

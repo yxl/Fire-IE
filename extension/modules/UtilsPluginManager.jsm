@@ -74,6 +74,7 @@ let UtilsPluginManager = {
     this._isInitCalled = true;
     
     this._isRunningOOP = Utils.isOOPP;
+    this._injectEventDispatchHelper();
     this._handlePluginEvents();
     this._install();
     this._registerHandlers();
@@ -153,6 +154,24 @@ let UtilsPluginManager = {
       setter();
   },
 
+  _injectEventDispatchHelper: function()
+  {
+    let window = Utils.getHiddenWindow();
+    window = window.wrappedJSObject || window;
+    let document = window.document;
+    window.FireIEContainer = Cu.cloneInto({
+      dispatchEvent: function(type, detail)
+      {
+        let event = document.createEvent("CustomEvent");
+        event.initCustomEvent(type, true, true, detail);
+        let plugin = document.getElementById(Utils.utilsPluginId);
+        return plugin.dispatchEvent(event);
+      }
+    }, window, {
+      cloneFunctions: true
+    });
+  },
+  
   _handlePluginEvents: function()
   {
     let window = Utils.getHiddenWindow();
