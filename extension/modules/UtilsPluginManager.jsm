@@ -54,6 +54,11 @@ let UtilsPluginManager = {
   _isRunningOOP: false,
   
   /**
+   * Whether our plugin is being reloaded
+   */
+  _isReloading: false,
+  
+  /**
    * Keep a list of pref setters, which will be called upon plugin initialization
    */
   _prefSetters: [],
@@ -244,6 +249,9 @@ let UtilsPluginManager = {
   
   _installPlugin: function()
   {
+    // Record OOPP state before installing the plugin
+    this._isRunningOOP = Utils.isOOPP;
+    
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.setAttribute("id", Utils.utilsPluginId);
@@ -263,6 +271,14 @@ let UtilsPluginManager = {
     {
       this.isPluginInitialized = true;
       this._setPluginPrefs();
+      
+      // Tell tabs in IE engine to reload
+      if (this._isReloading)
+      {
+        this._isReloading = false;
+        Services.obs.notifyObservers(null, "fireie-reload-plugin", null);
+        Utils.LOG("Reloaded plugin process.");
+      }
     }, this, [], true);
     
     this._reinstallPlugin();
@@ -272,7 +288,11 @@ let UtilsPluginManager = {
   {
     let plugin = this.getPlugin();
     plugin.parentElement.removeChild(plugin);
-    this._installPlugin();
+    Utils.runAsyncTimeout(function()
+    {
+      IECookieManager.changeIETempDirectorySetting();
+      this._installPlugin();
+    }, this, 300);
   },
   
   _registerHandlers: function()
@@ -350,7 +370,41 @@ let UtilsPluginManager = {
         plugin.RemoveNewWindow(attr.id);
       tab.removeAttribute("fireieNavigateParams");
     }
-  }
+  },
+    
+  /**
+   * In OOPP mode, we can reload the plugin process to apply changes to IE compatibility mode
+   */
+  reloadPluginProcess: function()
+  {
+    if (!this._isRunningOOP) return;
+    
+    this._isReloading = true;
+    let plugin = this.getPlugin();
+    if (plugin)
+    {
+      try
+      {
+        // It will throw because the plugin process exits.
+        // Just ignore the error.
+        plugin.ExitProcess();
+      }
+      catch (ex)
+      {}
+      
+      checkPluginCrash();
+    }
+  },
+  
+  get isReloading()
+  {
+    return this._isReloading;
+  },
+  
+  get isRunningOOP()
+  {
+    return this._isRunningOOP;
+  },
 };
 
 function onPluginBindingAttached(event)
@@ -476,7 +530,9 @@ function checkPluginCrash()
   if (!UtilsPluginManager.isPluginInitialized || UtilsPluginManager.getPlugin().Alive)
     return;
 
-  Utils.ERROR("Plugin crashed, attempting to resume...");
+  // Don't panic if we are just intentionally reloading the plugin
+  if (!UtilsPluginManager.isReloading)
+    Utils.ERROR("Plugin crashed, attempting to resume...");
   UtilsPluginManager.reinstall();
 }
 

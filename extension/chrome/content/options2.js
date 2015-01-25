@@ -22,6 +22,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 Cu.import(baseURL.spec + "AppIntegration.jsm");
 Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
 Cu.import(baseURL.spec + "ABPObserver.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -71,6 +72,7 @@ Options.restoreDefaultSettings = function()
 Options.apply = function(quiet)
 {
   let requiresRestart = false;
+  let requiresPluginRestart = false;
 
   // General
   Prefs.handleUrlBar = E("handleurl").checked;
@@ -108,7 +110,7 @@ Options.apply = function(quiet)
   Prefs.historyEnabled = E("historyEnabled").checked;
   let newRedirect = E("disableFolderRedirection").checked;
   if (Prefs.disableFolderRedirection != newRedirect)
-    requiresRestart = true;
+    requiresPluginRestart = true;
   Prefs.disableFolderRedirection = newRedirect;
   
   // IE compatibility mode
@@ -120,7 +122,7 @@ Options.apply = function(quiet)
   }
   if (Prefs.compatMode != newMode)
   {
-    requiresRestart = true;
+    requiresPluginRestart = true;
     Prefs.compatMode = newMode;
     Options.applyIECompatMode();
   }
@@ -129,18 +131,33 @@ Options.apply = function(quiet)
   let newGPURendering = E("gpuRendering").checked;
   if (Prefs.gpuRendering != newGPURendering)
   {
-    requiresRestart = true;
+    requiresPluginRestart = true;
     Prefs.gpuRendering = newGPURendering;
     Options.applyGPURenderingState();
   }
 
   //update UI
   Options.updateApplyButton(false);
+  
+  if (requiresPluginRestart)
+  {
+    // Prompt user for reloading the plugin process
+    let ifReload = UtilsPluginManager.isRunningOOP && !quiet &&
+      Utils.confirm(window,
+        Utils.getString("fireie.options.alert.restartPluginProcess"),
+        Utils.getString("fireie.options.alert.title"));
+
+    if (ifReload)
+      UtilsPluginManager.reloadPluginProcess();
+    else
+      requiresRestart = true;
+  }
 
   //notify of restart requirement
   if (requiresRestart && !quiet)
   {
-    Utils.alert(window, Utils.getString("fireie.options.alert.restart"), Utils.getString("fireie.options.alert.title"));
+    Utils.alert(window, Utils.getString("fireie.options.alert.restart"),
+                        Utils.getString("fireie.options.alert.title"));
   }
 };
 
@@ -332,7 +349,8 @@ Options.updateIEModeTab = function(restore)
   E("iecompat").hidden = false;
   
   E("iemodeNotSupported").hidden = true;
-  E("iemodeRestartDescr").hidden = false;
+  E("iemodeRestartDescr").hidden = UtilsPluginManager.isRunningOOP;
+  E("iemodeReloadDescr").hidden = !UtilsPluginManager.isRunningOOP;
   
   // do not attempt to get values from registry if we are restoring default
   if (!restore)
@@ -423,9 +441,10 @@ Options.initDialog = function(restore)
   {
     E("disableFolderRedirection").hidden = true;
   }
-  if (E("disableFolderRedirection").hidden)
+  if (!E("disableFolderRedirection").hidden)
   {
-    E("integrationRestartDescr").hidden = true;
+    E("integrationRestartDescr").hidden = UtilsPluginManager.isRunningOOP;
+    E("integrationReloadDescr").hidden = !UtilsPluginManager.isRunningOOP;
   }
 
   // IE Compatibility Mode
@@ -519,7 +538,7 @@ Options.close = function()
   {
     if (Utils.confirm(window, Utils.getString("fireie.options.alert.modified"), Utils.getString("fireie.options.alert.title")))
     {
-      Options.apply(true);
+      Options.apply();
     }
   }
 };

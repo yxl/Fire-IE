@@ -86,4 +86,4 @@
 <!ENTITY fireie.options.import "导入选项文件">
 <!ENTITY fireie.options.export "导出选项文件">
 <!ENTITY fireie.options.restart.descr "重启火狐生效。">
-
+<!ENTITY fireie.options.reload.descr "重新加载“Fire IE DLL”插件后生效。">

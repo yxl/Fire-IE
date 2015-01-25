@@ -92,18 +92,26 @@ function init()
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
   
-  // observer to listen to the "fireie-reload-prefs" notification
-  let reloadObserver = {
+  // genereal event observer for "fireie-*" events
+  let generalObserver = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
     
     observe: function(subject, topic, data)
     {
-      if (topic == "fireie-reload-prefs")
+      switch (topic)
+      {
+      case "fireie-reload-prefs":
         reloadPrefs();
+        break;
+      case "fireie-reload-plugin":
+        reloadTabs();
+        break;
+      };
     }
   };
   
-  Services.obs.addObserver(reloadObserver, "fireie-reload-prefs", false);
+  Services.obs.addObserver(generalObserver, "fireie-reload-prefs", false);
+  Services.obs.addObserver(generalObserver, "fireie-reload-plugin", false);
 }
 
 /**
@@ -403,6 +411,14 @@ WindowWrapper.prototype = {
     return allow;
   },
   
+  _forEachTab: function(callback)
+  {
+    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
+    for (let i = 0; i < mTabs.length; i++)
+      if (mTabs[i].localName == "tab")
+        callback.call(this, mTabs[i], i);
+  },
+  
   /**
    * Update favicon for the specified tab
    */
@@ -427,12 +443,29 @@ WindowWrapper.prototype = {
    */
   updateFavicons: function()
   {
-    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
-    for (let i = 0; i < mTabs.length; i++)
-      if (mTabs[i].localName == "tab")
-        this._updateFaviconForTab(mTabs[i]);
+    this._forEachTab(this._updateFaviconForTab);
   },
   
+  _reloadBrowserIfIEEngine: function(browser)
+  {
+    if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
+    {
+      browser.loadURIWithFlags(browser.currentURI.spec,
+        Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
+    }
+  },
+  
+  /**
+   * Reload tabs in IE engine
+   */
+  reloadTabs: function()
+  {
+    this._forEachTab(function(tab)
+    {
+      this._reloadBrowserIfIEEngine(tab.linkedBrowser);
+    });
+  },
+
   updateButtonStatus: function()
   {
     Utils.scheduleThrottledUpdate(this._updateButtonStatusCore, this);
@@ -629,8 +662,7 @@ WindowWrapper.prototype = {
 
     this._updateInterface();
   },
-
-
+  
   /**
    * Setup up the theme
    */
@@ -1134,37 +1166,33 @@ WindowWrapper.prototype = {
 
   _updateProgressStatus: function()
   {
-    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
-    for (let i = 0; i < mTabs.length; i++)
+    this._forEachTab(function(tab)
     {
-      if (mTabs[i].localName == "tab")
+      let pluginObject = this.getContainerPlugin(tab);
+      if (pluginObject)
       {
-        let pluginObject = this.getContainerPlugin(mTabs[i]);
-        if (pluginObject)
+        let aCurTotalProgress = pluginObject.Progress;
+        if (aCurTotalProgress != tab.mProgress)
         {
-          let aCurTotalProgress = pluginObject.Progress;
-          if (aCurTotalProgress != mTabs[i].mProgress)
+          const wpl = Ci.nsIWebProgressListener;
+          let aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
+          let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
+          let aWebProgress = tab.linkedBrowser.webProgress;
+          let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
+          let aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
+          try
           {
-            const wpl = Ci.nsIWebProgressListener;
-            let aMaxTotalProgress = (aCurTotalProgress == -1 ? -1 : 100);
-            let aTabListener = this.window.gBrowser.mTabListeners[mTabs[i]._tPos];
-            let aWebProgress = mTabs[i].linkedBrowser.webProgress;
-            let aRequest = Services.io.newChannelFromURI(mTabs[i].linkedBrowser.currentURI);
-            let aStateFlags = (aCurTotalProgress == -1 ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
-            try
-            {
-              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-              aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
-            }
-            catch (ex)
-            {
-              Utils.ERROR("Error calling WebProgressListeners: " + ex);
-            }
-            mTabs[i].mProgress = aCurTotalProgress;
+            aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
+            aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0, aCurTotalProgress, aMaxTotalProgress);
           }
+          catch (ex)
+          {
+            Utils.ERROR("Error calling WebProgressListeners: " + ex);
+          }
+          tab.mProgress = aCurTotalProgress;
         }
       }
-    }
+    });
   },
   
   _focusPlugin: function()
@@ -2592,11 +2620,7 @@ WindowWrapper.prototype = {
     switch (msg.name)
     {
     case "fireie:reloadContainerPage":
-      if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
-      {
-        browser.loadURIWithFlags(browser.currentURI.spec,
-          Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
-      }
+      this._reloadBrowserIfIEEngine(browser);
       break;
     case "fireie:shouldLoadInFrame":
       if (browser)
@@ -2690,6 +2714,17 @@ function updateFavicons()
 {
   for each (let wrapper in wrappers)
     wrapper.updateFavicons();
+}
+
+/**
+ * Reload all tabs in IE engine (in response of a plugin process reload)
+ */
+function reloadTabs()
+{
+  wrappers.forEach(function(wrapper)
+  {
+    wrapper.reloadTabs();
+  });
 }
 
 /**

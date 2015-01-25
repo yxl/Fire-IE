@@ -720,6 +720,18 @@ namespace Plugin
 
 			return false;
 		}
+		// void ExitProcess() - no return
+		else if (name == NPI_ID(ExitProcess))
+		{
+			TRACE("ExitProcess called!\n");
+
+			// Make sure we are actually in OOPP mode
+			if (Utils::App::GetApplication() != Utils::App::OOPP)
+				return false;
+
+			::ExitProcess(0);
+			return true;
+		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))
 		{
