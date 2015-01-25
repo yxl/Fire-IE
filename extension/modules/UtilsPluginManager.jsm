@@ -63,6 +63,11 @@ let UtilsPluginManager = {
    */
   _prefSetters: [],
   
+  /**
+   * Plugin checker timer
+   */
+  _delayedPluginCheckerTimer: null,
+  
   lazyStartup: function()
   {
     this.init();
@@ -234,13 +239,7 @@ let UtilsPluginManager = {
     }, this, [], true);
 
     this._installPlugin();
-    
-    // Check after 30 sec whether the plugin is initialized yet
-    Utils.runAsyncTimeout(function()
-    {
-      if (!this.isPluginInitialized)
-        loadFailureSubHandler();
-    }, this, 30000);
+    this._runDelayedPluginChecker();
     
     // Pref setter for cookie sync and DNT
     this.addPrefSetter(setCookieSyncPref);
@@ -276,7 +275,10 @@ let UtilsPluginManager = {
       if (this._isReloading)
       {
         this._isReloading = false;
-        Services.obs.notifyObservers(null, "fireie-reload-plugin", null);
+        Utils.runAsync(function()
+        {
+          Services.obs.notifyObservers(null, "fireie-reload-plugin", null);
+        }, this);
         Utils.LOG("Reloaded plugin process.");
       }
     }, this, [], true);
@@ -290,9 +292,25 @@ let UtilsPluginManager = {
     plugin.parentElement.removeChild(plugin);
     Utils.runAsyncTimeout(function()
     {
+      loadFailureHandled = false;
       IECookieManager.changeIETempDirectorySetting();
       this._installPlugin();
+      this._runDelayedPluginChecker();
     }, this, 300);
+  },
+  
+  _runDelayedPluginChecker: function()
+  {
+    if (this._delayedPluginCheckerTimer)
+      Utils.cancelAsyncTimeout(this._delayedPluginCheckerTimer);
+    
+    // Check after 30 sec whether the plugin is initialized yet
+    this._delayedPluginCheckerTimer = Utils.runAsyncTimeout(function()
+    {
+      this._delayedPluginCheckerTimer = null;
+      if (!this.isPluginInitialized)
+        loadFailureSubHandler();
+    }, this, 30000);
   },
   
   _registerHandlers: function()
