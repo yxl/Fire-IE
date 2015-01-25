@@ -9,6 +9,8 @@
 <!ENTITY fireie.menu.skin.label "Skórki">
 <!ENTITY fireie.menu.skin.default.label "Domyślna">
 <!ENTITY fireie.menu.skin.more.label "Więcej...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Open Link in New Tab with IE Engine">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "Open Link in IE Browser">
 <!ENTITY fireie.options.title "Fire IE - Opcje">
 <!ENTITY fireie.options.general.tab "Ogólne">
 <!ENTITY fireie.options.general.pane "Ogólne">
@@ -36,6 +38,8 @@
 <!ENTITY fireie.options.ui.faviconIE "Używaj ikony silnika IE">
 <!ENTITY fireie.options.ui.customLabelLabel "Dostosuj etykiety:">
 <!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Show the button only when using IE engine">
+<!ENTITY fireie.options.ui.contextMenuCaption "Context Menu">
+<!ENTITY fireie.options.ui.showContextMenuItems "Show context menu items (open link in IE engine/browser)">
 <!ENTITY fireie.options.integration.tab "Integracja">
 <!ENTITY fireie.options.integration.pane "Integracja">
 <!ENTITY fireie.options.integration.mgCaption "Wsparcie gestów myszy">

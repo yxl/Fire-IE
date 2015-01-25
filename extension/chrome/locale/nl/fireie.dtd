@@ -1,5 +1,5 @@
 <!ENTITY fireie.switchButton.label "Fire IE">
-<!ENTITY fireie.urlbar.switch.tooltip1 "Render-engine wisselen">
+<!ENTITY fireie.urlbar.switch.tooltip1 "KLik: Render-engine wisselen">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Kan niet wisselen op deze pagina">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Rechtsklik: Fire IE-opties weergeven">
 <!ENTITY fireie.menu.switchRules.label "Wisselregels">
@@ -9,6 +9,8 @@
 <!ENTITY fireie.menu.skin.label "Skins">
 <!ENTITY fireie.menu.skin.default.label "Standaard">
 <!ENTITY fireie.menu.skin.more.label "Meer…">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Koppeling in nieuw tabblad met IE-engine openen">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "Koppeling in IE-browser openen">
 <!ENTITY fireie.options.title "Fire IE-opties">
 <!ENTITY fireie.options.general.tab "Algemeen">
 <!ENTITY fireie.options.general.pane "Algemeen">
@@ -36,6 +38,8 @@
 <!ENTITY fireie.options.ui.faviconIE "Pictogram IE-engine gebruiken">
 <!ENTITY fireie.options.ui.customLabelLabel "Labels aanpassen:">
 <!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Knop alleen bij gebruik IE-engine weergeven">
+<!ENTITY fireie.options.ui.contextMenuCaption "Contextmenu">
+<!ENTITY fireie.options.ui.showContextMenuItems "Contextmenu-items weergeven (koppeling in IE-engine/-browser openen)">
 <!ENTITY fireie.options.integration.tab "Integratie">
 <!ENTITY fireie.options.integration.pane "Integratie">
 <!ENTITY fireie.options.integration.mgCaption "Ondersteuning muisbewegingen">

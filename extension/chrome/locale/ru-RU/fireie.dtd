@@ -9,6 +9,8 @@
 <!ENTITY fireie.menu.skin.label "Скины">
 <!ENTITY fireie.menu.skin.default.label "По умолчанию">
 <!ENTITY fireie.menu.skin.more.label "Другие...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Open Link in New Tab with IE Engine">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "Open Link in IE Browser">
 <!ENTITY fireie.options.title "Настройки Fire IE">
 <!ENTITY fireie.options.general.tab "Основные">
 <!ENTITY fireie.options.general.pane "Основные">
@@ -36,6 +38,8 @@
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">
 <!ENTITY fireie.options.ui.customLabelLabel "Customize labels:">
 <!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Show the button only when using IE engine">
+<!ENTITY fireie.options.ui.contextMenuCaption "Context Menu">
+<!ENTITY fireie.options.ui.showContextMenuItems "Show context menu items (open link in IE engine/browser)">
 <!ENTITY fireie.options.integration.tab "Интеграция">
 <!ENTITY fireie.options.integration.pane "Интеграция">
 <!ENTITY fireie.options.integration.mgCaption "Поддержка жестов мышью">

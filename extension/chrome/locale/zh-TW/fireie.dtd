@@ -3,12 +3,14 @@
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "無法在該頁面進行切換">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊：設定 解雇 IE 選項">
 <!ENTITY fireie.menu.switchRules.label "切換規則">
-<!ENTITY fireie.menu.internetProperties.label "網際網路選項（IE）">
+<!ENTITY fireie.menu.internetProperties.label "網際網路選項（控制台）">
 <!ENTITY fireie.menu.autoswitch.disable "完全停用自動切換">
-<!ENTITY fireie.menu.openInIE.label "在 IE 中開啟目前頁面">
+<!ENTITY fireie.menu.openInIE.label "在 IE 瀏覽器中開啟目前頁面">
 <!ENTITY fireie.menu.skin.label "面板">
 <!ENTITY fireie.menu.skin.default.label "預設">
 <!ENTITY fireie.menu.skin.more.label "更多...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "以 IE 引擎用新分頁開啟鏈結">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "在 IE 瀏覽器中開啟鏈結">
 <!ENTITY fireie.options.title "解雇 IE 選項">
 <!ENTITY fireie.options.general.tab "一般">
 <!ENTITY fireie.options.general.pane "一般">
@@ -36,6 +38,8 @@
 <!ENTITY fireie.options.ui.faviconIE "使用 IE 引擎圖示">
 <!ENTITY fireie.options.ui.customLabelLabel "自訂標籤：">
 <!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "只在使用 IE 引擎時顯示按鈕">
+<!ENTITY fireie.options.ui.contextMenuCaption "右鍵選單">
+<!ENTITY fireie.options.ui.showContextMenuItems "顯示右鍵選單項目（用 IE 引擎/瀏覽器開啟鏈結）">
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">
