@@ -450,7 +450,15 @@ WindowWrapper.prototype = {
   {
     if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
     {
-      browser.loadURIWithFlags(browser.currentURI.spec,
+      let uri = browser.currentURI;
+      let uriToLoad = uri;
+      if (uri.hasRef)
+      {
+        // If the URI has hash part, directly loading it does nothing.
+        // We should reload the base part of the URI only
+        uriToLoad = uri.cloneIgnoringRef();
+      }
+      browser.loadURIWithFlags(uriToLoad.spec,
         Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
     }
   },
