@@ -309,7 +309,6 @@ BEGIN_MESSAGE_MAP(CIEHostWindow, CDialog)
 	ON_WM_SIZE()
 	ON_MESSAGE(WM_USER_MESSAGE, OnUserMessage)
 	ON_WM_PARENTNOTIFY()
-	ON_WM_APPCOMMAND()
 END_MESSAGE_MAP()
 
 
@@ -377,6 +376,32 @@ void CIEHostWindow::UninitIE()
 	}
 }
 
+LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	// DefWindowProc propagates messages to parent window by SendMessage.
+	// In OOPP mode, this can potentially deadlock firefox since we can't RPC into the
+	// plugin during SendMessage.
+	// Here we post all messages that would otherwise propagate to the firefox main window.
+	LRESULT ret = 0;
+	bool bShouldHandle = false;
+	switch (message)
+	{
+	case WM_APPCOMMAND:
+		ret = TRUE;
+		bShouldHandle = true;
+		break;
+	}
+
+	if (bShouldHandle)
+	{
+		HWND hwndFirefox = GetTopMozillaWindowClassWindow(m_hWnd);
+		if (hwndFirefox && ::PostMessage(hwndFirefox, message, wParam, lParam))
+			return ret;
+	}
+
+	return CDialog::WindowProc(message, wParam, lParam);
+}
+
 void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
@@ -405,71 +430,6 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
-}
-
-void CIEHostWindow::OnAppCommand(CWnd* pWnd, UINT nCmd, UINT nDevice, UINT nKey)
-{
-	bool bProcessed = false;
-
-	if (m_pPlugin)
-	{
-		CString cmdName = _T("");
-		switch (nCmd) {
-		case APPCOMMAND_BROWSER_BACKWARD:
-			cmdName = _T("BrowserBackward");
-			break;
-		case APPCOMMAND_BROWSER_FORWARD:
-			cmdName = _T("BrowserForward");
-			break;
-		case APPCOMMAND_BROWSER_REFRESH:
-			cmdName = _T("BrowserRefresh");
-			break;
-		case APPCOMMAND_BROWSER_STOP:
-			cmdName = _T("BrowserStop");
-			break;
-		case APPCOMMAND_SAVE:
-			cmdName = _T("Save");
-			break;
-		case APPCOMMAND_PRINT:
-			cmdName = _T("Print");
-			break;
-		case APPCOMMAND_SEND_MAIL:
-			cmdName = _T("SendMail");
-			break;
-		case APPCOMMAND_COPY:
-			cmdName = _T("Copy");
-			break;
-		case APPCOMMAND_CUT:
-			cmdName = _T("Cut");
-			break;
-		case APPCOMMAND_DELETE:
-			cmdName = _T("Delete");
-			break;
-		case APPCOMMAND_PASTE:
-			cmdName = _T("Paste");
-			break;
-		case APPCOMMAND_UNDO:
-			cmdName = _T("Undo");
-			break;
-		case APPCOMMAND_REDO:
-			cmdName = _T("Redo");
-			break;
-		case APPCOMMAND_CLOSE:
-			cmdName = _T("Close");
-			break;
-		case APPCOMMAND_FIND:
-			cmdName = _T("Find");
-			break;
-		}
-
-		if (cmdName.GetLength())
-		{
-			m_pPlugin->FireEvent(_T("IEDoAppCommand"), cmdName);
-			bProcessed = true;
-		}
-	}
-	if (!bProcessed)
-		CDialog::OnAppCommand(pWnd, nCmd, nDevice, nKey);
 }
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)

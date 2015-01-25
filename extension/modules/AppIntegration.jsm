@@ -391,7 +391,6 @@ WindowWrapper.prototype = {
     this.window.addEventListener("IEStatusChanged", this._bindMethod(this._onIEStatusChanged), false);
     this.window.addEventListener("IESetCookie", this._bindMethod(this._onIESetCookie), false);
     this.window.addEventListener("IEBatchSetCookie", this._bindMethod(this._onIEBatchSetCookie), false);
-    this.window.addEventListener("IEDoAppCommand", this._bindMethod(this._onIEDoAppCommand), false);
 
     // Listen for theme related events that bubble up from content
     this.window.document.addEventListener("InstallBrowserTheme", this._bindMethod(this._onInstallTheme), false, true);
@@ -2649,59 +2648,6 @@ WindowWrapper.prototype = {
     }
     
     return result;
-  },
-  
-  _onIEDoAppCommand: function(event)
-  {
-    let cmd = event.detail;
-    switch (cmd)
-    {
-    case "BrowserBackward":
-      this.window.BrowserBack();
-      break;
-    case "BrowserForward":
-      this.window.BrowserForward();
-      break;
-    case "BrowserRefresh":
-      this.window.BrowserReload();
-      break;
-    case "BrowserStop":
-      this.window.BrowserStop();
-      break;
-    case "Save":
-      this.goDoCommand("SaveAs");
-      break;
-    case "Print":
-      this.goDoCommand("Print");
-      break;
-    case "SendMail":
-      this.window.goDoCommand("Browser:SendLink");
-      break;
-    case "Copy":
-      this.goDoCommand("cmd_copy");
-      break;
-    case "Cut":
-      this.goDoCommand("cmd_cut");
-      break;
-    case "Paste":
-      this.goDoCommand("cmd_paste");
-      break;
-    case "Undo":
-      this.goDoCommand("cmd_undo");
-      break;
-    case "Redo":
-      this.goDoCommand("cmd_redo");
-      break;
-    case "Close":
-      this.window.goDoCommand("cmd_close");
-      break;
-    case "Find":
-      this.window.goDoCommand("cmd_find");
-      break;
-    default:
-      Utils.LOG("Unhandled App Command: " + cmd);
-      break;
-    }
   },
 };
 
