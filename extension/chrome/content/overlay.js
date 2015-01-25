@@ -26,6 +26,7 @@ var gFireIE = null;
 
   let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
   let jsm = {};
+  Cu.import("resource://gre/modules/Services.jsm", jsm);
   Cu.import(baseURL.spec + "AppIntegration.jsm", jsm);
   Cu.import(baseURL.spec + "Utils.jsm", jsm);
   Cu.import(baseURL.spec + "GesturePrefObserver.jsm", jsm);
@@ -34,6 +35,7 @@ var gFireIE = null;
   
   let
   {
+    Services,
     AppIntegration, Utils, GesturePrefObserver, HookManager, UtilsPluginManager
   } = jsm;
   
@@ -500,12 +502,27 @@ var gFireIE = null;
 
     HM.hookAttrTail(document.getElementById("cmd_find"), "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);");
 
-    HM.hookCodeHead("gFindBar._getInitialSelection", function()
-    {
-      let value = gFireIE.getSelectionText(this._selectionMaxLen);
-      if (value != null) return RET.shouldReturn(value);
-    });
-
+    if (typeof(gFindBar.onCurrentSelection) == "function")
+      HM.hookCodeHead("gFindBar.onCurrentSelection", function(selectionString)
+      {
+        if (this.prefillWithSelection &&
+            Services.prefs.getBoolPref("accessibility.typeaheadfind.prefillwithselection"))
+        {
+          let value = gFireIE.getSelectionText(this._selectionMaxLen);
+          if (value != null)
+          {
+            arguments[0] = value;
+            return RET.modifyArguments(arguments);
+          }
+        }
+      });
+    else
+      HM.hookCodeHead("gFindBar._getInitialSelection", function()
+      {
+        let value = gFireIE.getSelectionText(this._selectionMaxLen);
+        if (value != null) return RET.shouldReturn(value);
+      });
+    
     try
     {
       gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
@@ -549,7 +566,10 @@ var gFireIE = null;
     HM.reclaimHookIndex(findbar.onFindAgainCommand);
     HM.reclaimHookIndex(findbar.toggleHighlight);
     HM.reclaimHookIndex(findbar._find);
-    HM.reclaimHookIndex(findbar._getInitialSelection);
+    if (typeof(findbar.onCurrentSelection) == "function")
+      HM.reclaimHookIndex(findbar.onCurrentSelection);
+    else
+      HM.reclaimHookIndex(findbar._getInitialSelection);
   }
   
   // Per-site FullZoom support
