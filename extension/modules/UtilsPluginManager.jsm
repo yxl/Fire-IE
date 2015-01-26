@@ -146,10 +146,10 @@ let UtilsPluginManager = {
       let window = Utils.getHiddenWindow();
       let handler = function(e)
       {
-        window.removeEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+        window.removeEventListener("IEUtilsPluginInitialized", handler, !!useCapture);
         callback.apply(self, args);
       };
-      window.addEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+      window.addEventListener("IEUtilsPluginInitialized", handler, !!useCapture);
     }
   },
   
@@ -308,7 +308,7 @@ let UtilsPluginManager = {
     this._delayedPluginCheckerTimer = Utils.runAsyncTimeout(function()
     {
       this._delayedPluginCheckerTimer = null;
-      if (!this.isPluginInitialized)
+      if (!this.isPluginInitialized && !this._isReloading)
         loadFailureSubHandler();
     }, this, 30000);
   },
