@@ -697,6 +697,22 @@ var Utils = {
     return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
   },
   
+  urlCanHandle: function(url)
+  {
+    // A URL can be handled if it is
+    // 1. a valid URL
+    // 2. if consists only of host, must be a valid domain name
+    // 3. not firefox only
+    if (Utils.isFirefoxOnly(url))
+      return false;
+
+    let uri = Utils.makeURI(url, true);
+    if (!uri)
+      return false;
+    
+    return url !== uri.host || Utils.isValidDomainName(url);
+  },
+  
   escapeURLForCSS: function(url)
   {
     return url.replace(/[(),\s'"]/g, "\$&");

@@ -1093,7 +1093,7 @@ WindowWrapper.prototype = {
 
     if (this.isIEEngine())
     {
-      if (Utils.isValidUrl(url) || Utils.isValidDomainName(url))
+      if (Utils.urlCanHandle(url))
       {
         let originalURL = this.getURL();
         let handleUrlBar = Prefs.handleUrlBar;
