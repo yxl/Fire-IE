@@ -381,22 +381,34 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 	// DefWindowProc propagates messages to parent window by SendMessage.
 	// In OOPP mode, this can potentially deadlock firefox since we can't RPC into the
 	// plugin during SendMessage.
-	// Here we post all messages that would otherwise propagate to the firefox main window.
+	// Here we post some of these messages to the firefox main window, and ignore the rest.
 	LRESULT ret = 0;
 	bool bShouldHandle = false;
+	bool bShouldForward = false;
 	switch (message)
 	{
 	case WM_APPCOMMAND:
 		ret = TRUE;
 		bShouldHandle = true;
+		bShouldForward = true;
+		break;
+	case WM_MOUSEWHEEL:
+	case WM_MOUSEHWHEEL:
+		ret = 0;
+		bShouldHandle = true;
+		bShouldForward = false;
 		break;
 	}
 
 	if (bShouldHandle)
 	{
-		HWND hwndFirefox = GetTopMozillaWindowClassWindow(m_hWnd);
-		if (hwndFirefox && ::PostMessage(hwndFirefox, message, wParam, lParam))
-			return ret;
+		if (bShouldForward)
+		{
+			HWND hwndFirefox = GetTopMozillaWindowClassWindow(m_hWnd);
+			if (hwndFirefox)
+				::PostMessage(hwndFirefox, message, wParam, lParam);
+		}
+		return ret;
 	}
 
 	return CDialog::WindowProc(message, wParam, lParam);
