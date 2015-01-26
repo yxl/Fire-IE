@@ -103,6 +103,9 @@ function init()
       case "fireie-reload-prefs":
         reloadPrefs();
         break;
+      case "fireie-before-reload-plugin":
+        hideContainerPlugins();
+        break;
       case "fireie-reload-plugin":
         reloadTabs();
         break;
@@ -111,6 +114,7 @@ function init()
   };
   
   Services.obs.addObserver(generalObserver, "fireie-reload-prefs", false);
+  Services.obs.addObserver(generalObserver, "fireie-before-reload-plugin", false);
   Services.obs.addObserver(generalObserver, "fireie-reload-plugin", false);
 }
 
@@ -445,6 +449,24 @@ WindowWrapper.prototype = {
     this._forEachTab(this._updateFaviconForTab);
   },
   
+  /**
+   * Hide all container plugins
+   */
+  hideContainerPlugins: function()
+  {
+    this._forEachTab(function(tab)
+    {
+      let plugin = this.getContainerPlugin(tab);
+      if (plugin)
+      {
+        let doc = plugin.ownerDocument;
+        let event = doc.createEvent("CustomEvent");
+        event.initCustomEvent("HideContainerPlugin", true, true, null);
+        plugin.dispatchEvent(event);
+      }
+    });
+  },
+
   _reloadBrowserIfIEEngine: function(browser)
   {
     if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
@@ -2668,6 +2690,17 @@ function updateFavicons()
 {
   for each (let wrapper in wrappers)
     wrapper.updateFavicons();
+}
+
+/**
+ * Hide all container plugins in preparation of a reload
+ */
+function hideContainerPlugins()
+{
+  wrappers.forEach(function(wrapper)
+  {
+    wrapper.hideContainerPlugins();
+  });
 }
 
 /**

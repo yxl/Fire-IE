@@ -401,6 +401,7 @@ let UtilsPluginManager = {
     let plugin = this.getPlugin();
     if (plugin)
     {
+      Services.obs.notifyObservers(null, "fireie-before-reload-plugin", null);
       try
       {
         // It will throw because the plugin process exits.

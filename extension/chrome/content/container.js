@@ -110,9 +110,9 @@ let FireIEContainer = {};
     return !!need;
   }
 
-  function destory()
+  function destroy()
   {
-    window.removeEventListener("unload", destory, false);
+    window.removeEventListener("unload", destroy, false);
 
     let container = E('container');
 
@@ -173,6 +173,7 @@ let FireIEContainer = {};
     window.addEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     window.addEventListener("IEURLChanged", onIEURLChanged, false);
+    window.addEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -188,6 +189,7 @@ let FireIEContainer = {};
     window.removeEventListener("IEDocumentComplete", onIEDocumentComplete, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     window.removeEventListener("IEURLChanged", onIEURLChanged, false);
+    window.removeEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -475,8 +477,14 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
+  function onHideContainerPlugin(event)
+  {
+    // We're reloading anyway, just boom everything
+    destroy();
+  }
+  
   window.addEventListener('load', init, false);
-  window.addEventListener('unload', destory, false);
+  window.addEventListener('unload', destroy, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
   FireIEContainer.getNavigateHeaders = getNavigateHeaders;
   FireIEContainer.getNavigatePostData = getNavigatePostData;
