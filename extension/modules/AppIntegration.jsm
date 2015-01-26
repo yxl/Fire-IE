@@ -378,10 +378,6 @@ WindowWrapper.prototype = {
     if (panelUIPopup)
       panelUIPopup.addEventListener("popupshowing", this._bindMethod(this._updatePanelUIItems), false);
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
-    this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    if (this.E("star-button")) // Nightly 20140304 removed this
-      this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
     let contextMenu = this.E("contentAreaContextMenu");
     if (contextMenu)
@@ -2262,19 +2258,6 @@ WindowWrapper.prototype = {
     }
   },
   
-  // process click events inside the URL bar (mainly to stop propagation
-  // in order to resolve multiple-caret problems)
-  _onClickInsideURLBar: function(e)
-  {
-    let pluginObject = this.getContainerPlugin();
-    if (pluginObject != null)
-    {
-      e.stopPropagation();
-      // the focus handler does window focus transfer for us (do not call Focus!!)
-      pluginObject.focus();
-    }
-  },
-
   _onTabSelected: function(e)
   {
     this._updateInterface();

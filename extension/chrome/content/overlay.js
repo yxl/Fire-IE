@@ -749,6 +749,11 @@ var gFireIE = null;
     if (!aURLBar) return;
     aURLBar.addEventListener("click", function(e)
     {
+      let target = e.originalTarget;
+      if (!(target.mozMatchesSelector || target.matchesSelector).call(target,
+        "[anonid=\"input\"], [anonid=\"input\"] *"))
+      return;
+      
       let pluginObject = gFireIE.getContainerPlugin();
       if (pluginObject)
       {
