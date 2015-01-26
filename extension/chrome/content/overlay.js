@@ -310,16 +310,13 @@ var gFireIE = null;
         HM.hookCodeHeadTail("PlacesStarButton.updateState",
                             function() { setUseRealURI(gBrowser.mCurrentBrowser); },
                             function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
-
       // Firefox 23 : PlacesStarButton has been changed to BookmarksMenuButton
-      if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
+      else if (typeof(BookmarksMenuButton) != "undefined" && typeof(BookmarksMenuButton.updateStarState) == "function")
         HM.hookCodeHeadTail("BookmarksMenuButton.updateStarState",
                             function() { setUseRealURI(gBrowser.mCurrentBrowser); },
                             function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
-      
       // Firefox 24 : BookmarksMenuButton is again changed into BookmarkingUI...
-      //  WTF... I mean, Welcome To Firefox!!
-      if (typeof(BookmarkingUI) != "undefined" && typeof(BookmarkingUI.updateStarState) == "function")
+      else
         HM.hookCodeHeadTail("BookmarkingUI.updateStarState",
                             function() { setUseRealURI(gBrowser.mCurrentBrowser); },
                             function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
@@ -342,7 +339,7 @@ var gFireIE = null;
       // Visit the new URL
       if (typeof(getShortcutOrURI) !== "undefined")
         HM.hookCodeTail("getShortcutOrURI", function(ret) RET.modifyValue(gFireIE.getHandledURL(ret)));
-      else if (typeof(getShortcutOrURIAndPostData) !== "undefined")
+      else
         HM.hookCodeHeadTail("getShortcutOrURIAndPostData",
         function(aURL, aCallback)
         {
@@ -497,12 +494,15 @@ var gFireIE = null;
       }
     });
 
-    // disabled, in order to support F3 findNext/Prev
-    //hookCode("gFindBar.close", /{/, "$& if (!this.hidden) gFireIE.endFindText();");
-
     HM.hookAttrTail(document.getElementById("cmd_find"), "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);");
 
-    if (typeof(gFindBar.onCurrentSelection) == "function")
+    if (typeof(gFindBar._getInitialSelection) === "function")
+      HM.hookCodeHead("gFindBar._getInitialSelection", function()
+      {
+        let value = gFireIE.getSelectionText(this._selectionMaxLen);
+        if (value != null) return RET.shouldReturn(value);
+      });
+    else
       HM.hookCodeHead("gFindBar.onCurrentSelection", function(selectionString)
       {
         if (this.prefillWithSelection &&
@@ -515,12 +515,6 @@ var gFireIE = null;
             return RET.modifyArguments(arguments);
           }
         }
-      });
-    else
-      HM.hookCodeHead("gFindBar._getInitialSelection", function()
-      {
-        let value = gFireIE.getSelectionText(this._selectionMaxLen);
-        if (value != null) return RET.shouldReturn(value);
       });
     
     try
@@ -610,7 +604,7 @@ var gFireIE = null;
         function(browser) { setUseRealURI(browser); },
         function(ret, browser) { unsetUseRealURI(browser); });
     }
-    else if (typeof(FullZoom._applySettingToPref) === "function")
+    else
     {
       HM.hookCodeHeadTail("FullZoom._applySettingToPref",
         function() { setUseRealURI(gBrowser.mCurrentBrowser); },
