@@ -118,6 +118,18 @@ let UtilsPluginManager = {
   },
   
   /**
+   * Convert the object so that it can be safely passed to the plugin
+   */
+  convertObjectWithFunction: function(obj)
+  {
+    if (Cu.cloneInto)
+      return Cu.cloneInto(obj, Utils.getHiddenWindow(), {
+        cloneFunctions: true
+      });
+    return obj;
+  },
+  
+  /**
    * Retrieves the window where utils plugin sits in
    */
   getWindow: function()
@@ -167,19 +179,14 @@ let UtilsPluginManager = {
   _injectEventDispatchHelper: function()
   {
     let window = Utils.getHiddenWindow();
-    window = window.wrappedJSObject || window;
-    let document = window.document;
-    window.FireIEContainer = Cu.cloneInto({
-      dispatchEvent: function(type, detail)
-      {
-        let event = document.createEvent("CustomEvent");
-        event.initCustomEvent(type, true, true, detail);
-        let plugin = document.getElementById(Utils.utilsPluginId);
-        return plugin.dispatchEvent(event);
-      }
-    }, window, {
-      cloneFunctions: true
-    });
+    let unsafeWindow = window.wrappedJSObject || window;
+    let container = unsafeWindow.FireIEContainer = new unsafeWindow.Object();
+    container.dispatchEvent = new unsafeWindow.Function("type", "detail",
+      "let event = document.createEvent(\"CustomEvent\");\n" +
+      "event.initCustomEvent(type, true, true, detail);\n" +
+      "let plugin = document.getElementById(\"" + Utils.utilsPluginId + "\");\n" +
+      "return plugin.dispatchEvent(event);"
+    );
   },
   
   _handlePluginEvents: function()
