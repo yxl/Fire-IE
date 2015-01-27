@@ -436,6 +436,9 @@ var gFireIE = null;
       
       // Hook FullZoom object to use per-site zooming for IE container pages
       initializeFullZoomHooks();
+      
+      // Workaround for a weired bug that sometimes the nav bar input cannot be focused
+      workaroundNavBarFocus();
     }
   }
 
@@ -744,7 +747,7 @@ var gFireIE = null;
     // hook aBrowser.sessionHistory
     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
     aBrowser.FireIE_hooked = true;
-  };
+  }
   
   function unhookBrowserGetter(aBrowser)
   {
@@ -752,26 +755,46 @@ var gFireIE = null;
     HM.unhookProp(aBrowser, "currentURI");
     HM.unhookProp(aBrowser, "sessionHistory");
     aBrowser.FireIE_hooked = false;
-  };
+  }
+  
+  function workaroundNavBarFocus()
+  {
+    function onClickInsideChromeInput(e)
+    {
+      let pluginObject = gFireIE.getContainerPlugin();
+      if (pluginObject)
+      {
+        gFireIE.goDoCommand("HandOverFocus");
+        e.target.focus();
+      }
+    }
+    
+    let urlBar = document.getElementById("urlbar");
+    if (urlBar)
+    {
+      let urlBarInput = document.getAnonymousElementByAttribute(urlBar, "anonid", "input");
+      if (urlBarInput)
+        urlBarInput.addEventListener("click", onClickInsideChromeInput, false);
+    }
+    
+    let searchBar = document.getElementById("searchbar");
+    if (searchBar)
+    {
+      let searchBarTextbox = document.getAnonymousElementByAttribute(searchBar, "anonid", "searchbar-textbox");
+      if (searchBarTextbox)
+      {
+        let searchBarInput = document.getAnonymousElementByAttribute(searchBarTextbox, "anonid", "input");
+        if (searchBarInput)
+          searchBarInput.addEventListener("click", onClickInsideChromeInput, false);
+      }
+    }
+  }
 
   function hookURLBarSetter(aURLBar)
   {
     if (!aURLBar) aURLBar = document.getElementById("urlbar");
     if (!aURLBar) return;
-    aURLBar.addEventListener("click", function(e)
-    {
-      let target = e.originalTarget;
-      if (!(target.mozMatchesSelector || target.matchesSelector).call(target,
-        "[anonid=\"input\"], [anonid=\"input\"] *"))
-      return;
-      
-      let pluginObject = gFireIE.getContainerPlugin();
-      if (pluginObject)
-      {
-        gFireIE.goDoCommand("HandOverFocus");
-        aURLBar.focus();
-      }
-    }, false);
+    
     HM.hookProp(aURLBar, "value", null, function()
     {
       if (!arguments[0]) return;
