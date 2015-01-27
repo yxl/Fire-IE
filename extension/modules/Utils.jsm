@@ -675,7 +675,7 @@ var Utils = {
   isFirefoxOnly: function(url)
   {
     url = url.trim();
-    return (url && (url.length > 0) &&
+    return (url &&
       (
        Utils.startsWith(url, 'about:') ||
        Utils.startsWith(url, 'view-source:') ||
@@ -683,6 +683,22 @@ var Utils = {
        Utils.startsWith(url, 'chrome://') ||
        Utils.startsWith(url, 'resource://') ||
        Utils.startsWith(url, 'wyciwyg://')
+      ));
+  },
+  
+  /**
+   * Check whether URL in Firefox has chrome privilege
+   * This is to prevent potential XCS privilege escalation
+   */
+  urlHasChromePrivilege: function(url)
+  {
+    url = url.trim();
+    return (url &&
+      (
+       Utils.startsWith(url, 'about:') ||
+       Utils.startsWith(url, 'jar:') ||
+       Utils.startsWith(url, 'chrome://') ||
+       Utils.startsWith(url, 'resource://')
       ));
   },
 
