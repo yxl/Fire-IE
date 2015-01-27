@@ -367,6 +367,11 @@ var Utils = {
     return "chrome://fireie/content/switchJumper.xhtml?url=";
   },
   
+  get fakeUrl()
+  {
+    return "chrome://fireie/content/fake.html?url=";
+  },
+  
   /** Whether url is IE engine container url */
   isIEEngine: function(url)
   {
@@ -378,47 +383,28 @@ var Utils = {
     return Utils.startsWith(url, Utils.switchJumperUrl);
   },
   
+  isFake: function(url)
+  {
+    return Utils.startsWith(url, Utils.fakeUrl);
+  },
+  
   toPrefixedUrl: function(url, prefix)
   {
     url = url.trim();
-    if (Utils.startsWith(url, prefix)) return url;
-    if (/^file:\/\/.*/.test(url))
-    {
-      try
-      {
-        url = decodeURI(url).replace(/\|/g, ":");
-      }
-      catch (e)
-      {}
-    }
-    return prefix + encodeURI(url);
+    return prefix + encodeURIComponent(url);
   },
 
   fromPrefixedUrl: function(url, prefix)
   {
-    if (url && url.length > 0)
-    {
-      url = url.trim();
-      if (!/^[\w\-]+:/.test(url))
-      {
-        url = "http://" + url;
-      }
-      if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
-      if (url.substr(0, prefix.length) == prefix)
-      {
-        url = decodeURI(url.substring(prefix.length));
-        if (!/^[\w\-]+:/.test(url))
-        {
-          url = "http://" + url;
-        }
-      }
-    }
+    url = url.trim();
+    if (url.substr(0, prefix.length) == prefix)
+      url = decodeURIComponent(url.substring(prefix.length));
     return url;
   },
   
   fromAnyPrefixedUrl: function(url)
   {
-    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl];
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
     for (let i = 0, l = prefixes.length; i < l; i++)
     {
       let prefix = prefixes[i];
@@ -426,6 +412,12 @@ var Utils = {
         return Utils.fromPrefixedUrl(url, prefix);
     }
     return url;
+  },
+  
+  isPrefixedUrl: function(url)
+  {
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
+    return prefixes.some(function(prefix) Utils.startsWith(url, prefix));
   },
   
   /** Converts URL into IE Engine URL */
@@ -448,6 +440,58 @@ var Utils = {
   fromSwitchJumperUrl: function(url)
   {
     return Utils.fromPrefixedUrl(url, Utils.switchJumperUrl);
+  },
+  
+  toFakeUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  fromFakeUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  convertToIEURL: function(fxURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToIEURL = function(fxURL)
+    {
+      if (!/^file:\/\/.*/.test(fxURL))
+        return fxURL;
+      
+      let idx = fxURL.indexOf("?");
+      if (idx === -1) idx = fxURL.indexOf("#");
+      let queryAndHash = (idx !== -1) ? fxURL.substring(idx) : "";
+      
+      let ieURL = WinPathURI.convertToIEFileURI(fxURL);
+      return ieURL && (ieURL + queryAndHash);
+    };
+    
+    return Utils.convertToIEURL(fxURL);
+  },
+  
+  convertToFxURL: function(ieURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToFxURL = function(ieURL)
+    {
+      if (!/^file:\/\/.*/.test(ieURL))
+        return ieURL;
+      
+      let idx = ieURL.indexOf("?");
+      if (idx === -1) idx = ieURL.indexOf("#");
+      let queryAndHash = (idx !== -1) ? ieURL.substring(idx) : "";
+      
+      let fxURL = WinPathURI.convertToFxFileURI(ieURL);
+      return fxURL && fxURL + queryAndHash;
+    };
+    
+    return Utils.convertToFxURL(ieURL);
   },
 
   get containerPluginId()
@@ -547,12 +591,12 @@ var Utils = {
   
   getChromeWindowFrom: function(window)
   {
-    let mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+    let mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShellTreeItem)
                            .rootTreeItem
-                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow); 
+                           .QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow); 
     return mainWindow;
   },
   
@@ -595,7 +639,7 @@ var Utils = {
   
   isRootWindow: function(win)
   {
-    return !win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow);
+    return !win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow);
   },
   
   generatorFromEnumerator: function(enumerator, nsInterface)
@@ -728,6 +772,13 @@ var Utils = {
     
     return url !== uri.host || Utils.isValidDomainName(url);
   },
+
+  fuzzyUrlCompare: function(url1, url2)
+  {
+    let uri1 = Utils.makeURI(url1, true);
+    let uri2 = Utils.makeURI(url2, true);
+    return (uri1 && uri2 && uri1.specIgnoringRef === uri2.specIgnoringRef);
+  },
   
   escapeURLForCSS: function(url)
   {
@@ -849,6 +900,34 @@ var Utils = {
     try
     {
       if (channel.loadGroup && channel.loadGroup.notificationCallbacks) return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+    }
+    catch (e)
+    {}
+
+    return null;
+  },
+  
+  /**
+   * Gets the XUL <browser> associated with a particular request (if any).
+   */
+  getRequestBrowser: function( /**nsIChannel*/ channel) /**nsIDOMWindow*/
+  {
+    try
+    {
+      let loadContext = null;
+      if (channel.notificationCallbacks) 
+        loadContext = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      else if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
+        loadContext = channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      
+      if (loadContext)
+      {
+        if (loadContext.topFrameElement && loadContext.topFrameElement.localName === "browser")
+          return loadContext.topFrameElement;
+        
+        let window = loadContext.associatedWindow;
+        return Utils.getTabFromWindow(window).linkedBrowser;
+      }
     }
     catch (e)
     {}

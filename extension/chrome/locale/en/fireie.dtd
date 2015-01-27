@@ -86,3 +86,4 @@
 <!ENTITY fireie.options.import "Import Options File">
 <!ENTITY fireie.options.export "Export Options File">
 <!ENTITY fireie.options.restart.descr "Restart Firefox to take effect.">
+<!ENTITY fireie.options.reload.descr "Reload &quot;Fire IE DLL&quot; plugin to take effect.">

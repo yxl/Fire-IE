@@ -221,7 +221,10 @@
         <checkbox id="historyEnabled" label="&fireie.options.integration.historyEnabled;" />
         <checkbox id="disableFolderRedirection" label="&fireie.options.integration.disableFolderRedirection;*" />
       </groupbox>
-      <label id="integrationRestartDescr" class="descr" value="*&fireie.options.restart.descr;" />
+      <label id="integrationRestartDescr" class="descr" hidden="true"
+             value="*&fireie.options.restart.descr;" />
+      <label id="integrationReloadDescr" class="descr" hidden="true"
+             value="*&fireie.options.reload.descr;" />
     </vbox>
   </prefpane>
 
@@ -262,6 +265,8 @@
       </groupbox>
       <label id="iemodeRestartDescr" class="descr" style="margin-top:20px;" hidden="true"
              value="*&fireie.options.restart.descr;"/>
+      <label id="iemodeReloadDescr" class="descr" style="margin-top:20px;" hidden="true"
+             value="*&fireie.options.reload.descr;"/>
     </vbox>
   </prefpane>
 

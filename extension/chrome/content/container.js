@@ -22,6 +22,15 @@ let FireIEContainer = {};
   let Ci = Components.interfaces;
   let Cr = Components.results;
   let Cu = Components.utils;
+  
+  if (!("@fireie.org/fireie/public;1" in Cc))
+  {
+    // Might be in a content process, reload the page to get rid of it
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent("fireie:reloadContainerPage", true, true, "");
+    window.dispatchEvent(event);
+    return;
+  }
 
   let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
   let jsm = {};
@@ -101,9 +110,9 @@ let FireIEContainer = {};
     return !!need;
   }
 
-  function destory()
+  function destroy()
   {
-    window.removeEventListener("unload", destory, false);
+    window.removeEventListener("unload", destroy, false);
 
     let container = E('container');
 
@@ -129,6 +138,11 @@ let FireIEContainer = {};
       headers = navigateParams[name];
     }
     return headers;
+  }
+  
+  function getNavigateURL()
+  {
+    return Utils.convertToIEURL(Utils.fromContainerUrl(location.href));
   }
 
   function getNavigateHeaders()
@@ -165,6 +179,7 @@ let FireIEContainer = {};
     window.addEventListener("IERefresh", onIERefresh, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     window.addEventListener("IEURLChanged", onIEURLChanged, false);
+    window.addEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -181,6 +196,7 @@ let FireIEContainer = {};
     window.removeEventListener("IERefresh", onIERefresh, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     window.removeEventListener("IEURLChanged", onIEURLChanged, false);
+    window.removeEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -279,7 +295,7 @@ let FireIEContainer = {};
     let po = E(Utils.containerPluginId);
     if (!po) return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
 
     if (checkSwitchBack(url))
@@ -331,7 +347,7 @@ let FireIEContainer = {};
     if (!po.IsDocumentComplete)
       return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
     
     if (url != syncHistoryURL)
@@ -480,16 +496,32 @@ let FireIEContainer = {};
     pluginObject.Focus();
   }
 
+  function onHideContainerPlugin(event)
+  {
+    // We're reloading anyway, just boom everything
+    destroy();
+  }
+  
   window.addEventListener('load', init, false);
-  window.addEventListener('unload', destory, false);
+  window.addEventListener('unload', destroy, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
+  FireIEContainer.getNavigateURL = getNavigateURL;
   FireIEContainer.getNavigateHeaders = getNavigateHeaders;
   FireIEContainer.getNavigatePostData = getNavigatePostData;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
     let gFireIE = getGFireIE();
-    let zoomLevel = gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
+    let zoomLevel = gFireIE ? (gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) || 1) : 1;
     return zoomLevel * Utils.DPIScaling;
-  }
+  };
+  
+  // Fast event dispatching, in order to reduce inter-process communication
+  FireIEContainer.dispatchEvent = function(type, detail)
+  {
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent(type, true, true, detail);
+    let target = E(Utils.containerPluginId) || E("container");
+    return target.dispatchEvent(event);
+  };
 })();

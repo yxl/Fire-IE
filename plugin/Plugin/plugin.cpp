@@ -46,6 +46,7 @@
 #include "ScriptablePluginObject.h"
 #include "json/json.h"
 #include "OS.h"
+#include "App.h"
 #include "comfix.h"
 
 #ifdef DEBUG
@@ -57,12 +58,16 @@ using namespace UserMessage;
 namespace Plugin
 {
 
+	std::unordered_map<CPlugin::utf8string, NPIdentifier> CPlugin::s_mapIdentifierCache;
+
 	CPlugin::CPlugin(const nsPluginCreateData& data)
 		:m_pNPInstance(data.instance),
 		m_pNPStream(NULL),
 		m_bInitialized(false),
 		m_pScriptableObject(NULL),
-		m_pIEHostWindow(NULL)
+		m_pIEHostWindow(NULL),
+		m_pWindow(NULL),
+		m_pContainer(NULL)
 	{
 		USES_CONVERSION_EX;
 		// <html:embed id='fireie-utils-object' type='application/fireie' hidden='true' width='0' height='0'/>
@@ -94,8 +99,79 @@ namespace Plugin
 			delete m_pIEHostWindow;
 			m_pIEHostWindow = NULL;
 		}
+
+		if (m_pWindow)
+			NPN_ReleaseObject(m_pWindow);
+		if (m_pContainer)
+			NPN_ReleaseObject(m_pContainer);
 	}
 
+	NPObject* CPlugin::GetWindowPropertyObject(const NPUTF8* szPropertyName) const
+	{
+		NPObject* pWindow = GetWindow();
+		NPVariant vObject;
+		VOID_TO_NPVARIANT(vObject);
+
+		if ((!NPN_GetProperty(m_pNPInstance, pWindow, GetIdentifier(szPropertyName), &vObject)) || !NPVARIANT_IS_OBJECT(vObject))
+		{
+			if (!NPVARIANT_IS_VOID(vObject))
+				NPN_ReleaseVariantValue(&vObject);
+			throw CString(_T("Cannot get window.")) + NPStringCharactersToCString(szPropertyName);
+		}
+
+		NPObject* pObject = NPVARIANT_TO_OBJECT(vObject);
+		if (!pObject)
+		{
+			NPN_ReleaseVariantValue(&vObject);
+			throw CString(_T("window.")) + NPStringCharactersToCString(szPropertyName) + _T(" is null");
+		}
+
+		NPN_RetainObject(pObject);
+		NPN_ReleaseVariantValue(&vObject);
+
+		return pObject;
+	}
+
+	NPObject* CPlugin::GetEnvironmentObject(NPNVariable variable, const TCHAR* szDescription) const
+	{
+		NPObject* pObject;
+
+		if ((NPN_GetValue(m_pNPInstance, variable, &pObject) != NPERR_NO_ERROR) || !pObject)
+			throw CString(_T("Cannot get ")) + szDescription;
+
+		return pObject;
+	}
+
+	NPObject* CPlugin::GetWindow() const
+	{
+		if (m_pWindow)
+			return m_pWindow;
+
+		m_pWindow = GetEnvironmentObject(NPNVWindowNPObject, _T("window"));
+		return m_pWindow;
+	}
+
+	NPObject* CPlugin::GetContainer() const
+	{
+		if (m_pContainer)
+			return m_pContainer;
+
+		m_pContainer = GetWindowPropertyObject(RES_CONTAINER);
+		return m_pContainer;
+	}
+
+	NPIdentifier CPlugin::GetIdentifier(const NPUTF8* npcharsId)
+	{
+		utf8string utf8strId = npcharsId;
+		auto iter = s_mapIdentifierCache.find(utf8strId);
+		if (iter != s_mapIdentifierCache.end())
+			return iter->second;
+
+		NPIdentifier npid = NPN_GetStringIdentifier(npcharsId);
+
+		s_mapIdentifierCache.insert(make_pair(std::move(utf8strId), npid));
+		return npid;
+	}
 
 	NPBool CPlugin::init(NPWindow* pNPWindow)
 	{
@@ -126,7 +202,7 @@ namespace Plugin
 				return FALSE;
 
 			// Fetch the URL to visit from host URL
-			url = strHostUrl.Mid(PREFIX.GetLength());
+			url = GetNavigateURL();
 
 			// Fetch other parameters from Firefox
 			ulId = GetNavigateWindowId();
@@ -195,13 +271,14 @@ namespace Plugin
 			pIEHostWindow->MoveWindow(rect);
 			pIEHostWindow->ShowWindow(SW_SHOW);
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
-			if (pIEHostWindow) 
+			if (pIEHostWindow)
 			{
 				delete pIEHostWindow;
 				pIEHostWindow = NULL;
 			}
+			UNUSED(strMessage);
 			TRACE(_T("[CPlugin::CreateIEHostWindow] Exception: %s\n"), (LPCTSTR)strMessage);
 		}
 		parent.Detach();
@@ -300,7 +377,6 @@ namespace Plugin
 		CString url;
 
 		BOOL bOK = FALSE;
-		NPObject* pWindow = NULL;
 		NPVariant vLocation;
 		VOID_TO_NPVARIANT(vLocation);
 		NPVariant vHref;
@@ -308,18 +384,14 @@ namespace Plugin
 
 		try 
 		{
+			NPObject* pWindow = GetWindow();
 
-			if (( NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
-			{
-				throw(CString(_T("Cannot get window")));
-			}
-
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier ("location"), &vLocation)) || !NPVARIANT_IS_OBJECT (vLocation))
+			if ((!NPN_GetProperty( m_pNPInstance, pWindow, GetIdentifier("location"), &vLocation)) || !NPVARIANT_IS_OBJECT (vLocation))
 			{
 				throw(CString(_T("Cannot get window.location")));
 			}
 
-			if ((!NPN_GetProperty( m_pNPInstance, NPVARIANT_TO_OBJECT(vLocation), NPN_GetStringIdentifier ("href"), &vHref)) || !NPVARIANT_IS_STRING(vHref))
+			if ((!NPN_GetProperty( m_pNPInstance, NPVARIANT_TO_OBJECT(vLocation), GetIdentifier("href"), &vHref)) || !NPVARIANT_IS_STRING(vHref))
 			{
 				throw(CString(_T("Cannot get window.location.href")));
 			}
@@ -340,14 +412,14 @@ namespace Plugin
 			delete[] szUnescaped;
 
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
+			UNUSED(strMessage);
 			TRACE(_T("[CPlugin::GetHostURL Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vHref))	NPN_ReleaseVariantValue(&vHref);
 		if (!NPVARIANT_IS_VOID(vLocation))	NPN_ReleaseVariantValue(&vLocation);
-		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return url;
 	}
@@ -356,27 +428,16 @@ namespace Plugin
 	{
 		CString strParam;
 
-		NPObject* pWindow = NULL;
-		NPVariant vContainer;
-		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vParam;
 		VOID_TO_NPVARIANT(vParam);
 
 		try
 		{
-			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
-			{
-				throw(CString(_T("Cannot get window")));
-			}
+			NPObject* pContainer = GetContainer();
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
+			if (!NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier(name), NULL, 0, &vParam))
 			{
-				throw(CString(_T("Cannot get window.Container")));
-			}
-
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier(name), NULL, 0, &vParam))
-			{
-				throw(CString(_T("Cannot execute window.Container.getXXX()")));
+				throw(CString(_T("Cannot invoke window.Container.getXXX()")));
 			}
 			if (!NPVARIANT_IS_STRING(vParam)) 
 			{
@@ -384,14 +445,13 @@ namespace Plugin
 			}
 			strParam = NPStringToCString(vParam.value.stringValue);
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
+			UNUSED(strMessage);
 			TRACE(_T("[CPlugin::GetNavigateHeaders Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vParam))	NPN_ReleaseVariantValue(&vParam);
-		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
-		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return strParam;
 	}
@@ -405,6 +465,12 @@ namespace Plugin
 #else
 		return _tcstoul(strId, NULL, 10);
 #endif
+	}
+
+	// Get URL to visit
+	CString CPlugin::GetNavigateURL() const
+	{
+		return GetNavigateParam("getNavigateURL");
 	}
 
 	// Get Http headers paramter for IECtrl::Navigate
@@ -422,44 +488,30 @@ namespace Plugin
 	// Clear all the paramters for IECtrl::Navigate
 	void CPlugin::RemoveNavigateParams()
 	{
-		NPObject* pWindow = NULL;
-		NPVariant vContainer;
-		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vResult;
 		VOID_TO_NPVARIANT(vResult);
 
 		try
 		{
-			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
-			{
-				throw(CString(_T("Cannot get window")));
-			}
+			NPObject* pContainer = GetContainer();
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
-			{
-				throw(CString(_T("Cannot get window.Container")));
-			}
-
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier("removeNavigateParams"), NULL, 0, &vResult))
+			if (!NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier("removeNavigateParams"), NULL, 0, &vResult))
 			{
 				throw(CString(_T("Cannot execute window.Container.removeNavigateParams()")));
 			}
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
+			UNUSED(strMessage);
 			TRACE(_T("[CPlugin::RemoveNavigateParams Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vResult))	NPN_ReleaseVariantValue(&vResult);
-		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
-		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 	}
 
 	// This function is equivalent to the following JavaScript function:
 	// function FireEvent(strEventType, strDetail) {
-	//   var event = document.createEvent("CustomEvent");
-	//   event.initCustomEvent(strEventType, true, true, strDetail);
-	//   pluginObject.dispatchEvent(event);
+	//   FireIEContainer.dispatchEvent(strEventType, strDetail)
 	// }
 	// 
 	// Uses following JavaScript code to listen to the event fired:
@@ -468,148 +520,70 @@ namespace Plugin
 	// }
 	BOOL CPlugin::FireEvent(const CString &strEventType, const CString &strDetail)
 	{
-		BOOL bOK = FALSE;
-		NPObject* pWindow = NULL;
-		NPVariant vDocument;
-		VOID_TO_NPVARIANT(vDocument);
-		NPVariant vEvent;
-		NPObject* pDocument = NULL;
-		VOID_TO_NPVARIANT(vEvent);
-		NPObject *pEvent = NULL;
-		NPObject* pPlugin = NULL;
-
+		// Fast event dispatching, requires helper function in container object
 		try
 		{
-			// get window object
-			if (NPN_GetValue(m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR || pWindow == NULL)
-			{
-				throw CString(_T("Cannot get window"));
-			}
+			// FireIEContainer.dispatchEvent(strEventType, strDetail);
+			NPObject* pContainer = GetContainer();
+			NPVariant args[2];
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strEventType), args[0]);
+			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strDetail), args[1]);
+			NPVariant vSucceeded;
+			VOID_TO_NPVARIANT(vSucceeded);
 
-			// get window.document
-			bOK = NPN_GetProperty(m_pNPInstance, pWindow, NPN_GetStringIdentifier("document"), &vDocument);
-			if (!NPVARIANT_IS_OBJECT(vDocument) || !bOK)
-			{
-				throw CString(_T("Cannot get window.document"));
-			}
-			pDocument = NPVARIANT_TO_OBJECT(vDocument);
+			BOOL bOK = NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier("dispatchEvent"), args, 2, &vSucceeded);
+				
+			for (int i = 0; i < 2; i++)
+				NPN_ReleaseVariantValue(&args[i]);
 
-			// var event = document.createEvent("CustomEvent");
-			if (pDocument) 
+			if (!bOK || !NPVARIANT_IS_BOOLEAN(vSucceeded))
 			{
-				NPVariant arg;
-				STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(_T("CustomEvent")), arg);
-				bOK = NPN_Invoke(m_pNPInstance, pDocument, NPN_GetStringIdentifier("createEvent"), &arg, 1, &vEvent);
-				NPN_ReleaseVariantValue(&arg);
-				if (!NPVARIANT_IS_OBJECT(vEvent) || !bOK)
-				{
-					throw CString(_T("Cannot document.createEvent"));
-				}
+				NPN_ReleaseVariantValue(&vSucceeded);
+				throw CString(_T("Cannot invoke dispatchEvent"));
 			}
-			else 
-			{
-				throw CString(_T("window.document is null"));
-			}
-			pEvent = NPVARIANT_TO_OBJECT(vEvent);;
+			bool bSucceeded = NPVARIANT_TO_BOOLEAN(vSucceeded);
+			NPN_ReleaseVariantValue(&vSucceeded);
+			if (!bSucceeded)
+				throw CString(_T("Event dispatch failed"));
 
-			// event.initCustomEvent(strEventType, true, true, strDetail);
-			if (pEvent)
-			{
-				NPVariant args[4];
-				STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strEventType), args[0]);
-				BOOLEAN_TO_NPVARIANT(true, args[1]);
-				BOOLEAN_TO_NPVARIANT(true, args[2]);
-				STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(strDetail), args[3]);
-				NPVariant vResult;
-				bOK = NPN_Invoke(m_pNPInstance, pEvent, NPN_GetStringIdentifier("initCustomEvent"), args, 4, &vResult);
-				for (int i=0; i<4; i++)
-				{
-					NPN_ReleaseVariantValue(&args[i]);
-				}
-				NPN_ReleaseVariantValue(&vResult);
-				if (!bOK)
-				{
-					throw CString(_T("Cannot event.initCustomEvent"));
-				}
-			}
-			else
-			{
-				throw CString(_T("event is null"));
-			}
-
-			// get plugin object
-			if (NPN_GetValue(m_pNPInstance, NPNVPluginElementNPObject, &pPlugin) != NPERR_NO_ERROR || pPlugin == NULL)
-			{
-				throw CString(_T("Cannot get window"));
-			}
-
-
-			// pluginObject.dispatchEvent(event);
-			NPVariant vNotCanceled; 
-			bOK = NPN_Invoke(m_pNPInstance, pPlugin, NPN_GetStringIdentifier("dispatchEvent"), &vEvent, 1, &vNotCanceled);
-			NPN_ReleaseVariantValue(&vEvent);
-			if (!bOK || !NPVARIANT_IS_BOOLEAN(vNotCanceled)) 
-			{
-				NPN_ReleaseVariantValue(&vNotCanceled);
-				throw CString(_T("Cannot dispatchEvent"));
-			}
-			if (NPVARIANT_TO_BOOLEAN(vNotCanceled) != true)
-			{
-				throw CString(_T("Event is canceled"));
-			}
+			return TRUE;
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
-			TRACE(_T("[CPlugin::FireEvent Exception] %s\n"), strMessage);
-			bOK = FALSE;
+			UNUSED(strMessage);
+			TRACE(_T("[CPlugin::FireEvent Exception] Fast event dispatching failed: %s\n"), strMessage);
+			return FALSE;
 		}
-		if (pPlugin != NULL) NPN_ReleaseObject(pPlugin);
-		if (!NPVARIANT_IS_VOID(vEvent))	NPN_ReleaseVariantValue(&vEvent);
-		if (!NPVARIANT_IS_VOID(vDocument))	NPN_ReleaseVariantValue(&vDocument);
-		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
-		return bOK;
 	}
 
 	double CPlugin::GetZoomLevel()
 	{
 		double level = 1;
 
-		NPObject* pWindow = NULL;
-		NPVariant vContainer;
-		VOID_TO_NPVARIANT(vContainer);
 		NPVariant vLevel;
 		VOID_TO_NPVARIANT(vLevel);
 
 		try
 		{
-			if ((NPN_GetValue( m_pNPInstance, NPNVWindowNPObject, &pWindow) != NPERR_NO_ERROR ) || !pWindow )
-			{
-				throw(CString(_T("Cannot get window")));
-			}
+			NPObject* pContainer = GetContainer();
 
-			if ((!NPN_GetProperty( m_pNPInstance, pWindow, NPN_GetStringIdentifier (RES_CONTAINER), &vContainer)) || !NPVARIANT_IS_OBJECT (vContainer))
+			if (!NPN_Invoke(m_pNPInstance, pContainer, GetIdentifier("getZoomLevel"), NULL, 0, &vLevel))
 			{
-				throw(CString(_T("Cannot get window.Container")));
-			}
-
-			if (!NPN_Invoke(m_pNPInstance, NPVARIANT_TO_OBJECT(vContainer), NPN_GetStringIdentifier("getZoomLevel"), NULL, 0, &vLevel))
-			{
-				throw(CString(_T("Cannot execute window.Container.getZoomLevel()")));
+				throw CString(_T("Cannot invoke window.Container.getZoomLevel()"));
 			}
 			if (NPVARIANT_IS_DOUBLE(vLevel)) 
 				level = NPVARIANT_TO_DOUBLE(vLevel);
 			else if ( NPVARIANT_IS_INT32(vLevel) ) 
 				level = NPVARIANT_TO_INT32(vLevel);
 		}
-		catch (CString strMessage)
+		catch (const CString& strMessage)
 		{
 			level = 1;
+			UNUSED(strMessage);
 			TRACE(_T("[CPlugin::GetZoomLevel Exception] %s\n"), strMessage);
 		}
 
 		if (!NPVARIANT_IS_VOID(vLevel))	NPN_ReleaseVariantValue(&vLevel);
-		if (!NPVARIANT_IS_VOID(vContainer))	NPN_ReleaseVariantValue(&vContainer);
-		if (pWindow != NULL) NPN_ReleaseObject(pWindow);
 
 		return level;
 	}
@@ -658,18 +632,6 @@ namespace Plugin
 
 		strDetail = CA2T(json.toStyledString().c_str());
 		FireEvent(strEventType, strDetail);
-	}
-
-	void CPlugin::SetURLCookie(const CString& strURL, const CString& strCookie)
-	{
-		char* url = CStringToNPStringCharacters(strURL);
-		char* cookie = CStringToNPStringCharacters(strCookie);
-		if (NPN_SetValueForURL(m_pNPInstance, NPNURLVCookie, url, cookie, (uint32_t)strlen(cookie)) != NPERR_NO_ERROR)
-		{
-			TRACE(_T("[CPlugin::SetURLCookie] NPN_SetValueForURL failed! URL: %s"), strURL);
-		}
-		NPN_MemFree(cookie);
-		NPN_MemFree(url);
 	}
 
 	void CPlugin::IENewTab(ULONG_PTR ulId, const CString& strURL, bool bShift, bool bCtrl)
@@ -737,7 +699,7 @@ namespace Plugin
 #ifdef DEBUG
 		test::doTest();
 #endif
-		if (COMFix::ifNeedFix())
+		if (Utils::App::GetApplication() != Utils::App::OOPP && COMFix::ifNeedFix())
 			COMFix::doFix();
 
 		CString strEventType = _T("IEUtilsPluginInitialized");

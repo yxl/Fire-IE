@@ -92,18 +92,30 @@ function init()
     if (/^(rule|subscription)\.(added|removed|disabled|updated)$/.test(action)) reloadPrefs();
   });
   
-  // observer to listen to the "fireie-reload-prefs" notification
-  let reloadObserver = {
+  // genereal event observer for "fireie-*" events
+  let generalObserver = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
     
     observe: function(subject, topic, data)
     {
-      if (topic == "fireie-reload-prefs")
+      switch (topic)
+      {
+      case "fireie-reload-prefs":
         reloadPrefs();
+        break;
+      case "fireie-before-reload-plugin":
+        hideContainerPlugins();
+        break;
+      case "fireie-reload-plugin":
+        reloadTabs();
+        break;
+      };
     }
   };
   
-  Services.obs.addObserver(reloadObserver, "fireie-reload-prefs", false);
+  Services.obs.addObserver(generalObserver, "fireie-reload-prefs", false);
+  Services.obs.addObserver(generalObserver, "fireie-before-reload-plugin", false);
+  Services.obs.addObserver(generalObserver, "fireie-reload-plugin", false);
 }
 
 /**
@@ -331,6 +343,7 @@ WindowWrapper.prototype = {
     Services.obs.notifyObservers(null, "fireie-lazy-init", null);
 
     this._registerEventListeners();
+    this._registerMessageListeners();
 
     this.updateState();
   },
@@ -365,10 +378,6 @@ WindowWrapper.prototype = {
     if (panelUIPopup)
       panelUIPopup.addEventListener("popupshowing", this._bindMethod(this._updatePanelUIItems), false);
     this.window.addEventListener("mousedown", this._bindMethod(this._onMouseDown), true);
-    this.E("urlbar-reload-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    this.E("urlbar-stop-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
-    if (this.E("star-button")) // Nightly 20140304 removed this
-      this.E("star-button").addEventListener("click", this._bindMethod(this._onClickInsideURLBar), false);
     this.window.gURLBar.addEventListener("input", this._bindMethod(this.updateButtonStatus), false);
     let contextMenu = this.E("contentAreaContextMenu");
     if (contextMenu)
@@ -388,7 +397,7 @@ WindowWrapper.prototype = {
     this.window.document.addEventListener("PreviewBrowserTheme", this._bindMethod(this._onPreviewTheme), false, true);
     this.window.document.addEventListener("ResetBrowserThemePreview", this._bindMethod(this._onResetThemePreview), false, true);
   },
- 
+  
   // security check, do not let malicious sites send fake events
   _checkEventOrigin: function(event)
   {
@@ -399,6 +408,14 @@ WindowWrapper.prototype = {
     let allow = Utils.isIEEngine(doc.location.href);
     if (!allow) Utils.LOG("Blocked content event: " + event.type);
     return allow;
+  },
+  
+  _forEachTab: function(callback)
+  {
+    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
+    for (let i = 0; i < mTabs.length; i++)
+      if (mTabs[i].localName == "tab")
+        callback.call(this, mTabs[i], i);
   },
   
   /**
@@ -425,12 +442,55 @@ WindowWrapper.prototype = {
    */
   updateFavicons: function()
   {
-    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
-    for (let i = 0; i < mTabs.length; i++)
-      if (mTabs[i].localName == "tab")
-        this._updateFaviconForTab(mTabs[i]);
+    this._forEachTab(this._updateFaviconForTab);
   },
   
+  /**
+   * Hide all container plugins
+   */
+  hideContainerPlugins: function()
+  {
+    this._forEachTab(function(tab)
+    {
+      let plugin = this.getContainerPlugin(tab);
+      if (plugin)
+      {
+        let doc = plugin.ownerDocument;
+        let event = doc.createEvent("CustomEvent");
+        event.initCustomEvent("HideContainerPlugin", true, true, null);
+        plugin.dispatchEvent(event);
+      }
+    });
+  },
+
+  _reloadBrowserIfIEEngine: function(browser)
+  {
+    if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
+    {
+      let uri = browser.currentURI;
+      let uriToLoad = uri;
+      if (uri.hasRef)
+      {
+        // If the URI has hash part, directly loading it does nothing.
+        // We should reload the base part of the URI only
+        uriToLoad = uri.cloneIgnoringRef();
+      }
+      browser.loadURIWithFlags(uriToLoad.spec,
+        Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
+    }
+  },
+  
+  /**
+   * Reload tabs in IE engine
+   */
+  reloadTabs: function()
+  {
+    this._forEachTab(function(tab)
+    {
+      this._reloadBrowserIfIEEngine(tab.linkedBrowser);
+    });
+  },
+
   updateButtonStatus: function()
   {
     Utils.scheduleThrottledUpdate(this._updateButtonStatusCore, this);
@@ -474,10 +534,11 @@ WindowWrapper.prototype = {
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
       let isIEEngine = this.isIEEngine();
+      let unmangledURL = this.window.gBrowser.currentURI.spec;
 
       // Update the enable status of back, forward, reload and stop buttons.
-      let canBack = (pluginObject ? pluginObject.CanBack : false) || this.window.gBrowser.webNavigation.canGoBack;
-      let canForward = (pluginObject ? pluginObject.CanForward : false) || this.window.gBrowser.webNavigation.canGoForward;
+      let canBack = (pluginObject && pluginObject.CanBack) || this.window.gBrowser.webNavigation.canGoBack;
+      let canForward = (pluginObject && pluginObject.CanForward) || this.window.gBrowser.webNavigation.canGoForward;
       let isBlank = (this.window.gBrowser.currentURI.spec == "about:blank");
       let isLoading = this.window.gBrowser.mIsBusy;
       this._updateObjectDisabledStatus("Browser:Back", canBack);
@@ -485,9 +546,8 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
       // Fix for Australis forward button
-      if (this.window.CombinedBackForward) {
+      if (this.window.CombinedBackForward)
         this.window.CombinedBackForward.setForwardButtonOcclusion(!canForward);
-      }
 
       // Update the content of the URL bar.
       if (this.window.gURLBar && isIEEngine)
@@ -495,10 +555,9 @@ WindowWrapper.prototype = {
         if (!this.window.gBrowser.userTypedValue)
         {
           let displayURL = url;
-          if (displayURL == "about:blank") displayURL = "";
-          if (this.window.gURLBar.value != displayURL) {
-            this.window.gURLBar.value = displayURL;
-          }
+          if (url == "about:blank") displayURL = "";
+          if (this.window.gURLBar.value != displayURL)
+            this.window.gURLBar.value = unmangledURL;
         }
       }
 
@@ -510,7 +569,7 @@ WindowWrapper.prototype = {
         this.updateIEStatusText();
         // update current tab's title
         let title = pluginObject.Title;
-        if (title && title != "")
+        if (title)
           this.window.gBrowser.contentDocument.title = title;
       }
 
@@ -627,8 +686,7 @@ WindowWrapper.prototype = {
 
     this._updateInterface();
   },
-
-
+  
   /**
    * Setup up the theme
    */
@@ -749,55 +807,28 @@ WindowWrapper.prototype = {
     return null;
   },
 
-  /** Get current navigation URL with current engine.*/
-  getURL: function(aTab)
+  _getURLFromBrowser: function(aBrowser)
   {
-    let tab = aTab || null;
-    let aBrowser = (tab ? tab.linkedBrowser : this.window.gBrowser);
     let url = aBrowser.currentURI.spec;
-        
-    // Is it an IE engine container url?
-    let pluginObject = this.getContainerPlugin(tab);
-    let pluginURL = pluginObject ? pluginObject.URL : null;
-    if (pluginURL && pluginURL != "")
-    {
-      url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginURL)) : pluginURL);
-      return Utils.fromContainerUrl(url);
-    }
-    
+    // No need to query container plugin here - we hooked the browser getter already
     return Utils.fromAnyPrefixedUrl(url);
   },
 
-
+  /** Get current navigation URL with current engine.*/
+  getURL: function(aTab)
+  {
+    let tab = aTab || this.window.gBrowser.mCurrentTab;
+    return this._getURLFromBrowser(tab.linkedBrowser);
+  },
+  
   /**
    *  Get current navigation URI with current engine.
    *  It's of the same function with WindowWrapper#getURL.
    */
   getURI: function(aBrowser)
   {
-    try
-    {
-      let docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
-      let wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-      if (wNav.currentURI && Utils.isIEEngine(wNav.currentURI.spec))
-      {
-        let pluginObject = wNav.document.getElementById(Utils.containerPluginId);
-        if (pluginObject)
-        {
-          if (pluginObject.wrappedJSObject) pluginObject = pluginObject.wrappedJSObject;
-          let pluginURL = pluginObject.URL;
-          if (pluginURL)
-          {
-            return Utils.makeURI(Utils.containerUrl + encodeURI(pluginURL));
-          }
-        }
-      }
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
-    return null;
+    let url = this._getURLFromBrowser(aBrowser);
+    return Utils.makeURI(url);
   },
   
   /** Check whether we should switch back to Firefox engine */
@@ -806,36 +837,51 @@ WindowWrapper.prototype = {
     return Prefs.autoswitch_enabled && Prefs.autoSwitchBackEnabled && Policy.checkEngineExceptionalRule(url);
   },
   
-  /** Check whether current engine is IE.*/
-  isIEEngine: function(aTab)
+  _checkTabURL: function(aTab, checkerFunc)
   {
-    let tab = aTab || this.window.gBrowser.mCurrentTab;
     let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.isIEEngine(aBrowser.currentURI.spec))
+    if (aBrowser && aBrowser.currentURI && checkerFunc.call(Utils, aBrowser.currentURI.spec))
     {
       return true;
     }
     return false;
+  },
+  
+  /** Check whether current engine is IE.*/
+  isIEEngine: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isIEEngine);
   },
   
   /** Check whether current page is a switch jumper.*/
   isSwitchJumper: function(aTab)
   {
-    let tab = aTab || this.window.gBrowser.mCurrentTab;
-    let aBrowser = (aTab ? aTab.linkedBrowser : this.window.gBrowser);
-    if (aBrowser && aBrowser.currentURI && Utils.isSwitchJumper(aBrowser.currentURI.spec))
-    {
-      return true;
-    }
-    return false;
+    return this._checkTabURL(aTab, Utils.isSwitchJumper);
+  },
+  
+  /** Check whether current page is faked.*/
+  isFake: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isFake);
+  },
+  
+  /** Check whether current page has a prefixed URL.*/
+  hasPrefixedUrl: function(aTab)
+  {
+    return this._checkTabURL(aTab, Utils.isPrefixedUrl);
   },
   
   _addNewTab: function(where, related)
   {
     var gBrowser = this.window.gBrowser;
+    
+    // Hack: make sure the new tab is loaded in chrome process, to make e10s nightly happy
+    let url = Utils.toFakeUrl("about:blank");
+    
     // it is highly probable that the new tab is related to current
-    let newTab = gBrowser.addTab("about:blank",
-      { relatedToCurrent: related === undefined || related });
+    let newTab = gBrowser.addTab(url, {
+      relatedToCurrent: related === undefined || related
+    });
 
     let loadInBackground = Utils.shouldLoadInBackground();
     
@@ -903,10 +949,13 @@ WindowWrapper.prototype = {
       }
 
       let zoomLevel = this.getZoomLevel(aTab.linkedBrowser);
-      Utils.setTabAttributeJSON(aTab, 'zoom', {
-        zoomLevel: zoomLevel
-      });
-
+      if (zoomLevel)
+      {
+        Utils.setTabAttributeJSON(aTab, 'zoom', {
+          zoomLevel: zoomLevel
+        });
+      }
+      
       if (isIEEngineAfterSwitch)
       {
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
@@ -919,7 +968,7 @@ WindowWrapper.prototype = {
         if (pluginObject)
         {
           pluginObject.style.visibility = "hidden";
-          this.goDoCommand("Stop");
+          try { pluginObject.Stop(); } catch (ex) {}
         }
 
         // Switch to Firefox engine by loading the switch jumper page
@@ -937,7 +986,16 @@ WindowWrapper.prototype = {
   _openInCurrentTab: function(url, isIEEngine)
   {
     if (this.isIEEngine() != isIEEngine)
-      this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+    {
+      try
+      {
+        this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+      }
+      catch (ex)
+      {
+        Utils.ERROR("_switchTabEngine failed: " + ex + "\n" + ex.stack);
+      }
+    }
     else
     {
       if (isIEEngine && !Utils.isFirefoxOnly(url))
@@ -978,7 +1036,8 @@ WindowWrapper.prototype = {
       this._setManuallySwitchFlag(newTab, url);
 
       // and then load the actual url
-      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT |
+                  Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
       try
       {
         if (!isIEEngine)
@@ -1067,10 +1126,7 @@ WindowWrapper.prototype = {
   openInIE: function(urlOverride)
   {
     var url = urlOverride || this.getURL();
-    // file:// urls should be decoded, otherwise IE won't recognize
-    if (/^file:\/\/.*/.test(url))
-      url = decodeURI(url);
-    var args = [url];
+    var args = [ Utils.convertToIEURL(url) ];
 
     // Private browsing mode - launch IE in InPrivate mode
     if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
@@ -1107,41 +1163,40 @@ WindowWrapper.prototype = {
 
   _updateProgressStatus: function()
   {
-    let mTabs = this.window.gBrowser.mTabContainer.childNodes;
-    for (let i = 0; i < mTabs.length; i++)
+    this._forEachTab(function(tab)
     {
-      let tab = mTabs[i];
-      if (tab.localName == "tab")
+      let pluginObject = this.getContainerPlugin(tab);
+      if (pluginObject)
       {
-        let pluginObject = this.getContainerPlugin(tab);
-        if (pluginObject)
+        let aCurTotalProgress = pluginObject.Progress;
+        if (aCurTotalProgress != tab.mProgress)
         {
-          let aCurTotalProgress = pluginObject.Progress;
-          if (aCurTotalProgress != tab.mProgress)
+          const wpl = Ci.nsIWebProgressListener;
+          let aMaxTotalProgress = 100;
+          let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
+          let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
+          let aWebProgress = tab.linkedBrowser.webProgress;
+          let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
+          let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
+          
+          try
           {
-            const wpl = Ci.nsIWebProgressListener;
-            let aMaxTotalProgress = 100;
-            let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
-            let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
-            let aWebProgress = tab.linkedBrowser.webProgress;
-            let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
-            let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
-            
             if (!aStopped && !tab.mProgressStarted)
               aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-            
             aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0,
               aCurTotalProgress == -1 ? 100 : aCurTotalProgress, aMaxTotalProgress);
-              
             if (aStopped)
               aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-            
-            tab.mProgress = aCurTotalProgress;
-            tab.mProgressStarted = !aStopped;
           }
+          catch (ex)
+          {
+            Utils.ERROR("Error calling WebProgressListeners: " + ex);
+          }
+          tab.mProgress = aCurTotalProgress;
+          tab.mProgressStarted = !aStopped;
         }
       }
-    }
+    });
   },
   
   _focusPlugin: function()
@@ -1401,8 +1456,13 @@ WindowWrapper.prototype = {
 
     if (themeData != null)
     {
-      LightweightTheme.installTheme(themeData);
+      this._installTheme(themeData);
     }
+  },
+  
+  _installTheme: function(themeData)
+  {
+    LightweightTheme.installTheme(themeData);
   },
 
   /**
@@ -1442,8 +1502,13 @@ WindowWrapper.prototype = {
     let themeData = this._getThemeDataFromNode(node);
     if (themeData != null)
     {
-      this._applyTheme(themeData);
+      this._previewTheme(themeData);
     }
+  },
+  
+  _previewTheme: function(themeData)
+  {
+    this._applyTheme(themeData);
   },
 
   /**
@@ -1455,6 +1520,11 @@ WindowWrapper.prototype = {
   _onResetThemePreview: function(event)
   {
     if (!this._checkThemeSite(event.target)) return;
+    this._resetThemePreview();
+  },
+  
+  _resetThemePreview: function()
+  {
     this._applyTheme(LightweightTheme.currentTheme);
   },
 
@@ -1709,7 +1779,8 @@ WindowWrapper.prototype = {
       "Zoom": function(pluginObject)
       {
         let zoomLevel = this.getZoomLevel();
-        pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
+        if (zoomLevel)
+          pluginObject.Zoom(zoomLevel * Utils.DPIScaling);
         return true;
       },
       "DisplaySecurityInfo": function(pluginObject)
@@ -2074,7 +2145,7 @@ WindowWrapper.prototype = {
   {
     try
     {
-      if (this.isSwitchJumper())
+      if (this.isSwitchJumper() || this.isFake())
       {
         this._setSecureLockIcon("Unsecure");
         return true;
@@ -2112,7 +2183,7 @@ WindowWrapper.prototype = {
       {
         return null;
       }
-      let url = pluginObject.URL;
+      let url = Utils.convertToFxURL(pluginObject.URL);
       return Utils.getEffectiveHost(url);
     }
     catch (ex)
@@ -2174,19 +2245,6 @@ WindowWrapper.prototype = {
     }
   },
   
-  // process click events inside the URL bar (mainly to stop propagation
-  // in order to resolve multiple-caret problems)
-  _onClickInsideURLBar: function(e)
-  {
-    let pluginObject = this.getContainerPlugin();
-    if (pluginObject != null)
-    {
-      e.stopPropagation();
-      // the focus handler does window focus transfer for us (do not call Focus!!)
-      pluginObject.focus();
-    }
-  },
-
   _onTabSelected: function(e)
   {
     this._updateInterface();
@@ -2327,7 +2385,12 @@ WindowWrapper.prototype = {
    */
   getZoomLevel: function(aBrowser)
   {
-    let browser = aBrowser || this.window.gBrowser.selectedBrowser
+    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+
+    // Are we in e10s window?
+    if (!browser.docShell)
+      return null;
+
     let docViewer = browser.markupDocumentViewer;
     let zoomLevel = docViewer.fullZoom;
     return zoomLevel;
@@ -2339,6 +2402,11 @@ WindowWrapper.prototype = {
   _setZoomLevel: function(value, aBrowser)
   {
     let browser = aBrowser || this.window.gBrowser.selectedBrowser;
+
+    // Are we in e10s window?
+    if (!browser.docShell)
+      return;
+    
     let docViewer = browser.markupDocumentViewer;
     docViewer.fullZoom = value;
   },
@@ -2357,9 +2425,10 @@ WindowWrapper.prototype = {
     this._updateInterface();
 
     let url = doc.defaultView.location.href;
-    if (url == "about:blank" || Utils.isSwitchJumper(url))
+    if (url == "about:blank" || Utils.isSwitchJumper(url) || Utils.isFake(url))
     {
-      // might be the switch jumper from IE to FF, ignore zooming on this page
+      // might be the switch jumper from IE to FF or our custom faked page,
+      // ignore zooming on this page
       return;
     }
     
@@ -2522,6 +2591,60 @@ WindowWrapper.prototype = {
     this.E("fireie-context-openlinkintabwithieengine").hidden = hidden;
     this.E("fireie-context-openlinkiniebrowser").hidden = hidden;
   },
+
+  /**
+   * Attaches message listeners to handle messages from content processes
+   */
+  _registerMessageListeners: function()
+  {
+    let mm = this.window.messageManager;
+    if (mm)
+    {
+      mm.addMessageListener("fireie:reloadContainerPage", this);
+      mm.addMessageListener("fireie:shouldLoadInBrowser", this);
+      mm.addMessageListener("fireie:notifyIsRootWindowRequest", this);
+      mm.addMessageListener("fireie:InstallBrowserTheme", this);
+      mm.addMessageListener("fireie:PreviewBrowserTheme", this);
+      mm.addMessageListener("fireie:ResetBrowserThemePreview", this);
+      mm.loadFrameScript("chrome://fireie/content/frame.js", true);
+    }
+  },
+  
+  /**
+   * nsIMessageListener
+   */
+  receiveMessage: function(msg)
+  {
+    let result = undefined;
+    
+    let browser = msg.target;
+    switch (msg.name)
+    {
+    case "fireie:reloadContainerPage":
+      this._reloadBrowserIfIEEngine(browser);
+      break;
+    case "fireie:shouldLoadInBrowser":
+      result = Policy.shouldLoadInBrowser(browser, msg.data);
+      break;
+    case "fireie:notifyIsRootWindowRequest":
+      Policy.notifyIsRootWindowRequest(browser, msg.data);
+      break;
+    case "fireie:InstallBrowserTheme":
+      this._installTheme(JSON.parse(msg.data));
+      break;
+    case "fireie:PreviewBrowserTheme":
+      this._previewTheme(JSON.parse(msg.data));
+      break;
+    case "fireie:ResetBrowserThemePreview":
+      this._resetThemePreview();
+      break;
+    default:
+      Utils.LOG("Unhandled message: " + msg.name);
+      break;
+    }
+    
+    return result;
+  },
 };
 
 /**
@@ -2541,6 +2664,28 @@ function updateFavicons()
 {
   for each (let wrapper in wrappers)
     wrapper.updateFavicons();
+}
+
+/**
+ * Hide all container plugins in preparation of a reload
+ */
+function hideContainerPlugins()
+{
+  wrappers.forEach(function(wrapper)
+  {
+    wrapper.hideContainerPlugins();
+  });
+}
+
+/**
+ * Reload all tabs in IE engine (in response of a plugin process reload)
+ */
+function reloadTabs()
+{
+  wrappers.forEach(function(wrapper)
+  {
+    wrapper.reloadTabs();
+  });
 }
 
 /**

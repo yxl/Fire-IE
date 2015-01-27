@@ -269,7 +269,7 @@ let IECookieManager = {
       cookieData +="; httponly";
     }
     
-    if (Prefs.OOPP_remoteSetCookie && Utils.isOOPP)
+    if (Prefs.OOPP_remoteSetCookie && this._upm.isRunningOOP)
     {
       this._upm.getPlugin().SetCookie(url, cookieData);
     }
