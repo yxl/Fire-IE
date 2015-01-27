@@ -747,6 +747,13 @@ var Utils = {
     return /^[0-9a-zA-Z]+[0-9a-zA-Z\.\_\-]*\.[0-9a-zA-Z\_\-]+$/.test(domainName);
   },
   
+  fuzzyUrlCompare: function(url1, url2)
+  {
+    let uri1 = Utils.makeURI(url1, true);
+    let uri2 = Utils.makeURI(url2, true);
+    return (uri1 && uri2 && uri1.specIgnoringRef === uri2.specIgnoringRef);
+  },
+  
   escapeURLForCSS: function(url)
   {
     return url.replace(/[(),\s'"]/g, "\$&");

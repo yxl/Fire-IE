@@ -34,6 +34,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   Cu.import(baseURL.spec + "ContentProcessContentPolicy.jsm");
   Cu.import(baseURL.spec + "ContentUtils.jsm");
   Cu.import(baseURL.spec + "ContentPrefs.jsm");
+  
+  let global = this;
  
   addEventListener("fireie:reloadContainerPage", function(event)
   {
@@ -43,14 +45,17 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     let url = containerWindow.location.href;
     if (ContentUtils.isIEEngine(url))
     {
-      ChromeBridge.reloadContainerPage(this);
+      ChromeBridge.reloadContainerPage(global);
     }
   }, false);
   
-  addEventListener("fireie:shouldLoadInWindow", function(event)
+  addEventListener("fireie:requestFrameGlobal", function(event)
   {
-    let locationSpec = event.detail.locationSpec;
-    event.detail.result = ChromeBridge.shouldLoadInFrame(this, locationSpec);
+    let detail = event.detail;
+    let callback = detail.callback;
+    let thisPtr = detail.thisPtr;
+    let args = detail.args;
+    detail.result = callback.apply(thisPtr, [global].concat(args));
   }, false);
   
   function getThemeDataFromNode(node)
@@ -86,7 +91,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     }
     
     let themeData = getThemeDataFromNode(node);
-    ChromeBridge.handleThemeRequest(this, event.type, themeData);
+    ChromeBridge.handleThemeRequest(global, event.type, themeData);
   }
   
   addEventListener("InstallBrowserTheme", browserThemeEventHandler, false, true);

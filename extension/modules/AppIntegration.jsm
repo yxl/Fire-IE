@@ -2585,7 +2585,8 @@ WindowWrapper.prototype = {
     if (mm)
     {
       mm.addMessageListener("fireie:reloadContainerPage", this);
-      mm.addMessageListener("fireie:shouldLoadInFrame", this);
+      mm.addMessageListener("fireie:shouldLoadInBrowser", this);
+      mm.addMessageListener("fireie:notifyIsRootWindowRequest", this);
       mm.addMessageListener("fireie:InstallBrowserTheme", this);
       mm.addMessageListener("fireie:PreviewBrowserTheme", this);
       mm.addMessageListener("fireie:ResetBrowserThemePreview", this);
@@ -2606,9 +2607,11 @@ WindowWrapper.prototype = {
     case "fireie:reloadContainerPage":
       this._reloadBrowserIfIEEngine(browser);
       break;
-    case "fireie:shouldLoadInFrame":
-      if (browser)
-        result = Policy.shouldLoadInBrowser(browser, msg.data);
+    case "fireie:shouldLoadInBrowser":
+      result = Policy.shouldLoadInBrowser(browser, msg.data);
+      break;
+    case "fireie:notifyIsRootWindowRequest":
+      Policy.notifyIsRootWindowRequest(browser, msg.data);
       break;
     case "fireie:InstallBrowserTheme":
       this._installTheme(JSON.parse(msg.data));

@@ -87,6 +87,16 @@ var Policy = {
   {
     return !(location.scheme in Policy.ignoredSchemes);
   },
+  
+  /**
+   * Checks whether the engine of given location's scheme is http/https.
+   * @param {nsIURI} location  
+   * @return {Boolean}
+   */
+  isHTTPScheme: function(location)
+  {
+    return location.scheme == "http" || location.scheme == "https";
+  },
 };
 
 /**
@@ -117,7 +127,8 @@ var PolicyPrivate = {
     let location = ContentUtils.unwrapURL(contentLocation);
 
     // Ignore whitelisted schemes
-    if (!Policy.isSwitchableScheme(location)) return Ci.nsIContentPolicy.ACCEPT;
+    if (!Policy.isSwitchableScheme(location) && !Policy.isHTTPScheme(location))
+      return Ci.nsIContentPolicy.ACCEPT;
 
     // Loading the container page in content process does not work.
     // Let the page load - it should handle reloading itself.
@@ -132,6 +143,13 @@ var PolicyPrivate = {
     if (!window || !ContentUtils.isRootWindow(window))
       return Ci.nsIContentPolicy.ACCEPT;
     
+    // If it's a HTTP(S) request, notify http-on-modify-request handler that 
+    // it is indeed from a root window
+    if (Policy.isHTTPScheme(location))
+    {
+      ChromeBridge.notifyIsRootWindowRequest(window, location.spec);
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
     return ChromeBridge.shouldLoadInWindow(window, location.spec);
   },
 

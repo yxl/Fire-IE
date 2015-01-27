@@ -73,23 +73,36 @@ let ChromeBridge = {
     frameGlobal.sendAsyncMessage("fireie:reloadContainerPage");
   },
   
-  shouldLoadInWindow: function(window, locationSpec)
+  _requestFrameGlobal: function(window, callback, args)
   {
-    // We don't have frameGlobal here. Fire an event to retrieve it
     let doc = window.document;
     let event = doc.createEvent("CustomEvent");
     let detail = {
-      locationSpec: locationSpec,
-      result: Ci.nsIContentPolicy.ACCEPT
+      callback: callback,
+      thisPtr: this,
+      args: args,
+      result: undefined
     };
-    event.initCustomEvent("fireie:shouldLoadInWindow", true, true, detail);
+    event.initCustomEvent("fireie:requestFrameGlobal", true, true, detail);
     window.dispatchEvent(event);
     return detail.result;
   },
   
-  shouldLoadInFrame: function(frameGlobal, locationSpec)
+  shouldLoadInWindow: function(window, locationSpec)
   {
-    return frameGlobal.sendSyncMessage("fireie:shouldLoadInFrame", locationSpec);
+    // We don't have frameGlobal here. Fire an event to retrieve it
+    return this._requestFrameGlobal(window, function(frameGlobal, locationSpec)
+    {
+      return frameGlobal.sendSyncMessage("fireie:shouldLoadInBrowser", locationSpec);
+    }, [locationSpec]);
+  },
+  
+  notifyIsRootWindowRequest: function(window, locationSpec)
+  {
+    return this._requestFrameGlobal(window, function(frameGlobal, locationSpec)
+    {
+      return frameGlobal.sendSyncMessage("fireie:notifyIsRootWindowRequest", locationSpec);
+    }, [locationSpec]);
   },
   
   handleThemeRequest: function(frameGlobal, action, themeData)

@@ -172,6 +172,33 @@ var Policy = {
   {
     return PolicyPrivate.shouldLoadInBrowser(browser, locationSpec);
   },
+  
+  /**
+   * Notifies "http-on-modify-request" handlers about whether a URL is loaded in a root window
+   * @param {nsIDOMNode} browserNode
+   * @param {String} locationSpec
+   */
+  notifyIsRootWindowRequest: function(browserNode, locationSpec)
+  {
+    Utils.LOG("notifyIsRootWindowRequest: " + locationSpec);
+    browserNode.setAttribute("isRootWindow", locationSpec);
+  },
+  
+  isRootWindowRequest: function(browserNode, locationSpec)
+  {
+    let rootWindowSpec = browserNode.getAttribute("isRootWindow");
+    let result = Utils.fuzzyUrlCompare(rootWindowSpec, locationSpec);
+    if (result)
+    {
+      browserNode.removeAttribute("isRootWindow");
+      Utils.LOG("isRootWindowRequest: true for " + locationSpec);
+    }
+    else
+    {
+      Utils.LOG("isRootWindowRequest: false for " + locationSpec);
+    }
+    return result;
+  },
 };
 
 /**
@@ -274,8 +301,6 @@ var PolicyPrivate = {
 
         let url = subject.URI.spec;
         let domain = Utils.getHostname(url);
-        let wnd = Utils.getRequestWindow(subject);
-        let browser = Utils.getRequestBrowser(subject);
         
         // Changes the UserAgent to that of IE if necessary.
         let match;
@@ -288,34 +313,38 @@ var PolicyPrivate = {
           if (userAgent)
             subject.setRequestHeader("user-agent", userAgent, false);
         }
+        
+        if (!Prefs.autoswitch_enabled)
+          break;
+        
+        // isWindowURI
+        if (!(subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI))
+          break;
 
-        if (Prefs.autoswitch_enabled && browser && (!wnd || Utils.isRootWindow(wnd)))
+        let browser = Utils.getRequestBrowser(subject);
+        if (!browser)
+          break;
+        
+        let wnd = Utils.getRequestWindow(subject);
+        
+        if (Policy.isRootWindowRequest(browser, url) ||
+            (wnd && Utils.isRootWindow(wnd)))
         {
-          // Checks whether we need switch to IE
-          let isWindowURI = subject.loadFlags & Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
-          if (isWindowURI)
-          {
-            let tab = Utils.getTabFromBrowser(browser);
-            if (!tab || !tab.linkedBrowser) return;
+          // User has manually switched to Firefox engine
+          if (Policy.isManuallySwitched(browser, url))
+            break;
 
-            let browserNode = tab.linkedBrowser.QueryInterface(Ci.nsIDOMNode) || null;
-            if (browserNode)
-            {
-              // User has manually switched to Firefox engine
-              if (Policy.isManuallySwitched(browserNode, url))
-                return;
-            }
+          // The browser must be in a tab
+          let tab = Utils.getTabFromBrowser(browser);
+          if (!tab || !tab.linkedBrowser)
+            break;
 
-            // Check engine switch list
-            if (!Policy.checkEngineRule(url))
-            {
-              return;
-            }
+          // Check engine switch list
+          if (!Policy.checkEngineRule(url))
+            break;
 
-            subject.cancel(Cr.NS_BINDING_ABORTED);
-
-            this._switchToIEEngine(url, tab, subject);
-          }
+          subject.cancel(Cr.NS_BINDING_ABORTED);
+          this._switchToIEEngine(url, tab, subject);
         }
         break;
       }
