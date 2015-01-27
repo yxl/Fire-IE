@@ -462,7 +462,12 @@ var Utils = {
       if (!/^file:\/\/.*/.test(fxURL))
         return fxURL;
       
-      return WinPathURI.convertToIEFileURI(fxURL);
+      let idx = fxURL.indexOf("?");
+      if (idx === -1) idx = fxURL.indexOf("#");
+      let queryAndHash = (idx !== -1) ? fxURL.substring(idx) : "";
+      
+      let ieURL = WinPathURI.convertToIEFileURI(fxURL);
+      return ieURL && (ieURL + queryAndHash);
     };
     
     return Utils.convertToIEURL(fxURL);
@@ -478,7 +483,12 @@ var Utils = {
       if (!/^file:\/\/.*/.test(ieURL))
         return ieURL;
       
-      return WinPathURI.convertToFxFileURI(ieURL);
+      let idx = ieURL.indexOf("?");
+      if (idx === -1) idx = ieURL.indexOf("#");
+      let queryAndHash = (idx !== -1) ? ieURL.substring(idx) : "";
+      
+      let fxURL = WinPathURI.convertToFxFileURI(ieURL);
+      return fxURL && fxURL + queryAndHash;
     };
     
     return Utils.convertToFxURL(ieURL);
