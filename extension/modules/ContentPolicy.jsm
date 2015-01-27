@@ -107,6 +107,11 @@ var Policy = {
    */
   checkEngineExceptionalRule: function(url)
   {
+    // It's a security risk to allow IE engine switch back to
+    // pages with chrome privilege.
+    if (Utils.urlHasChromePrivilege(url))
+      return false;
+
     let docDomain = Utils.getHostname(url);
     let match = EngineMatcher.matchesAny(url, docDomain);
     // While explicitly checking against exceptional rules,
