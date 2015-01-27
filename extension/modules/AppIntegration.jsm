@@ -1248,12 +1248,14 @@ WindowWrapper.prototype = {
       tooltip = Utils.getString("fireie.security.notEntrypted");
       break;
     case "Mixed":
-      classname = self.IDENTITY_MODE_MIXED_CONTENT;
+      classname = self.IDENTITY_MODE_MIXED_ACTIVE_CONTENT ||
+                  self.IDENTITY_MODE_MIXED_ACTIVE_LOADED ||
+                  self.IDENTITY_MODE_MIXED_CONTENT;
       tooltip = Utils.getString("fireie.security.partiallyEncrypted");
       break;
     default:
       classname = self.IDENTITY_MODE_DOMAIN_VERIFIED;
-      tooltip = Utils.getString("fireie.security.encrypted");
+      tooltip = Utils.getString("fireie.security.encrypted") + " ";
       switch (info)
       {
       case "Secure40Bit":
@@ -1285,7 +1287,8 @@ WindowWrapper.prototype = {
     // Firefox 14+ uses a new site identity UI,
     // we should not attempt to set the identity label
     // as it's only for Extended Validation
-    if (Utils.firefoxMajorVersion < 14) {
+    // Pale Moon 25 still uses the old UI
+    if (Utils.firefoxMajorVersion < 14 || Services.appinfo.name === "Pale Moon") {
       identityIconLabel.value = icon_label;
       identityIconCountryLabel.value = "";
       identityIconLabel.crop = "center";
