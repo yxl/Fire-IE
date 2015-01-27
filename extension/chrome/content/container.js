@@ -507,6 +507,7 @@ let FireIEContainer = {};
   {
     let event = document.createEvent("CustomEvent");
     event.initCustomEvent(type, true, true, detail);
-    return E(Utils.containerPluginId).dispatchEvent(event);
+    let target = E(Utils.containerPluginId) || E("container");
+    return target.dispatchEvent(event);
   };
 })();

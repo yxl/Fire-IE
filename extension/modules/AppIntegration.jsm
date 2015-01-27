@@ -968,7 +968,7 @@ WindowWrapper.prototype = {
         if (pluginObject)
         {
           pluginObject.style.visibility = "hidden";
-          this.goDoCommand("Stop");
+          try { pluginObject.Stop(); } catch (ex) {}
         }
 
         // Switch to Firefox engine by loading the switch jumper page
@@ -987,10 +987,13 @@ WindowWrapper.prototype = {
   {
     if (this.isIEEngine() != isIEEngine)
     {
-      try {
-      this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
-      } catch (ex) {
-        Utils.ERROR(ex + "\n" + ex.stack);
+      try
+      {
+        this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+      }
+      catch (ex)
+      {
+        Utils.ERROR("_switchTabEngine failed: " + ex + "\n" + ex.stack);
       }
     }
     else
