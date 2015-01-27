@@ -107,10 +107,6 @@ var Policy = {
    */
   checkEngineExceptionalRule: function(url)
   {
-    // Some webpages do something like opening an "about:blank" window
-    // and then changing its URL rather than opening the URL directly.
-    if (Utils.isFirefoxOnly(url) && url.toLowerCase() != "about:blank")
-      return true;
     let docDomain = Utils.getHostname(url);
     let match = EngineMatcher.matchesAny(url, docDomain);
     // While explicitly checking against exceptional rules,
