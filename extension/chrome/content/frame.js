@@ -51,7 +51,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   {
     let locationSpec = event.detail.locationSpec;
     event.detail.result = ChromeBridge.shouldLoadInFrame(this, locationSpec);
-  }, false, true);
+  }, false);
   
   function getThemeDataFromNode(node)
   {
