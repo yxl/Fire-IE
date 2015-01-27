@@ -391,38 +391,14 @@ var Utils = {
   toPrefixedUrl: function(url, prefix)
   {
     url = url.trim();
-    if (Utils.startsWith(url, prefix)) return url;
-    if (/^file:\/\/.*/.test(url))
-    {
-      try
-      {
-        url = decodeURI(url).replace(/\|/g, ":");
-      }
-      catch (e)
-      {}
-    }
-    return prefix + encodeURI(url);
+    return prefix + encodeURIComponent(url);
   },
 
   fromPrefixedUrl: function(url, prefix)
   {
-    if (url && url.length > 0)
-    {
-      url = url.trim();
-      if (!/^[\w\-]+:/.test(url))
-      {
-        url = "http://" + url;
-      }
-      if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
-      if (url.substr(0, prefix.length) == prefix)
-      {
-        url = decodeURI(url.substring(prefix.length));
-        if (!/^[\w\-]+:/.test(url))
-        {
-          url = "http://" + url;
-        }
-      }
-    }
+    url = url.trim();
+    if (url.substr(0, prefix.length) == prefix)
+      url = decodeURIComponent(url.substring(prefix.length));
     return url;
   },
   
@@ -474,6 +450,38 @@ var Utils = {
   fromFakeUrl: function(url)
   {
     return Utils.fromPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  convertToIEURL: function(fxURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToIEURL = function(fxURL)
+    {
+      if (!/^file:\/\/.*/.test(fxURL))
+        return fxURL;
+      
+      return WinPathURI.convertToIEFileURI(fxURL);
+    };
+    
+    return Utils.convertToIEURL(fxURL);
+  },
+  
+  convertToFxURL: function(ieURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToFxURL = function(ieURL)
+    {
+      if (!/^file:\/\/.*/.test(ieURL))
+        return ieURL;
+      
+      return WinPathURI.convertToFxFileURI(ieURL);
+    };
+    
+    return Utils.convertToFxURL(ieURL);
   },
 
   get containerPluginId()

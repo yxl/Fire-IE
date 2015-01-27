@@ -402,7 +402,7 @@ var gFireIE = null;
         let pluginObject = gFireIE.getContainerPlugin();
         if (pluginObject)
         {
-          arguments[0] = pluginObject.URL;
+          arguments[0] = Utils.convertToFxURL(pluginObject.URL);
           arguments[1] = pluginObject.Title;
           return RET.modifyArguments(arguments);
         }
@@ -688,14 +688,11 @@ var gFireIE = null;
     if (Utils.isIEEngine(uri.spec))
     {
       let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
-      if (pluginObject)
+      let pluginURL = Utils.convertToFxURL(pluginObject && pluginObject.URL);
+      if (pluginURL)
       {
-        let pluginURL = pluginObject.URL;
-        if (pluginURL)
-        {
-          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
-          return RET.modifyValue(Utils.makeURI(url));
-        }
+        let url = this.FireIE_bUseRealURI ? pluginURL : Utils.toContainerUrl(pluginURL);
+        return RET.modifyValue(Utils.makeURI(url));
       }
       // Failed to get URL from plugin object? Extract from uri.spec directly.
       if (this.FireIE_bUseRealURI)
@@ -770,7 +767,6 @@ var gFireIE = null;
       if (Utils.isPrefixedUrl(arguments[0]))
       {
         arguments[0] = Utils.fromAnyPrefixedUrl(arguments[0]);
-        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
         return RET.modifyArguments(arguments);
       }
     });

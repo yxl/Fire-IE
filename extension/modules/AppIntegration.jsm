@@ -534,10 +534,11 @@ WindowWrapper.prototype = {
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
       let isIEEngine = this.isIEEngine();
+      let unmangledURL = this.window.gBrowser.currentURI.spec;
 
       // Update the enable status of back, forward, reload and stop buttons.
-      let canBack = (pluginObject ? pluginObject.CanBack : false) || this.window.gBrowser.webNavigation.canGoBack;
-      let canForward = (pluginObject ? pluginObject.CanForward : false) || this.window.gBrowser.webNavigation.canGoForward;
+      let canBack = (pluginObject && pluginObject.CanBack) || this.window.gBrowser.webNavigation.canGoBack;
+      let canForward = (pluginObject && pluginObject.CanForward) || this.window.gBrowser.webNavigation.canGoForward;
       let isBlank = (this.window.gBrowser.currentURI.spec == "about:blank");
       let isLoading = this.window.gBrowser.mIsBusy;
       this._updateObjectDisabledStatus("Browser:Back", canBack);
@@ -545,9 +546,8 @@ WindowWrapper.prototype = {
       this._updateObjectDisabledStatus("Browser:Reload", pluginObject ? pluginObject.CanRefresh : !isBlank);
       this._updateObjectDisabledStatus("Browser:Stop", pluginObject ? pluginObject.CanStop : isLoading);
       // Fix for Australis forward button
-      if (this.window.CombinedBackForward) {
+      if (this.window.CombinedBackForward)
         this.window.CombinedBackForward.setForwardButtonOcclusion(!canForward);
-      }
 
       // Update the content of the URL bar.
       if (this.window.gURLBar && isIEEngine)
@@ -555,10 +555,9 @@ WindowWrapper.prototype = {
         if (!this.window.gBrowser.userTypedValue)
         {
           let displayURL = url;
-          if (displayURL == "about:blank") displayURL = "";
-          if (this.window.gURLBar.value != displayURL) {
-            this.window.gURLBar.value = displayURL;
-          }
+          if (url == "about:blank") displayURL = "";
+          if (this.window.gURLBar.value != displayURL)
+            this.window.gURLBar.value = unmangledURL;
         }
       }
 
@@ -570,7 +569,7 @@ WindowWrapper.prototype = {
         this.updateIEStatusText();
         // update current tab's title
         let title = pluginObject.Title;
-        if (title && title != "")
+        if (title)
           this.window.gBrowser.contentDocument.title = title;
       }
 
@@ -808,55 +807,28 @@ WindowWrapper.prototype = {
     return null;
   },
 
-  /** Get current navigation URL with current engine.*/
-  getURL: function(aTab)
+  _getURLFromBrowser: function(aBrowser)
   {
-    let tab = aTab || null;
-    let aBrowser = (tab ? tab.linkedBrowser : this.window.gBrowser);
     let url = aBrowser.currentURI.spec;
-        
-    // Is it an IE engine container url?
-    let pluginObject = this.getContainerPlugin(tab);
-    let pluginURL = pluginObject ? pluginObject.URL : null;
-    if (pluginURL && pluginURL != "")
-    {
-      url = (/^file:\/\/.*/.test(url) ? encodeURI(Utils.convertToUTF8(pluginURL)) : pluginURL);
-      return Utils.fromContainerUrl(url);
-    }
-    
+    // No need to query container plugin here - we hooked the browser getter already
     return Utils.fromAnyPrefixedUrl(url);
   },
 
-
+  /** Get current navigation URL with current engine.*/
+  getURL: function(aTab)
+  {
+    let tab = aTab || this.window.gBrowser.mCurrentTab;
+    return this._getURLFromBrowser(tab.linkedBrowser);
+  },
+  
   /**
    *  Get current navigation URI with current engine.
    *  It's of the same function with WindowWrapper#getURL.
    */
   getURI: function(aBrowser)
   {
-    try
-    {
-      let docShell = aBrowser.boxObject.QueryInterface(Ci.nsIBrowserBoxObject).docShell;
-      let wNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-      if (wNav.currentURI && Utils.isIEEngine(wNav.currentURI.spec))
-      {
-        let pluginObject = wNav.document.getElementById(Utils.containerPluginId);
-        if (pluginObject)
-        {
-          if (pluginObject.wrappedJSObject) pluginObject = pluginObject.wrappedJSObject;
-          let pluginURL = pluginObject.URL;
-          if (pluginURL)
-          {
-            return Utils.makeURI(Utils.containerUrl + encodeURI(pluginURL));
-          }
-        }
-      }
-    }
-    catch (e)
-    {
-      Utils.ERROR(e);
-    }
-    return null;
+    let url = this._getURLFromBrowser(aBrowser);
+    return Utils.makeURI(url);
   },
   
   /** Check whether we should switch back to Firefox engine */
@@ -1151,10 +1123,7 @@ WindowWrapper.prototype = {
   openInIE: function(urlOverride)
   {
     var url = urlOverride || this.getURL();
-    // file:// urls should be decoded, otherwise IE won't recognize
-    if (/^file:\/\/.*/.test(url))
-      url = decodeURI(url);
-    var args = [url];
+    var args = [ Utils.convertToIEURL(url) ];
 
     // Private browsing mode - launch IE in InPrivate mode
     if (this.isPrivateBrowsing() && Utils.ieMajorVersion >= 8)
@@ -2196,7 +2165,7 @@ WindowWrapper.prototype = {
       {
         return null;
       }
-      let url = pluginObject.URL;
+      let url = Utils.convertToFxURL(pluginObject.URL);
       return Utils.getEffectiveHost(url);
     }
     catch (ex)

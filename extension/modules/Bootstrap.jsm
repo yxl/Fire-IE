@@ -67,7 +67,8 @@ let defaultModules = [
   baseURL.spec + "IECookieManager.jsm",
   baseURL.spec + "UtilsPluginManager.jsm",
   baseURL.spec + "ABPObserver.jsm",
-  baseURL.spec + "LightweightTheme.jsm"
+  baseURL.spec + "LightweightTheme.jsm",
+  baseURL.spec + "WinPathURI.jsm",
 ];
 
 let loadedModules = Object.create(null);

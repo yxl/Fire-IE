@@ -139,6 +139,11 @@ let FireIEContainer = {};
     }
     return headers;
   }
+  
+  function getNavigateURL()
+  {
+    return Utils.convertToIEURL(Utils.fromContainerUrl(location.href));
+  }
 
   function getNavigateHeaders()
   {
@@ -276,7 +281,7 @@ let FireIEContainer = {};
     let po = E(Utils.containerPluginId);
     if (!po) return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
 
     if (checkSwitchBack(url))
@@ -328,7 +333,7 @@ let FireIEContainer = {};
     if (!po.IsDocumentComplete)
       return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
     
     if (url != syncHistoryURL)
@@ -486,6 +491,7 @@ let FireIEContainer = {};
   window.addEventListener('load', init, false);
   window.addEventListener('unload', destroy, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
+  FireIEContainer.getNavigateURL = getNavigateURL;
   FireIEContainer.getNavigateHeaders = getNavigateHeaders;
   FireIEContainer.getNavigatePostData = getNavigatePostData;
   FireIEContainer.removeNavigateParams = removeNavigateParams;

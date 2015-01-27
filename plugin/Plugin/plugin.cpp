@@ -202,7 +202,7 @@ namespace Plugin
 				return FALSE;
 
 			// Fetch the URL to visit from host URL
-			url = strHostUrl.Mid(PREFIX.GetLength());
+			url = GetNavigateURL();
 
 			// Fetch other parameters from Firefox
 			ulId = GetNavigateWindowId();
@@ -465,6 +465,12 @@ namespace Plugin
 #else
 		return _tcstoul(strId, NULL, 10);
 #endif
+	}
+
+	// Get URL to visit
+	CString CPlugin::GetNavigateURL() const
+	{
+		return GetNavigateParam("getNavigateURL");
 	}
 
 	// Get Http headers paramter for IECtrl::Navigate

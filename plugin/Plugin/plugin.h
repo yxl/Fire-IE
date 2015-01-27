@@ -75,6 +75,9 @@ namespace Plugin
 		// Get CIEHostWindow ID
 		ULONG_PTR GetNavigateWindowId() const;
 
+		// Get URL to visit
+		CString GetNavigateURL() const;
+
 		// Get Http headers paramter for IECtrl::Navigate
 		CString GetNavigateHeaders() const;
 
