@@ -50,13 +50,20 @@ let HookFunction = function(name, orgFunc, myFuncHead, myFuncTail) {
  * @param globalScope - the global scope that hooked function names can be referenced in
  * @param globalReferencableName - the name that can be used to reference this HM instance
  *                                 in the global scope
+ * @param evalInScope - function that evaluates an expression in globalScope
+ * @param assignInScope - function that assigns a value to an expression in globalScope
  * @constructor
  */
-let HookManager = function(globalScope, globalReferencableName) {
+let HookManager = function(globalScope, globalReferencableName, evalInScope, assignInScope) {
   this._scope = globalScope;
   this._refName = globalReferencableName;
   this._hookFunctions = [];
   this._recycledIndices = [];
+  
+  if (evalInScope)
+    this._evalInScope = evalInScope;
+  if (assignInScope)
+    this._assignInScope = assignInScope;
 };
 
 HookManager.prototype = {
@@ -96,17 +103,12 @@ HookManager.prototype = {
   
   _evalInScope: function(expression)
   {
-    return eval("with (this._scope) { " + expression + " }");
+    throw "_evalInScope not implemented.";
   },
   
   _assignInScope: function(name, value)
   {
-    // Creates an assign delegate function in this._scope
-    // Can't just assign it here cause "value" might be a property of this._scope
-    // We must have something that passes value safely into the assignment
-    let assignDelegate =
-        eval("with (this._scope) { (function() { return " + name + " = arguments[0]; }) }");
-    return assignDelegate(value);
+    throw "_assignInScope not implemented.";
   },
   
   _genHookedFunction: function(idx, code)

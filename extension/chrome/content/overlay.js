@@ -39,7 +39,15 @@ var gFireIE = null;
     AppIntegration, Utils, GesturePrefObserver, HookManager, UtilsPluginManager
   } = jsm;
   
-  let HM = new HookManager(window, "gFireIE._hookManager");
+  let HM = new HookManager(window, "gFireIE._hookManager",
+  function(name) // evalInScope
+  {
+    return window.eval(name);
+  },
+  function(name, value) // assignInScope
+  {
+    return (new Function("return (" + name + ") = arguments[0];"))(value);
+  });
   let RET = HM.RET;
   gFireIE = AppIntegration.addWindow(window);
   gFireIE._hookManager = HM;
@@ -744,7 +752,7 @@ var gFireIE = null;
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
-    let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
+    let uri = this.currentURI; // hooked by currentURIGetter
     if (uri && Utils.isIEEngine(uri.spec))
     {
       let entry = history.getEntryAtIndex(history.index, false);
