@@ -111,7 +111,7 @@ var Policy = {
     // pages with chrome privilege.
     if (Utils.urlHasChromePrivilege(url))
       return false;
-
+    
     let docDomain = Utils.getHostname(url);
     let match = EngineMatcher.matchesAny(url, docDomain);
     // While explicitly checking against exceptional rules,
