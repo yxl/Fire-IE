@@ -640,7 +640,7 @@ var Utils = {
    */
   isFirefoxOnly: function(url)
   {
-    url = url.trim();
+    url = url.trim().toLowerCase();
     return (url &&
       (
        Utils.startsWith(url, 'about:') ||
@@ -658,13 +658,23 @@ var Utils = {
    */
   urlHasChromePrivilege: function(url)
   {
-    url = url.trim();
+    try
+    {
+      url = Utils.unwrapURL(url.trim().toLowerCase()).spec;
+    }
+    catch (ex)
+    {
+      // Something we don't recognize. Better consider it harmful.
+      return true;
+    }
     return (url &&
       (
        Utils.startsWith(url, 'about:') ||
        Utils.startsWith(url, 'jar:') ||
        Utils.startsWith(url, 'chrome://') ||
-       Utils.startsWith(url, 'resource://')
+       Utils.startsWith(url, 'resource://') ||
+       Utils.startsWith(url, 'javascript:') ||
+       Utils.startsWith(url, 'data:')
       ));
   },
 
