@@ -875,15 +875,13 @@ WindowWrapper.prototype = {
   {
     var gBrowser = this.window.gBrowser;
     
-    // Hack: make sure the new tab is loaded in chrome process, to make e10s nightly happy
-    let url = Utils.toFakeUrl("about:blank");
-    
     // it is highly probable that the new tab is related to current
-    let newTab = gBrowser.addTab(url, {
+    let newTab = gBrowser.addTab("about:blank", {
       relatedToCurrent: related === undefined || related
     });
 
     let loadInBackground = Utils.shouldLoadInBackground();
+    let shouldSelectTab = false;
     
     switch (where)
     {
@@ -895,7 +893,7 @@ WindowWrapper.prototype = {
       });
       break;
     case "current":
-      gBrowser.selectedTab = newTab;
+      shouldSelectTab = true;
       break;
     case "tabshifted":
       loadInBackground = !loadInBackground;
@@ -903,9 +901,20 @@ WindowWrapper.prototype = {
     case "tab":
     default:
       if (!loadInBackground)
-        gBrowser.selectedTab = newTab;
+        shouldSelectTab = true;
       // otherwise, A background tab has been opened, nothing else to do here.
       break;
+    }
+    
+    if (shouldSelectTab)
+    {
+      if (this.window.gMultiProcessBrowser)
+        Utils.runAsync(function()
+        {
+          gBrowser.selectedTab = newTab;
+        });
+      else
+        gBrowser.selectedTab = newTab;
     }
     
     return newTab;
