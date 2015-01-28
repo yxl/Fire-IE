@@ -462,11 +462,12 @@ var Utils = {
       if (!/^file:\/\/.*/.test(fxURL))
         return fxURL;
       
-      let idx = fxURL.indexOf("?");
-      if (idx === -1) idx = fxURL.indexOf("#");
-      let queryAndHash = (idx !== -1) ? fxURL.substring(idx) : "";
+      let idxQ = fxURL.indexOf("?"), idxH = fxURL.indexOf("#");
+      let idx = idxQ === -1 ? idxH : (idxH === -1 ? idxQ : Math.min(idxQ, idxH));
+      if (idx === -1) idx = fxURL.length;
+      let queryAndHash = fxURL.substring(idx);
       
-      let ieURL = WinPathURI.convertToIEFileURI(fxURL);
+      let ieURL = WinPathURI.convertToIEFileURI(fxURL.substring(0, idx));
       return ieURL && (ieURL + queryAndHash);
     };
     
@@ -483,11 +484,12 @@ var Utils = {
       if (!/^file:\/\/.*/.test(ieURL))
         return ieURL;
       
-      let idx = ieURL.indexOf("?");
-      if (idx === -1) idx = ieURL.indexOf("#");
-      let queryAndHash = (idx !== -1) ? ieURL.substring(idx) : "";
+      let idxQ = ieURL.indexOf("?"), idxH = ieURL.indexOf("#");
+      let idx = idxQ === -1 ? idxH : (idxH === -1 ? idxQ : Math.min(idxQ, idxH));
+      if (idx === -1) idx = ieURL.length;
+      let queryAndHash = ieURL.substring(idx);
       
-      let fxURL = WinPathURI.convertToFxFileURI(ieURL);
+      let fxURL = WinPathURI.convertToFxFileURI(ieURL.substring(0, idx));
       return fxURL && fxURL + queryAndHash;
     };
     
