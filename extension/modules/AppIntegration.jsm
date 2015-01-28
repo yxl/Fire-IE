@@ -931,7 +931,7 @@ WindowWrapper.prototype = {
       if (!aTab.linkedBrowser || aTab.linkedBrowser.currentURI.spec == url)
         return;
 
-      let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
+      let browserNode = aTab.linkedBrowser.QueryInterface(Ci.nsIDOMNode);
       if (browserNode)
       {
         if (!automatic)
@@ -1060,7 +1060,7 @@ WindowWrapper.prototype = {
   {
     if (aTab.linkedBrowser)
     {
-      let browserNode = aTab.linkedBrowser.QueryInterface(Components.interfaces.nsIDOMNode);
+      let browserNode = aTab.linkedBrowser.QueryInterface(Ci.nsIDOMNode);
       if (browserNode)
       {
         if (Utils.isIEEngine(url)) url = Utils.fromContainerUrl(url);

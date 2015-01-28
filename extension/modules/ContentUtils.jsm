@@ -132,14 +132,14 @@ let ContentUtils = {
     let jsm = {};
     try
     {
-      Components.utils.import("resource://gre/modules/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/AddonLogging.jsm";
     }
     catch (e)
     {
       // Nightly 20140225
-      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/(addons/)AddonLogging.jsm";
     }

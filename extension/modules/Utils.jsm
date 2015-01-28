@@ -62,7 +62,7 @@ var Utils = {
     try
     {
       let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
-        .getService(Components.interfaces.nsIXULAppInfo);
+        .getService(Ci.nsIXULAppInfo);
 
       let versionString = versionInfo.version;
       Utils.LOG("Host app version: " + versionString);
@@ -527,7 +527,7 @@ var Utils = {
         }
         else
         {
-          let strBundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+          let strBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
           var intlMess = strBundle.createBundle("chrome://global-platform/locale/intl.properties");
           try
           {
@@ -542,7 +542,7 @@ var Utils = {
       let charset = getDefaultCharset();
       if (charset)
       {
-        let uc = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+        let uc = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
         try
         {
           uc.charset = charset;
@@ -627,7 +627,7 @@ var Utils = {
     {
       for (; win; win = win.parent)
       {
-        if (!win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow)) return win;
+        if (!win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow)) return win;
       }
 
       return null;
@@ -1403,14 +1403,14 @@ var Utils = {
     let jsm = {};
     try
     {
-      Components.utils.import("resource://gre/modules/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/AddonLogging.jsm";
     }
     catch (e)
     {
       // Nightly 20140225
-      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/(addons/)AddonLogging.jsm";
     }

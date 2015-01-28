@@ -733,7 +733,7 @@ var gFireIE = null;
       let entry = history.getEntryAtIndex(history.index, false);
       if (entry.URI.spec != uri.spec)
       {
-        entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
+        entry.QueryInterface(Ci.nsISHEntry).setURI(uri);
       }
     }
   };
