@@ -100,14 +100,8 @@ protected:
 	// Map used to search the CIEHostWindow object by its window handle
 	static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
 	
-	// Ensure the operations on s_IEWindowMap are thread safe.
-	static CCriticalSection s_csIEWindowMap;
-
 	// Map used to search the CIEHostWindow object by its ID
 	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
-
-	// Ensure the operations on s_NewIEWindowMap are thread safe.
-	static CCriticalSection s_csNewIEWindowMap;
 
 	// Plugins used to do utilities like transferring cookies to Firfox
 	static CSimpleMap<HWND, CIEHostWindow *> s_UtilsIEWindowMap;

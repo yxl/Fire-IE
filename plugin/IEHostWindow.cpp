@@ -40,9 +40,7 @@ using namespace abp;
 // Initilizes the static member variables of CIEHostWindow
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
-CCriticalSection CIEHostWindow::s_csIEWindowMap; 
 CSimpleMap<ULONG_PTR, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
-CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
@@ -89,9 +87,7 @@ CIEHostWindow::~CIEHostWindow()
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 {
 	CIEHostWindow *pInstance = NULL;
-	s_csIEWindowMap.Lock();
 	pInstance = s_IEWindowMap.Lookup(hwnd);
-	s_csIEWindowMap.Unlock();
 	return pInstance;
 }
 
@@ -172,7 +168,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 	if (ulId != 0)
 	{
 		// The CIEHostWindow has been created that we needn't recreate it.
-		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 		if (pIEHostWindow)
 		{
@@ -181,7 +176,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 			if (opIsNewlyCreated)
 				*opIsNewlyCreated = false;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 	if (!pIEHostWindow)
 	{
@@ -329,9 +323,7 @@ BOOL CIEHostWindow::OnInitDialog()
 
 void CIEHostWindow::InitIE()
 {
-	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Add(GetSafeHwnd(), this);
-	s_csIEWindowMap.Unlock();
 
 	m_ie.put_RegisterAsBrowser(TRUE);
 
@@ -357,9 +349,7 @@ void CIEHostWindow::UninitIE()
 	if (OS::GetIEVersion() >= 7 && m_ie.GetSafeHwnd())
 		m_ie.put_Silent(TRUE);
 
-	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
-	s_csIEWindowMap.Unlock();
 
 	s_csUtilsIEWindowMap.Lock();
 	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
@@ -804,10 +794,8 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 
 void CIEHostWindow::RemoveNewWindow(ULONG_PTR ulId)
 {
-	s_csNewIEWindowMap.Lock();
 	CIEHostWindow* pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 	s_NewIEWindowMap.Remove(ulId);
-	s_csNewIEWindowMap.Unlock();
 
 	if (pIEHostWindow)
 	{
@@ -1689,9 +1677,7 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
 			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
-			s_csNewIEWindowMap.Lock();
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
-			s_csNewIEWindowMap.Unlock();
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
 
 			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
