@@ -261,7 +261,7 @@ let UtilsPluginManager = {
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.setAttribute("id", Utils.utilsPluginId);
-    embed.setAttribute("type", "application/fireie");
+    embed.setAttribute("type", Utils.pluginMIMEType);
     embed.style.visibility = "collapse";
     doc.body.appendChild(embed);
   },
@@ -483,7 +483,7 @@ function onPluginClickToPlay(event)
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   
   let mimetype = plugin.getAttribute("type");
-  if (mimetype == "application/fireie")
+  if (mimetype == Utils.pluginMIMEType)
   {
     // check the container page
     let doc = plugin.ownerDocument;
@@ -512,7 +512,7 @@ function genPluginEventHandler(subHandler)
       return;
     
     let mimetype = plugin.getAttribute("type");
-    if (mimetype == "application/fireie")
+    if (mimetype == Utils.pluginMIMEType)
     {
       // check the container page
       let doc = plugin.ownerDocument;

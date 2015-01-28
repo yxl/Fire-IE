@@ -90,7 +90,14 @@ let FireIEContainer = {};
     else
     {
       getGFireIE().clearResumeFromPBW();
-      container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
+
+      let embed = document.createElement("embed");
+      embed.setAttribute("id", Utils.containerPluginId);
+      embed.setAttribute("type", Utils.pluginMIMEType);
+      embed.style.width = "100%";
+      embed.style.height = "100%";
+      container.appendChild(embed);
+
       registerEventHandler();
     }
   }

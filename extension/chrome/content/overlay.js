@@ -74,7 +74,7 @@ var gFireIE = null;
       return;
 
     // Check if it's our plugin
-    if (plugin.getAttribute("type") != "application/fireie")
+    if (plugin.getAttribute("type") != Utils.pluginMIMEType)
       return;
     
     // Check the container page
@@ -123,11 +123,28 @@ var gFireIE = null;
   this.window.addEventListener("PluginClickToPlay", clickToPlayHandler, true);
   // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
   this.window.addEventListener("PluginBindingAttached", clickToPlayHandler, true);
-  // still we have to hook gPluginHandler.handleEvent
-  // in case they start listening on the window object
-  if (typeof(gPluginHandler) == "object" && typeof(gPluginHandler.handleEvent) == "function")
+
+  if (typeof(gPluginHandler) === "object" && gPluginHandler &&
+      typeof(gPluginHandler.receiveMessage) === "function")
   {
-    HM.hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
+    HM.hookCodeHead("gPluginHandler.receiveMessage", function(msg)
+    {
+      switch (msg.name) {
+      case "PluginContent:ShowClickToPlayNotification":
+        let data = msg.data;
+        let newPlugins = [];
+        data.plugins.forEach(function(pluginData)
+        {
+          if (pluginData.mimetype !== Utils.pluginMIMEType)
+            newPlugins.push(pluginData);
+        });
+        if (newPlugins.length != data.plugins.length)
+          data.plugins = newPlugins;
+        if (data.plugins.length === 0)
+          return RET.shouldReturn();
+        break;
+      }
+    });
   }
   
   function initBasicHooks()

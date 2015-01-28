@@ -159,6 +159,16 @@ var Utils = {
     Object.defineProperty(Utils, "platformVersion", { get: function() platformVersion });
     return platformVersion;
   },
+  
+  get pluginName()
+  {
+    return "Fire IE DLL";
+  },
+  
+  get pluginMIMEType()
+  {
+    return "application/fireie";
+  },
 
   /**
    * Whether running in 64bit environment.
