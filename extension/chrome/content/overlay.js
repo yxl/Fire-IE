@@ -649,13 +649,25 @@ var gFireIE = null;
     else
     {
       HM.hookCodeHeadTail("FullZoom._applySettingToPref",
-        function() { setUseRealURI(gBrowser.mCurrentBrowser); },
-        function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
+        function() { setUseRealURI(gBrowser.selectedBrowser); },
+        function() { unsetUseRealURI(gBrowser.selectedBrowser); });
     }
 
     HM.hookCodeHeadTail("FullZoom.reset",
       function() { setUseRealURI(gBrowser.selectedBrowser); },
       function() { unsetUseRealURI(gBrowser.selectedBrowser); });
+    
+    // Because of lazy hooking, we have to manually run the onLocationChange
+    // handler in case it has already run for the current tab
+    try
+    {
+      let browser = gBrowser.selectedBrowser;
+      FullZoom.onLocationChange(browser.currentURI, false, browser);
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Set initial zoom failed: " + ex);
+    }
   }
 
   // FireGestures support

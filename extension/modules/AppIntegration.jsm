@@ -957,14 +957,6 @@ WindowWrapper.prototype = {
         }
       }
 
-      let zoomLevel = this.getZoomLevel(aTab.linkedBrowser);
-      if (zoomLevel)
-      {
-        Utils.setTabAttributeJSON(aTab, 'zoom', {
-          zoomLevel: zoomLevel
-        });
-      }
-      
       if (isIEEngineAfterSwitch)
       {
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
@@ -2405,21 +2397,6 @@ WindowWrapper.prototype = {
     return zoomLevel;
   },
 
-  /**
-   * Since IE don't support Text-Only Zoom, consider only Full Zoom
-   */
-  _setZoomLevel: function(value, aBrowser)
-  {
-    let browser = aBrowser || this.window.gBrowser.selectedBrowser;
-
-    // Are we in e10s window?
-    if (!browser.docShell)
-      return;
-    
-    let docViewer = browser.markupDocumentViewer;
-    docViewer.fullZoom = value;
-  },
-
   /** Update interface on IE page show/load */
   _onPageShowOrLoad: function(e)
   {
@@ -2432,31 +2409,6 @@ WindowWrapper.prototype = {
     if (!tab) return;
 
     this._updateInterface();
-
-    let url = doc.defaultView.location.href;
-    if (url == "about:blank" || Utils.isSwitchJumper(url) || Utils.isFake(url))
-    {
-      // might be the switch jumper from IE to FF or our custom faked page,
-      // ignore zooming on this page
-      return;
-    }
-    
-    if (this.isPrivateBrowsing() && Prefs.privatebrowsingwarning && !this.isResumeFromPBW()
-      && this.isIEEngine(tab) && !this.getContainerPlugin(tab))
-    {
-      // should be the private browsing warning page, ignore zooming
-      return;
-    }
-    
-    //
-    // Check if we have to set ZoomLevel
-    //  
-    let zoomLevelParams = Utils.getTabAttributeJSON(tab, 'zoom');
-    if (zoomLevelParams)
-    {
-      this._setZoomLevel(zoomLevelParams.zoomLevel, tab.linkedBrowser);
-      tab.removeAttribute('zoom');
-    }
   },
 
   /**
