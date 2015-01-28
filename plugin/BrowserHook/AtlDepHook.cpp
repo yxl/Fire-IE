@@ -110,6 +110,7 @@ namespace BrowserHook
 		ULONG64 RaxImm;         //
 		USHORT  RaxJmp;         // jmp target
 	};
+#pragma pack(pop)
 
 	BOOL CheckThunk(_WndProcThunk* pThunk)
 	{
