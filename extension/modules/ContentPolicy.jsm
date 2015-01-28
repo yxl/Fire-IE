@@ -117,7 +117,10 @@ var Policy = {
     // While explicitly checking against exceptional rules,
     // don't count hits as we'll hit the exceptional rule again
     // after switch back.
-    return match && match instanceof EngineExceptionalRule;
+    if (Prefs.autoSwitchBackOnRuleMiss)
+      return !match || match instanceof EngineExceptionalRule;
+    else
+      return match && match instanceof EngineExceptionalRule;
   },
 
   /**

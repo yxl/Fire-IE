@@ -24,6 +24,7 @@ pref("extensions.fireie.OOPP_remoteSetCookie", true);
 pref("extensions.fireie.handleUrlBar", false);
 pref("extensions.fireie.autoswitch_enabled", true);
 pref("extensions.fireie.autoSwitchBackEnabled", true);
+pref("extensions.fireie.autoSwitchBackOnRuleMiss", false);
 pref("extensions.fireie.shortcutEnabled", true);
 pref("extensions.fireie.shortcut_modifiers", "alt");
 pref("extensions.fireie.shortcut_key", "C");
