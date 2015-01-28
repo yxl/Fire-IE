@@ -1161,7 +1161,7 @@ var Utils = {
     try
     {
       // Assume an absolute path first
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(path);
       return file;
     }
@@ -1172,7 +1172,7 @@ var Utils = {
     {
       // Try relative path now
       let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.setRelativeDescriptor(profileDir, path);
       return file;
     }
@@ -1362,7 +1362,7 @@ var Utils = {
   launchProcess: function(exePath, args, description)
   {
     description = description || exePath;
-    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(exePath);
     if (!file.exists()) {
       Utils.ERROR("Cannot launch " + description + ", file not found: " + exePath);

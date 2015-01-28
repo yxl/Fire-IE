@@ -447,7 +447,7 @@ var TitleEditor =
     // Prevent any key presses from triggering outside actions
     event.stopPropagation();
 
-    if (event.keyCode == event.DOM_VK_RETURN || event.keyCode == event.DOM_VK_ENTER)
+    if (event.keyCode == event.DOM_VK_RETURN)
     {
       event.preventDefault();
       this.end(true);
@@ -581,7 +581,7 @@ var SelectSubscription =
     if (event.target.localName == "button" || event.target.localName == "label")
       return;
 
-    if (event.keyCode == event.DOM_VK_RETURN || event.keyCode == event.DOM_VK_ENTER)
+    if (event.keyCode == event.DOM_VK_RETURN)
     {
       // This shouldn't accept our dialog, only the panel
       event.preventDefault();

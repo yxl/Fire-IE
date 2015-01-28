@@ -697,7 +697,7 @@ WindowWrapper.prototype = {
     let openInIEBrowserMenuItem = this.E("fireie-context-openlinkiniebrowser");
     if (openInIEBrowserMenuItem)
     {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(Utils.iePath);
       let iconURL = "moz-icon:" + Services.io.newFileURI(file, null, null).spec + "?size=16";
       openInIEBrowserMenuItem.style.listStyleImage = 'url("' + Utils.escapeURLForCSS(iconURL) + '")';
