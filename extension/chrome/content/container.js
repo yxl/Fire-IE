@@ -296,6 +296,8 @@ let FireIEContainer = {};
     return false;
   }
   
+  let syncedURL = "";
+  
   /** sync recorded url when IE engine navigates to another location */
   function syncURL()
   {
@@ -309,12 +311,24 @@ let FireIEContainer = {};
       return;
       
     let containerUrl = Utils.toContainerUrl(url);
-    if (window.location.href != containerUrl)
+    if (window.location.href != containerUrl || syncedURL != url)
     {
-      // HTML5 history manipulation,
-      // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
-      if (window.history)
+      syncedURL = url;
+      try
+      {
+        // HTML5 history manipulation,
+        // see https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history#The_replaceState%28%29_method
         window.history.replaceState("", document.title, containerUrl);
+      }
+      catch (ex)
+      {
+        // Shouldn't normally happen, but it indeed happens. Don't know why...
+        Utils.ERROR("Failed to sync URL to " + url + ": " + ex);
+        // At least we can try to update the URL bar
+        let gFireIE = getGFireIE();
+        if (gFireIE)
+          gFireIE.updateInterface();
+      }
     }
   }
   
