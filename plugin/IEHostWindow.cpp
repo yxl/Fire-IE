@@ -368,38 +368,43 @@ void CIEHostWindow::UninitIE()
 
 LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (App::GetApplication() != App::OOPP)
+		return CDialog::WindowProc(message, wParam, lParam);
+
 	// DefWindowProc propagates messages to parent window by SendMessage.
 	// In OOPP mode, this can potentially deadlock firefox since we can't RPC into the
 	// plugin during SendMessage.
 	// Here we post some of these messages to the firefox main window, and ignore the rest.
 	LRESULT ret = 0;
-	bool bShouldHandle = false;
-	bool bShouldForward = false;
+	bool bShouldReturn = false;
 	switch (message)
 	{
 	case WM_APPCOMMAND:
 		ret = TRUE;
-		bShouldHandle = true;
-		bShouldForward = true;
-		break;
-	case WM_MOUSEWHEEL:
-	case WM_MOUSEHWHEEL:
-		ret = 0;
-		bShouldHandle = true;
-		bShouldForward = false;
-		break;
-	}
-
-	if (bShouldHandle)
-	{
-		if (bShouldForward)
+		bShouldReturn = true;
 		{
 			HWND hwndFirefox = GetTopMozillaWindowClassWindow(m_hWnd);
 			if (hwndFirefox)
 				::PostMessage(hwndFirefox, message, wParam, lParam);
 		}
-		return ret;
+		break;
+	case WM_MOUSEWHEEL:
+	case WM_MOUSEHWHEEL:
+		ret = 0;
+		bShouldReturn = true;
+		break;
+	case WM_MOUSEACTIVATE:
+		// Close popups in Firefox main window
+		::PostMessage((HWND)wParam, WM_KILLFOCUS, (WPARAM)m_hWnd, NULL);
+		break;
+	case WM_SETCURSOR:
+		ret = FALSE;
+		bShouldReturn = true;
+		break;
 	}
+
+	if (bShouldReturn)
+		return ret;
 
 	return CDialog::WindowProc(message, wParam, lParam);
 }
