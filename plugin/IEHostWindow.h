@@ -105,6 +105,9 @@ protected:
 	// Map used to search the CIEHostWindow object by its ID
 	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
 
+	// Generate each new window's ID sequentially
+	static ULONG_PTR s_ulpNewIEWindowId;
+
 	// Plugins used to do utilities like transferring cookies to Firfox
 	static CSimpleMap<HWND, CIEHostWindow *> s_UtilsIEWindowMap;
 

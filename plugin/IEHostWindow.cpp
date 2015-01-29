@@ -41,6 +41,7 @@ using namespace abp;
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
 CSimpleMap<ULONG_PTR, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
+ULONG_PTR CIEHostWindow::s_ulpNewIEWindowId = 1;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
@@ -331,19 +332,6 @@ void CIEHostWindow::InitIE()
 
 	// Allow drag'n'drop to open files
 	m_ie.put_RegisterAsDropTarget(TRUE);
-
-#ifdef _DEBUG
-	if (m_bUtils)
-	{
-		for (int i = 100; i >= 0; i--)
-		{
-			RunAsyncTimeout([=]
-			{
-				TRACE("[RunAsyncTimeout] Function body: %d\n", i);
-			}, (unsigned int)(i * 1000));
-		}
-	}
-#endif
 }
 
 
@@ -1706,9 +1694,12 @@ void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned lo
 		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
 		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 		{
-			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
+			ULONG_PTR ulId = s_ulpNewIEWindowId += 2; // never be zero ever
 			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
 			*ppDisp = pIEHostWindow->m_ie.get_Application();
+			CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
+			if (pUtilsWindow)
+				pUtilsWindow->RunAsyncTimeout([=] { RemoveNewWindow(ulId); }, 10000);
 
 			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
 			bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
