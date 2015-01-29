@@ -267,7 +267,7 @@ let FireIEContainer = {};
   
   function onIEURLChanged(event)
   {
-    checkSwitchBack(event.detail);
+    checkSwitchBack(Utils.convertToFxURL(event.detail));
   }
   
   let bSwitchEngineInitiated = false;

@@ -1254,7 +1254,7 @@ WindowWrapper.prototype = {
     if (!this._checkEventOrigin(event)) return;
     
     let data = JSON.parse(event.detail);
-    let url = data.url;
+    let url = Utils.convertToFxURL(data.url);
     let id = data.id;
 
     let shift = data.shift;
