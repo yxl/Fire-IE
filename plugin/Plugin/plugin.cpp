@@ -658,11 +658,20 @@ namespace Plugin
 		FireEvent(strEventType, strDetail);
 	}
 
-	// Notify the Firefox that the page title has changed.
+	// Notify Firefox that the page title has changed.
 	void CPlugin::OnIETitleChanged(const CString& strTitle)
 	{
 		CString strEventType = _T("IETitleChanged");
 		CString strDetail = strTitle;
+		FireEvent(strEventType, strDetail);
+	}
+
+	// Notify the Firefox that the progress has changed.
+	void CPlugin::OnIEProgressChanged(int progress)
+	{
+		CString strEventType = _T("IEProgressChanged");
+		CString strDetail;
+		strDetail.Format(_T("%d"), progress);
 		FireEvent(strEventType, strDetail);
 	}
 

@@ -146,8 +146,11 @@ namespace Plugin
 		// Close current IE engie tab.
 		void CloseIETab();
 
-		// Notify the Firefox that the page title has changed.
+		// Notify Firefox that the page title has changed.
 		void OnIETitleChanged(const CString& strTitle);
+
+		// Notify Firefox that the progress has changed.
+		void OnIEProgressChanged(int progress);
 
 		// Send the IE UserAgent to the Firefox.
 		void OnIEUserAgentReceived(const CString& strUserAgent);

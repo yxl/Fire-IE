@@ -36,6 +36,7 @@ using namespace UserMessage;
 using namespace Utils;
 using namespace Utils::String;
 using namespace abp;
+using namespace Plugin;
 
 // Initilizes the static member variables of CIEHostWindow
 
@@ -248,21 +249,21 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 		{
 			// Ensure that pWindowContext still exists
 			// No need to use lock - modifications happen only on main thread
-			bool bExists = pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext));
-
-			// To use the window context, the window must already be attached to a plugin object,
-			// otherwise, we can't fire the event.
-			if (bExists && pWindowContext->m_pPlugin)
+			if (pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext)))
 			{
-				pWindowContext->m_pPlugin->SetFirefoxCookie(vParams, 0);
+				pWindowContext->RequirePlugin([vParams](CPlugin* pPlugin)
+				{
+					pPlugin->SetFirefoxCookie(vParams, 0);
+				});
 			}
 			else
 			{
 				// Fall back to use the utils plugin
 				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
 				{
-					// Figure out the id of the window where the cookie(s) come from
-					ULONG_PTR ulId = pWindowContext ? reinterpret_cast<ULONG_PTR>(pWindowContext) : 0;
+					// No need to figure out the id of the window where the cookie(s) come from
+					// If the window is not in s_IEWindowMap, it is not in s_NewIEWindowMap either.
+					ULONG_PTR ulId = 0;
 					// Send cookies as well as window id, so that extension can recover the context information
 					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams, ulId);
 				}
@@ -354,12 +355,12 @@ void CIEHostWindow::UninitIE()
 
 	s_IEWindowMap.Remove(GetSafeHwnd());
 
-	s_csUtilsIEWindowMap.Lock();
-	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
-	s_csUtilsIEWindowMap.Unlock();
-
 	if (m_bUtils)
 	{
+		s_csUtilsIEWindowMap.Lock();
+		s_UtilsIEWindowMap.Remove(GetSafeHwnd());
+		s_csUtilsIEWindowMap.Unlock();
+
 		AdBlockPlus::clearFilters();
 #ifdef MATCHER_PERF
 		AdBlockPlus::showPerfInfo();
@@ -1094,39 +1095,39 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 
 void CIEHostWindow::OnABPFilterLoaded()
 {
-	if (m_pPlugin)
+	int numActiveFilters = AdBlockPlus::getNumberOfActiveFilters();
+	unsigned int loadTicks = AdBlockPlus::getLoadTicks();
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnABPFilterLoaded(
-			AdBlockPlus::getNumberOfActiveFilters(), AdBlockPlus::getLoadTicks());
-	}
+		pPlugin->OnABPFilterLoaded(numActiveFilters, loadTicks);
+	});
 }
 
 void CIEHostWindow::OnABPLoadFailure()
 {
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnABPLoadFailure();
-	}
+		pPlugin->OnABPLoadFailure();
+	});
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
 {
+	if (m_bUtils) return;
 	m_strTitle = title;
 
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnIETitleChanged(title);
-	}
+		pPlugin->OnIETitleChanged(title);
+	});
 }
 
 void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 {
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		CString strDetail;
-		strDetail.Format(_T("%d"), iProgress);
-		m_pPlugin->FireEvent(_T("IEProgressChanged"), strDetail);
-	}
+		pPlugin->OnIEProgressChanged(iProgress);
+	});
 }
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
@@ -1137,20 +1138,20 @@ void CIEHostWindow::OnStatusChanged(const CString& message)
 		m_strStatusText = message;
 		RunAsync([=]
 		{
-			if (m_pPlugin)
+			RequirePlugin([=](CPlugin* pPlugin)
 			{
-				m_pPlugin->SetStatus(m_strStatusText);
-			}
+				pPlugin->SetStatus(m_strStatusText);
+			});
 		});
 	}
 }
 
 void CIEHostWindow::OnCloseIETab()
 {
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->CloseIETab();
-	}
+		pPlugin->CloseIETab();
+	});
 }
 
 void CIEHostWindow::OnStatusTextChange(LPCTSTR Text)
@@ -1174,11 +1175,11 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 		m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
 	// Zoom according to Firefox setting
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		double level = m_pPlugin->GetZoomLevel();
+		double level = pPlugin->GetZoomLevel();
 		Zoom(level);
-	}
+	});
 }
 
 static inline BOOL UrlCanHandle(LPCTSTR szUrl)
@@ -1244,10 +1245,10 @@ void CIEHostWindow::OnURLChanged(const CString& url)
 {
 	// Fire navigate event so that the extension will have a chance to switch back
 	// before the first "progress changed" event arrives
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnURLChanged(url);
-	}
+		pPlugin->OnURLChanged(url);
+	});
 }
 
 bool CIEHostWindow::IsTopLevelContainer(CComQIPtr<IWebBrowser2> spBrowser)
@@ -1270,10 +1271,13 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	COLE2T szUrl(URL->bstrVal);
 
 	// Zoom according to Firefox setting
-	if (!m_bUtils && m_pPlugin)
+	if (!m_bUtils)
 	{
-		double level = m_pPlugin->GetZoomLevel();
-		Zoom(level);
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			double level = pPlugin->GetZoomLevel();
+			Zoom(level);
+		});
 	}
 
 	// Filter non-http protocols
@@ -1351,11 +1355,11 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	if (IsTopLevelContainer(pDisp))
 	{
 		// Zoom according to Firefox setting
-		if (m_pPlugin)
+		RequirePlugin([=](CPlugin* pPlugin)
 		{
-			double level = m_pPlugin->GetZoomLevel();
+			double level = pPlugin->GetZoomLevel();
 			Zoom(level);
-		}
+		});
 
 		// Cache Favicon URL
 		m_strFaviconURL = GetFaviconURLFromContent();
@@ -1373,10 +1377,10 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	// Set element hiding styles
 	ProcessElemHideStyles();
 
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnDocumentComplete();
-	}
+		pPlugin->OnDocumentComplete();
+	});
 }
 
 void CIEHostWindow::OnDownloadBegin()
@@ -1410,8 +1414,10 @@ void CIEHostWindow::OnDownloadComplete()
 		if (m_bFBInProgress)
 			FBResetFindRange();
 		// Notify Firefox
-		if (m_pPlugin)
-			m_pPlugin->OnRefresh();
+		RequirePlugin([](CPlugin* pPlugin)
+		{
+			pPlugin->OnRefresh();
+		});
 	}
 	else
 	{
@@ -1453,8 +1459,10 @@ void CIEHostWindow::OnSetSecureLockIcon(int state)
 	CString description = s_strSecureLockInfos[state];
 
 	this->m_strSecureLockInfo = description;
-	if (m_pPlugin)
-		m_pPlugin->OnSetSecureLockIcon(description);
+	RequirePlugin([=](CPlugin* pPlugin)
+	{
+		pPlugin->OnSetSecureLockIcon(description);
+	});
 }
 
 CString CIEHostWindow::GetFaviconURLFromContent()
@@ -1684,45 +1692,54 @@ BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
 {
 	m_pPlugin = pPlugin;
+	if (m_pPlugin && m_vDeferredCallPluginFuncs.size())
+		RunAsync([=]
+		{
+			TRACE(_T("CIEHostWindow: doing deferred plugin calls, number of funcs = %d\n"),
+					m_vDeferredCallPluginFuncs.size());
+			for (const CallPluginFunc& func : m_vDeferredCallPluginFuncs)
+				func(m_pPlugin);
+			m_vDeferredCallPluginFuncs.clear();
+		});
 }
 
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
 {
-	if (m_pPlugin)
+	CIEHostWindow* pIEHostWindow = new CIEHostWindow();
+	if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 	{
+		ULONG_PTR ulId = s_ulpNewIEWindowId += 2; // never be zero ever
+		s_NewIEWindowMap.Add(ulId, pIEHostWindow);
+		*ppDisp = pIEHostWindow->m_ie.get_Application();
+		CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
+		if (pUtilsWindow)
+			pUtilsWindow->RunAsyncTimeout([=] { RemoveNewWindow(ulId); }, 10000);
 
-		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
-		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
+		bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
+		bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
+		if (dwFlags & NWMF_FORCEWINDOW)
 		{
-			ULONG_PTR ulId = s_ulpNewIEWindowId += 2; // never be zero ever
-			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
-			*ppDisp = pIEHostWindow->m_ie.get_Application();
-			CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
-			if (pUtilsWindow)
-				pUtilsWindow->RunAsyncTimeout([=] { RemoveNewWindow(ulId); }, 10000);
-
-			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
-			bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
-			if (dwFlags & NWMF_FORCEWINDOW)
-			{
-				// ignore current key states, always open in new window
-				bShift = true;
-				bCtrl = false;
-			}
-			else if (dwFlags & NWMF_FORCETAB)
-			{
-				bCtrl = true;
-			}
-			m_pPlugin->IENewTab(ulId, bstrUrl, bShift, bCtrl);
+			// ignore current key states, always open in new window
+			bShift = true;
+			bCtrl = false;
 		}
-		else
+		else if (dwFlags & NWMF_FORCETAB)
 		{
-			if (pIEHostWindow)
-			{
-				delete pIEHostWindow;
-			}
-			*Cancel = TRUE;
+			bCtrl = true;
 		}
+		CString strURL = bstrUrl;
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			pPlugin->IENewTab(ulId, strURL, bShift, bCtrl);
+		});
+	}
+	else
+	{
+		if (pIEHostWindow)
+		{
+			delete pIEHostWindow;
+		}
+		*Cancel = TRUE;
 	}
 }
 
@@ -2636,4 +2653,13 @@ void CIEHostWindow::OnRunAsyncTimeoutCall()
 	if (bNeedCall) funcToCall();
 	if (bNeedActivate)
 		RunAsync([=] { ActivateTimer(); });
+}
+
+template <class TCallPluginFunc>
+void CIEHostWindow::RequirePlugin(const TCallPluginFunc& func)
+{
+	if (m_pPlugin)
+		func(m_pPlugin);
+	else
+		m_vDeferredCallPluginFuncs.push_back(func);
 }

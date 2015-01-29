@@ -79,7 +79,6 @@ public:
 	
 	/* Indicates that a main page request is detected */
 	void SetMainPageDone();
-public:
 	
 	virtual ~CIEHostWindow();
 
@@ -96,7 +95,7 @@ public:
 
 	void SetPlugin(Plugin::CPlugin* pPlugin);
 
-protected:
+private:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
 	// Map used to search the CIEHostWindow object by its window handle
@@ -269,7 +268,8 @@ public:
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
 	void ReceiveUserAgent(const CString& userAgent);
-protected:
+
+private:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
 	INT32 m_iProgress;
@@ -308,7 +308,7 @@ protected:
 	long m_lFBCurrentDoc;
 
 	long m_lFBLastFindLength;
-	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)
+	// store the rendering service as well as the highlight segment, in case we process multiple documents (e.g. iframes)
 	std::vector<std::pair<CComPtr<IHighlightRenderingServices>, CComPtr<IHighlightSegment> > > m_vFBHighlightSegments;
 	bool m_bFBFound;
 	bool m_bFBCrossHead;
@@ -339,7 +339,9 @@ public:
 
 	// Asynchronously run the specified function after a specified timeout
 	void RunAsyncTimeout(const MainThreadFunc& func, unsigned int timeoutMillis);
+
 private:
+	// Helper stuff to make RunAsync(Timeout) work
 	void OnRunAsyncCall();
 	void OnRunAsyncTimeoutCall();
 
@@ -364,6 +366,14 @@ private:
 	Utils::Mutex m_mtxTimeoutFuncs;
 
 	void ActivateTimer();
+
+	// Helper stuff to make RequirePlugin work
+	typedef std::function<void(Plugin::CPlugin*)> CallPluginFunc;
+	std::vector<CallPluginFunc> m_vDeferredCallPluginFuncs;
+
+	// Wait until the CPlugin instance is available to run the specific function
+	template <class TCallPluginFunc>
+	void RequirePlugin(const TCallPluginFunc& func);
 
 	/**
 	 * Used for Refresh() detection, as IE fire neither NavigateComplete2 nor DocumentComplete when Refresh() completes.
