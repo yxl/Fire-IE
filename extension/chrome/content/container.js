@@ -62,6 +62,13 @@ let FireIEContainer = {};
 
     E(Utils.statusBarId).hidden = true;
 
+    if (!Utils.isIEEngine(location.href) || !Utils.isValidUrl(Utils.fromContainerUrl(location.href)))
+    {
+      Utils.ERROR('Not a valid URL to navigate to.');
+      location.replace("about:blank");
+      return;
+    }
+    
     let container = E('container');
     if (!container)
     {
