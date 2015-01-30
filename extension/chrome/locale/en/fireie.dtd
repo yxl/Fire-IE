@@ -3,7 +3,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "Left-Click: Switch rendering engine">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "Cannot switch on this page">
 <!ENTITY fireie.urlbar.switch.tooltip3 "Right-Click: Show Fire IE Options">
-<!ENTITY fireie.menu.switchRules.label "Switch Rules">
+<!ENTITY fireie.menu.switchRules.label "Edit Switch Rules">
 <!ENTITY fireie.menu.internetProperties.label "Internet Properties (Control Panel)">
 <!ENTITY fireie.menu.autoswitch.disable "Disable Auto-switch Everywhere">
 <!ENTITY fireie.menu.openInIE.label "Open This Page in IE Browser">
@@ -17,9 +17,14 @@
 
 <!ENTITY fireie.options.general.tab "General">
 <!ENTITY fireie.options.general.pane "General">
-<!ENTITY fireie.options.switch.caption "When switch rendering engine:">
-<!ENTITY fireie.options.switch.handleurl "Always use current engine to open a new URL">
-<!ENTITY fireie.options.switch.disableAutoSwitch "Disable engine auto-switch">
+<!ENTITY fireie.options.switch.caption "Auto-switch Policy">
+<!ENTITY fireie.options.switch.handleurl "Always use current engine for URLs typed in URL bar">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Disable auto-switch everywhere">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "When URL doesn't match any switch rules:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "When URL matches an exceptional rule:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "Keep current rendering engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "Switch to Firefox engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "Switch to IE engine">
 <!ENTITY fireie.options.shorcut.caption "Shortcut Key">
 <!ENTITY fireie.options.shorcut.enable "Enable">
 <!ENTITY fireie.options.private.caption "Private Browsing">

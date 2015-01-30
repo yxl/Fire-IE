@@ -3,7 +3,7 @@
 <!ENTITY fireie.urlbar.switch.tooltip1 "左键点击: 切换浏览引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "无法在该页面进行切换">
 <!ENTITY fireie.urlbar.switch.tooltip3 "右键点击: 设置 解雇IE 选项">
-<!ENTITY fireie.menu.switchRules.label "切换规则">
+<!ENTITY fireie.menu.switchRules.label "编辑切换规则">
 <!ENTITY fireie.menu.internetProperties.label "Internet 选项 (控制面板)">
 <!ENTITY fireie.menu.autoswitch.disable "全局禁用自动切换">
 <!ENTITY fireie.menu.openInIE.label "使用 IE 浏览器打开当前页面">
@@ -17,9 +17,14 @@
 
 <!ENTITY fireie.options.general.tab "常规">
 <!ENTITY fireie.options.general.pane "常规">
-<!ENTITY fireie.options.switch.caption "浏览引擎切换时:">
+<!ENTITY fireie.options.switch.caption "自动切换策略">
 <!ENTITY fireie.options.switch.handleurl "总是以当前浏览引擎打开地址栏的新网址">
-<!ENTITY fireie.options.switch.disableAutoSwitch "禁用浏览引擎的自动切换">
+<!ENTITY fireie.options.switch.disableAutoSwitch "全局禁用自动切换">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "网址未匹配任何切换规则时：">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "网址匹配例外规则时：">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "保持当前浏览引擎">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "切换至 Firefox 引擎">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "切换至 IE 引擎">
 <!ENTITY fireie.options.shorcut.caption "快捷键">
 <!ENTITY fireie.options.shorcut.enable "启用">
 <!ENTITY fireie.options.private.caption "隐私浏览模式">

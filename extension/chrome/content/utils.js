@@ -36,8 +36,12 @@ function E(id)
  */
 function doSizeToContent(window, document)
 {
-  window.sizeToContent();
   let vboxes = document.querySelectorAll("prefpane > vbox");
+  Array.prototype.forEach.call(vboxes, function(vbox)
+  {
+    vbox.height = undefined;
+  });
+  window.sizeToContent();
   Array.prototype.forEach.call(vboxes, function(vbox)
   {
     vbox.height = vbox.boxObject.height;

@@ -40,12 +40,32 @@
           <hbox>
             <button id="openSwitchRules" label="&fireie.menu.switchRules.label;..." oncommand="Utils.openRulesDialog();" />
           </hbox>
+          <label value="&fireie.options.switch.onRuleMiss.caption;" />
+          <menulist id="autoSwitchOnRuleMiss" class="auto-switch-element indent">
+            <menupopup>
+              <menuitem id="autoSwitchOnRuleMiss-no-radio" value="no"
+                        label="&fireie.options.switch.autoSwitchOnCondition.no;" />
+              <menuitem id="autoSwitchOnRuleMiss-fx-radio" value="fx"
+                        label="&fireie.options.switch.autoSwitchOnCondition.fx;" />
+              <menuitem id="autoSwitchOnRuleMiss-ie-radio" value="ie"
+                        label="&fireie.options.switch.autoSwitchOnCondition.ie;" />
+            </menupopup>
+          </menulist>
+          <label value="&fireie.options.switch.onExceptionalRuleHit.caption;" />
+          <menulist id="autoSwitchOnExceptionalRuleHit" class="auto-switch-element indent">
+            <menupopup>
+              <menuitem id="autoSwitchOnRuleMiss-no-radio" value="no"
+                        label="&fireie.options.switch.autoSwitchOnCondition.no;" />
+              <menuitem id="autoSwitchOnRuleMiss-fx-radio" value="fx"
+                        label="&fireie.options.switch.autoSwitchOnCondition.fx;" />
+            </menupopup>
+          </menulist>
         </vbox>
       </groupbox>
       <!-- Sets Shortcut key -->
       <groupbox id="shortcut">
         <caption label="&fireie.options.shorcut.caption;*" />
-        <hbox>
+        <hbox align="center">
           <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
           <menulist id="shortcut-modifiers">
             <menupopup>
@@ -274,7 +294,7 @@
     <iframe src="chrome://fireie/content/about.xul" flex="1" />
   </prefpane>
 
-  <hbox class="prefWindow-dlgbuttons">
+  <hbox class="prefWindow-dlgbuttons" flex="1">
     <button id="mySettingManager" type="menu"
     label="&fireie.options.manager;">
       <menupopup>

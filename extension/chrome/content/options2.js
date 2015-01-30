@@ -77,6 +77,8 @@ Options.apply = function(quiet)
   // General
   Prefs.handleUrlBar = E("handleurl").checked;
   Prefs.autoswitch_enabled = !E("disableAutoSwitch").checked;
+  Prefs.autoSwitchOnRuleMiss = E("autoSwitchOnRuleMiss").value;
+  Prefs.autoSwitchOnExceptionalRuleHit = E("autoSwitchOnExceptionalRuleHit").value;
 
   let newKey = E("shortcut-key").value;
   if (Prefs.shortcut_key != newKey)
@@ -401,11 +403,31 @@ Options.updateIECompatDescription = function()
   Options.sizeToContent();
 };
 
+Options.updateAutoSwitchElements = function()
+{
+  let disabled = E("disableAutoSwitch").checked;
+  [].forEach.call(document.querySelectorAll(".auto-switch-element"), function(element)
+  {
+    element.disabled = disabled;
+  });
+};
+
+Options._getGroupValue = function(value, allowedValues, defValue)
+{
+  if (allowedValues.indexOf(value) !== -1)
+    return value;
+  return defValue;
+};
+
 Options.initDialog = function(restore)
 {
   // General
   E("handleurl").checked = Prefs.handleUrlBar;
   E("disableAutoSwitch").checked = !Prefs.autoswitch_enabled;
+  E("autoSwitchOnRuleMiss").value =
+    Options._getGroupValue(Prefs.autoSwitchOnRuleMiss, ["fx", "ie"], "no");
+  E("autoSwitchOnExceptionalRuleHit").value =
+    Options._getGroupValue(Prefs.autoSwitchOnExceptionalRuleHit, ["fx"], "no");
   E("shortcutEnabled").checked = Prefs.shortcutEnabled;
   E("shortcut-modifiers").value = Prefs.shortcut_modifiers;
   E("shortcut-key").value = Prefs.shortcut_key;
@@ -451,6 +473,7 @@ Options.initDialog = function(restore)
   Options.updateIEModeTab(restore);
 
   // updateStatus
+  Options.updateAutoSwitchElements();
   Options.handleShortcutEnabled();
   Options.updateCustomLabelsUI();
   Options.updateABPStatus();
@@ -518,6 +541,8 @@ Options.init = function()
   addEventListenerByTagName("menulist", "command", Options.updateApplyButton);
   addEventListenerByTagName("html:input", "input", Options.updateApplyButton);
   addEventListenerByTagName("html:input", "focus", function() { this.select(); });
+  
+  E("disableAutoSwitch").addEventListener("command", Options.updateAutoSwitchElements, false);
   E("shortcutEnabled").addEventListener('command', Options.handleShortcutEnabled);
   
   E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
