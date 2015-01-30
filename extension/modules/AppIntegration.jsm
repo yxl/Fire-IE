@@ -834,7 +834,7 @@ WindowWrapper.prototype = {
   /** Check whether we should switch back to Firefox engine */
   shouldSwitchBack: function(url)
   {
-    return Prefs.autoswitch_enabled && Prefs.autoSwitchBackEnabled && Policy.checkEngineExceptionalRule(url);
+    return Prefs.autoswitch_enabled && Policy.checkEngineExceptionalRule(url);
   },
   
   _checkTabURL: function(aTab, checkerFunc)

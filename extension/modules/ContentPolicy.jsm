@@ -97,7 +97,8 @@ var Policy = {
     {
       RuleStorage.increaseHitCount(match);
     }
-    return match && match instanceof EngineRule;
+    if (!match) return Prefs.autoSwitchOnRuleMiss === "ie";
+    return match instanceof EngineRule;
   },
 
   /**
@@ -117,10 +118,9 @@ var Policy = {
     // While explicitly checking against exceptional rules,
     // don't count hits as we'll hit the exceptional rule again
     // after switch back.
-    if (Prefs.autoSwitchBackOnRuleMiss)
-      return !match || match instanceof EngineExceptionalRule;
-    else
-      return match && match instanceof EngineExceptionalRule;
+    if (!match) return Prefs.autoSwitchOnRuleMiss === "fx";
+    return Prefs.autoSwitchOnExceptionalRuleHit === "fx" &&
+           match instanceof EngineExceptionalRule;
   },
 
   /**
@@ -266,7 +266,7 @@ var PolicyPrivate = {
       return Ci.nsIContentPolicy.REJECT_OTHER;
     }
     // Check engine switch back list
-    if (Prefs.autoSwitchBackEnabled && Utils.isIEEngine(locationSpec))
+    if (Utils.isIEEngine(locationSpec))
     {
       let url = Utils.fromContainerUrl(locationSpec);
       if (Policy.isManuallySwitched(browserNode, url))

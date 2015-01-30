@@ -23,8 +23,8 @@ pref("extensions.fireie.OOPP_remoteSetCookie", true);
 // General
 pref("extensions.fireie.handleUrlBar", false);
 pref("extensions.fireie.autoswitch_enabled", true);
-pref("extensions.fireie.autoSwitchBackEnabled", true);
-pref("extensions.fireie.autoSwitchBackOnRuleMiss", false);
+pref("extensions.fireie.autoSwitchOnExceptionalRuleHit", "fx"); // "no"/"fx"
+pref("extensions.fireie.autoSwitchOnRuleMiss", "no"); // "no"/"fx"/"ie"
 pref("extensions.fireie.shortcutEnabled", true);
 pref("extensions.fireie.shortcut_modifiers", "alt");
 pref("extensions.fireie.shortcut_key", "C");
