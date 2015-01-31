@@ -1162,42 +1162,35 @@ WindowWrapper.prototype = {
     return url;
   },
 
-  _updateProgressStatus: function()
+  _updateProgressStatusForTab: function(tab, pluginObject)
   {
-    this._forEachTab(function(tab)
+    let aCurTotalProgress = pluginObject.Progress;
+    if (aCurTotalProgress != tab.mProgress)
     {
-      let pluginObject = this.getContainerPlugin(tab);
-      if (pluginObject)
+      const wpl = Ci.nsIWebProgressListener;
+      let aMaxTotalProgress = 100;
+      let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
+      let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
+      let aWebProgress = tab.linkedBrowser.webProgress;
+      let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
+      let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
+      
+      try
       {
-        let aCurTotalProgress = pluginObject.Progress;
-        if (aCurTotalProgress != tab.mProgress)
-        {
-          const wpl = Ci.nsIWebProgressListener;
-          let aMaxTotalProgress = 100;
-          let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
-          let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
-          let aWebProgress = tab.linkedBrowser.webProgress;
-          let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
-          let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;
-          
-          try
-          {
-            if (!aStopped && !tab.mProgressStarted)
-              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-            aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0,
-              aCurTotalProgress == -1 ? 100 : aCurTotalProgress, aMaxTotalProgress);
-            if (aStopped)
-              aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
-          }
-          catch (ex)
-          {
-            Utils.ERROR("Error calling WebProgressListeners: " + ex);
-          }
-          tab.mProgress = aCurTotalProgress;
-          tab.mProgressStarted = !aStopped;
-        }
+        if (!aStopped && !tab.mProgressStarted)
+          aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
+        aTabListener.onProgressChange(aWebProgress, aRequest, 0, 0,
+          aCurTotalProgress == -1 ? 100 : aCurTotalProgress, aMaxTotalProgress);
+        if (aStopped)
+          aTabListener.onStateChange(aWebProgress, aRequest, aStateFlags, 0);
       }
-    });
+      catch (ex)
+      {
+        Utils.ERROR("Error calling WebProgressListeners: " + ex);
+      }
+      tab.mProgress = aCurTotalProgress;
+      tab.mProgressStarted = !aStopped;
+    }
   },
   
   _focusPlugin: function()
@@ -1243,9 +1236,11 @@ WindowWrapper.prototype = {
     
     let progress = parseInt(event.detail, 10);
     if (progress == 0) this.window.gBrowser.userTypedValue = null;
-    this._updateProgressStatus();
     if (progress >= 100 || progress == -1)
       this._updateInterface();
+    let pluginObject = event.target;
+    let tab = Utils.getTabFromDocument(pluginObject.ownerDocument);
+    this._updateProgressStatusForTab(tab, pluginObject);
   },
 
   /** Handler for IE new tab event*/
@@ -2409,6 +2404,10 @@ WindowWrapper.prototype = {
     if (!tab) return;
 
     this._updateInterface();
+
+    // Reset nsIWebProgressListener state
+    tab.mProgress = 0;
+    tab.mProgressStarted = false;
   },
 
   /**
