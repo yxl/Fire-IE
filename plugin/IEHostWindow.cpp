@@ -378,7 +378,7 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 	// DefWindowProc propagates messages to parent window by SendMessage.
 	// In OOPP mode, this can potentially deadlock firefox since we can't RPC into the
 	// plugin during SendMessage.
-	// Here we post some of these messages to the firefox main window, and ignore the rest.
+	// Here we process such messages and make sure they won't block forever.
 	LRESULT ret = 0;
 	bool bShouldReturn = false;
 	switch (message)
@@ -398,8 +398,22 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		bShouldReturn = true;
 		break;
 	case WM_MOUSEACTIVATE:
+		ret = MA_ACTIVATE;
+		bShouldReturn = true;
 		// Close popups in Firefox main window
 		::PostMessage((HWND)wParam, WM_KILLFOCUS, (WPARAM)m_hWnd, NULL);
+		{
+			// Must send a message to the child MozillaWindowClass window to transfer input focus.
+			// DefWindowProc uses blocking SendMessage, which we don't want
+			DWORD_PTR dwResult;
+			HWND hwndChildMozillaWindow = GetChildMozillaWindowClassWindow(m_hWnd);
+			if (hwndChildMozillaWindow && 
+				::SendMessageTimeout(hwndChildMozillaWindow, WM_MOUSEACTIVATE, wParam, lParam,
+				SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, &dwResult))
+			{
+				ret = dwResult;
+			}
+		}
 		break;
 	case WM_SETCURSOR:
 		ret = FALSE;
@@ -597,60 +611,85 @@ void CIEHostWindow::Find()
 	ExecOleCmd(OLECMDID_FIND);
 }
 
-// Find the sub-window of MozillaContentWindow.
-HWND GetMozillaContentWindow(HWND hwndIECtrl)
-{
-	// The trivial way: traverse up the hierarchy until we find MozillaContentWindow
-	HWND hwnd = ::GetParent(hwndIECtrl);
-	for ( int i = 0; i < 5; i++ )
-	{
-		hwnd = ::GetParent( hwnd );
-		TCHAR szClassName[MAX_PATH];
-		if ( GetClassName(::GetParent(hwnd), szClassName, ARRAYSIZE(szClassName)) > 0 )
-		{
-			if ( _tcscmp(szClassName, _T("MozillaContentWindowClass")) == 0 )
-			{
-				return hwnd;
-			}
-		}
-	}
-
-	return NULL;
-}
-
 // Firefox 4.0 uses a new window hierarchy,
 // Plugin windows are placed in GeckoPluginWindow, which is inside MozillaWindowClass,
 // which is in another top-level MozillaWindowClass.
 // Our messges should be sent to the top-level window, so here's the function that finds it
-HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl)
+HWND GetTopMozillaWindowClassWindow(HWND hwndAnyChild)
 {
-	HWND hwnd = ::GetParent(hwndIECtrl);
-	for ( int i = 0; i < 5; i++ )
-	{
-		HWND hwndParent = ::GetParent( hwnd );
-		if ( NULL == hwndParent ) break;
-		hwnd = hwndParent;
-	}
+	HWND hwndTop = GetAncestor(hwndAnyChild, GA_ROOT);
 
-	TCHAR szClassName[MAX_PATH];
-	if ( GetClassName(hwnd, szClassName, ARRAYSIZE(szClassName)) > 0 )
-	{
-		if ( _tcscmp(szClassName, _T("MozillaWindowClass")) == 0 )
-		{
-			return hwnd;
-		}
-	}
+	CString className;
+	GetClassName(hwndTop, className.GetBuffer(MAX_PATH), MAX_PATH);
+	className.ReleaseBuffer();
+	if (className == _T("MozillaWindowClass"))
+		return hwndTop;
 
 	return NULL;
 }
 
+// Returns the real parent window
+// Same as GetParent(), but doesn't return the owner
+static HWND GetRealParent(HWND hWnd)
+{
+	HWND hParent;
+
+	hParent = GetAncestor(hWnd, GA_PARENT);
+	if (!hParent || hParent == GetDesktopWindow())
+		return NULL;
+
+	return hParent;
+}
+
+template <class T, class R>
+static int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind)
+{
+	for (int i = 0; i < arrayLength; i++)
+	{
+		if ((*(arrayBegin + i)) == toFind)
+			return i;
+	}
+	return -1;
+}
+
+static HWND GetParentWindowForAnyClassName(HWND hwnd, const CString targetClassNames[],
+									int nTargetClassNames, int maxLevelsUp, CString& className)
+{
+	int levels = 0;
+	int index = -1;
+	HWND hwndParent = hwnd;
+	while (hwndParent && levels <= maxLevelsUp && index < 0)
+	{
+		hwnd = hwndParent;
+		hwndParent = GetRealParent(hwnd);
+
+		int nCopied = GetClassName(hwnd, className.GetBuffer(MAX_PATH), MAX_PATH);
+		className.ReleaseBuffer(nCopied);
+
+		if (nCopied == 0)
+			return NULL;
+
+		index = ArrayFind(targetClassNames, nTargetClassNames, className);
+
+		levels++;
+	}
+
+	return (index < 0) ? NULL : hwnd;
+}
+
+// Finder for the child MozillaWindowClass window
+HWND GetChildMozillaWindowClassWindow(HWND hwndAnyChild)
+{
+	static const CString targetClassNames[] = { _T("MozillaWindowClass") };
+	CString className;
+	HWND hwnd = GetParentWindowForAnyClassName(hwndAnyChild, targetClassNames, 1, 10, className);
+	// Make sure it's actually the child MozillaWindowClass window, not the top-level one.
+	return GetRealParent(hwnd) ? hwnd : NULL;
+}
+
 void CIEHostWindow::HandOverFocus()
 {
-	HWND hwndMessageTarget = GetMozillaContentWindow(m_hWnd);
-	if (!hwndMessageTarget)
-	{
-		hwndMessageTarget = GetTopMozillaWindowClassWindow(m_hWnd);
-	}
+	HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(m_hWnd);
 
 	// Change the focus to the parent window of html document to kill its focus. 
 	if (m_ie.GetSafeHwnd())

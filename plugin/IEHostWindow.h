@@ -33,6 +33,8 @@ namespace Plugin
 // which is in another top-level MozillaWindowClass.
 // Our messges should be sent to the top-level window, so here's the function that finds it
 HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl);
+// Finder for the child MozillaWindowClass window
+HWND GetChildMozillaWindowClassWindow(HWND hwndAnyChild);
 
 // CIEHostWindow dialog
 

@@ -521,7 +521,7 @@ let FireIEContainer = {};
   {
     let pluginObject = event.originalTarget;
     pluginObject.blur();
-    pluginObject.Focus();
+    try { pluginObject.Focus(); } catch (ex) { }
   }
 
   function onHideContainerPlugin(event)
