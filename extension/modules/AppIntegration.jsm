@@ -467,15 +467,8 @@ WindowWrapper.prototype = {
   {
     if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
     {
-      let uri = browser.currentURI;
-      let uriToLoad = uri;
-      if (uri.hasRef)
-      {
-        // If the URI has hash part, directly loading it does nothing.
-        // We should reload the base part of the URI only
-        uriToLoad = uri.cloneIgnoringRef();
-      }
-      browser.loadURIWithFlags(uriToLoad.spec,
+      let uri = this._getURIFromBrowser(browser);
+      browser.loadURIWithFlags(uri.specIgnoringRef,
         Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY | Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT);
     }
   },
@@ -499,8 +492,7 @@ WindowWrapper.prototype = {
   _updateButtonStatusCore: function()
   {
     // Only update when we are on a firefox-only page
-    let url = this.getURL();
-    if (!Utils.isFirefoxOnly(url))
+    if (!Utils.isFirefoxOnly(this.getURL()))
       return;
     
     // disable engine switch for firefox-only urls
@@ -534,7 +526,7 @@ WindowWrapper.prototype = {
       let pluginObject = this.getContainerPlugin();
       let url = this.getURL();
       let isIEEngine = this.isIEEngine();
-      let unmangledURL = this.window.gBrowser.currentURI.spec;
+      let unmangledURL = this._getURIFromBrowser(this.window.gBrowser.mCurrentBrowser).spec;
 
       // Update the enable status of back, forward, reload and stop buttons.
       let canBack = (pluginObject && pluginObject.CanBack) || this.window.gBrowser.webNavigation.canGoBack;
@@ -621,7 +613,7 @@ WindowWrapper.prototype = {
     }
     catch (e)
     {
-      Utils.ERROR(e);
+      Utils.ERROR("updateInterface() failed: " + e);
     }
   },
 
@@ -807,14 +799,30 @@ WindowWrapper.prototype = {
     return null;
   },
 
+  _getURIFromBrowser: function(aBrowser)
+  {
+    aBrowser.FireIE_bUsePluginURL = true;
+    try
+    {
+      return aBrowser.currentURI;
+    }
+    finally
+    {
+      aBrowser.FireIE_bUsePluginURL = false;
+    }
+  },
+
   _getURLFromBrowser: function(aBrowser)
   {
-    let url = aBrowser.currentURI.spec;
+    let url = this._getURIFromBrowser(aBrowser).spec;
     // No need to query container plugin here - we hooked the browser getter already
     return Utils.fromAnyPrefixedUrl(url);
   },
-
-  /** Get current navigation URL with current engine.*/
+  
+  /**
+   * Get current navigation URL. If the URL is prefixed, the wrapped URL is returned.
+   * This function uses the plugin.URL property and should only be called when absolutely necessary.
+   */
   getURL: function(aTab)
   {
     let tab = aTab || this.window.gBrowser.mCurrentTab;
@@ -822,8 +830,8 @@ WindowWrapper.prototype = {
   },
   
   /**
-   *  Get current navigation URI with current engine.
-   *  It's of the same function with WindowWrapper#getURL.
+   * Get the browser's navigation URI. If the URI is prefixed, the wrapped URL is returned.
+   * This function uses the plugin.URL property and should only be called when absolutely necessary.
    */
   getURI: function(aBrowser)
   {

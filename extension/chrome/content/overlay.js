@@ -65,6 +65,19 @@ var gFireIE = null;
     return browser.FireIE_bUseRealURI = value - 1;
   }
   
+  function getPluginURIFromBrowser(browser)
+  {
+    browser.FireIE_bUsePluginURL = true;
+    try
+    {
+      return browser.currentURI;
+    }
+    finally
+    {
+      browser.FireIE_bUsePluginURL = false;
+    }
+  }
+  
   // hook click_to_play
   // Don't allow PluginClickToPlay, PluginInstantiated and PluginRemoved to be processed by
   // gPluginHandler, in order to hide the notification icon
@@ -662,7 +675,7 @@ var gFireIE = null;
     try
     {
       let browser = gBrowser.selectedBrowser;
-      FullZoom.onLocationChange(browser.currentURI, false, browser);
+      FullZoom.onLocationChange(getPluginURIFromBrowser(browser), false, browser);
     }
     catch (ex)
     {
@@ -741,12 +754,15 @@ var gFireIE = null;
   {
     if (Utils.isIEEngine(uri.spec))
     {
-      let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
-      let pluginURL = Utils.convertToFxURL(pluginObject && pluginObject.URL);
-      if (pluginURL)
+      if (this.FireIE_bUsePluginURL || this.FireIE_bUseRealURI)
       {
-        let url = this.FireIE_bUseRealURI ? pluginURL : Utils.toContainerUrl(pluginURL);
-        return RET.modifyValue(Utils.makeURI(url));
+        let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
+        let pluginURL = Utils.convertToFxURL(pluginObject && pluginObject.URL);
+        if (pluginURL)
+        {
+          let url = this.FireIE_bUseRealURI ? pluginURL : Utils.toContainerUrl(pluginURL);
+          return RET.modifyValue(Utils.makeURI(url));
+        }
       }
       // Failed to get URL from plugin object? Extract from uri.spec directly.
       if (this.FireIE_bUseRealURI)
@@ -764,7 +780,7 @@ var gFireIE = null;
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
-    let uri = this.currentURI; // hooked by currentURIGetter
+    let uri = getPluginURIFromBrowser(this);
     if (uri && Utils.isIEEngine(uri.spec))
     {
       let entry = history.getEntryAtIndex(history.index, false);
