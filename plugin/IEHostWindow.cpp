@@ -66,7 +66,6 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_bFBInProgress(false)
 	, m_lFBCurrentDoc(0)
 	, m_strSecureLockInfo(_T("Unsecure"))
-	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
 	, m_strLoadingUrl(_T(""))
@@ -80,8 +79,6 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 
 CIEHostWindow::~CIEHostWindow()
 {
-	SAFE_DELETE(m_pNavigateParams);
-
 	m_csFuncs.Lock();
 	m_qFuncs.clear();
 	m_csFuncs.Unlock();
@@ -519,21 +516,9 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
-	m_csNavigateParams.Lock();
-	if (m_pNavigateParams == NULL)
-	{
-		m_pNavigateParams = new NavigateParams();
-	}
-	if (m_pNavigateParams == NULL)
-	{
-		m_csNavigateParams.Unlock();
-		return;
-	}
-
-	m_pNavigateParams->strURL = strURL;
-	m_pNavigateParams->strPost = strPost;
-	m_pNavigateParams->strHeaders = strHeaders;
-	m_csNavigateParams.Unlock();
+	m_navigateParams.strURL = strURL;
+	m_navigateParams.strPost = strPost;
+	m_navigateParams.strHeaders = strHeaders;
 
 	OnNavigate();
 }
@@ -980,18 +965,9 @@ void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 
 void CIEHostWindow::OnNavigate()
 {
-	m_csNavigateParams.Lock();
-	if (m_pNavigateParams == NULL)
-	{
-		m_csNavigateParams.Unlock();
-		return;
-	}
-
-	CString strURL = m_pNavigateParams->strURL;
-	CString strHeaders = m_pNavigateParams->strHeaders;
-	CString strPost = m_pNavigateParams->strPost;
-	SAFE_DELETE(m_pNavigateParams);
-	m_csNavigateParams.Unlock();
+	CString strURL = m_navigateParams.strURL;
+	CString strHeaders = m_navigateParams.strHeaders;
+	CString strPost = m_navigateParams.strPost;
 
 	if (m_ie.GetSafeHwnd())
 	{

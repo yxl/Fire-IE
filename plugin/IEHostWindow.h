@@ -321,9 +321,7 @@ private:
 	
 	Plugin::CPlugin* m_pPlugin;
 
-	UserMessage::NavigateParams* m_pNavigateParams;
-	// Ensure the operations on m_pNavigateParams are thread safe.
-	CCriticalSection m_csNavigateParams;
+	UserMessage::NavigateParams m_navigateParams;
 
 	// Indicates whether the associated plugin is a utils plugin
 	bool m_bUtils;
