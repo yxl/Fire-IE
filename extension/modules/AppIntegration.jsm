@@ -1357,7 +1357,8 @@ WindowWrapper.prototype = {
    */
   _onIEStatusChanged: function(event)
   {
-    this.updateIEStatusText();
+    if (event.target === this.getContainerPlugin())
+      this.updateIEStatusText();
   },
 
   updateIEStatusText: function()
