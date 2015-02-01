@@ -1723,14 +1723,13 @@ void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
 {
 	m_pPlugin = pPlugin;
 	if (m_pPlugin && m_vDeferredCallPluginFuncs.size())
-		RunAsync([=]
-		{
-			TRACE(_T("CIEHostWindow: doing deferred plugin calls, number of funcs = %d\n"),
-					m_vDeferredCallPluginFuncs.size());
-			for (const CallPluginFunc& func : m_vDeferredCallPluginFuncs)
-				func(m_pPlugin);
-			m_vDeferredCallPluginFuncs.clear();
-		});
+	{
+		TRACE(_T("CIEHostWindow: doing deferred plugin calls, number of funcs = %d\n"),
+			  m_vDeferredCallPluginFuncs.size());
+		for (const CallPluginFunc& func : m_vDeferredCallPluginFuncs)
+			func(m_pPlugin);
+		m_vDeferredCallPluginFuncs.clear();
+	}
 }
 
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
