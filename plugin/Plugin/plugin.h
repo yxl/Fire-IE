@@ -96,18 +96,17 @@ namespace Plugin
 
 		NPObject *GetScriptableObject();
 
-		/** This function is equivalent to the following JavaScript function:
-		* function FireEvent(strEventType, strDetail) {
-		*   var event = document.createEvent("CustomEvent");
-		*   event.initCustomEvent(strEventType, true, true, strDetail);
-		*   pluginObject.dispatchEvent(event);
-		* }
-		* 
-		* Uses following JavaScript code to listen to the event fired:
-		* pluginObject.addEventListener(strEventType, function(event) {
-		*    alert(event.detail);
-		* }
-		*/
+		/**
+		 * This function is equivalent to the following JavaScript function:
+		 * function FireEvent(strEventType, strDetail) {
+		 *   FireIEContainer.dispatchEvent(strEventType, strDetail)
+		 * }
+		 * 
+		 * Uses following JavaScript code to listen to the event fired:
+		 * pluginObject.addEventListener(strEventType, function(event) {
+		 *    alert(event.detail);
+		 * }
+		 */
 		BOOL FireEvent(const CString &strEventType, const CString &strDetail);
 
 		/** Get the window zoom level of Firefox by calling the JavaScript method of

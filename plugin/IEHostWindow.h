@@ -379,6 +379,29 @@ private:
 	template <class TCallPluginFunc>
 	void RequirePlugin(const TCallPluginFunc& func);
 
+	// Throttle some events so that they are not sent to Firefox rapidly
+	struct ThrottleControl
+	{
+		ThrottleControl(int timeoutMillis)
+			: timeoutMillis(timeoutMillis)
+			, updating(false)
+			, delaying(false)
+			, scheduled(false)
+		{}
+
+		bool updating;
+		bool delaying;
+		bool scheduled;
+		const int timeoutMillis;
+	};
+
+	template <class ThrottledFunc>
+	void RunThrottled(const ThrottledFunc& func, ThrottleControl& tc);
+	template <class ThrottledFunc>
+	void OnRunThrottled(const ThrottledFunc& func, ThrottleControl& tc);
+
+	ThrottleControl m_tcProgressChanged;
+
 	/**
 	 * Used for Refresh() detection, as IE fire neither NavigateComplete2 nor DocumentComplete when Refresh() completes.
 	 */

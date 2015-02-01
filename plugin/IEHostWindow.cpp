@@ -74,6 +74,7 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_nObjCounter(0)
 	, m_bActivateTimerScheduled(false)
 	, m_bDeferredSetCookieScheduled(false)
+	, m_tcProgressChanged(100)
 {
 	FBResetFindStatus();
 }
@@ -1150,10 +1151,13 @@ void CIEHostWindow::OnTitleChanged(const CString& title)
 
 void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 {
-	RequirePlugin([=](CPlugin* pPlugin)
+	RunThrottled([=]
 	{
-		pPlugin->OnIEProgressChanged(iProgress);
-	});
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			pPlugin->OnIEProgressChanged(m_iProgress);
+		});
+	}, m_tcProgressChanged);
 }
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
@@ -2688,4 +2692,39 @@ void CIEHostWindow::RequirePlugin(const TCallPluginFunc& func)
 		func(m_pPlugin);
 	else
 		m_vDeferredCallPluginFuncs.push_back(func);
+}
+
+template <class ThrottledFunc>
+void CIEHostWindow::RunThrottled(const ThrottledFunc& func, ThrottleControl& tc)
+{
+	// Almost identical to Utils.scheduleThrottledUpdate in Utils.jsm
+	if (tc.updating || tc.scheduled)
+		return;
+
+	tc.scheduled = true;
+	if (!tc.delaying)
+	{
+		// no need to set tc.delaying - we are calling it right away
+		OnRunThrottled(func, tc);
+	}
+}
+
+template <class ThrottledFunc>
+void CIEHostWindow::OnRunThrottled(const ThrottledFunc& func, ThrottleControl& tc)
+{
+	tc.delaying = false;
+	if (tc.scheduled)
+	{
+		tc.scheduled = false;
+		tc.updating = true;
+		func();
+		tc.updating = false;
+		tc.delaying = true;
+		tc.scheduled = false;
+		// func is captured here
+		RunAsyncTimeout([this, func, &tc]
+		{
+			OnRunThrottled(func, tc);
+		}, tc.timeoutMillis);
+	}
 }
