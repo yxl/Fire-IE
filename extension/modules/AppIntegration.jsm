@@ -1173,7 +1173,7 @@ WindowWrapper.prototype = {
   _updateProgressStatusForTab: function(tab, pluginObject)
   {
     let aCurTotalProgress = pluginObject.Progress;
-    if (aCurTotalProgress != tab.mProgress)
+    if (typeof(aCurTotalProgress) === "number" && aCurTotalProgress != tab.mProgress)
     {
       const wpl = Ci.nsIWebProgressListener;
       let aMaxTotalProgress = 100;

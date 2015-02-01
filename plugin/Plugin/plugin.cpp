@@ -264,7 +264,12 @@ namespace Plugin
 			{
 				throw CString(_T("Cannot Create CIEHostWindow!"));
 			}
-			pIEHostWindow->SetPlugin(this);
+			if (isUtils)
+			{
+				// For content plugins, SetPlugin will be delayed until SPO initialization,
+				// in order to avoid event ordering issues.
+				pIEHostWindow->SetPlugin(this);
+			}
 			pIEHostWindow->SetParent(&parent);
 			CRect rect;
 			parent.GetClientRect(rect);
@@ -350,6 +355,10 @@ namespace Plugin
 			OnUtilsPluginInit();
 		else
 			OnContentPluginInit();
+
+		// SetPlugin delayed until SPO initialization to avoid event ordering issues.
+		if (!m_bIsUtilsPlugin)
+			m_pIEHostWindow->SetPlugin(this);
 	}
 
 	NPObject *CPlugin::GetScriptableObject()

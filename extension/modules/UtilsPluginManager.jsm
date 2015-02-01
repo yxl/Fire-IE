@@ -173,7 +173,7 @@ let UtilsPluginManager = {
   {
     this._prefSetters.push(setter);
     if (this.isPluginInitialized)
-      setter();
+      setter(this.getPlugin());
   },
 
   _injectEventDispatchHelper: function()
