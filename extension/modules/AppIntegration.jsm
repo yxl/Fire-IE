@@ -2417,8 +2417,11 @@ WindowWrapper.prototype = {
     this._updateInterface();
 
     // Reset nsIWebProgressListener state
-    tab.mProgress = 0;
+    tab.mProgress = undefined;
     tab.mProgressStarted = false;
+    let plugin = this.getContainerPlugin(tab);
+    if (plugin)
+      this._updateProgressStatusForTab(tab, plugin);
   },
 
   /**
