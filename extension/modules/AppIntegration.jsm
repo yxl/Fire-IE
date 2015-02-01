@@ -465,7 +465,8 @@ WindowWrapper.prototype = {
 
   _reloadBrowserIfIEEngine: function(browser)
   {
-    if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec))
+    if (browser && browser.loadURIWithFlags && Utils.isIEEngine(browser.currentURI.spec) &&
+        !browser.hasAttribute("pending"))
     {
       let uri = this._getURIFromBrowser(browser);
       browser.loadURIWithFlags(uri.specIgnoringRef,
