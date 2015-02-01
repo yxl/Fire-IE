@@ -145,6 +145,16 @@ let adblockerMap = (function generateAdblockers()
     options: {
       excludedSubscriptionsRegex: "/^\\[proxy\\]/"
     }
+  }, {
+    name: "Custom Filter File",
+    id: Utils.addonID,
+    prefsBranch: "extensions.fireie.abpCustomPseudoAddonBranch.",
+    get filterFilePath() { return Prefs.abpCustomFilterFilePath; },
+    priority: 998, // Only ￥998 !
+    getFilterNotifier: function()
+    {
+      return customPseudoFilterNotifier;
+    }
   }];
   
   let map = {};
@@ -155,6 +165,27 @@ let adblockerMap = (function generateAdblockers()
   
   return map;
 })();
+
+let customPseudoAddon = {
+  id: Utils.addonID,
+  get isActive() { return !!Prefs.abpCustomFilterFilePath; },
+  name: Utils.getString("abpCustomFilterFile.name"),
+};
+
+let customPseudoFilterNotifier = {
+  _listeners: [],
+  addListener: function(l) { this._listeners.push(l); },
+  removeListener: function(l) { Utils.removeOneItem(this._listeners, l); },
+  notifyListeners: function() { this._listeners.forEach(function (l) { l("save"); }); }
+};
+
+function getAddonByID(id, callback)
+{
+  if (id === Utils.addonID)
+    callback(customPseudoAddon);
+  else
+    AddonManager.getAddonByID(id, callback);
+}
 
 /**
  * Current adblocker in use
@@ -385,7 +416,7 @@ let ABPObserver = {
     {
       if (index >= idArray.length) return;
       let id = idArray[index];
-      AddonManager.getAddonByID(id, function(addon)
+      getAddonByID(id, function(addon)
       {
         if (self._abpInstalled) return;
         
@@ -751,6 +782,18 @@ function onFireIEPrefChanged(name)
     let self = ABPObserver;
     self._setAdditionalFilters();
     self.reloadUpdate();
+  }
+  else if (name == "abpCustomFilterFilePath")
+  {
+    if (customPseudoAddon.isActive)
+    {
+      customPseudoFilterNotifier.notifyListeners();
+      ABPAddonListener.onEnabled(customPseudoAddon);
+    }
+    else
+    {
+      ABPAddonListener.onDisabled(customPseudoAddon);
+    }
   }
 }
 

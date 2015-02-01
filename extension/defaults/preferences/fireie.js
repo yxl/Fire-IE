@@ -50,6 +50,8 @@ pref("extensions.fireie.abpAdditionalFiltersEnabled", true);
 pref("extensions.fireie.historyEnabled", true);
 pref("extensions.fireie.historyPrefix", "[Fire IE] ");
 pref("extensions.fireie.disableFolderRedirection", false);
+pref("extensions.fireie.abpCustomFilterFilePath", "");
+pref("extensions.fireie.abpCustomPseudoAddonBranch.enabled", true);
 
 // IE Options
 pref("extensions.fireie.compatMode", "ie7mode");
