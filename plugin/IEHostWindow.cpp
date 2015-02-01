@@ -73,6 +73,7 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_bMainPageDone(false)
 	, m_nObjCounter(0)
 	, m_bActivateTimerScheduled(false)
+	, m_bDeferredSetCookieScheduled(false)
 {
 	FBResetFindStatus();
 }
@@ -82,6 +83,10 @@ CIEHostWindow::~CIEHostWindow()
 	m_csFuncs.Lock();
 	m_qFuncs.clear();
 	m_csFuncs.Unlock();
+
+	// Make sure cookies are not lost
+	if (m_vDeferredCookies.size())
+		SetFirefoxCookie(std::move(m_vDeferredCookies), NULL);
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
@@ -244,26 +249,32 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
 		pUtilsWindow->RunAsync([pWindowContext, pUtilsWindow, vParams]
 		{
+			const unsigned int DEFERRED_SET_COOKIE_TIMEOUT_MILLIS = 100;
+
+			CIEHostWindow* pWindowToSetCookie;
 			// Ensure that pWindowContext still exists
 			// No need to use lock - modifications happen only on main thread
 			if (pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext)))
-			{
-				pWindowContext->RequirePlugin([vParams](CPlugin* pPlugin)
-				{
-					pPlugin->SetFirefoxCookie(vParams, 0);
-				});
-			}
+				pWindowToSetCookie = pWindowContext;
 			else
+				pWindowToSetCookie = pUtilsWindow;
+
+			// Append cookies to pending list
+			std::move(vParams.begin(), vParams.end(), std::back_inserter(pWindowToSetCookie->m_vDeferredCookies));
+
+			// Optionally activate the cookie setter function
+			if (!pWindowToSetCookie->m_bDeferredSetCookieScheduled)
 			{
-				// Fall back to use the utils plugin
-				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
+				pWindowToSetCookie->m_bDeferredSetCookieScheduled = true;
+				pWindowToSetCookie->RunAsyncTimeout([pWindowToSetCookie]
 				{
-					// No need to figure out the id of the window where the cookie(s) come from
-					// If the window is not in s_IEWindowMap, it is not in s_NewIEWindowMap either.
-					ULONG_PTR ulId = 0;
-					// Send cookies as well as window id, so that extension can recover the context information
-					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams, ulId);
-				}
+					pWindowToSetCookie->RequirePlugin([pWindowToSetCookie](CPlugin* pPlugin)
+					{
+						pPlugin->SetFirefoxCookie(pWindowToSetCookie->m_vDeferredCookies, 0);
+						pWindowToSetCookie->m_vDeferredCookies.clear();
+						pWindowToSetCookie->m_bDeferredSetCookieScheduled = false;
+					});
+				}, DEFERRED_SET_COOKIE_TIMEOUT_MILLIS);
 			}
 		});
 	}

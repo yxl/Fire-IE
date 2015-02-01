@@ -331,6 +331,10 @@ private:
 	// Ensure the operations on m_strLoadingUrl are thread safe.
 	CCriticalSection m_csLoadingUrl;
 
+	// Deferred set cookie, potentially reducing inter-process communication
+	bool m_bDeferredSetCookieScheduled;
+	std::vector<UserMessage::SetFirefoxCookieParams> m_vDeferredCookies;
+
 public:
 	typedef std::function<void()> MainThreadFunc;
 
