@@ -1336,6 +1336,8 @@ WindowWrapper.prototype = {
       icon_label = this.getEffectiveHost();
       break;
     }
+    if (info !== "Unsecure")
+      tooltip += "\n" + Utils.getString("fireie.security.iconClick");
 
     let identityBox = self._identityBox;
     let identityIconLabel = self._identityIconLabel;
