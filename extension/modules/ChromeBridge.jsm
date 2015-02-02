@@ -50,6 +50,13 @@ let factoryPrivate = {
 
 Cu.import(baseURL.spec + "ContentUtils.jsm");
 
+function MsgRet(retArray, defaultValue)
+{
+  if (retArray.length < 1)
+    return defaultValue;
+  return retArray[0];
+}
+
 let initialized = false;
 
 let ChromeBridge = {
@@ -93,7 +100,8 @@ let ChromeBridge = {
     // We don't have frameGlobal here. Fire an event to retrieve it
     return this._requestFrameGlobal(window, function(frameGlobal, locationSpec)
     {
-      return frameGlobal.sendSyncMessage("fireie:shouldLoadInBrowser", locationSpec);
+      return MsgRet(frameGlobal.sendSyncMessage("fireie:shouldLoadInBrowser", locationSpec),
+                    Ci.nsIContentPolicy.ACCEPT);
     }, [locationSpec]);
   },
   
@@ -101,7 +109,7 @@ let ChromeBridge = {
   {
     return this._requestFrameGlobal(window, function(frameGlobal, locationSpec)
     {
-      return frameGlobal.sendSyncMessage("fireie:notifyIsRootWindowRequest", locationSpec);
+      return MsgRet(frameGlobal.sendSyncMessage("fireie:notifyIsRootWindowRequest", locationSpec));
     }, [locationSpec]);
   },
   
