@@ -84,6 +84,7 @@ namespace Plugin
 		NPI_DEF(SetDNTEnabled);
 		NPI_DEF(SetDNTValue);
 		NPI_DEF(SetCookie);
+		NPI_DEF(ClearSessionCookies);
 		NPI_DEF(ExitProcess);
 
 		// ABP methods
@@ -175,6 +176,7 @@ namespace Plugin
 			NPN_GSI_M(SetDNTEnabled);
 			NPN_GSI_M(SetDNTValue);
 			NPN_GSI_M(SetCookie);
+			NPN_GSI_M(ClearSessionCookies);
 			NPN_GSI_M(ExitProcess);
 			NPN_GSI_M(ABPEnable);
 			NPN_GSI_M(ABPDisable);

@@ -727,6 +727,14 @@ namespace Plugin
 
 			return false;
 		}
+		// void ClearSessionCookies()
+		else if (name == NPI_ID(ClearSessionCookies))
+		{
+			TRACE("ClearSessionCookies called!\n");
+			bool success = CIEHostWindow::ClearSessionCookies();
+			UNUSED(success);
+			return true;
+		}
 		// void ExitProcess() - no return
 		else if (name == NPI_ID(ExitProcess))
 		{

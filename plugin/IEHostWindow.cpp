@@ -86,7 +86,7 @@ CIEHostWindow::~CIEHostWindow()
 	m_csFuncs.Unlock();
 
 	// Make sure cookies are not lost
-	if (m_vDeferredCookies.size())
+	if (m_vDeferredCookies.size() && !m_bUtils)
 		SetFirefoxCookie(std::move(m_vDeferredCookies), NULL);
 }
 
@@ -287,8 +287,18 @@ bool CIEHostWindow::SetIECookie(const CString& url, const CString& cookieData)
 		return true;
 	if (InternetSetCookieEx(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL))
 		return true;
-	TRACE(_T("InternetSetCookieExW failed with ERROR %d url: %s data: %s"),
+	TRACE(_T("InternetSetCookieEx failed with ERROR %d url: %s data: %s\n"),
 		  GetLastError(), url.GetString(), cookieData.GetString());
+	return false;
+}
+
+bool CIEHostWindow::ClearSessionCookies()
+{
+	// Clear session cookies by ending the current browser session
+	// http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
+	if (InternetSetOption(NULL, INTERNET_OPTION_END_BROWSER_SESSION, NULL, 0))
+		return true;
+	TRACE(_T("InternetSetOption failed with ERROR %d\n"), GetLastError());
 	return false;
 }
 

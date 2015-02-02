@@ -307,13 +307,20 @@ let IECookieManager = {
 
   clearIESessionCookies: function()
   {
-    // Clear session cookies by ending the current browser session
-    // http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
-    let ret = InternetSetOptionW(null, INTERNET_OPTION_END_BROWSER_SESSION, null, 0);
-    if (!ret)
+    if (Prefs.OOPP_remoteSetCookie && this._upm.isRunningOOP)
     {
-      let errCode = ctypes.winLastError || 0;
-      Utils.LOG("InternetSetOptionW failed with ERROR " + errCode);
+      this._upm.getPlugin().ClearSessionCookies();
+    }
+    else
+    {
+      // Clear session cookies by ending the current browser session
+      // http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
+      let ret = InternetSetOptionW(null, INTERNET_OPTION_END_BROWSER_SESSION, null, 0);
+      if (!ret)
+      {
+        let errCode = ctypes.winLastError || 0;
+        Utils.LOG("InternetSetOptionW failed with ERROR " + errCode);
+      }
     }
   },
   
