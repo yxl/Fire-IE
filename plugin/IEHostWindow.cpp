@@ -429,7 +429,7 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 			HWND hwndChildMozillaWindow = GetChildMozillaWindowClassWindow(m_hWnd);
 			if (hwndChildMozillaWindow && 
 				::SendMessageTimeout(hwndChildMozillaWindow, WM_MOUSEACTIVATE, wParam, lParam,
-				SMTO_ABORTIFHUNG | SMTO_BLOCK, 1000, &dwResult))
+				SMTO_ABORTIFHUNG | SMTO_BLOCK, 200, &dwResult))
 			{
 				ret = dwResult;
 			}
