@@ -69,7 +69,6 @@ namespace Plugin
 		m_pWindow(NULL),
 		m_pContainer(NULL)
 	{
-		USES_CONVERSION_EX;
 		// <html:embed id='fireie-utils-object' type='application/fireie' hidden='true' width='0' height='0'/>
 		// argc == 5
 		// argn[0] = "id",                   argn[1] = "type",               argn[2] = "hidden", argn[3] = "width", argn[4] = "height"
@@ -86,7 +85,7 @@ namespace Plugin
 		}
 		if (i < data.argc)
 		{
-			m_strId = A2T_EX(data.argv[i], strlen(data.argv[i]) + 1);
+			m_strId = CA2T(data.argv[i]);
 		}
 	}
 
@@ -599,25 +598,23 @@ namespace Plugin
 
 	void CPlugin::SetFirefoxCookie(const CString& strURL, const CString& strCookieHeader, ULONG_PTR ulWindowId)
 	{
-		USES_CONVERSION_EX;
 		CString strEventType = _T("IESetCookie");
 		CString strDetail;
 		Json::Value json;
-		json["url"] = T2A_EX(strURL, strURL.GetLength() + 1);
-		json["header"] = T2A_EX(strCookieHeader, strCookieHeader.GetLength() + 1);
+		json["url"] = (LPCSTR)CT2A(strURL, CP_UTF8);
+		json["header"] = (LPCSTR)CT2A(strCookieHeader, CP_UTF8);
 		if (ulWindowId)
 		{
 			char szWindowId[32] = { 0 };
 			_ui64toa_s(ulWindowId, szWindowId, 32, 10);
 			json["windowId"] = szWindowId;
 		}
-		strDetail = CA2T(json.toStyledString().c_str());
+		strDetail = CA2T(json.toStyledString().c_str(), CP_UTF8);
 		FireEvent(strEventType, strDetail);
 	}
 
 	void CPlugin::SetFirefoxCookie(const vector<SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId)
 	{
-		USES_CONVERSION_EX;
 		CString strEventType = _T("IEBatchSetCookie");
 		CString strDetail;
 		Json::Value json;
@@ -626,8 +623,8 @@ namespace Plugin
 		{
 			const SetFirefoxCookieParams& param = vCookies[i];
 			Json::Value cookie;
-			cookie["url"] = T2A_EX(param.strURL, param.strURL.GetLength() + 1);
-			cookie["header"] = T2A_EX(param.strCookie, param.strCookie.GetLength() + 1);
+			cookie["url"] = (LPCSTR)CT2A(param.strURL, CP_UTF8);
+			cookie["header"] = (LPCSTR)CT2A(param.strCookie, CP_UTF8);
 			aCookies.append(cookie);
 		}
 		json["cookies"] = aCookies;
@@ -639,7 +636,7 @@ namespace Plugin
 			json["windowId"] = szWindowId;
 		}
 
-		strDetail = CA2T(json.toStyledString().c_str());
+		strDetail = CA2T(json.toStyledString().c_str(), CP_UTF8);
 		FireEvent(strEventType, strDetail);
 	}
 

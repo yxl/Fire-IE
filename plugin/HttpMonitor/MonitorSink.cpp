@@ -240,8 +240,6 @@ namespace HttpMonitor
 
 	CString MonitorSink::GetBindURL() const
 	{
-		USES_CONVERSION_EX;
-
 		CString strURL;
 		WCHAR* pURL = NULL;
 		ULONG cEl = 1;
