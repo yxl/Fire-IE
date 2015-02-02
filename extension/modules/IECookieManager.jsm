@@ -150,33 +150,17 @@ function removeIECtrlRegString(regName)
   }
 }
 
-function getNameValueFromCookieHeader(header)
-{
-  header = header.trim();
-  let terminate = header.indexOf(";");
-  if (terminate == -1)
-  {
-    terminate = header.length;
-  }
-  let seperate = header.indexOf("=");
-  if (seperate == -1 || seperate > terminate)
-  {
-    return {name: null, value: null};
-  }
-  let cookieName = header.substring(0, seperate).trim();
-  let cookieValue = header.substring(seperate + 1, terminate).trim();
-  return {name: cookieName, value: cookieValue};
-}
-
 /**
  * Monitors the cookie changes of Firefox and synchronizes to IE.
  * @class
  */
 let IECookieManager = {
   wininetDll: null,
-  _ieCookieMap: {},
   _bTmpDirChanged: false,
   _redirectionDisabled: false,
+  _deferredIECookies: [],
+  _deferredSaveIECookieScheduled: false,
+  _savingFirefoxCookie: false,
   
   /**
    * Called on module startup.
@@ -213,30 +197,31 @@ let IECookieManager = {
   
   saveFirefoxCookie: function(url, cookieHeader, context, isPrivate)
   {
-    // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
-    let {name, value} = getNameValueFromCookieHeader(cookieHeader);   
-    this._ieCookieMap[name] = value;
-    
-    // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
     let uri = Utils.makeURI(url);
-    // Issue #105:
-    // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
-    // It seems that only nsILoadContext is needed, however, we need new APIs for this.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
-    // Currently, skip synchronizing cookies from private browsing window
-    if (!isPrivate)
-      cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
+
+    // Leaves a mark about this cookie received from IE to avoid sync it back to IE.
+    this._savingFirefoxCookie = true;
+    try
+    {
+      // Uses setCookieStringFromHttp instead of setCookieString to allow httponly flag. 
+      // Issue #105:
+      // "context" param is not used because we can't convert nsILoadContext to nsIChannel. 
+      // It seems that only nsILoadContext is needed, however, we need new APIs for this.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=777620 for more information.
+      // Currently, skip synchronizing cookies from private browsing window
+      if (!isPrivate)
+        cookieSvc.setCookieStringFromHttp(uri, uri, null, cookieHeader, "", null);
+    }
+    finally
+    {
+      this._savingFirefoxCookie = false;
+    }
   },
 
   saveIECookie: function(cookie2, isPrivate)
   {  
     // If the cookie is received from IE, do not sync it back
-    let valueInMap = this._ieCookieMap[cookie2.name] || null;
-    if (valueInMap !== null && valueInMap === cookie2.value)
-    {
-      this._ieCookieMap[cookie2.name] = undefined;
-        return;
-    }
+    if (this._savingFirefoxCookie) return;
     
     let hostname = cookie2.host.trim();
     // Strip off beginning dot in hostname
@@ -244,10 +229,6 @@ let IECookieManager = {
     {
       hostname = hostname.substring(1);
     }
-    
-    // Might be a private-browsing warning cookie, ignore it
-    if (hostname == "fireie")
-      return;
     
     /* The URL format must be correct or set cookie will fail
      * http://.baidu.com must be transformed into
@@ -271,7 +252,7 @@ let IECookieManager = {
     
     if (Prefs.OOPP_remoteSetCookie && this._upm.isRunningOOP)
     {
-      this._upm.getPlugin().SetCookie(url, cookieData);
+      this._deferredSaveIECookie(url, cookieData);
     }
     else
     {
@@ -321,6 +302,38 @@ let IECookieManager = {
         let errCode = ctypes.winLastError || 0;
         Utils.LOG("InternetSetOptionW failed with ERROR " + errCode);
       }
+    }
+  },
+  
+  _deferredSaveIECookie: function(url, data)
+  {
+    const DEFERRED_SAVE_IE_COOKIE_TIMEOUT = 100;
+    
+    this._deferredIECookies.push({ url: url, data: data });
+    if (!this._deferredSaveIECookieScheduled)
+    {
+      Utils.runAsyncTimeout(function()
+      {
+        try
+        {
+          if (this._deferredIECookies.length)
+          {
+            if (Prefs.logCookies)
+              Utils.LOG("[CookieObserver] Saving " + this._deferredIECookies.length + " deferred IE cookie(s).");
+            let jsonCookies = JSON.stringify(this._deferredIECookies);
+            this._upm.getPlugin().BatchSetCookie(jsonCookies);
+          }
+        }
+        catch (ex)
+        {
+          Utils.ERROR("[CookieObserver] DeferredSaveIECookie failed: " + ex);
+        }
+        finally
+        {
+          this._deferredIECookies = [];
+          this._deferredSaveIECookieScheduled = false;
+        }
+      }, this, DEFERRED_SAVE_IE_COOKIE_TIMEOUT);
     }
   },
   

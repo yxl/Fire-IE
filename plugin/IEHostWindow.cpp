@@ -283,6 +283,7 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 
 bool CIEHostWindow::SetIECookie(const CString& url, const CString& cookieData)
 {
+	TRACE(_T("InternetSetCookieEx url: %s data: %s\n"), url.GetString(), cookieData.GetString());
 	if (InternetSetCookie(url, NULL, cookieData))
 		return true;
 	if (InternetSetCookieEx(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL))
