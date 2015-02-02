@@ -241,7 +241,7 @@ var gFireIE = null;
             || (event.type == 'click' && event.button == 0)
             || (event.type == 'keypress'
                 && (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)))
-          && gFireIE.getContainerPlugin().SecureLockInfo !== "Unsecure"
+          && gFireIE.isIEEngine() && gFireIE.getContainerPlugin().SecureLockInfo !== "Unsecure"
           && gFireIE.goDoCommand('DisplaySecurityInfo'))
         {
           if (event) event.stopPropagation();
