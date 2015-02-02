@@ -55,6 +55,17 @@ let LightweightTheme = {
   },
   
   /**
+   * Check to make sure that the themeData has the required fields
+   */
+  isValidThemeData: function(themeData)
+  {
+    return typeof(themeData.id) === "string" &&
+           Utils.isValidUrl(themeData.fxURL) &&
+           Utils.isValidUrl(themeData.ieURL) &&
+           typeof(themeData.textcolor) === "string";
+  },
+  
+  /**
    * Gets current theme from preferences.
    * @returns {object} JSON object of current theme. If no theme data is set, returns the default value.
    */
@@ -82,14 +93,11 @@ let LightweightTheme = {
     try
     {
       // Check to make sure that the themeData has the required fields
-      if (typeof(themeData.id) !== "string" ||
-          !Utils.isValidUrl(themeData.fxURL) ||
-          !Utils.isValidUrl(themeData.ieURL) ||
-          typeof(themeData.textcolor) !== "string")
+      if (!this.isValidThemeData(themeData))
       {
         throw "incorrect theme data format";
       }
-        
+      
       Prefs.currentTheme = JSON.stringify(themeData);
       this.tryCacheThemeImages(themeData);
     }
@@ -208,6 +216,8 @@ let LightweightTheme = {
    */
   getThemeImages: function(themeData)
   {
+    if (!themeData) themeData = this.currentTheme;
+    
     let images = this.getCachedThemeImages(themeData);
     if (images) return images;
     return {

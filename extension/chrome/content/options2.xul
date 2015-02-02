@@ -181,10 +181,12 @@
           <vbox id="customLabels">
             <label>&fireie.options.ui.customLabelLabel;</label>
             <hbox class="indent" align="center">
-              <image src="chrome://fireie/skin/engine-fx.png" width="16" height="16" />
+              <image id="customLabels-fxIcon" src="chrome://fireie/skin/engine-fx.png"
+                     width="16" height="16" />
               <html:input id="fxLabel" type="text" size="12" maxlength="20"/>
               <separator orient="vertical" />
-              <image src="chrome://fireie/skin/engine-ie.png" width="16" height="16" />
+              <image id="customLabels-ieIcon" src="chrome://fireie/skin/engine-ie.png"
+                     width="16" height="16" />
               <html:input id="ieLabel" type="text" size="12" maxlength="20"/>
             </hbox>
           </vbox>

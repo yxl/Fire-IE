@@ -23,6 +23,7 @@ Cu.import(baseURL.spec + "AppIntegration.jsm");
 Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
 Cu.import(baseURL.spec + "ABPObserver.jsm");
 Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
+Cu.import(baseURL.spec + "LightweightTheme.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -393,6 +394,12 @@ Options.updateCustomLabelsUI = function()
   E("customLabels").hidden = (E("iconDisplay").value != "iconAndText");
   E("showUrlBarButtonOnlyForIE").hidden = (E("iconDisplay").value == "iconHidden");
   E("fxLabel").disabled = E("showUrlBarButtonOnlyForIE").checked;
+  let images = LightweightTheme.getThemeImages();
+  if (images && images.fxURL && images.ieURL)
+  {
+    E("customLabels-fxIcon").setAttribute("src", images.fxURL);
+    E("customLabels-ieIcon").setAttribute("src", images.ieURL);
+  }
   Options.sizeToContent();
 };
 

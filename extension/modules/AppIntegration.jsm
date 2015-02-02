@@ -1466,6 +1466,13 @@ WindowWrapper.prototype = {
     {
       this._installTheme(themeData);
     }
+    
+    Object.defineProperty(event.detail, "installed", {
+      value: true,
+      writable: false,
+      enumerable: true,
+      configurable: false
+    });
   },
   
   _installTheme: function(themeData)
@@ -1551,7 +1558,10 @@ WindowWrapper.prototype = {
   {
     if (themeData.id == LightweightTheme.appliedThemeId)
       return;
-      
+    
+    if (!LightweightTheme.isValidThemeData(themeData))
+      return;
+    
     // Style URL bar engie button
     let urlbarButton = this.E("fireie-urlbar-switch");
 
