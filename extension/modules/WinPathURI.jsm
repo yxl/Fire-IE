@@ -31,9 +31,33 @@ let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-
 Cu.import(baseURL.spec + "Utils.jsm");
+
+try
+{
+  Cu.import("resource://gre/modules/osfile.jsm");
+}
+catch (ex)
+{
+  Utils.LOG("WinPathURI.jsm: osfile.jsm not found. Using alternative implementation.");
+  Cu.import("resource://gre/modules/FileUtils.jsm");
+  this.OS = {
+    Path: {
+      fromFileURI: function(fileURI)
+      {
+        let fileHandler = Services.io.getProtocolHandler("file").QueryInterface(Ci.nsIFileProtocolHandler);
+        let file = fileHandler.getFileFromURLSpec(fileURI);
+        return file.path;
+      },
+      
+      toFileURI: function(filePath)
+      {
+        let file = new FileUtils.File(filePath);
+        return Services.io.newFileURI(file).spec;
+      }
+    }
+  };
+}
 
 let Path = OS.Path;
 
