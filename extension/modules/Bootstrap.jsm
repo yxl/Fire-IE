@@ -69,6 +69,7 @@ let defaultModules = [
   baseURL.spec + "ABPObserver.jsm",
   baseURL.spec + "LightweightTheme.jsm",
   baseURL.spec + "WinPathURI.jsm",
+  baseURL.spec + "SharedHooks.jsm",
 ];
 
 let loadedModules = Object.create(null);

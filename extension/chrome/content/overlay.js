@@ -40,15 +40,15 @@ var gFireIE = null;
   } = jsm;
   
   let HM = new HookManager(window, "gFireIE._hookManager",
-  function(name) // evalInScope
-  {
-    return window.eval(name);
-  },
-  function(name, value) // assignInScope
-  {
-    return (new Function("return (" + name + ") = arguments[0];"))(value);
-  });
-  let RET = HM.RET;
+    function(name) // evalInScope
+    {
+      return window.eval(name);
+    },
+    function(name, value) // assignInScope
+    {
+      return (new Function("return (" + name + ") = arguments[0];"))(value);
+    });
+  let RET = HookManager.RET;
   gFireIE = AppIntegration.addWindow(window);
   gFireIE._hookManager = HM;
   
@@ -186,16 +186,6 @@ var gFireIE = null;
     //hook properties
     hookBrowserGetter(gBrowser.mTabContainer.firstChild.linkedBrowser);
     hookURLBarSetter(gURLBar);
-    
-    // Hook e10s blacklist
-    if (typeof(E10SUtils) === "object") 
-    {
-      HM.hookCodeHead("E10SUtils.shouldBrowserBeRemote", function(url)
-      {
-        if (Utils.isPrefixedUrl(url))
-          return RET.shouldReturn(false);
-      });
-    }
   }
   
   function initListeners()

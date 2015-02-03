@@ -26,9 +26,59 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import(baseURL.spec + "Utils.jsm");
+
+/**
+ * Global HookManager instance for doing application-wide hooks
+ */
+let globalHM = null;
+
+const cidGlobalHM = Components.ID("{BC0178CF-665A-4BB6-BF00-BCF9A9A5FE11}");
+const contractIDGlobalHM = "@fireie.org/fireie/hook-manager-global;1";
+
+function globalEval(name) { return eval(name); }
+
+let factoryGlobalHM = {
+  createInstance: function(outer, iid)
+  {
+    if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
+    if (!globalHM)
+    {
+      globalHM = new HookManager(
+        this, // globalScope
+        "Components.classes['" + contractIDGlobalHM + "'].getService().wrappedJSObject", // ref name
+        function(name) // evalInScope
+        {
+          return globalEval(name);
+        },
+        function(name, value) // assignInScope
+        {
+          return (new Function("return (" + name + ") = arguments[0];"))(value);
+        });
+      globalHM.wrappedJSObject = globalHM;
+    }
+    return globalHM.QueryInterface(iid);
+  }
+};
+
+let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+registrar.registerFactory(cidGlobalHM, "Fire-IE Global HookManager", contractIDGlobalHM, factoryGlobalHM);
+
+/**
+ * Helper objects to ease the use of the global HM
+ */
+ 
+// Usage: HM.hookCodeHead("JSM(moduleURL).symbolName.XXX", function(...) {...});
+let JSM = function(moduleURL) {
+  let jsm = {};
+  Cu.import(moduleURL, jsm);
+  return jsm;
+};
 
 /**
  * Stores information about a hooked function
@@ -88,7 +138,7 @@ HMS._warnIfAlreadyHooked = function(func, funcName)
     return;
   Utils.WARN(funcName + " is already hooked. Make sure you don't hook any shared functions " +
              "in overlay scripts. Hook them in some shared module, please.");
-}
+};
 
 /** 
  * Check whether the given function is hooked
@@ -111,7 +161,28 @@ HMS.getOriginalFunction = function(func)
   return HMS._getOriginalFunc(func);
 };
 
+// specify hook function return values
+HMS.RET = {
+  // hook @ head should return without calling orgFunc
+  shouldReturn: function(value)
+  {
+    return { shouldReturn: true, value: value };
+  },
+  // hook @ head should modify arguments passed to orgFunc
+  modifyArguments: function(args)
+  {
+    return { shouldReturn: false, args: args };
+  },
+  // hook @ tail should modify the return value
+  modifyValue: function(value)
+  {
+    return { shouldModify: true, value: value };
+  }
+};
+
 HookManager.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([]),
+
   get globalScope() { return this._scope; },
   get globalReferencableName() { return this._refName; },
   get utils() { return Utils; },
@@ -292,24 +363,7 @@ HookManager.prototype = {
     return null;
   },
   
-  // specify hook function return values
-  RET: {
-    // hook @ head should return without calling orgFunc
-    shouldReturn: function(value)
-    {
-      return { shouldReturn: true, value: value };
-    },
-    // hook @ head should modify arguments passed to orgFunc
-    modifyArguments: function(args)
-    {
-      return { shouldReturn: false, args: args };
-    },
-    // hook @ tail should modify the return value
-    modifyValue: function(value)
-    {
-      return { shouldModify: true, value: value };
-    }
-  },
+  RET: HMS.RET,
   
   /** 
    * Add a hook to the beginning of a globally referencable function
@@ -617,7 +671,7 @@ HookManager.prototype = {
       {
         Utils.LOG("Redirected source-patching hook for " + orgHookFunction.name);
         arguments[funcIdx] = func;
-        return HM.RET.modifyArguments(arguments);
+        return HMS.RET.modifyArguments(arguments);
       }
     },
     function(ret)
@@ -625,7 +679,7 @@ HookManager.prototype = {
       if (orgFunc != arguments[funcIdx + 1])
       {
         if (ret) orgHookFunction.orgFunc = ret;
-        return HM.RET.modifyValue(orgFunc);
+        return HMS.RET.modifyValue(orgFunc);
       }
     });
   },
@@ -660,7 +714,7 @@ HookManager.prototype = {
         arguments[nameIdx] = orgHookManager._refName + "._hookFunctions[" + orgHookFunctionIdx + "].orgFunc";
         arguments[funcIdx] = func;
         Utils.LOG("Redirected name-func SPH from " + orgHookManager._hookFunctions[orgHookFunctionIdx].name + " to " + arguments[nameIdx]);
-        return HM.RET.modifyArguments(arguments);
+        return HMS.RET.modifyArguments(arguments);
       }
     });
   }
