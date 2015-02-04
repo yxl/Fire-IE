@@ -932,18 +932,21 @@ WindowWrapper.prototype = {
   /**
    *  Switch the engine of specified tab.
    */
-  _switchTabEngine: function(aTab, automatic, overrideUrl)
+  _switchTabEngine: function(aTab, automatic, overrideUrl, referer)
   {
     if (aTab && aTab.localName == "tab")
     {
       // getURL retrieves the actual URL from, maybe, container url
       let url = overrideUrl || this.getURL(aTab);
 
+      // firefox-only urls are not switchable at all, no matter what the target engine is.
+      if (Utils.isFirefoxOnly(url))
+        return;
+      
       let isIEEngineAfterSwitch = !this.isIEEngine(aTab);
 
       let unprefixedUrl = url;
-      // firefox-only urls can only be handled by firefox(gecko) engine
-      if (isIEEngineAfterSwitch && !Utils.isFirefoxOnly(url))
+      if (isIEEngineAfterSwitch)
         url = Utils.toContainerUrl(url);
       
       if (!aTab.linkedBrowser || aTab.linkedBrowser.currentURI.spec == url)
@@ -968,6 +971,12 @@ WindowWrapper.prototype = {
 
       if (isIEEngineAfterSwitch)
       {
+        if (referer)
+        {
+          Utils.setTabAttributeJSON(aTab, "fireieNavigateParams", {
+            headers: "Referer: " + referer + "\r\n"
+          });
+        }
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
         aTab.linkedBrowser.loadURIWithFlags(url, flags);
       }
@@ -993,13 +1002,13 @@ WindowWrapper.prototype = {
     }
   },
   
-  _openInCurrentTab: function(url, isIEEngine)
+  _openInCurrentTab: function(url, isIEEngine, referer)
   {
     if (this.isIEEngine() != isIEEngine)
     {
       try
       {
-        this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url);
+        this._switchTabEngine(this.window.gBrowser.mCurrentTab, false, url, referer);
       }
       catch (ex)
       {
@@ -1008,8 +1017,12 @@ WindowWrapper.prototype = {
     }
     else
     {
-      if (isIEEngine && !Utils.isFirefoxOnly(url))
+      if (isIEEngine)
+      {
+        if (Utils.isFirefoxOnly(url))
+          return;
         url = Utils.toContainerUrl(url);
+      }
       
       let tab = this.window.gBrowser.mCurrentTab;
       if (tab.linkedBrowser.currentURI.spec == url)
@@ -1018,6 +1031,14 @@ WindowWrapper.prototype = {
       // should load actual url after setting the manuallyswitched flag
       this._setManuallySwitchFlag(tab, url);
       
+      // set referer if any
+      if (isIEEngine && referer)
+      {
+        Utils.setTabAttributeJSON(tab, "fireieNavigateParams", {
+          headers: "Referer: " + referer + "\r\n"
+        });
+      }
+
       let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
       try
       {
@@ -1029,10 +1050,10 @@ WindowWrapper.prototype = {
     }
   },
   
-  _openInEngine: function(url, isIEEngine, where)
+  _openInEngine: function(url, isIEEngine, where, referer)
   {
     if (where == "current")
-      this._openInCurrentTab(url, isIEEngine);
+      this._openInCurrentTab(url, isIEEngine, referer);
     else
     {
       let gBrowser = this.window.gBrowser;
@@ -1044,6 +1065,14 @@ WindowWrapper.prototype = {
 
       // first set manual switch flags
       this._setManuallySwitchFlag(newTab, url);
+      
+      // set referer if any
+      if (isIEEngine && referer)
+      {
+        Utils.setTabAttributeJSON(newTab, "fireieNavigateParams", {
+          headers: "Referer: " + referer + "\r\n"
+        });
+      }
 
       // and then load the actual url
       let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
@@ -2270,6 +2299,22 @@ WindowWrapper.prototype = {
     this._delayedFocusPlugin();
   },
   
+  _urlSecurityCheck: function(url)
+  {
+    try
+    {
+      this.window.urlSecurityCheck(url,
+        this.window.gBrowser.contentPrincipal,
+        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+      return true;
+    }
+    catch (ex)
+    {
+      Utils.LOG("Security check for URL failed: " + url + "\n" + ex);
+      return false;
+    }
+  },
+  
   _shouldHandleDrop: function(e)
   {
     let dt = e.dataTransfer;
@@ -2363,17 +2408,6 @@ WindowWrapper.prototype = {
   
   _openDropUrl: function(url, isIEEngine, where)
   {
-    try
-    {
-      this.window.urlSecurityCheck(url,
-        this.window.gBrowser.contentPrincipal,
-        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-    }
-    catch (ex)
-    {
-      Utils.LOG("[Drag'n'Drop] Security check for URL failed: " + url + "\n" + ex);
-      return;
-    }
     this._openInEngine(url, isIEEngine, where);
   },
   
@@ -2550,8 +2584,15 @@ WindowWrapper.prototype = {
    */
   openLinkInIEEngine: function(url)
   {
+    if (!this._urlSecurityCheck(url))
+      return;
+    
     if (url)
-      this._openInEngine(url, true, "tab");
+    {
+      let referer = this.getURL();
+      referer = Utils.makeURI(referer).specIgnoringRef;
+      this._openInEngine(url, true, "tab", referer);
+    }
   },
   
   /**
@@ -2559,6 +2600,9 @@ WindowWrapper.prototype = {
    */
   openLinkInIEBrowser: function(url)
   {
+    if (!this._urlSecurityCheck(url))
+      return;
+    
     this.openInIE(url);
   },
   
