@@ -1297,6 +1297,7 @@ WindowWrapper.prototype = {
     let self = this.gIdentityHandler;
     if (!self || !self._identityBox) return;
 
+    if (!info) info = "Unsecure";
     let classname = null;
     let tooltip = "";
     let icon_label = "";
