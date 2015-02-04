@@ -1005,6 +1005,11 @@ void CIEHostWindow::OnNavigate()
 				// In the post data, the text before "\r\n\r\n" is the Content-Type and Content-Length info, in order to 
 				// let web server accept the post data, we should move this info to headers.
 				int pos = strPost.Find(_T("\r\n\r\n"));
+				if (pos == -1)
+				{
+					pos = 0;
+					strPost = _T("\r\n\r\n") + strPost;
+				}
 
 				// Append Content-Type and Content-Length of the post data to headers.
 				vHeader = CString(vHeader) + strPost.Left(pos) + _T("\r\n");
