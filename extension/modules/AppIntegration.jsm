@@ -1046,8 +1046,7 @@ WindowWrapper.prototype = {
       this._setManuallySwitchFlag(newTab, url);
 
       // and then load the actual url
-      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT |
-                  Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+      let flags = Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT;
       try
       {
         if (!isIEEngine)
