@@ -92,6 +92,16 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
     
     let themeData = getThemeDataFromNode(node);
     ChromeBridge.handleThemeRequest(global, event.type, themeData);
+    
+    if (event.type === "InstallBrowserTheme")
+    {
+      Object.defineProperty(event.detail, "installed", {
+        value: true,
+        writable: false,
+        enumerable: true,
+        configurable: false
+      });
+    }
   }
   
   addEventListener("InstallBrowserTheme", browserThemeEventHandler, false, true);
