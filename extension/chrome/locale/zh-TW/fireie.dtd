@@ -81,3 +81,4 @@
 <!ENTITY fireie.options.import "匯入選項檔案">
 <!ENTITY fireie.options.export "匯出選項檔案">
 <!ENTITY fireie.options.restart.descr "設定將會在重啟 Firefox 後生效。">
+<!ENTITY fireie.options.reload.descr "重新載入 &quot;Fire IE DLL&quot; 外掛程式以生效。">
