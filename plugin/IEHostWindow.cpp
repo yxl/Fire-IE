@@ -407,7 +407,7 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		ret = TRUE;
 		bShouldReturn = true;
 		{
-			HWND hwndFirefox = GetTopMozillaWindowClassWindow(m_hWnd);
+			HWND hwndFirefox = GetTopMozillaWindowClassWindow(GetSafeHwnd());
 			if (hwndFirefox)
 				::PostMessage(hwndFirefox, message, wParam, lParam);
 		}
@@ -421,12 +421,12 @@ LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 		ret = MA_ACTIVATE;
 		bShouldReturn = true;
 		// Close popups in Firefox main window
-		::PostMessage((HWND)wParam, WM_KILLFOCUS, (WPARAM)m_hWnd, NULL);
+		::PostMessage((HWND)wParam, WM_KILLFOCUS, (WPARAM)GetSafeHwnd(), NULL);
 		{
 			// Must send a message to the child MozillaWindowClass window to transfer input focus.
 			// DefWindowProc uses blocking SendMessage, which we don't want
 			DWORD_PTR dwResult;
-			HWND hwndChildMozillaWindow = GetChildMozillaWindowClassWindow(m_hWnd);
+			HWND hwndChildMozillaWindow = GetChildMozillaWindowClassWindow(GetSafeHwnd());
 			if (hwndChildMozillaWindow && 
 				::SendMessageTimeout(hwndChildMozillaWindow, WM_MOUSEACTIVATE, wParam, lParam,
 				SMTO_ABORTIFHUNG | SMTO_BLOCK, 200, &dwResult))
@@ -697,7 +697,7 @@ HWND GetChildMozillaWindowClassWindow(HWND hwndAnyChild)
 
 void CIEHostWindow::HandOverFocus()
 {
-	HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(m_hWnd);
+	HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(GetSafeHwnd());
 
 	// Change the focus to the parent window of html document to kill its focus. 
 	if (m_ie.GetSafeHwnd())
@@ -834,7 +834,7 @@ BOOL CALLBACK CIEHostWindow::GetInternetExplorerServerCallback(HWND hWnd, LPARAM
 
 HWND CIEHostWindow::GetInternetExplorerServer() const
 {
-	HWND parent = this->m_hWnd;
+	HWND parent = GetSafeHwnd();
 	HWND hWnd = NULL;
 	EnumChildWindows(parent, GetInternetExplorerServerCallback, (LPARAM)&hWnd);
 	return hWnd;
