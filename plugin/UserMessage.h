@@ -37,9 +37,15 @@ namespace UserMessage
 		CString strURL;
 		CString strPost;
 		CString strHeaders;
+
+		void Clear()
+		{
+			strURL.Empty();
+			strPost.Empty();
+			strHeaders.Empty();
+		}
 	};
 
-	// WPARAM 10 is used by content policy delegation on CPDelegate branch, DO NOT USE IT HERE
 	static const WPARAM WPARAM_ABP_FILTER_LOADED = 11;
 	static const WPARAM WPARAM_ABP_LOAD_FAILURE = 12;
 	static const WPARAM WPARAM_RUN_ASYNC_CALL = 13;

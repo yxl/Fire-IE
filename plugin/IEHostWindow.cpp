@@ -991,6 +991,7 @@ void CIEHostWindow::OnNavigate()
 	CString strURL = m_navigateParams.strURL;
 	CString strHeaders = m_navigateParams.strHeaders;
 	CString strPost = m_navigateParams.strPost;
+	m_navigateParams.Clear();
 
 	if (m_ie.GetSafeHwnd())
 	{
