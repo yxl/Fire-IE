@@ -1,3 +1,19 @@
+Fire-IE 0.4.4 @ February 9, 2015
+This version no longer supports Firefox 12 or lower.
+
+Enhancements:
+* Added context menu items, allowing you to open a link with IE engine or IE browser.
+* The label of the toolbar button now synchronizes with the URL bar button.
+* Added support for refresh without cache (Ctrl-F5).
+
+Bug fixes:
+* Fix memory leak in special circumstances.
+* Enhance compatibility with "wyciwyg:" protocol.
+* Compatibility with Tab Scope's progress indicator.
+* Improve compatibility with address bar search.
+* Fix display issues of the URL bar identity icon.
+* Some security improvements.
+
 Fire-IE 0.4.3 @ January 19, 2015
 Enhancements:
 * Support Pan (adblocker).
