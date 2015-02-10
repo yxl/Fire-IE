@@ -41,7 +41,7 @@ let UtilsPluginManager = {
   /**
    * Whether the utils plugin is initialized
    */
-  isPluginInitialized: false,
+  _isPluginInitialized: false,
   
   /**
    * Whether init() has been called
@@ -57,6 +57,11 @@ let UtilsPluginManager = {
    * Whether our plugin is being reloaded
    */
   _isReloading: false,
+    
+  /**
+   * Interval for checking plugin crash
+   */
+  _checkPluginCrashInterval: null,
   
   /**
    * Keep a list of pref setters, which will be called upon plugin initialization
@@ -149,7 +154,7 @@ let UtilsPluginManager = {
    */
   fireAfterInit: function(callback, self, args, useCapture)
   {
-    if (this.isPluginInitialized)
+    if (this._isPluginInitialized)
     {
       callback.apply(self, args);
     }
@@ -172,7 +177,7 @@ let UtilsPluginManager = {
   addPrefSetter: function(setter)
   {
     this._prefSetters.push(setter);
-    if (this.isPluginInitialized)
+    if (this._isPluginInitialized)
       setter(this.getPlugin());
   },
 
@@ -200,14 +205,14 @@ let UtilsPluginManager = {
     window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
+    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
+
     if (this._isRunningOOP)
     {
       Services.obs.addObserver(checkPluginCrash, "plugin-crashed", false);
       this._checkPluginCrashInterval = window.setInterval(checkPluginCrash, Prefs.OOPP_crashCheckIntervalMillis);
     }
-    
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
-    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
   
   _cancelPluginEvents: function()
@@ -221,13 +226,13 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
-    if (this._isRunningOOP)
+    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
+
+    if (this._checkPluginCrashInterval)
     {
       Services.obs.removeObserver(checkPluginCrash, "plugin-crashed");
       window.clearInterval(this._checkPluginCrashInterval);
     }
-
-    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
 
   /**
@@ -241,7 +246,7 @@ let UtilsPluginManager = {
 
     this.fireAfterInit(function()
     {
-      this.isPluginInitialized = true;
+      this._isPluginInitialized = true;
       this._setPluginPrefs();
     }, this, [], true);
 
@@ -271,11 +276,11 @@ let UtilsPluginManager = {
    */
   reinstall: function()
   {
-    this.isPluginInitialized = false;
+    this._isPluginInitialized = false;
     
     this.fireAfterInit(function()
     {
-      this.isPluginInitialized = true;
+      this._isPluginInitialized = true;
       this._setPluginPrefs();
       
       // Tell tabs in IE engine to reload
@@ -315,7 +320,7 @@ let UtilsPluginManager = {
     this._delayedPluginCheckerTimer = Utils.runAsyncTimeout(function()
     {
       this._delayedPluginCheckerTimer = null;
-      if (!this.isPluginInitialized && !this._isReloading)
+      if (!this._isPluginInitialized && !this._isReloading)
         loadFailureSubHandler();
     }, this, 30000);
   },
@@ -427,9 +432,14 @@ let UtilsPluginManager = {
     return this._isReloading;
   },
   
+  get isPluginInitialized()
+  {
+    return this._isPluginInitialized;
+  },
+  
   get isRunningOOP()
   {
-    return this._isRunningOOP;
+    return this._isRunningOOP && this._isPluginInitialized;
   },
 };
 
