@@ -17,6 +17,11 @@
 <!ENTITY fireie.options.switch.caption "Bij wisselen render-engine:">
 <!ENTITY fireie.options.switch.handleurl "Altijd huidige engine gebruiken om een nieuwe URL te openen">
 <!ENTITY fireie.options.switch.disableAutoSwitch "Automatisch wisselen engine uitschakelen">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "Als de URL geen overeenkomst heeft met een wisselregel:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "Als de URL overeenkomt met een uitzonderingsregel:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "Huidige renderengine behouden">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "Wisselen naar Firefox-engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "Wisselen naar IE-engine">
 <!ENTITY fireie.options.shorcut.caption "Sneltoets">
 <!ENTITY fireie.options.shorcut.enable "Inschakelen">
 <!ENTITY fireie.options.private.caption "Privénavigatie">

@@ -17,6 +17,11 @@
 <!ENTITY fireie.options.switch.caption "Kiedy zmieniać silnik renderujący:">
 <!ENTITY fireie.options.switch.handleurl "Zawsze używaj tego samego silnika przy otwieraniu linku">
 <!ENTITY fireie.options.switch.disableAutoSwitch "Wyłącz automatyczne zmiany silnika">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "When URL doesn't match any switch rules:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "When URL matches an exceptional rule:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "Keep current rendering engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "Switch to Firefox engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "Switch to IE engine">
 <!ENTITY fireie.options.shorcut.caption "Skrót klawiszowy">
 <!ENTITY fireie.options.shorcut.enable "Włącz">
 <!ENTITY fireie.options.private.caption "Przeglądanie prywatne">
@@ -81,3 +86,4 @@
 <!ENTITY fireie.options.import "Importuj plik z ustawieniami">
 <!ENTITY fireie.options.export "Eksportuj plik z ustawieniami">
 <!ENTITY fireie.options.restart.descr "Uruchom ponownie Firefox, aby ustawienia zaczęły działać.">
+<!ENTITY fireie.options.reload.descr "Reload &quot;Fire IE DLL&quot; plugin to take effect.">
