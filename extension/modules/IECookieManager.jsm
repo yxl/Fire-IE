@@ -168,9 +168,7 @@ let IECookieManager = {
   startup: function()
   {
     // To avoid cyclic import, we have to do it here
-    let jsm = {};
-    Cu.import(baseURL.spec + "UtilsPluginManager.jsm", jsm);
-    this._upm = jsm.UtilsPluginManager;
+    Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
     
     try
     {
@@ -250,7 +248,7 @@ let IECookieManager = {
       cookieData +="; httponly";
     }
     
-    if (Prefs.OOPP_remoteSetCookie && this._upm.isRunningOOP)
+    if (Prefs.OOPP_remoteSetCookie && UtilsPluginManager.isRunningOOP)
     {
       this._deferredSaveIECookie(url, cookieData);
     }
@@ -288,9 +286,9 @@ let IECookieManager = {
 
   clearIESessionCookies: function()
   {
-    if (Prefs.OOPP_remoteSetCookie && this._upm.isRunningOOP)
+    if (Prefs.OOPP_remoteSetCookie && UtilsPluginManager.isRunningOOP)
     {
-      this._upm.getPlugin().ClearSessionCookies();
+      UtilsPluginManager.getPlugin().ClearSessionCookies();
     }
     else
     {
@@ -321,7 +319,7 @@ let IECookieManager = {
             if (Prefs.logCookies)
               Utils.LOG("[CookieObserver] Saving " + this._deferredIECookies.length + " deferred IE cookie(s).");
             let jsonCookies = JSON.stringify(this._deferredIECookies);
-            this._upm.getPlugin().BatchSetCookie(jsonCookies);
+            UtilsPluginManager.getPlugin().BatchSetCookie(jsonCookies);
           }
         }
         catch (ex)

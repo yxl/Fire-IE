@@ -192,11 +192,6 @@ let ABPObserver = {
   _abpBranch: null,
   
   /**
-   * Whether init() has been called
-   */
-  _isInitCalled: false,
-  
-  /**
    * Whether there's any pending updateState calls during filter loading
    */
   _pendingUpdate: false,
@@ -236,14 +231,6 @@ let ABPObserver = {
    */
   lazyStartup: function()
   {
-    this.init();
-  },
-  
-  init: function()
-  {
-    if (this._isInitCalled) return;
-    this._isInitCalled = true;
-    
     UtilsPluginManager.fireAfterInit(function()
     {
       // Apply a retry sequence to avoid the reported "Not Detected" bug
@@ -260,7 +247,6 @@ let ABPObserver = {
   
   shutdown: function()
   {
-    if (!this._isInitCalled) return;
     UtilsPluginManager.fireAfterInit(function()
     {
       this._listeners = [];
@@ -677,9 +663,9 @@ let ABPObserver = {
     if (this._clearTimer || this._cleared) return;
     this._clearTimer = Utils.runAsyncTimeout(function()
     {
-      UtilsPluginManager.getPlugin().ABPClear();
       this._clearTimer = null;
       this._cleared = true;
+      UtilsPluginManager.getPlugin().ABPClear();
       Utils.LOG("[ABP] Cleared.");
     }, this, 60000);
     Utils.LOG("[ABP] Scheduled to clear in 60 seconds.");

@@ -101,29 +101,23 @@ let S_OK = 0;
 let libShlwapi = null;
 let abi = ctypes.winapi_abi;
 
+function init()
+{
+  try
+  {
+    libShlwapi = ctypes.open("Shlwapi.dll");
+    PathCreateFromUrlW = libShlwapi.declare("PathCreateFromUrlW", abi,
+      HRESULT, PCWSTR, PWSTR, DWORD.ptr, DWORD);
+    UrlCreateFromPathW = libShlwapi.declare("UrlCreateFromPathW", abi,
+      HRESULT, PCWSTR, PWSTR, DWORD.ptr, DWORD);
+  }
+  catch (ex)
+  {
+    Utils.ERROR("Failed to initialize WinPathURI: " + ex);
+  }
+}
+
 let WinPathURI = {
-  startup: function()
-  {
-    try
-    {
-      libShlwapi = ctypes.open("Shlwapi.dll");
-      PathCreateFromUrlW = libShlwapi.declare("PathCreateFromUrlW", abi,
-        HRESULT, PCWSTR, PWSTR, DWORD.ptr, DWORD);
-      UrlCreateFromPathW = libShlwapi.declare("UrlCreateFromPathW", abi,
-        HRESULT, PCWSTR, PWSTR, DWORD.ptr, DWORD);
-    }
-    catch (ex)
-    {
-      Utils.ERROR("Failed to initialize WinPathURI: " + ex);
-    }
-  },
-  
-  shutdown: function()
-  {
-    if (libShlwapi)
-      libShlwapi.close();
-  },
-  
   filePathFromIEURI: function(ieFileURI)
   {
     if (!PathCreateFromUrlW)
@@ -194,3 +188,5 @@ let WinPathURI = {
     return this.filePathToIEURI(localFilePath);
   },
 };
+
+init();

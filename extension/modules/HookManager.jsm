@@ -38,41 +38,13 @@ Cu.import(baseURL.spec + "Utils.jsm");
  */
 let globalHM = null;
 
-const cidGlobalHM = Components.ID("{BC0178CF-665A-4BB6-BF00-BCF9A9A5FE11}");
-const contractIDGlobalHM = "@fireie.org/fireie/hook-manager-global;1";
-
-function globalEval(name) { return eval(name); }
-
-let factoryGlobalHM = {
-  createInstance: function(outer, iid)
-  {
-    if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
-    if (!globalHM)
-    {
-      globalHM = new HookManager(
-        this, // globalScope
-        "Components.classes['" + contractIDGlobalHM + "'].getService().wrappedJSObject", // ref name
-        function(name) // evalInScope
-        {
-          return globalEval(name);
-        },
-        function(name, value) // assignInScope
-        {
-          return (new Function("return (" + name + ") = arguments[0];"))(value);
-        });
-      globalHM.wrappedJSObject = globalHM;
-    }
-    return globalHM.QueryInterface(iid);
-  }
-};
-
-let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-registrar.registerFactory(cidGlobalHM, "Fire-IE Global HookManager", contractIDGlobalHM, factoryGlobalHM);
+let factoryGlobalHM = null;
+let globalScope = this;
 
 /**
- * Helper objects to ease the use of the global HM
+ * Helper stuff to simplify the use of the global HM
  */
- 
+
 // Usage: HM.hookCodeHead("JSM(moduleURL).symbolName.XXX", function(...) {...});
 let JSM = function(moduleURL) {
   let jsm = {};
@@ -118,6 +90,42 @@ let HookManager = function(globalScope, globalReferencableName, evalInScope, ass
 
 // Static scope of the class
 let HMS = HookManager;
+
+HMS.startup = function()
+{
+  const cidGlobalHM = Components.ID("{BC0178CF-665A-4BB6-BF00-BCF9A9A5FE11}");
+  const contractIDGlobalHM = "@fireie.org/fireie/hook-manager-global;1";
+
+  factoryGlobalHM = {
+    createInstance: function(outer, iid)
+    {
+      if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
+      if (!globalHM)
+      {
+        globalHM = new HookManager(
+          globalScope, // globalScope
+          "Components.classes['" + contractIDGlobalHM + "'].getService().wrappedJSObject", // ref name
+          function(name) // evalInScope
+          {
+            return (new Function("return " + name + ";"))();
+          },
+          function(name, value) // assignInScope
+          {
+            return (new Function("return (" + name + ") = arguments[0];"))(value);
+          });
+        globalHM.wrappedJSObject = globalHM;
+      }
+      return globalHM.QueryInterface(iid);
+    }
+  };
+
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(cidGlobalHM, "Fire-IE Global HookManager", contractIDGlobalHM, factoryGlobalHM);
+};
+
+HMS.shutdown = function()
+{
+};
 
 HMS._getOriginalFunc = function(func)
 {

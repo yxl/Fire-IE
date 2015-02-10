@@ -78,6 +78,13 @@ var Synchronizer = {
   },
 
   /**
+   * Called on module shutdown.
+   */
+  shutdown: function()
+  {
+  },
+  
+  /**
    * Checks whether a subscription is currently being downloaded.
    * @param {String} url  URL of the subscription
    * @return {Boolean}

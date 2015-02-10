@@ -44,11 +44,6 @@ let UtilsPluginManager = {
   _isPluginInitialized: false,
   
   /**
-   * Whether init() has been called
-   */
-  _isInitCalled: false,
-  
-  /**
    * Whether our plugin is running out-of-process
    */
   _isRunningOOP: false,
@@ -75,19 +70,6 @@ let UtilsPluginManager = {
   
   lazyStartup: function()
   {
-    this.init();
-  },
-  
-  shutdown: function()
-  {
-    this.uninit();
-  },
-  
-  init: function()
-  {
-    if (this._isInitCalled) return;
-    this._isInitCalled = true;
-    
     this._isRunningOOP = Utils.isOOPP;
     this._injectEventDispatchHelper();
     this._handlePluginEvents();
@@ -95,9 +77,8 @@ let UtilsPluginManager = {
     this._registerHandlers();
   },
   
-  uninit: function()
+  shutdown: function()
   {
-    if (!this._isInitCalled) return;
     this._unregisterHandlers();
     this._cancelPluginEvents();
   },
@@ -703,5 +684,4 @@ let DNTObserverPrivate = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
-
 };

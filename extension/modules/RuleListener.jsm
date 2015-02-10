@@ -144,9 +144,7 @@ var RuleListener = {
    */
   shutdown: function()
   {
-
     if (isDirty > 0) RuleStorage.saveToDisk();
-
   },
 
   /**

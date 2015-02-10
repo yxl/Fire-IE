@@ -57,14 +57,9 @@ function MsgRet(retArray, defaultValue)
   return retArray[0];
 }
 
-let initialized = false;
-
 let ChromeBridge = {
   startup: function()
   {
-    if (initialized) return;
-    initialized = true;
-    
     // Register component to allow retrieving private and public URL
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(cidPrivate, "Fire-IE private module URL", contractIDPrivate, factoryPrivate);
@@ -72,7 +67,6 @@ let ChromeBridge = {
   
   shutdown: function()
   {
-    if (!initialized) return;
   },
   
   reloadContainerPage: function(frameGlobal)
