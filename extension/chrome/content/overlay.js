@@ -39,8 +39,16 @@ var gFireIE = null;
     AppIntegration, Utils, GesturePrefObserver, HookManager, UtilsPluginManager
   } = jsm;
   
-  let HM = new HookManager(window, "gFireIE._hookManager");
-  let RET = HM.RET;
+  let HM = new HookManager(window, "gFireIE._hookManager",
+    function(name) // evalInScope
+    {
+      return window.eval(name);
+    },
+    function(name, value) // assignInScope
+    {
+      return (new Function("return (" + name + ") = arguments[0];"))(value);
+    });
+  let RET = HookManager.RET;
   gFireIE = AppIntegration.addWindow(window);
   gFireIE._hookManager = HM;
   
@@ -55,6 +63,19 @@ var gFireIE = null;
     let value = browser.FireIE_bUseRealURI || 1;
     if (value < 1) value = 1;
     return browser.FireIE_bUseRealURI = value - 1;
+  }
+  
+  function getPluginURIFromBrowser(browser)
+  {
+    browser.FireIE_bUsePluginURL = true;
+    try
+    {
+      return browser.currentURI;
+    }
+    finally
+    {
+      browser.FireIE_bUsePluginURL = false;
+    }
   }
   
   // hook click_to_play
@@ -74,7 +95,7 @@ var gFireIE = null;
       return;
 
     // Check if it's our plugin
-    if (plugin.getAttribute("type") != "application/fireie")
+    if (plugin.getAttribute("type") != Utils.pluginMIMEType)
       return;
     
     // Check the container page
@@ -123,11 +144,28 @@ var gFireIE = null;
   this.window.addEventListener("PluginClickToPlay", clickToPlayHandler, true);
   // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
   this.window.addEventListener("PluginBindingAttached", clickToPlayHandler, true);
-  // still we have to hook gPluginHandler.handleEvent
-  // in case they start listening on the window object
-  if (typeof(gPluginHandler) == "object" && typeof(gPluginHandler.handleEvent) == "function")
+
+  if (typeof(gPluginHandler) === "object" && gPluginHandler &&
+      typeof(gPluginHandler.receiveMessage) === "function")
   {
-    HM.hookCodeHead("gPluginHandler.handleEvent", clickToPlayHandler);
+    HM.hookCodeHead("gPluginHandler.receiveMessage", function(msg)
+    {
+      switch (msg.name) {
+      case "PluginContent:ShowClickToPlayNotification":
+        let data = msg.data;
+        let newPlugins = [];
+        data.plugins.forEach(function(pluginData)
+        {
+          if (pluginData.mimetype !== Utils.pluginMIMEType)
+            newPlugins.push(pluginData);
+        });
+        if (newPlugins.length != data.plugins.length)
+          data.plugins = newPlugins;
+        if (data.plugins.length === 0)
+          return RET.shouldReturn();
+        break;
+      }
+    });
   }
   
   function initBasicHooks()
@@ -193,6 +231,7 @@ var gFireIE = null;
             || (event.type == 'click' && event.button == 0)
             || (event.type == 'keypress'
                 && (event.charCode == KeyEvent.DOM_VK_SPACE || event.keyCode == KeyEvent.DOM_VK_RETURN)))
+          && gFireIE.isIEEngine() && gFireIE.getContainerPlugin().SecureLockInfo !== "Unsecure"
           && gFireIE.goDoCommand('DisplaySecurityInfo'))
         {
           if (event) event.stopPropagation();
@@ -203,7 +242,7 @@ var gFireIE = null;
       identityBox.addEventListener("keypress", displaySecurityInfoHandler, true);
       identityBox.addEventListener("dragstart", function(event)
       {
-        if (gFireIE.isIEEngine() || gFireIE.isSwitchJumper())
+        if (gFireIE.hasPrefixedUrl())
         {
           if (gURLBar.getAttribute("pageproxystate") != "valid") {
             return;
@@ -233,7 +272,11 @@ var gFireIE = null;
     // caused by the new hook mechanism
     let delayedCheckTab = function(tab)
     {
-      setTimeout(function() { if (gFireIE.isIEEngine(tab) || gFireIE.isSwitchJumper(tab)) doLazyHooks(); }, 0);
+      setTimeout(function()
+      {
+        if (gFireIE.hasPrefixedUrl(tab))
+          doLazyHooks();
+      }, 0);
     };
     let lazyHookTabOpenHandler = function(e)
     {
@@ -387,7 +430,7 @@ var gFireIE = null;
         let pluginObject = gFireIE.getContainerPlugin();
         if (pluginObject)
         {
-          arguments[0] = pluginObject.URL;
+          arguments[0] = Utils.convertToFxURL(pluginObject.URL);
           arguments[1] = pluginObject.Title;
           return RET.modifyArguments(arguments);
         }
@@ -422,6 +465,9 @@ var gFireIE = null;
       
       // Hook FullZoom object to use per-site zooming for IE container pages
       initializeFullZoomHooks();
+      
+      // Workaround for a weired bug that sometimes the nav bar input cannot be focused
+      workaroundNavBarFocus();
     }
   }
 
@@ -586,7 +632,7 @@ var gFireIE = null;
       {
         if (aBrowser)
           setUseRealURI(aBrowser);
-        if (Utils.isIEEngine(aURI.spec) || Utils.isSwitchJumper(aURI.spec))
+        if (Utils.isPrefixedUrl(aURI.spec))
         {
           arguments[0] = Utils.makeURI(Utils.fromAnyPrefixedUrl(aURI.spec));
           return RET.modifyArguments(arguments);
@@ -607,13 +653,25 @@ var gFireIE = null;
     else
     {
       HM.hookCodeHeadTail("FullZoom._applySettingToPref",
-        function() { setUseRealURI(gBrowser.mCurrentBrowser); },
-        function() { unsetUseRealURI(gBrowser.mCurrentBrowser); });
+        function() { setUseRealURI(gBrowser.selectedBrowser); },
+        function() { unsetUseRealURI(gBrowser.selectedBrowser); });
     }
 
     HM.hookCodeHeadTail("FullZoom.reset",
       function() { setUseRealURI(gBrowser.selectedBrowser); },
       function() { unsetUseRealURI(gBrowser.selectedBrowser); });
+    
+    // Because of lazy hooking, we have to manually run the onLocationChange
+    // handler in case it has already run for the current tab
+    try
+    {
+      let browser = gBrowser.selectedBrowser;
+      FullZoom.onLocationChange(getPluginURIFromBrowser(browser), false, browser);
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Set initial zoom failed: " + ex);
+    }
   }
 
   // FireGestures support
@@ -687,13 +745,13 @@ var gFireIE = null;
   {
     if (Utils.isIEEngine(uri.spec))
     {
-      let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
-      if (pluginObject)
+      if (this.FireIE_bUsePluginURL || this.FireIE_bUseRealURI)
       {
-        let pluginURL = pluginObject.URL;
+        let pluginObject = gFireIE.getContainerPluginFromBrowser(this);
+        let pluginURL = Utils.convertToFxURL(pluginObject && pluginObject.URL);
         if (pluginURL)
         {
-          let url = this.FireIE_bUseRealURI ? pluginURL : (Utils.containerUrl + encodeURI(pluginURL));
+          let url = this.FireIE_bUseRealURI ? pluginURL : Utils.toContainerUrl(pluginURL);
           return RET.modifyValue(Utils.makeURI(url));
         }
       }
@@ -704,22 +762,22 @@ var gFireIE = null;
         return RET.modifyValue(Utils.makeURI(url));
       }
     }
-    else if (Utils.isSwitchJumper(uri.spec) && this.FireIE_bUseRealURI)
+    else if (this.FireIE_bUseRealURI && (Utils.isSwitchJumper(uri.spec) || Utils.isFake(uri.spec)))
     {
-      let url = Utils.fromSwitchJumperUrl(uri.spec);
+      let url = Utils.fromAnyPrefixedUrl(uri.spec);
       return RET.modifyValue(Utils.makeURI(url));
     }
   };
   let sessionHistoryGetter = function()
   {
     let history = this.webNavigation.sessionHistory;
-    let uri = this.FireIE_hooked ? this.currentURI : gFireIE.getURI(this);
+    let uri = getPluginURIFromBrowser(this);
     if (uri && Utils.isIEEngine(uri.spec))
     {
       let entry = history.getEntryAtIndex(history.index, false);
       if (entry.URI.spec != uri.spec)
       {
-        entry.QueryInterface(Components.interfaces.nsISHEntry).setURI(uri);
+        entry.QueryInterface(Ci.nsISHEntry).setURI(uri);
       }
     }
   };
@@ -733,7 +791,7 @@ var gFireIE = null;
     // hook aBrowser.sessionHistory
     HM.hookProp(aBrowser, "sessionHistory", sessionHistoryGetter);
     aBrowser.FireIE_hooked = true;
-  };
+  }
   
   function unhookBrowserGetter(aBrowser)
   {
@@ -741,37 +799,55 @@ var gFireIE = null;
     HM.unhookProp(aBrowser, "currentURI");
     HM.unhookProp(aBrowser, "sessionHistory");
     aBrowser.FireIE_hooked = false;
-  };
-
-  function hookURLBarSetter(aURLBar)
+  }
+  
+  function workaroundNavBarFocus()
   {
-    if (!aURLBar) aURLBar = document.getElementById("urlbar");
-    if (!aURLBar) return;
-    aURLBar.addEventListener("click", function(e)
+    function onClickInsideChromeInput(e)
     {
       let pluginObject = gFireIE.getContainerPlugin();
       if (pluginObject)
       {
         gFireIE.goDoCommand("HandOverFocus");
-        aURLBar.focus();
+        e.target.focus();
       }
-    }, false);
+    }
+    
+    let urlBar = document.getElementById("urlbar");
+    if (urlBar)
+    {
+      let urlBarInput = document.getAnonymousElementByAttribute(urlBar, "anonid", "input");
+      if (urlBarInput)
+        urlBarInput.addEventListener("click", onClickInsideChromeInput, false);
+    }
+    
+    let searchBar = document.getElementById("searchbar");
+    if (searchBar)
+    {
+      let searchBarTextbox = document.getAnonymousElementByAttribute(searchBar, "anonid", "searchbar-textbox");
+      if (searchBarTextbox)
+      {
+        let searchBarInput = document.getAnonymousElementByAttribute(searchBarTextbox, "anonid", "input");
+        if (searchBarInput)
+          searchBarInput.addEventListener("click", onClickInsideChromeInput, false);
+      }
+    }
+  }
+
+  function hookURLBarSetter(aURLBar)
+  {
+    if (!aURLBar) aURLBar = document.getElementById("urlbar");
+    if (!aURLBar) return;
+    
     HM.hookProp(aURLBar, "value", null, function()
     {
       if (!arguments[0]) return;
       
       Utils.runAsync(gFireIE.updateButtonStatus, gFireIE);
 
-      if (Utils.isIEEngine(arguments[0]))
+      if (Utils.isPrefixedUrl(arguments[0]))
       {
-        arguments[0] = Utils.fromContainerUrl(arguments[0]);
-        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
-        return RET.modifyArguments(arguments);
-      }
-      else if (Utils.isSwitchJumper(arguments[0]))
-      {
-        arguments[0] = Utils.fromSwitchJumperUrl(arguments[0]);
-        if (/^file:\/\/.*/.test(arguments[0])) arguments[0] = encodeURI(arguments[0]);
+        arguments[0] = Utils.fromAnyPrefixedUrl(arguments[0]);
         return RET.modifyArguments(arguments);
       }
     });

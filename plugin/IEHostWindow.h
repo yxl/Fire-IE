@@ -20,6 +20,8 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "IECtrl.h"
 #include "UserMessage.h"
 #include "PointerHash.h"
+#include "RAIILock.h"
+#include <chrono>
 
 namespace Plugin
 {
@@ -31,6 +33,8 @@ namespace Plugin
 // which is in another top-level MozillaWindowClass.
 // Our messges should be sent to the top-level window, so here's the function that finds it
 HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl);
+// Finder for the child MozillaWindowClass window
+HWND GetChildMozillaWindowClassWindow(HWND hwndAnyChild);
 
 // CIEHostWindow dialog
 
@@ -58,6 +62,7 @@ public:
 
 	static void SetFirefoxCookie(std::vector<UserMessage::SetFirefoxCookieParams>&& vCookieParams, CIEHostWindow* pWindowContext);
 	static bool SetIECookie(const CString& url, const CString& cookieData);
+	static bool ClearSessionCookies();
 
 	static HWND GetAnyUtilsHWND();
 	static CIEHostWindow* GetAnyUtilsWindow();
@@ -77,7 +82,6 @@ public:
 	
 	/* Indicates that a main page request is detected */
 	void SetMainPageDone();
-public:
 	
 	virtual ~CIEHostWindow();
 
@@ -94,20 +98,17 @@ public:
 
 	void SetPlugin(Plugin::CPlugin* pPlugin);
 
-protected:
+private:
 	CIEHostWindow(Plugin::CPlugin* pPlugin = NULL, CWnd* pParent = NULL);   // standard constructor
 
 	// Map used to search the CIEHostWindow object by its window handle
 	static CSimpleMap<HWND, CIEHostWindow *> s_IEWindowMap;
 	
-	// Ensure the operations on s_IEWindowMap are thread safe.
-	static CCriticalSection s_csIEWindowMap;
-
 	// Map used to search the CIEHostWindow object by its ID
 	static CSimpleMap<ULONG_PTR, CIEHostWindow *> s_NewIEWindowMap;
 
-	// Ensure the operations on s_NewIEWindowMap are thread safe.
-	static CCriticalSection s_csNewIEWindowMap;
+	// Generate each new window's ID sequentially
+	static ULONG_PTR s_ulpNewIEWindowId;
 
 	// Plugins used to do utilities like transferring cookies to Firfox
 	static CSimpleMap<HWND, CIEHostWindow *> s_UtilsIEWindowMap;
@@ -148,8 +149,10 @@ protected:
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
+	virtual LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg LRESULT OnUserMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnTimer(UINT_PTR id);
 	void OnCommandStateChange(long Command, BOOL Enable);
 	void OnStatusTextChange(LPCTSTR Text);
 	void OnTitleChange(LPCTSTR Text);
@@ -268,7 +271,8 @@ public:
 	// miscellaneous
 	bool IsUtils() const { return m_bUtils; }
 	void ReceiveUserAgent(const CString& userAgent);
-protected:
+
+private:
 	BOOL m_bCanBack;
 	BOOL m_bCanForward;
 	INT32 m_iProgress;
@@ -307,7 +311,7 @@ protected:
 	long m_lFBCurrentDoc;
 
 	long m_lFBLastFindLength;
-	// store the rendering service as well as the highlight segment, in case we process multiple documents (i.e. iframes)
+	// store the rendering service as well as the highlight segment, in case we process multiple documents (e.g. iframes)
 	std::vector<std::pair<CComPtr<IHighlightRenderingServices>, CComPtr<IHighlightSegment> > > m_vFBHighlightSegments;
 	bool m_bFBFound;
 	bool m_bFBCrossHead;
@@ -318,9 +322,7 @@ protected:
 	
 	Plugin::CPlugin* m_pPlugin;
 
-	UserMessage::NavigateParams* m_pNavigateParams;
-	// Ensure the operations on m_pNavigateParams are thread safe.
-	CCriticalSection m_csNavigateParams;
+	UserMessage::NavigateParams m_navigateParams;
 
 	// Indicates whether the associated plugin is a utils plugin
 	bool m_bUtils;
@@ -330,22 +332,76 @@ protected:
 	// Ensure the operations on m_strLoadingUrl are thread safe.
 	CCriticalSection m_csLoadingUrl;
 
+	// Deferred set cookie, potentially reducing inter-process communication
+	bool m_bDeferredSetCookieScheduled;
+	std::vector<UserMessage::SetFirefoxCookieParams> m_vDeferredCookies;
+
 public:
 	typedef std::function<void()> MainThreadFunc;
 
 	// Asynchronously run the specified function on at next message loop
-	void RunAsync(const MainThreadFunc& func)
-	{		
-		m_csFuncs.Lock();
-		m_qFuncs.push_back(func);
-		m_csFuncs.Unlock();
+	void RunAsync(const MainThreadFunc& func);
 
-		PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
-	}
+	// Asynchronously run the specified function after a specified timeout
+	void RunAsyncTimeout(const MainThreadFunc& func, unsigned int timeoutMillis);
+
 private:
+	// Helper stuff to make RunAsync(Timeout) work
 	void OnRunAsyncCall();
+	void OnRunAsyncTimeoutCall();
+
 	std::deque<MainThreadFunc> m_qFuncs;
 	CCriticalSection m_csFuncs;
+
+	static const UINT_PTR IDT_TIMER_RUN_ASYNC_TIMEOUT = 1;
+	static const unsigned int MIN_TIMEOUT_THRESHOLD_MILLIS = 5;
+
+	typedef std::chrono::steady_clock Clock;
+	typedef Clock::time_point TimePoint;
+	typedef Clock::duration Duration;
+	typedef std::chrono::milliseconds Milliseconds;
+	typedef std::pair<TimePoint, MainThreadFunc> TimeoutFuncValueType;
+	class TimeoutFuncPred {
+	public:
+		bool operator()(const TimeoutFuncValueType& v1, const TimeoutFuncValueType& v2) const;
+	};
+	std::priority_queue<TimeoutFuncValueType, std::vector<TimeoutFuncValueType>, TimeoutFuncPred> m_pqTimeoutFuncs;
+	bool m_bActivateTimerScheduled;
+
+	Utils::Mutex m_mtxTimeoutFuncs;
+
+	void ActivateTimer();
+
+	// Helper stuff to make RequirePlugin work
+	typedef std::function<void(Plugin::CPlugin*)> CallPluginFunc;
+	std::vector<CallPluginFunc> m_vDeferredCallPluginFuncs;
+
+	// Wait until the CPlugin instance is available to run the specific function
+	template <class TCallPluginFunc>
+	void RequirePlugin(const TCallPluginFunc& func);
+
+	// Throttle some events so that they are not sent to Firefox rapidly
+	struct ThrottleControl
+	{
+		ThrottleControl(int timeoutMillis)
+			: timeoutMillis(timeoutMillis)
+			, updating(false)
+			, delaying(false)
+			, scheduled(false)
+		{}
+
+		bool updating;
+		bool delaying;
+		bool scheduled;
+		const int timeoutMillis;
+	};
+
+	template <class ThrottledFunc>
+	void RunThrottled(const ThrottledFunc& func, ThrottleControl& tc);
+	template <class ThrottledFunc>
+	void OnRunThrottled(const ThrottledFunc& func, ThrottleControl& tc);
+
+	ThrottleControl m_tcProgressChanged;
 
 	/**
 	 * Used for Refresh() detection, as IE fire neither NavigateComplete2 nor DocumentComplete when Refresh() completes.

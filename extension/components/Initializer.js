@@ -10,6 +10,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * Application startup/shutdown observer, triggers init()/shutdown() methods in Bootstrap.jsm module.
@@ -33,8 +34,8 @@ Initializer.prototype = {
   
   observe: function(subject, topic, data)
   {
-    let observerService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).QueryInterface(Ci.nsIPrefBranch);
+    let observerService = Services.obs;
+    let prefs = Services.prefs;
 
     switch (topic)
     {
@@ -42,7 +43,8 @@ Initializer.prototype = {
       observerService.addObserver(this, "profile-after-change", true);
       break;
     case "profile-after-change":
-      // Backwards compatibility, use previous version's clearOnShutdown user pref to set new prefs
+      // Prefs migration
+      // Version 0.3.2 - clear options separated into "cache" and "cookies"
       if (prefs.getPrefType("privacy.clearOnShutdown.extensions-fireie") == Ci.nsIPrefBranch.PREF_BOOL)
       {
         let value = prefs.getBoolPref("privacy.clearOnShutdown.extensions-fireie");
@@ -56,6 +58,16 @@ Initializer.prototype = {
         prefs.setBoolPref("privacy.cpd.extensions-fireie-cache", value);
         prefs.setBoolPref("privacy.cpd.extensions-fireie-cookies", value);
         prefs.clearUserPref("privacy.cpd.extensions-fireie");
+      }
+      // Version 0.4.5 - removal of autoSwitchBackEnabled
+      if (prefs.getPrefType("extensions.fireie.autoSwitchBackEnabled") == Ci.nsIPrefBranch.PREF_BOOL)
+      {
+        let value = prefs.getBoolPref("extensions.fireie.autoSwitchBackEnabled");
+        let newValue = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+        newValue.data = value ? "fx" : "no";
+        prefs.setComplexValue("extensions.fireie.autoSwitchOnExceptionalRuleHit",
+                              Ci.nsISupportsString, newValue);
+        prefs.clearUserPref("extensions.fireie.autoSwitchBackEnabled");
       }
       
       // Clear the history if need sanitize on startup, since there may be some leftovers.

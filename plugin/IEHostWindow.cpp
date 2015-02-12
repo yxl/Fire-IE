@@ -36,13 +36,13 @@ using namespace UserMessage;
 using namespace Utils;
 using namespace Utils::String;
 using namespace abp;
+using namespace Plugin;
 
 // Initilizes the static member variables of CIEHostWindow
 
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_IEWindowMap;
-CCriticalSection CIEHostWindow::s_csIEWindowMap; 
 CSimpleMap<ULONG_PTR, CIEHostWindow *> CIEHostWindow::s_NewIEWindowMap;
-CCriticalSection CIEHostWindow::s_csNewIEWindowMap;
+ULONG_PTR CIEHostWindow::s_ulpNewIEWindowId = 1;
 CSimpleMap<HWND, CIEHostWindow *> CIEHostWindow::s_UtilsIEWindowMap;
 CCriticalSection CIEHostWindow::s_csUtilsIEWindowMap;
 CString CIEHostWindow::s_strIEUserAgent = _T("");
@@ -66,32 +66,34 @@ CIEHostWindow::CIEHostWindow(Plugin::CPlugin* pPlugin /*=NULL*/, CWnd* pParent /
 	, m_bFBInProgress(false)
 	, m_lFBCurrentDoc(0)
 	, m_strSecureLockInfo(_T("Unsecure"))
-	, m_pNavigateParams(NULL)
 	, m_strStatusText(_T(""))
 	, m_bUtils(false)
 	, m_strLoadingUrl(_T(""))
 	, m_bIsRefresh(false)
 	, m_bMainPageDone(false)
 	, m_nObjCounter(0)
+	, m_bActivateTimerScheduled(false)
+	, m_bDeferredSetCookieScheduled(false)
+	, m_tcProgressChanged(100)
 {
 	FBResetFindStatus();
 }
 
 CIEHostWindow::~CIEHostWindow()
 {
-	SAFE_DELETE(m_pNavigateParams);
-
 	m_csFuncs.Lock();
 	m_qFuncs.clear();
 	m_csFuncs.Unlock();
+
+	// Make sure cookies are not lost
+	if (m_vDeferredCookies.size() && !m_bUtils)
+		SetFirefoxCookie(std::move(m_vDeferredCookies), NULL);
 }
 
 CIEHostWindow* CIEHostWindow::GetInstance(HWND hwnd)
 {
 	CIEHostWindow *pInstance = NULL;
-	s_csIEWindowMap.Lock();
 	pInstance = s_IEWindowMap.Lookup(hwnd);
-	s_csIEWindowMap.Unlock();
 	return pInstance;
 }
 
@@ -172,7 +174,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 	if (ulId != 0)
 	{
 		// The CIEHostWindow has been created that we needn't recreate it.
-		s_csNewIEWindowMap.Lock();
 		pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 		if (pIEHostWindow)
 		{
@@ -181,11 +182,11 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 			if (opIsNewlyCreated)
 				*opIsNewlyCreated = false;
 		}
-		s_csNewIEWindowMap.Unlock();
 	}
 	if (!pIEHostWindow)
 	{
 		pIEHostWindow = new CIEHostWindow();
+		pIEHostWindow->m_bUtils = isUtils;
 		if (pIEHostWindow == NULL || !pIEHostWindow->Create(CIEHostWindow::IDD, pParentWnd))
 		{
 			if (pIEHostWindow)
@@ -196,7 +197,6 @@ CIEHostWindow* CIEHostWindow::CreateNewIEHostWindow(CWnd* pParentWnd, ULONG_PTR 
 		}
 		else
 		{
-			pIEHostWindow->m_bUtils = isUtils;
 			if (opIsNewlyCreated)
 				*opIsNewlyCreated = true;
 		}
@@ -250,26 +250,32 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 		vector<UserMessage::SetFirefoxCookieParams> vParams(std::move(vCookieParams));
 		pUtilsWindow->RunAsync([pWindowContext, pUtilsWindow, vParams]
 		{
+			const unsigned int DEFERRED_SET_COOKIE_TIMEOUT_MILLIS = 100;
+
+			CIEHostWindow* pWindowToSetCookie;
 			// Ensure that pWindowContext still exists
 			// No need to use lock - modifications happen only on main thread
-			bool bExists = pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext));
-
-			// To use the window context, the window must already be attached to a plugin object,
-			// otherwise, we can't fire the event.
-			if (bExists && pWindowContext->m_pPlugin)
-			{
-				pWindowContext->m_pPlugin->SetFirefoxCookie(vParams, 0);
-			}
+			if (pWindowContext && (-1 != s_IEWindowMap.FindVal(pWindowContext)))
+				pWindowToSetCookie = pWindowContext;
 			else
+				pWindowToSetCookie = pUtilsWindow;
+
+			// Append cookies to pending list
+			std::move(vParams.begin(), vParams.end(), std::back_inserter(pWindowToSetCookie->m_vDeferredCookies));
+
+			// Optionally activate the cookie setter function
+			if (!pWindowToSetCookie->m_bDeferredSetCookieScheduled)
 			{
-				// Fall back to use the utils plugin
-				if (pUtilsWindow && pUtilsWindow->m_pPlugin)
+				pWindowToSetCookie->m_bDeferredSetCookieScheduled = true;
+				pWindowToSetCookie->RunAsyncTimeout([pWindowToSetCookie]
 				{
-					// Figure out the id of the window where the cookie(s) come from
-					ULONG_PTR ulId = pWindowContext ? reinterpret_cast<ULONG_PTR>(pWindowContext) : 0;
-					// Send cookies as well as window id, so that extension can recover the context information
-					pUtilsWindow->m_pPlugin->SetFirefoxCookie(vParams, ulId);
-				}
+					pWindowToSetCookie->RequirePlugin([pWindowToSetCookie](CPlugin* pPlugin)
+					{
+						pPlugin->SetFirefoxCookie(pWindowToSetCookie->m_vDeferredCookies, 0);
+						pWindowToSetCookie->m_vDeferredCookies.clear();
+						pWindowToSetCookie->m_bDeferredSetCookieScheduled = false;
+					});
+				}, DEFERRED_SET_COOKIE_TIMEOUT_MILLIS);
 			}
 		});
 	}
@@ -277,12 +283,23 @@ void CIEHostWindow::SetFirefoxCookie(vector<UserMessage::SetFirefoxCookieParams>
 
 bool CIEHostWindow::SetIECookie(const CString& url, const CString& cookieData)
 {
+	TRACE(_T("InternetSetCookieEx url: %s data: %s\n"), url.GetString(), cookieData.GetString());
 	if (InternetSetCookie(url, NULL, cookieData))
 		return true;
 	if (InternetSetCookieEx(url, NULL, cookieData, INTERNET_COOKIE_HTTPONLY, NULL))
 		return true;
-	TRACE(_T("InternetSetCookieExW failed with ERROR %d url: %s data: %s"),
+	TRACE(_T("InternetSetCookieEx failed with ERROR %d url: %s data: %s\n"),
 		  GetLastError(), url.GetString(), cookieData.GetString());
+	return false;
+}
+
+bool CIEHostWindow::ClearSessionCookies()
+{
+	// Clear session cookies by ending the current browser session
+	// http://msdn.microsoft.com/en-us/library/windows/desktop/aa385328%28v=vs.85%29.aspx
+	if (InternetSetOption(NULL, INTERNET_OPTION_END_BROWSER_SESSION, NULL, 0))
+		return true;
+	TRACE(_T("InternetSetOption failed with ERROR %d\n"), GetLastError());
 	return false;
 }
 
@@ -308,6 +325,7 @@ void CIEHostWindow::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CIEHostWindow, CDialog)
 	ON_WM_SIZE()
 	ON_MESSAGE(WM_USER_MESSAGE, OnUserMessage)
+	ON_WM_TIMER()
 	ON_WM_PARENTNOTIFY()
 END_MESSAGE_MAP()
 
@@ -329,9 +347,7 @@ BOOL CIEHostWindow::OnInitDialog()
 
 void CIEHostWindow::InitIE()
 {
-	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Add(GetSafeHwnd(), this);
-	s_csIEWindowMap.Unlock();
 
 	m_ie.put_RegisterAsBrowser(TRUE);
 
@@ -357,16 +373,14 @@ void CIEHostWindow::UninitIE()
 	if (OS::GetIEVersion() >= 7 && m_ie.GetSafeHwnd())
 		m_ie.put_Silent(TRUE);
 
-	s_csIEWindowMap.Lock();
 	s_IEWindowMap.Remove(GetSafeHwnd());
-	s_csIEWindowMap.Unlock();
-
-	s_csUtilsIEWindowMap.Lock();
-	s_UtilsIEWindowMap.Remove(GetSafeHwnd());
-	s_csUtilsIEWindowMap.Unlock();
 
 	if (m_bUtils)
 	{
+		s_csUtilsIEWindowMap.Lock();
+		s_UtilsIEWindowMap.Remove(GetSafeHwnd());
+		s_csUtilsIEWindowMap.Unlock();
+
 		AdBlockPlus::clearFilters();
 #ifdef MATCHER_PERF
 		AdBlockPlus::showPerfInfo();
@@ -374,6 +388,63 @@ void CIEHostWindow::UninitIE()
 		TRACE(L"Remaining windows: IEWindowMap: %d, UtilsIEWindowMap: %d, NewIEWindowMap: %d\n",
 			s_IEWindowMap.GetSize(), s_UtilsIEWindowMap.GetSize(), s_NewIEWindowMap.GetSize());
 	}
+}
+
+LRESULT CIEHostWindow::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (App::GetApplication() != App::OOPP)
+		return CDialog::WindowProc(message, wParam, lParam);
+
+	// DefWindowProc propagates messages to parent window by SendMessage.
+	// In OOPP mode, this can potentially deadlock firefox since we can't RPC into the
+	// plugin during SendMessage.
+	// Here we process such messages and make sure they won't block forever.
+	LRESULT ret = 0;
+	bool bShouldReturn = false;
+	switch (message)
+	{
+	case WM_APPCOMMAND:
+		ret = TRUE;
+		bShouldReturn = true;
+		{
+			HWND hwndFirefox = GetTopMozillaWindowClassWindow(GetSafeHwnd());
+			if (hwndFirefox)
+				::PostMessage(hwndFirefox, message, wParam, lParam);
+		}
+		break;
+	case WM_MOUSEWHEEL:
+	case WM_MOUSEHWHEEL:
+		ret = 0;
+		bShouldReturn = true;
+		break;
+	case WM_MOUSEACTIVATE:
+		ret = MA_ACTIVATE;
+		bShouldReturn = true;
+		// Close popups in Firefox main window
+		::PostMessage((HWND)wParam, WM_KILLFOCUS, (WPARAM)GetSafeHwnd(), NULL);
+		{
+			// Must send a message to the child MozillaWindowClass window to transfer input focus.
+			// DefWindowProc uses blocking SendMessage, which we don't want
+			DWORD_PTR dwResult;
+			HWND hwndChildMozillaWindow = GetChildMozillaWindowClassWindow(GetSafeHwnd());
+			if (hwndChildMozillaWindow && 
+				::SendMessageTimeout(hwndChildMozillaWindow, WM_MOUSEACTIVATE, wParam, lParam,
+				SMTO_ABORTIFHUNG | SMTO_BLOCK, 200, &dwResult))
+			{
+				ret = dwResult;
+			}
+		}
+		break;
+	case WM_SETCURSOR:
+		ret = FALSE;
+		bShouldReturn = true;
+		break;
+	}
+
+	if (bShouldReturn)
+		return ret;
+
+	return CDialog::WindowProc(message, wParam, lParam);
 }
 
 void CIEHostWindow::OnSize(UINT nType, int cx, int cy)
@@ -404,6 +475,16 @@ LRESULT CIEHostWindow::OnUserMessage(WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return 0;
+}
+
+void CIEHostWindow::OnTimer(UINT_PTR id)
+{
+	switch (id)
+	{
+	case IDT_TIMER_RUN_ASYNC_TIMEOUT:
+		OnRunAsyncTimeoutCall();
+		break;
+	}
 }
 
 BEGIN_EVENTSINK_MAP(CIEHostWindow, CDialog)
@@ -458,21 +539,9 @@ HRESULT FillSafeArray(_variant_t &vDest, LPCSTR szSrc)
 
 void CIEHostWindow::Navigate(const CString& strURL, const CString& strPost, const CString& strHeaders)
 {
-	m_csNavigateParams.Lock();
-	if (m_pNavigateParams == NULL)
-	{
-		m_pNavigateParams = new NavigateParams();
-	}
-	if (m_pNavigateParams == NULL)
-	{
-		m_csNavigateParams.Unlock();
-		return;
-	}
-
-	m_pNavigateParams->strURL = strURL;
-	m_pNavigateParams->strPost = strPost;
-	m_pNavigateParams->strHeaders = strHeaders;
-	m_csNavigateParams.Unlock();
+	m_navigateParams.strURL = strURL;
+	m_navigateParams.strPost = strPost;
+	m_navigateParams.strHeaders = strHeaders;
 
 	OnNavigate();
 }
@@ -550,60 +619,85 @@ void CIEHostWindow::Find()
 	ExecOleCmd(OLECMDID_FIND);
 }
 
-// Find the sub-window of MozillaContentWindow.
-HWND GetMozillaContentWindow(HWND hwndIECtrl)
-{
-	// The trivial way: traverse up the hierarchy until we find MozillaContentWindow
-	HWND hwnd = ::GetParent(hwndIECtrl);
-	for ( int i = 0; i < 5; i++ )
-	{
-		hwnd = ::GetParent( hwnd );
-		TCHAR szClassName[MAX_PATH];
-		if ( GetClassName(::GetParent(hwnd), szClassName, ARRAYSIZE(szClassName)) > 0 )
-		{
-			if ( _tcscmp(szClassName, _T("MozillaContentWindowClass")) == 0 )
-			{
-				return hwnd;
-			}
-		}
-	}
-
-	return NULL;
-}
-
 // Firefox 4.0 uses a new window hierarchy,
 // Plugin windows are placed in GeckoPluginWindow, which is inside MozillaWindowClass,
 // which is in another top-level MozillaWindowClass.
 // Our messges should be sent to the top-level window, so here's the function that finds it
-HWND GetTopMozillaWindowClassWindow(HWND hwndIECtrl)
+HWND GetTopMozillaWindowClassWindow(HWND hwndAnyChild)
 {
-	HWND hwnd = ::GetParent(hwndIECtrl);
-	for ( int i = 0; i < 5; i++ )
-	{
-		HWND hwndParent = ::GetParent( hwnd );
-		if ( NULL == hwndParent ) break;
-		hwnd = hwndParent;
-	}
+	HWND hwndTop = GetAncestor(hwndAnyChild, GA_ROOT);
 
-	TCHAR szClassName[MAX_PATH];
-	if ( GetClassName(hwnd, szClassName, ARRAYSIZE(szClassName)) > 0 )
-	{
-		if ( _tcscmp(szClassName, _T("MozillaWindowClass")) == 0 )
-		{
-			return hwnd;
-		}
-	}
+	CString className;
+	GetClassName(hwndTop, className.GetBuffer(MAX_PATH), MAX_PATH);
+	className.ReleaseBuffer();
+	if (className == _T("MozillaWindowClass"))
+		return hwndTop;
 
 	return NULL;
 }
 
+// Returns the real parent window
+// Same as GetParent(), but doesn't return the owner
+static HWND GetRealParent(HWND hWnd)
+{
+	HWND hParent;
+
+	hParent = GetAncestor(hWnd, GA_PARENT);
+	if (!hParent || hParent == GetDesktopWindow())
+		return NULL;
+
+	return hParent;
+}
+
+template <class T, class R>
+static int ArrayFind(const T* arrayBegin, int arrayLength, const R& toFind)
+{
+	for (int i = 0; i < arrayLength; i++)
+	{
+		if ((*(arrayBegin + i)) == toFind)
+			return i;
+	}
+	return -1;
+}
+
+static HWND GetParentWindowForAnyClassName(HWND hwnd, const CString targetClassNames[],
+									int nTargetClassNames, int maxLevelsUp, CString& className)
+{
+	int levels = 0;
+	int index = -1;
+	HWND hwndParent = hwnd;
+	while (hwndParent && levels <= maxLevelsUp && index < 0)
+	{
+		hwnd = hwndParent;
+		hwndParent = GetRealParent(hwnd);
+
+		int nCopied = GetClassName(hwnd, className.GetBuffer(MAX_PATH), MAX_PATH);
+		className.ReleaseBuffer(nCopied);
+
+		if (nCopied == 0)
+			return NULL;
+
+		index = ArrayFind(targetClassNames, nTargetClassNames, className);
+
+		levels++;
+	}
+
+	return (index < 0) ? NULL : hwnd;
+}
+
+// Finder for the child MozillaWindowClass window
+HWND GetChildMozillaWindowClassWindow(HWND hwndAnyChild)
+{
+	static const CString targetClassNames[] = { _T("MozillaWindowClass") };
+	CString className;
+	HWND hwnd = GetParentWindowForAnyClassName(hwndAnyChild, targetClassNames, 1, 10, className);
+	// Make sure it's actually the child MozillaWindowClass window, not the top-level one.
+	return GetRealParent(hwnd) ? hwnd : NULL;
+}
+
 void CIEHostWindow::HandOverFocus()
 {
-	HWND hwndMessageTarget = GetMozillaContentWindow(m_hWnd);
-	if (!hwndMessageTarget)
-	{
-		hwndMessageTarget = GetTopMozillaWindowClassWindow(m_hWnd);
-	}
+	HWND hwndMessageTarget = GetTopMozillaWindowClassWindow(GetSafeHwnd());
 
 	// Change the focus to the parent window of html document to kill its focus. 
 	if (m_ie.GetSafeHwnd())
@@ -740,7 +834,7 @@ BOOL CALLBACK CIEHostWindow::GetInternetExplorerServerCallback(HWND hWnd, LPARAM
 
 HWND CIEHostWindow::GetInternetExplorerServer() const
 {
-	HWND parent = this->m_hWnd;
+	HWND parent = GetSafeHwnd();
 	HWND hWnd = NULL;
 	EnumChildWindows(parent, GetInternetExplorerServerCallback, (LPARAM)&hWnd);
 	return hWnd;
@@ -766,10 +860,8 @@ void CIEHostWindow::ScrollWheelLine(bool up)
 
 void CIEHostWindow::RemoveNewWindow(ULONG_PTR ulId)
 {
-	s_csNewIEWindowMap.Lock();
 	CIEHostWindow* pIEHostWindow = s_NewIEWindowMap.Lookup(ulId);
 	s_NewIEWindowMap.Remove(ulId);
-	s_csNewIEWindowMap.Unlock();
 
 	if (pIEHostWindow)
 	{
@@ -896,18 +988,10 @@ void CIEHostWindow::RunAsyncOleCmd(OLECMDID cmdID)
 
 void CIEHostWindow::OnNavigate()
 {
-	m_csNavigateParams.Lock();
-	if (m_pNavigateParams == NULL)
-	{
-		m_csNavigateParams.Unlock();
-		return;
-	}
-
-	CString strURL = m_pNavigateParams->strURL;
-	CString strHeaders = m_pNavigateParams->strHeaders;
-	CString strPost = m_pNavigateParams->strPost;
-	SAFE_DELETE(m_pNavigateParams);
-	m_csNavigateParams.Unlock();
+	CString strURL = m_navigateParams.strURL;
+	CString strHeaders = m_navigateParams.strHeaders;
+	CString strPost = m_navigateParams.strPost;
+	m_navigateParams.Clear();
 
 	if (m_ie.GetSafeHwnd())
 	{
@@ -922,6 +1006,11 @@ void CIEHostWindow::OnNavigate()
 				// In the post data, the text before "\r\n\r\n" is the Content-Type and Content-Length info, in order to 
 				// let web server accept the post data, we should move this info to headers.
 				int pos = strPost.Find(_T("\r\n\r\n"));
+				if (pos == -1)
+				{
+					pos = 0;
+					strPost = _T("\r\n\r\n") + strPost;
+				}
 
 				// Append Content-Type and Content-Length of the post data to headers.
 				vHeader = CString(vHeader) + strPost.Left(pos) + _T("\r\n");
@@ -1050,39 +1139,42 @@ void CIEHostWindow::OnDisplaySecurityInfo()
 
 void CIEHostWindow::OnABPFilterLoaded()
 {
-	if (m_pPlugin)
+	int numActiveFilters = AdBlockPlus::getNumberOfActiveFilters();
+	unsigned int loadTicks = AdBlockPlus::getLoadTicks();
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnABPFilterLoaded(
-			AdBlockPlus::getNumberOfActiveFilters(), AdBlockPlus::getLoadTicks());
-	}
+		pPlugin->OnABPFilterLoaded(numActiveFilters, loadTicks);
+	});
 }
 
 void CIEHostWindow::OnABPLoadFailure()
 {
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnABPLoadFailure();
-	}
+		pPlugin->OnABPLoadFailure();
+	});
 }
 
 void CIEHostWindow::OnTitleChanged(const CString& title)
 {
+	if (m_bUtils) return;
 	m_strTitle = title;
 
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnIETitleChanged(title);
-	}
+		pPlugin->OnIETitleChanged(title);
+	});
 }
 
 void CIEHostWindow::OnIEProgressChanged(INT32 iProgress)
 {
-	if (m_pPlugin)
+	RunThrottled([=]
 	{
-		CString strDetail;
-		strDetail.Format(_T("%d"), iProgress);
-		m_pPlugin->FireEvent(_T("IEProgressChanged"), strDetail);
-	}
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			pPlugin->OnIEProgressChanged(m_iProgress);
+		});
+	}, m_tcProgressChanged);
 }
 
 void CIEHostWindow::OnStatusChanged(const CString& message)
@@ -1093,20 +1185,20 @@ void CIEHostWindow::OnStatusChanged(const CString& message)
 		m_strStatusText = message;
 		RunAsync([=]
 		{
-			if (m_pPlugin)
+			RequirePlugin([=](CPlugin* pPlugin)
 			{
-				m_pPlugin->SetStatus(m_strStatusText);
-			}
+				pPlugin->SetStatus(m_strStatusText);
+			});
 		});
 	}
 }
 
 void CIEHostWindow::OnCloseIETab()
 {
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->CloseIETab();
-	}
+		pPlugin->CloseIETab();
+	});
 }
 
 void CIEHostWindow::OnStatusTextChange(LPCTSTR Text)
@@ -1130,11 +1222,11 @@ void CIEHostWindow::OnProgressChange(long Progress, long ProgressMax)
 		m_iProgress = -1;
 	OnIEProgressChanged(m_iProgress);
 	// Zoom according to Firefox setting
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		double level = m_pPlugin->GetZoomLevel();
+		double level = pPlugin->GetZoomLevel();
 		Zoom(level);
-	}
+	});
 }
 
 static inline BOOL UrlCanHandle(LPCTSTR szUrl)
@@ -1200,10 +1292,10 @@ void CIEHostWindow::OnURLChanged(const CString& url)
 {
 	// Fire navigate event so that the extension will have a chance to switch back
 	// before the first "progress changed" event arrives
-	if (m_pPlugin)
+	RequirePlugin([=](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnURLChanged(url);
-	}
+		pPlugin->OnURLChanged(url);
+	});
 }
 
 bool CIEHostWindow::IsTopLevelContainer(CComQIPtr<IWebBrowser2> spBrowser)
@@ -1226,10 +1318,13 @@ void CIEHostWindow::OnBeforeNavigate2(LPDISPATCH pDisp, VARIANT* URL, VARIANT* F
 	COLE2T szUrl(URL->bstrVal);
 
 	// Zoom according to Firefox setting
-	if (!m_bUtils && m_pPlugin)
+	if (!m_bUtils)
 	{
-		double level = m_pPlugin->GetZoomLevel();
-		Zoom(level);
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			double level = pPlugin->GetZoomLevel();
+			Zoom(level);
+		});
 	}
 
 	// Filter non-http protocols
@@ -1307,11 +1402,11 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	if (IsTopLevelContainer(pDisp))
 	{
 		// Zoom according to Firefox setting
-		if (m_pPlugin)
+		RequirePlugin([=](CPlugin* pPlugin)
 		{
-			double level = m_pPlugin->GetZoomLevel();
+			double level = pPlugin->GetZoomLevel();
 			Zoom(level);
-		}
+		});
 
 		// Cache Favicon URL
 		m_strFaviconURL = GetFaviconURLFromContent();
@@ -1329,10 +1424,10 @@ void CIEHostWindow::OnDocumentComplete(LPDISPATCH pDisp, VARIANT* URL)
 	// Set element hiding styles
 	ProcessElemHideStyles();
 
-	if (m_pPlugin)
+	RequirePlugin([](CPlugin* pPlugin)
 	{
-		m_pPlugin->OnDocumentComplete();
-	}
+		pPlugin->OnDocumentComplete();
+	});
 }
 
 void CIEHostWindow::OnDownloadBegin()
@@ -1366,8 +1461,10 @@ void CIEHostWindow::OnDownloadComplete()
 		if (m_bFBInProgress)
 			FBResetFindRange();
 		// Notify Firefox
-		if (m_pPlugin)
-			m_pPlugin->OnRefresh();
+		RequirePlugin([](CPlugin* pPlugin)
+		{
+			pPlugin->OnRefresh();
+		});
 	}
 	else
 	{
@@ -1409,8 +1506,10 @@ void CIEHostWindow::OnSetSecureLockIcon(int state)
 	CString description = s_strSecureLockInfos[state];
 
 	this->m_strSecureLockInfo = description;
-	if (m_pPlugin)
-		m_pPlugin->OnSetSecureLockIcon(description);
+	RequirePlugin([=](CPlugin* pPlugin)
+	{
+		pPlugin->OnSetSecureLockIcon(description);
+	});
 }
 
 CString CIEHostWindow::GetFaviconURLFromContent()
@@ -1640,44 +1739,53 @@ BOOL CIEHostWindow::Create(UINT nIDTemplate,CWnd* pParentWnd)
 void CIEHostWindow::SetPlugin(Plugin::CPlugin* pPlugin)
 {
 	m_pPlugin = pPlugin;
+	if (m_pPlugin && m_vDeferredCallPluginFuncs.size())
+	{
+		TRACE(_T("CIEHostWindow: doing deferred plugin calls, number of funcs = %d\n"),
+			  m_vDeferredCallPluginFuncs.size());
+		for (const CallPluginFunc& func : m_vDeferredCallPluginFuncs)
+			func(m_pPlugin);
+		m_vDeferredCallPluginFuncs.clear();
+	}
 }
 
 void CIEHostWindow::OnNewWindow3Ie(LPDISPATCH* ppDisp, BOOL* Cancel, unsigned long dwFlags, LPCTSTR bstrUrlContext, LPCTSTR bstrUrl)
 {
-	if (m_pPlugin)
+	CIEHostWindow* pIEHostWindow = new CIEHostWindow();
+	if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
 	{
+		ULONG_PTR ulId = s_ulpNewIEWindowId += 2; // never be zero ever
+		s_NewIEWindowMap.Add(ulId, pIEHostWindow);
+		*ppDisp = pIEHostWindow->m_ie.get_Application();
+		CIEHostWindow* pUtilsWindow = GetAnyUtilsWindow();
+		if (pUtilsWindow)
+			pUtilsWindow->RunAsyncTimeout([=] { RemoveNewWindow(ulId); }, 10000);
 
-		CIEHostWindow* pIEHostWindow = new CIEHostWindow();
-		if (pIEHostWindow && pIEHostWindow->Create(CIEHostWindow::IDD))
+		bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
+		bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
+		if (dwFlags & NWMF_FORCEWINDOW)
 		{
-			ULONG_PTR ulId = reinterpret_cast<ULONG_PTR>(pIEHostWindow);
-			s_csNewIEWindowMap.Lock();
-			s_NewIEWindowMap.Add(ulId, pIEHostWindow);
-			s_csNewIEWindowMap.Unlock();
-			*ppDisp = pIEHostWindow->m_ie.get_Application();
-
-			bool bShift = 0 != (GetKeyState(VK_SHIFT) & 0x8000);
-			bool bCtrl = (GetKeyState(VK_CONTROL) & 0x8000) || BrowserHook::WindowMessageHook::IsMiddleButtonClicked();
-			if (dwFlags & NWMF_FORCEWINDOW)
-			{
-				// ignore current key states, always open in new window
-				bShift = true;
-				bCtrl = false;
-			}
-			else if (dwFlags & NWMF_FORCETAB)
-			{
-				bCtrl = true;
-			}
-			m_pPlugin->IENewTab(ulId, bstrUrl, bShift, bCtrl);
+			// ignore current key states, always open in new window
+			bShift = true;
+			bCtrl = false;
 		}
-		else
+		else if (dwFlags & NWMF_FORCETAB)
 		{
-			if (pIEHostWindow)
-			{
-				delete pIEHostWindow;
-			}
-			*Cancel = TRUE;
+			bCtrl = true;
 		}
+		CString strURL = bstrUrl;
+		RequirePlugin([=](CPlugin* pPlugin)
+		{
+			pPlugin->IENewTab(ulId, strURL, bShift, bCtrl);
+		});
+	}
+	else
+	{
+		if (pIEHostWindow)
+		{
+			delete pIEHostWindow;
+		}
+		*Cancel = TRUE;
 	}
 }
 
@@ -2465,6 +2573,15 @@ bool CIEHostWindow::FBRangesEqual(const CComPtr<IHTMLTxtRange>& pRange1, const C
 	return false;
 }
 
+void CIEHostWindow::RunAsync(const MainThreadFunc& func)
+{
+	m_csFuncs.Lock();
+	m_qFuncs.push_back(func);
+	m_csFuncs.Unlock();
+
+	PostMessage(UserMessage::WM_USER_MESSAGE, UserMessage::WPARAM_RUN_ASYNC_CALL, 0);
+}
+
 void CIEHostWindow::OnRunAsyncCall()
 {
 	m_csFuncs.Lock();
@@ -2484,5 +2601,146 @@ void CIEHostWindow::OnRunAsyncCall()
 	else
 	{
 		m_csFuncs.Unlock();
+	}
+}
+
+bool CIEHostWindow::TimeoutFuncPred::operator()(const TimeoutFuncValueType& v1, const TimeoutFuncValueType& v2) const
+{
+	return v1.first > v2.first;
+}
+
+void CIEHostWindow::ActivateTimer()
+{
+	KillTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT);
+
+	Duration minDuration;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		m_bActivateTimerScheduled = false;
+		if (!m_pqTimeoutFuncs.size())
+			return;
+		minDuration = m_pqTimeoutFuncs.top().first - Clock::now();
+	}
+
+	if (minDuration <= Milliseconds(MIN_TIMEOUT_THRESHOLD_MILLIS))
+	{
+		OnRunAsyncTimeoutCall();
+	}
+	else
+	{
+		UINT ticks = (UINT)std::chrono::duration_cast<std::chrono::milliseconds>(minDuration).count();
+		SetTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT, ticks, NULL);
+		TRACE("[RunAsyncTimeout] Activate timer, ticks = %d\n", ticks);
+	}
+}
+
+void CIEHostWindow::RunAsyncTimeout(const MainThreadFunc& func, unsigned int timeoutMillis)
+{
+	bool bNeedActivate = false;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		TimePoint tpOld, tpNew;
+		if (!m_bActivateTimerScheduled)
+		{
+			if (m_pqTimeoutFuncs.size() == 0)
+			{
+				bNeedActivate = true;
+				m_bActivateTimerScheduled = true;
+			}
+			else
+				tpOld = m_pqTimeoutFuncs.top().first;
+		}
+		TimeoutFuncValueType newFunc(Clock::now() + Milliseconds(timeoutMillis), func);
+		m_pqTimeoutFuncs.push(newFunc);
+		TRACE("[RunAsyncTimeout] Push item, timeout = %d, target = %lld\n", timeoutMillis,
+			  std::chrono::duration_cast<std::chrono::milliseconds>(newFunc.first.time_since_epoch()).count());
+		if (!m_bActivateTimerScheduled && !bNeedActivate)
+		{
+			tpNew = m_pqTimeoutFuncs.top().first;
+			if (tpOld != tpNew)
+			{
+				bNeedActivate = true;
+				m_bActivateTimerScheduled = true;
+			}
+		}
+	}
+	if (bNeedActivate)
+		RunAsync([=] { ActivateTimer(); });
+}
+
+void CIEHostWindow::OnRunAsyncTimeoutCall()
+{
+	KillTimer(IDT_TIMER_RUN_ASYNC_TIMEOUT);
+
+	MainThreadFunc funcToCall;
+	bool bNeedCall = false;
+	bool bNeedActivate = false;
+	{
+		Lock lock(m_mtxTimeoutFuncs);
+		if (m_pqTimeoutFuncs.size() && m_pqTimeoutFuncs.top().first <= Clock::now() + Milliseconds(MIN_TIMEOUT_THRESHOLD_MILLIS))
+		{
+			bNeedCall = true;
+			funcToCall = std::move(m_pqTimeoutFuncs.top().second);
+#ifdef _DEBUG
+			long long target = std::chrono::duration_cast<std::chrono::milliseconds>(m_pqTimeoutFuncs.top().first.time_since_epoch()).count();
+			long long now = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+			int diff = (int)(target - now);
+			TRACE("[RunAsyncTimeout] Call func, target = %lld, now = %lld, diff = %d\n", target, now, diff);
+#endif
+			m_pqTimeoutFuncs.pop();
+		}
+		if (!m_bActivateTimerScheduled && m_pqTimeoutFuncs.size())
+		{
+			bNeedActivate = true;
+			m_bActivateTimerScheduled = true;
+		}
+	}
+
+	if (bNeedCall) funcToCall();
+	if (bNeedActivate)
+		RunAsync([=] { ActivateTimer(); });
+}
+
+template <class TCallPluginFunc>
+void CIEHostWindow::RequirePlugin(const TCallPluginFunc& func)
+{
+	if (m_pPlugin)
+		func(m_pPlugin);
+	else
+		m_vDeferredCallPluginFuncs.push_back(func);
+}
+
+template <class ThrottledFunc>
+void CIEHostWindow::RunThrottled(const ThrottledFunc& func, ThrottleControl& tc)
+{
+	// Almost identical to Utils.scheduleThrottledUpdate in Utils.jsm
+	if (tc.updating || tc.scheduled)
+		return;
+
+	tc.scheduled = true;
+	if (!tc.delaying)
+	{
+		// no need to set tc.delaying - we are calling it right away
+		OnRunThrottled(func, tc);
+	}
+}
+
+template <class ThrottledFunc>
+void CIEHostWindow::OnRunThrottled(const ThrottledFunc& func, ThrottleControl& tc)
+{
+	tc.delaying = false;
+	if (tc.scheduled)
+	{
+		tc.scheduled = false;
+		tc.updating = true;
+		func();
+		tc.updating = false;
+		tc.delaying = true;
+		tc.scheduled = false;
+		// func is captured here
+		RunAsyncTimeout([this, func, &tc]
+		{
+			OnRunThrottled(func, tc);
+		}, tc.timeoutMillis);
 	}
 }

@@ -67,14 +67,17 @@ let defaultModules = [
   baseURL.spec + "IECookieManager.jsm",
   baseURL.spec + "UtilsPluginManager.jsm",
   baseURL.spec + "ABPObserver.jsm",
-  baseURL.spec + "LightweightTheme.jsm"
+  baseURL.spec + "LightweightTheme.jsm",
+  baseURL.spec + "HookManager.jsm",
+  baseURL.spec + "SharedHooks.jsm",
 ];
 
 let loadedModules = Object.create(null);
 
 let lazyLoadModules = Object.create(null);
 
-// Ensures ordered initialization for lazy loaded modules
+// Ensures ordered startup and shutdown for all modules
+let loadedModulesOrdered = [];
 let lazyLoadModulesOrdered = [];
 
 let initialized = false;
@@ -121,8 +124,8 @@ var Bootstrap = {
     if (!initialized) return;
 
     // Shut down modules
-    for (let url in loadedModules)
-      Bootstrap.shutdownModule(url);
+    for (let i = loadedModulesOrdered.length - 1; i >= 0; i--)
+      Bootstrap.shutdownModule(loadedModulesOrdered[i]);
 
     Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-added");
     Services.obs.removeObserver(BootstrapPrivate, "xpcom-category-entry-removed");
@@ -156,6 +159,7 @@ var Bootstrap = {
         {
           obj.startup();
           loadedModules[url] = obj;
+          loadedModulesOrdered.push(url);
         }
         catch (e)
         {
@@ -210,6 +214,7 @@ var Bootstrap = {
       {
         obj.lazyStartup();
         loadedModules[url] = obj;
+        loadedModulesOrdered.push(url);
       }
       catch (e)
       {

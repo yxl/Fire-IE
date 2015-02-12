@@ -21,6 +21,14 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 
 var EXPORTED_SYMBOLS = ["Favicon"];
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+const Cu = Components.utils;
+
+let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+Cu.import(baseURL.spec + "Utils.jsm");
+
 var Favicon = {
 
   setIcon: function(document, iconURL) {
@@ -39,7 +47,17 @@ var Favicon = {
 
   _addIcon: function(document, iconURL) {
     var link = document.createElement("link");
-    link.type = "image/x-icon";
+    let path = Utils.makeURI(iconURL).path;
+    let dotIdx = path.lastIndexOf(".");
+    let ext = dotIdx !== -1 ? path.substring(dotIdx + 1).toLowerCase() : "";
+    if (ext === "png")
+      link.type = "image/png";
+    else if (ext === "jpg" || ext === "jpeg")
+      link.type = "image/jpeg";
+    else if (ext === "bmp")
+      link.type = "image/bmp";
+    else
+      link.type = "image/x-icon";
     link.rel = "icon";
     link.href = iconURL;
     this._docHead(document).appendChild(link);

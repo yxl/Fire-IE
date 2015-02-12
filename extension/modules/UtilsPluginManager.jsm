@@ -41,12 +41,7 @@ let UtilsPluginManager = {
   /**
    * Whether the utils plugin is initialized
    */
-  isPluginInitialized: false,
-  
-  /**
-   * Whether init() has been called
-   */
-  _isInitCalled: false,
+  _isPluginInitialized: false,
   
   /**
    * Whether our plugin is running out-of-process
@@ -54,34 +49,36 @@ let UtilsPluginManager = {
   _isRunningOOP: false,
   
   /**
+   * Whether our plugin is being reloaded
+   */
+  _isReloading: false,
+    
+  /**
+   * Interval for checking plugin crash
+   */
+  _checkPluginCrashInterval: null,
+  
+  /**
    * Keep a list of pref setters, which will be called upon plugin initialization
    */
   _prefSetters: [],
   
+  /**
+   * Plugin checker timer
+   */
+  _delayedPluginCheckerTimer: null,
+  
   lazyStartup: function()
   {
-    this.init();
-  },
-  
-  shutdown: function()
-  {
-    this.uninit();
-  },
-  
-  init: function()
-  {
-    if (this._isInitCalled) return;
-    this._isInitCalled = true;
-    
     this._isRunningOOP = Utils.isOOPP;
+    this._injectEventDispatchHelper();
     this._handlePluginEvents();
     this._install();
     this._registerHandlers();
   },
   
-  uninit: function()
+  shutdown: function()
   {
-    if (!this._isInitCalled) return;
     this._unregisterHandlers();
     this._cancelPluginEvents();
   },
@@ -107,6 +104,18 @@ let UtilsPluginManager = {
   },
   
   /**
+   * Convert the object so that it can be safely passed to the plugin
+   */
+  convertObjectWithFunction: function(obj)
+  {
+    if (Cu.cloneInto)
+      return Cu.cloneInto(obj, Utils.getHiddenWindow(), {
+        cloneFunctions: true
+      });
+    return obj;
+  },
+  
+  /**
    * Retrieves the window where utils plugin sits in
    */
   getWindow: function()
@@ -126,7 +135,7 @@ let UtilsPluginManager = {
    */
   fireAfterInit: function(callback, self, args, useCapture)
   {
-    if (this.isPluginInitialized)
+    if (this._isPluginInitialized)
     {
       callback.apply(self, args);
     }
@@ -135,10 +144,10 @@ let UtilsPluginManager = {
       let window = Utils.getHiddenWindow();
       let handler = function(e)
       {
-        window.removeEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+        window.removeEventListener("IEUtilsPluginInitialized", handler, !!useCapture);
         callback.apply(self, args);
       };
-      window.addEventListener("IEUtilsPluginInitialized", handler, useCapture ? true : false);
+      window.addEventListener("IEUtilsPluginInitialized", handler, !!useCapture);
     }
   },
   
@@ -149,10 +158,23 @@ let UtilsPluginManager = {
   addPrefSetter: function(setter)
   {
     this._prefSetters.push(setter);
-    if (this.isPluginInitialized)
-      setter();
+    if (this._isPluginInitialized)
+      setter(this.getPlugin());
   },
 
+  _injectEventDispatchHelper: function()
+  {
+    let window = Utils.getHiddenWindow();
+    let unsafeWindow = window.wrappedJSObject || window;
+    let container = unsafeWindow.FireIEContainer = new unsafeWindow.Object();
+    container.dispatchEvent = new unsafeWindow.Function("type", "detail",
+      "let event = document.createEvent(\"CustomEvent\");\n" +
+      "event.initCustomEvent(type, true, true, detail);\n" +
+      "let plugin = document.getElementById(\"" + Utils.utilsPluginId + "\");\n" +
+      "return plugin.dispatchEvent(event);"
+    );
+  },
+  
   _handlePluginEvents: function()
   {
     let window = Utils.getHiddenWindow();
@@ -164,14 +186,14 @@ let UtilsPluginManager = {
     window.addEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.addEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.addEventListener("PluginDisabled", onPluginLoadFailure, true);
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
+    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
+
     if (this._isRunningOOP)
     {
       Services.obs.addObserver(checkPluginCrash, "plugin-crashed", false);
       this._checkPluginCrashInterval = window.setInterval(checkPluginCrash, Prefs.OOPP_crashCheckIntervalMillis);
     }
-    
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=813963, events merged into PluginBindingAttached
-    window.addEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
   
   _cancelPluginEvents: function()
@@ -185,13 +207,13 @@ let UtilsPluginManager = {
     window.removeEventListener("PluginVulnerableUpdatable", onPluginLoadFailure, true);
     window.removeEventListener("PluginVulnerableNoUpdate", onPluginLoadFailure, true);
     window.removeEventListener("PluginDisabled", onPluginLoadFailure, true);
-    if (this._isRunningOOP)
+    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
+
+    if (this._checkPluginCrashInterval)
     {
       Services.obs.removeObserver(checkPluginCrash, "plugin-crashed");
       window.clearInterval(this._checkPluginCrashInterval);
     }
-
-    window.removeEventListener("PluginBindingAttached", onPluginBindingAttached, true);
   },
 
   /**
@@ -205,18 +227,12 @@ let UtilsPluginManager = {
 
     this.fireAfterInit(function()
     {
-      this.isPluginInitialized = true;
+      this._isPluginInitialized = true;
       this._setPluginPrefs();
     }, this, [], true);
 
     this._installPlugin();
-    
-    // Check after 30 sec whether the plugin is initialized yet
-    Utils.runAsyncTimeout(function()
-    {
-      if (!this.isPluginInitialized)
-        loadFailureSubHandler();
-    }, this, 30000);
+    this._runDelayedPluginChecker();
     
     // Pref setter for cookie sync and DNT
     this.addPrefSetter(setCookieSyncPref);
@@ -225,10 +241,13 @@ let UtilsPluginManager = {
   
   _installPlugin: function()
   {
+    // Record OOPP state before installing the plugin
+    this._isRunningOOP = Utils.isOOPP;
+    
     let doc = Utils.getHiddenWindow().document;
     let embed = doc.createElementNS("http://www.w3.org/1999/xhtml", "html:embed");
     embed.setAttribute("id", Utils.utilsPluginId);
-    embed.setAttribute("type", "application/fireie");
+    embed.setAttribute("type", Utils.pluginMIMEType);
     embed.style.visibility = "collapse";
     doc.body.appendChild(embed);
   },
@@ -238,12 +257,23 @@ let UtilsPluginManager = {
    */
   reinstall: function()
   {
-    this.isPluginInitialized = false;
+    this._isPluginInitialized = false;
     
     this.fireAfterInit(function()
     {
-      this.isPluginInitialized = true;
+      this._isPluginInitialized = true;
       this._setPluginPrefs();
+      
+      // Tell tabs in IE engine to reload
+      if (this._isReloading)
+      {
+        this._isReloading = false;
+        Utils.runAsync(function()
+        {
+          Services.obs.notifyObservers(null, "fireie-reload-plugin", null);
+        }, this);
+        Utils.LOG("Reloaded plugin process.");
+      }
     }, this, [], true);
     
     this._reinstallPlugin();
@@ -253,7 +283,27 @@ let UtilsPluginManager = {
   {
     let plugin = this.getPlugin();
     plugin.parentElement.removeChild(plugin);
-    this._installPlugin();
+    Utils.runAsyncTimeout(function()
+    {
+      loadFailureHandled = false;
+      IECookieManager.changeIETempDirectorySetting();
+      this._installPlugin();
+      this._runDelayedPluginChecker();
+    }, this, 300);
+  },
+  
+  _runDelayedPluginChecker: function()
+  {
+    if (this._delayedPluginCheckerTimer)
+      Utils.cancelAsyncTimeout(this._delayedPluginCheckerTimer);
+    
+    // Check after 30 sec whether the plugin is initialized yet
+    this._delayedPluginCheckerTimer = Utils.runAsyncTimeout(function()
+    {
+      this._delayedPluginCheckerTimer = null;
+      if (!this._isPluginInitialized && !this._isReloading)
+        loadFailureSubHandler();
+    }, this, 30000);
   },
   
   _registerHandlers: function()
@@ -331,7 +381,47 @@ let UtilsPluginManager = {
         plugin.RemoveNewWindow(attr.id);
       tab.removeAttribute("fireieNavigateParams");
     }
-  }
+  },
+    
+  /**
+   * In OOPP mode, we can reload the plugin process to apply changes to IE compatibility mode
+   */
+  reloadPluginProcess: function()
+  {
+    if (!this._isRunningOOP) return;
+    
+    this._isReloading = true;
+    let plugin = this.getPlugin();
+    if (plugin)
+    {
+      Services.obs.notifyObservers(null, "fireie-before-reload-plugin", null);
+      try
+      {
+        // It will throw because the plugin process exits.
+        // Just ignore the error.
+        plugin.ExitProcess();
+      }
+      catch (ex)
+      {}
+      
+      checkPluginCrash();
+    }
+  },
+  
+  get isReloading()
+  {
+    return this._isReloading;
+  },
+  
+  get isPluginInitialized()
+  {
+    return this._isPluginInitialized;
+  },
+  
+  get isRunningOOP()
+  {
+    return this._isRunningOOP && this._isPluginInitialized;
+  },
 };
 
 function onPluginBindingAttached(event)
@@ -384,7 +474,7 @@ function onPluginClickToPlay(event)
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   
   let mimetype = plugin.getAttribute("type");
-  if (mimetype == "application/fireie")
+  if (mimetype == Utils.pluginMIMEType)
   {
     // check the container page
     let doc = plugin.ownerDocument;
@@ -413,7 +503,7 @@ function genPluginEventHandler(subHandler)
       return;
     
     let mimetype = plugin.getAttribute("type");
-    if (mimetype == "application/fireie")
+    if (mimetype == Utils.pluginMIMEType)
     {
       // check the container page
       let doc = plugin.ownerDocument;
@@ -457,7 +547,9 @@ function checkPluginCrash()
   if (!UtilsPluginManager.isPluginInitialized || UtilsPluginManager.getPlugin().Alive)
     return;
 
-  Utils.ERROR("Plugin crashed, attempting to resume...");
+  // Don't panic if we are just intentionally reloading the plugin
+  if (!UtilsPluginManager.isReloading)
+    Utils.ERROR("Plugin crashed, attempting to resume...");
   UtilsPluginManager.reinstall();
 }
 
@@ -592,5 +684,4 @@ let DNTObserverPrivate = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference, Ci.nsIObserver])
-
 };

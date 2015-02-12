@@ -156,42 +156,30 @@ namespace Plugin
 
 char* CStringToNPStringCharacters(const CString &str)
 {
-	USES_CONVERSION_EX;
-	char* utf8str = NULL;
-	int cnt = str.GetLength() + 1;
-	TCHAR* tstr = new TCHAR[cnt];
-	_tcsncpy_s(tstr, cnt, str, cnt);
-	if (tstr != NULL)
-	{
-		LPWSTR wstr = T2W(tstr);
-
-		// converts to utf8 string
-		int nUTF8 = WideCharToMultiByte(CP_UTF8, 0, wstr, cnt, NULL, 0, NULL, NULL);
-		if (nUTF8 > 0)
-		{
-			utf8str = (char *)NPN_MemAlloc(nUTF8);
-			WideCharToMultiByte(CP_UTF8, 0, wstr, cnt, utf8str, nUTF8, NULL, NULL);
-		}
-		delete[] tstr;
-	}
+	CStringW wstr = CT2W(str);
+	int nUTF8 = WideCharToMultiByte(CP_UTF8, 0, wstr, wstr.GetLength() + 1, NULL, 0, NULL, NULL);
+	if (nUTF8 == 0)
+		return NULL;
+	char* utf8str = (char *)NPN_MemAlloc(nUTF8);
+	WideCharToMultiByte(CP_UTF8, 0, wstr, wstr.GetLength() + 1, utf8str, nUTF8, NULL, NULL);
 	return utf8str;
+}
+
+CString NPStringCharactersToCString(const NPUTF8* npstrchars)
+{
+	NPString npstr = { npstrchars, (uint32_t)strlen(npstrchars) };
+	return NPStringToCString(npstr);
 }
 
 CString NPStringToCString(NPString npstr)
 {
-	USES_CONVERSION_EX;
-	CString str;
-	int nWide =  MultiByteToWideChar(CP_UTF8, 0, npstr.UTF8Characters, npstr.UTF8Length + 1, NULL, 0);
+	int nWide = MultiByteToWideChar(CP_UTF8, 0, npstr.UTF8Characters, npstr.UTF8Length + 1, NULL, 0);
 	if (nWide == 0)
-		return str;
-	WCHAR* wstr = new WCHAR[nWide];
-	if (wstr)
-	{
-		MultiByteToWideChar(CP_UTF8, 0, npstr.UTF8Characters, npstr.UTF8Length + 1, wstr, nWide);
-		str = W2T(wstr);
-		delete[] wstr;
-	}
-	return str;
+		return CString();
+	CStringW wstr;
+	MultiByteToWideChar(CP_UTF8, 0, npstr.UTF8Characters, npstr.UTF8Length + 1, wstr.GetBuffer(nWide), nWide);
+	wstr.ReleaseBuffer();
+	return CString(CW2T(wstr));
 }
 
 CString NPIdentifierToCString(NPIdentifier npid)

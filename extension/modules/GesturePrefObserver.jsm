@@ -56,6 +56,11 @@ let GesturePrefObserver = {
    * Set of individual prefs to observe
    */
   prefObserveSet: {},
+  
+  /**
+   * Avoid adding duplicate pref setters to UtilsPluginManager
+   */
+  _prefSetterAdded: false,
 
   /**
    * Retrieve the (any) utils plugin object
@@ -155,6 +160,10 @@ let GesturePrefObserver = {
     // if still no extension detected, do the default behavior
     if (!this.mainGestureExtension)
       this.setGestureExtension("NotDetected");
+
+    if (this._prefSetterAdded)
+      return;
+    this._prefSetterAdded = true;
     UtilsPluginManager.addPrefSetter(function()
     {
       this.setEnabledGestures();

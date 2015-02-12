@@ -17,6 +17,11 @@
 <!ENTITY fireie.options.switch.caption "切換瀏覽引擎時:">
 <!ENTITY fireie.options.switch.handleurl "總是以目前瀏覽引擎開啟網址列的新網址">
 <!ENTITY fireie.options.switch.disableAutoSwitch "停用自動切換瀏覽引擎">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "當 URL 不匹配任何切換規則:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "當 URL 匹配一個例外規則:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "保持目前的渲染引擎">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "切換到 Firefox 引擎">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "切換到 IE 引擎">
 <!ENTITY fireie.options.shorcut.caption "快捷鍵">
 <!ENTITY fireie.options.shorcut.enable "啟用">
 <!ENTITY fireie.options.private.caption "隱私瀏覽模式">
@@ -81,3 +86,4 @@
 <!ENTITY fireie.options.import "匯入選項檔案">
 <!ENTITY fireie.options.export "匯出選項檔案">
 <!ENTITY fireie.options.restart.descr "設定將會在重啟 Firefox 後生效。">
+<!ENTITY fireie.options.reload.descr "重新載入 &quot;Fire IE DLL&quot; 外掛程式以生效。">

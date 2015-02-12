@@ -75,6 +75,9 @@ namespace Plugin
 		// Get CIEHostWindow ID
 		ULONG_PTR GetNavigateWindowId() const;
 
+		// Get URL to visit
+		CString GetNavigateURL() const;
+
 		// Get Http headers paramter for IECtrl::Navigate
 		CString GetNavigateHeaders() const;
 
@@ -93,18 +96,17 @@ namespace Plugin
 
 		NPObject *GetScriptableObject();
 
-		/** This function is equivalent to the following JavaScript function:
-		* function FireEvent(strEventType, strDetail) {
-		*   var event = document.createEvent("CustomEvent");
-		*   event.initCustomEvent(strEventType, true, true, strDetail);
-		*   pluginObject.dispatchEvent(event);
-		* }
-		* 
-		* Uses following JavaScript code to listen to the event fired:
-		* pluginObject.addEventListener(strEventType, function(event) {
-		*    alert(event.detail);
-		* }
-		*/
+		/**
+		 * This function is equivalent to the following JavaScript function:
+		 * function FireEvent(strEventType, strDetail) {
+		 *   FireIEContainer.dispatchEvent(strEventType, strDetail)
+		 * }
+		 * 
+		 * Uses following JavaScript code to listen to the event fired:
+		 * pluginObject.addEventListener(strEventType, function(event) {
+		 *    alert(event.detail);
+		 * }
+		 */
 		BOOL FireEvent(const CString &strEventType, const CString &strDetail);
 
 		/** Get the window zoom level of Firefox by calling the JavaScript method of
@@ -132,12 +134,6 @@ namespace Plugin
 		void SetFirefoxCookie(const std::vector<UserMessage::SetFirefoxCookieParams>& vCookies, ULONG_PTR ulWindowId);
 
 		/** 
-		 * Sets Firefox Cookie using NPAPI
-		 * @param strCookie Cookie http header string
-		 */
-		void SetURLCookie(const CString& strURL, const CString& strCookie);
-
-		/** 
 		 * Create a new IE engine tab in the Firefox to load the given CIEHostWindow.
 		 * @param ulId The ID of the CIEHostWindow object.
 		 * @param strURL The page URL to be loaded in the new tab.
@@ -149,8 +145,11 @@ namespace Plugin
 		// Close current IE engie tab.
 		void CloseIETab();
 
-		// Notify the Firefox that the page title has changed.
+		// Notify Firefox that the page title has changed.
 		void OnIETitleChanged(const CString& strTitle);
+
+		// Notify Firefox that the progress has changed.
+		void OnIEProgressChanged(int progress);
 
 		// Send the IE UserAgent to the Firefox.
 		void OnIEUserAgentReceived(const CString& strUserAgent);
@@ -196,6 +195,21 @@ namespace Plugin
 
 		// Whether this is a utils plugin (or a content plugin)
 		bool m_bIsUtilsPlugin;
+
+	private:
+		// Caches for commonly-used objects
+		mutable NPObject* m_pWindow;
+		mutable NPObject* m_pContainer;
+
+		NPObject* GetWindowPropertyObject(const NPUTF8* szPropertyName) const;
+		NPObject* GetEnvironmentObject(NPNVariable variable, const TCHAR* szDescription) const;
+
+		NPObject* GetWindow() const;
+		NPObject* GetContainer() const;
+
+		typedef std::string utf8string;
+		static std::unordered_map<utf8string, NPIdentifier> s_mapIdentifierCache;
+		static NPIdentifier GetIdentifier(const NPUTF8* npcharsId);
 	};
 
 }

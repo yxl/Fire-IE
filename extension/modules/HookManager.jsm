@@ -26,9 +26,31 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
 
 Cu.import(baseURL.spec + "Utils.jsm");
+
+/**
+ * Global HookManager instance for doing application-wide hooks
+ */
+let globalHM = null;
+
+let factoryGlobalHM = null;
+let globalScope = this;
+
+/**
+ * Helper stuff to simplify the use of the global HM
+ */
+
+// Usage: HM.hookCodeHead("JSM(moduleURL).symbolName.XXX", function(...) {...});
+let JSM = function(moduleURL) {
+  let jsm = {};
+  Cu.import(moduleURL, jsm);
+  return jsm;
+};
 
 /**
  * Stores information about a hooked function
@@ -50,16 +72,125 @@ let HookFunction = function(name, orgFunc, myFuncHead, myFuncTail) {
  * @param globalScope - the global scope that hooked function names can be referenced in
  * @param globalReferencableName - the name that can be used to reference this HM instance
  *                                 in the global scope
+ * @param evalInScope - function that evaluates an expression in globalScope
+ * @param assignInScope - function that assigns a value to an expression in globalScope
  * @constructor
  */
-let HookManager = function(globalScope, globalReferencableName) {
+let HookManager = function(globalScope, globalReferencableName, evalInScope, assignInScope) {
   this._scope = globalScope;
   this._refName = globalReferencableName;
   this._hookFunctions = [];
   this._recycledIndices = [];
+  
+  if (evalInScope)
+    this._evalInScope = evalInScope;
+  if (assignInScope)
+    this._assignInScope = assignInScope;
+};
+
+// Static scope of the class
+let HMS = HookManager;
+
+HMS.startup = function()
+{
+  const cidGlobalHM = Components.ID("{BC0178CF-665A-4BB6-BF00-BCF9A9A5FE11}");
+  const contractIDGlobalHM = "@fireie.org/fireie/hook-manager-global;1";
+
+  factoryGlobalHM = {
+    createInstance: function(outer, iid)
+    {
+      if (outer) throw Cr.NS_ERROR_NO_AGGREGATION;
+      if (!globalHM)
+      {
+        globalHM = new HookManager(
+          globalScope, // globalScope
+          "Components.classes['" + contractIDGlobalHM + "'].getService().wrappedJSObject", // ref name
+          function(name) // evalInScope
+          {
+            return (new Function("return " + name + ";"))();
+          },
+          function(name, value) // assignInScope
+          {
+            return (new Function("return (" + name + ") = arguments[0];"))(value);
+          });
+        globalHM.wrappedJSObject = globalHM;
+      }
+      return globalHM.QueryInterface(iid);
+    }
+  };
+
+  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  registrar.registerFactory(cidGlobalHM, "Fire-IE Global HookManager", contractIDGlobalHM, factoryGlobalHM);
+};
+
+HMS.shutdown = function()
+{
+};
+
+HMS._getOriginalFunc = function(func)
+{
+  let idx = func.FireIE_orgFuncIdx;
+  let HM = func.FireIE_hookManager;
+  if (typeof(idx) == "number" && HM instanceof HookManager)
+  {
+    let hf = HM._hookFunctions[idx];
+    if (hf instanceof HookFunction)
+      return hf.orgFunc;
+  }
+  return null;
+};
+
+HMS._warnIfAlreadyHooked = function(func, funcName)
+{
+  if (!HMS.isHooked(func))
+    return;
+  Utils.WARN(funcName + " is already hooked. Make sure you don't hook any shared functions " +
+             "in overlay scripts. Hook them in some shared module, please.");
+};
+
+/** 
+ * Check whether the given function is hooked
+ * @param func - the function to check
+ * @returns true if the func is hooked, false otherwise
+ */
+HMS.isHooked = function(func)
+{
+  return HMS._getOriginalFunc(func) !== null;
+};
+  
+/** 
+ * Obtain a reference to the original function before the hook
+ * @param func - the hooked function to obtain original function from
+ * @returns the original function, or null if the func is not hooked.
+ *          Note that the return value may itself be a hooked function as well.
+ */
+HMS.getOriginalFunction = function(func)
+{
+  return HMS._getOriginalFunc(func);
+};
+
+// specify hook function return values
+HMS.RET = {
+  // hook @ head should return without calling orgFunc
+  shouldReturn: function(value)
+  {
+    return { shouldReturn: true, value: value };
+  },
+  // hook @ head should modify arguments passed to orgFunc
+  modifyArguments: function(args)
+  {
+    return { shouldReturn: false, args: args };
+  },
+  // hook @ tail should modify the return value
+  modifyValue: function(value)
+  {
+    return { shouldModify: true, value: value };
+  }
 };
 
 HookManager.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([]),
+
   get globalScope() { return this._scope; },
   get globalReferencableName() { return this._refName; },
   get utils() { return Utils; },
@@ -96,17 +227,12 @@ HookManager.prototype = {
   
   _evalInScope: function(expression)
   {
-    return eval("with (this._scope) { " + expression + " }");
+    throw "_evalInScope not implemented.";
   },
   
   _assignInScope: function(name, value)
   {
-    // Creates an assign delegate function in this._scope
-    // Can't just assign it here cause "value" might be a property of this._scope
-    // We must have something that passes value safely into the assignment
-    let assignDelegate =
-        eval("with (this._scope) { (function() { return " + name + " = arguments[0]; }) }");
-    return assignDelegate(value);
+    throw "_assignInScope not implemented.";
   },
   
   _genHookedFunction: function(idx, code)
@@ -220,19 +346,6 @@ HookManager.prototype = {
     }
   },
   
-  _getOriginalFunc: function(func)
-  {
-    let idx = func.FireIE_orgFuncIdx;
-    let HM = func.FireIE_hookManager;
-    if (typeof(idx) == "number" && HM instanceof HookManager)
-    {
-      let hf = HM._hookFunctions[idx];
-      if (hf instanceof HookFunction)
-        return hf.orgFunc;
-    }
-    return null;
-  },
-  
   _lookupPropertyDescriptor: function(obj, prop)
   {
     while (obj !== undefined && obj !== null)
@@ -258,24 +371,7 @@ HookManager.prototype = {
     return null;
   },
   
-  // specify hook function return values
-  RET: {
-    // hook @ head should return without calling orgFunc
-    shouldReturn: function(value)
-    {
-      return { shouldReturn: true, value: value };
-    },
-    // hook @ head should modify arguments passed to orgFunc
-    modifyArguments: function(args)
-    {
-      return { shouldReturn: false, args: args };
-    },
-    // hook @ tail should modify the return value
-    modifyValue: function(value)
-    {
-      return { shouldModify: true, value: value };
-    }
-  },
+  RET: HMS.RET,
   
   /** 
    * Add a hook to the beginning of a globally referencable function
@@ -291,6 +387,7 @@ HookManager.prototype = {
       let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
+        HMS._warnIfAlreadyHooked(orgFunc, orgFuncName);
         let wrappedFunc = this._wrapFunctionHead(orgFunc, myFunc, orgFuncName);
         // execute the assignment
         this._assignInScope(orgFuncName, wrappedFunc);
@@ -326,6 +423,7 @@ HookManager.prototype = {
       let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
+        HMS._warnIfAlreadyHooked(orgFunc, orgFuncName);
         let wrappedFunc = this._wrapFunctionTail(orgFunc, myFunc, orgFuncName);
         // execute the assignment
         this._assignInScope(orgFuncName, wrappedFunc);
@@ -362,6 +460,7 @@ HookManager.prototype = {
       let orgFunc = this._evalInScope(orgFuncName);
       if (typeof(orgFunc) == "function")
       {
+        HMS._warnIfAlreadyHooked(orgFunc, orgFuncName);
         let wrappedFunc = this._wrapFunctionHeadTail(orgFunc, myFuncHead, myFuncTail, orgFuncName);
         // execute the assignment
         this._assignInScope(orgFuncName, wrappedFunc);
@@ -397,7 +496,7 @@ HookManager.prototype = {
       let hookedFunc = this._evalInScope(orgFuncName);
       if (typeof(hookedFunc) == "function")
       {
-        let orgFunc = this._getOriginalFunc(hookedFunc);
+        let orgFunc = HMS._getOriginalFunc(hookedFunc);
         if (orgFunc)
         {
           // execute the eval that restores original function
@@ -429,7 +528,7 @@ HookManager.prototype = {
   {
     try
     {
-      if (this._getOriginalFunc(hookedFunc))
+      if (HMS._getOriginalFunc(hookedFunc))
       {
         this._recycleFunc(hookedFunc);
         return true;
@@ -499,12 +598,18 @@ HookManager.prototype = {
       let oSetter = desc.set;
       if (myGetterBegin || myGetterEnd)
       {
-        let newGetter = this._wrapFunction(oGetter, myGetterBegin, myGetterEnd, parentNode.toString() + ".get " + propName);
+        let getterName = parentNode.toString() + ".get " + propName;
+        if (oGetter)
+          HMS._warnIfAlreadyHooked(oGetter, getterName);
+        let newGetter = this._wrapFunction(oGetter, myGetterBegin, myGetterEnd, getterName);
         desc.get = newGetter;
       }
       if (mySetterBegin || mySetterEnd)
       {
-        let newSetter = this._wrapFunction(oSetter, mySetterBegin, mySetterEnd, parentNode.toString() + ".set " + propName);
+        let setterName = parentNode.toString() + ".set " + propName;
+        if (oSetter)
+          HMS._warnIfAlreadyHooked(oSetter, setterName);
+        let newSetter = this._wrapFunction(oSetter, mySetterBegin, mySetterEnd, setterName);
         desc.set = newSetter;
       }
       
@@ -514,7 +619,7 @@ HookManager.prototype = {
     }
     catch (ex)
     {
-      Utils.ERROR("Failed to hook property " + propName + ": " + ex);
+      Utils.ERROR("Failed to hook property " + parentNode.toString() + "." + propName + ": " + ex);
       return { getter: null, setter: null };
     }
   },
@@ -527,17 +632,25 @@ HookManager.prototype = {
    */
   unhookProp: function(parentNode, propName)
   {
-    let desc = this._lookupPropertyDescriptor(parentNode, propName);
-    let myGetter = desc.get;
-    let mySetter = desc.set;
-    let oGetter = (myGetter && this._getOriginalFunc(myGetter)) || myGetter;
-    let oSetter = (mySetter && this._getOriginalFunc(mySetter)) || mySetter;
-    desc.get = oGetter;
-    desc.set = oSetter;
-    Object.defineProperty(parentNode, propName, desc);
-    if (oGetter != myGetter) this._recycleFunc(myGetter);
-    if (oSetter != mySetter) this._recycleFunc(mySetter);
-    return { getter: myGetter, setter: mySetter };
+    try
+    {
+      let desc = this._lookupPropertyDescriptor(parentNode, propName);
+      let myGetter = desc.get;
+      let mySetter = desc.set;
+      let oGetter = (myGetter && HMS._getOriginalFunc(myGetter)) || myGetter;
+      let oSetter = (mySetter && HMS._getOriginalFunc(mySetter)) || mySetter;
+      desc.get = oGetter;
+      desc.set = oSetter;
+      Object.defineProperty(parentNode, propName, desc);
+      if (oGetter != myGetter) this._recycleFunc(myGetter);
+      if (oSetter != mySetter) this._recycleFunc(mySetter);
+      return { getter: myGetter, setter: mySetter };
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to unhook property " + parentNode.toString() + "." + propName + ": " + ex);
+      return { getter: null, setter: null };
+    }
   },
   
   /**
@@ -566,7 +679,7 @@ HookManager.prototype = {
       {
         Utils.LOG("Redirected source-patching hook for " + orgHookFunction.name);
         arguments[funcIdx] = func;
-        return HM.RET.modifyArguments(arguments);
+        return HMS.RET.modifyArguments(arguments);
       }
     },
     function(ret)
@@ -574,7 +687,7 @@ HookManager.prototype = {
       if (orgFunc != arguments[funcIdx + 1])
       {
         if (ret) orgHookFunction.orgFunc = ret;
-        return HM.RET.modifyValue(orgFunc);
+        return HMS.RET.modifyValue(orgFunc);
       }
     });
   },
@@ -609,7 +722,7 @@ HookManager.prototype = {
         arguments[nameIdx] = orgHookManager._refName + "._hookFunctions[" + orgHookFunctionIdx + "].orgFunc";
         arguments[funcIdx] = func;
         Utils.LOG("Redirected name-func SPH from " + orgHookManager._hookFunctions[orgHookFunctionIdx].name + " to " + arguments[nameIdx]);
-        return HM.RET.modifyArguments(arguments);
+        return HMS.RET.modifyArguments(arguments);
       }
     });
   }

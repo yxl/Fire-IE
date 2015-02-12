@@ -22,6 +22,7 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 #include "PrefManager.h"
 #include "App.h"
 #include "abp/AdBlockPlus.h"
+#include "json/json.h"
 
 namespace Plugin
 {
@@ -726,6 +727,60 @@ namespace Plugin
 			}
 
 			return false;
+		}
+		// void BatchSetCookie({String, json}jsonCookies)
+		else if (name == NPI_ID(BatchSetCookie))
+		{
+			TRACE("BatchSetCookie called!\n");
+			if (argCount < 1) return false;
+
+			CString jsonCookies;
+			if (NPVARIANT_IS_STRING(args[0]))
+			{
+				jsonCookies = NPStringToCString(NPVARIANT_TO_STRING(args[0]));
+				Json::Reader reader(Json::Features::strictMode());
+				Json::Value cookies;
+				reader.parse(std::string(CT2A(jsonCookies, CP_UTF8)), cookies);
+				if (cookies.isArray())
+				{
+					bool success = true;
+					for (const Json::Value& cookie : cookies)
+					{
+						const Json::Value& vURL = cookie["url"];
+						const Json::Value& vData = cookie["data"];
+						if (vURL.isString() && vData.isString())
+						{
+							CString url = CA2T(vURL.asCString(), CP_UTF8);
+							CString data = CA2T(vData.asCString(), CP_UTF8);
+							success = CIEHostWindow::SetIECookie(url, data) && success;
+						}
+					}
+					UNUSED(success);
+					return true;
+				}
+			}
+
+			return false;
+		}
+		// void ClearSessionCookies()
+		else if (name == NPI_ID(ClearSessionCookies))
+		{
+			TRACE("ClearSessionCookies called!\n");
+			bool success = CIEHostWindow::ClearSessionCookies();
+			UNUSED(success);
+			return true;
+		}
+		// void ExitProcess() - no return
+		else if (name == NPI_ID(ExitProcess))
+		{
+			TRACE("ExitProcess called!\n");
+
+			// Make sure we are actually in OOPP mode
+			if (Utils::App::GetApplication() != Utils::App::OOPP)
+				return false;
+
+			::ExitProcess(0);
+			return true;
 		}
 		// void ABPEnable()
 		else if (name == NPI_ID(ABPEnable))

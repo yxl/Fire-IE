@@ -53,12 +53,12 @@ var Backup =
   {
     try
     {
-      return Services.prefs.getComplexValue("browser.download.lastDir", Ci.nsILocalFile);
+      return Services.prefs.getComplexValue("browser.download.lastDir", Ci.nsIFile);
     }
     catch (e)
     {
       // No default download location. Default to desktop.
-      return Services.dirsvc.get("Desk", Ci.nsILocalFile);
+      return Services.dirsvc.get("Desk", Ci.nsIFile);
     }
   },
 
@@ -70,7 +70,7 @@ var Backup =
   {
     try
     {
-      Services.prefs.setComplexValue("browser.download.lastDir", Ci.nsILocalFile, dir);
+      Services.prefs.setComplexValue("browser.download.lastDir", Ci.nsIFile, dir);
     } catch(e) {};
   },
 

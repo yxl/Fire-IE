@@ -40,12 +40,32 @@
           <hbox>
             <button id="openSwitchRules" label="&fireie.menu.switchRules.label;..." oncommand="Utils.openRulesDialog();" />
           </hbox>
+          <label value="&fireie.options.switch.onRuleMiss.caption;" />
+          <menulist id="autoSwitchOnRuleMiss" class="auto-switch-element indent">
+            <menupopup>
+              <menuitem id="autoSwitchOnRuleMiss-no-radio" value="no"
+                        label="&fireie.options.switch.autoSwitchOnCondition.no;" />
+              <menuitem id="autoSwitchOnRuleMiss-fx-radio" value="fx"
+                        label="&fireie.options.switch.autoSwitchOnCondition.fx;" />
+              <menuitem id="autoSwitchOnRuleMiss-ie-radio" value="ie"
+                        label="&fireie.options.switch.autoSwitchOnCondition.ie;" />
+            </menupopup>
+          </menulist>
+          <label value="&fireie.options.switch.onExceptionalRuleHit.caption;" />
+          <menulist id="autoSwitchOnExceptionalRuleHit" class="auto-switch-element indent">
+            <menupopup>
+              <menuitem id="autoSwitchOnRuleMiss-no-radio" value="no"
+                        label="&fireie.options.switch.autoSwitchOnCondition.no;" />
+              <menuitem id="autoSwitchOnRuleMiss-fx-radio" value="fx"
+                        label="&fireie.options.switch.autoSwitchOnCondition.fx;" />
+            </menupopup>
+          </menulist>
         </vbox>
       </groupbox>
       <!-- Sets Shortcut key -->
       <groupbox id="shortcut">
         <caption label="&fireie.options.shorcut.caption;*" />
-        <hbox>
+        <hbox align="center">
           <checkbox label="&fireie.options.shorcut.enable;" id="shortcutEnabled" />
           <menulist id="shortcut-modifiers">
             <menupopup>
@@ -161,10 +181,12 @@
           <vbox id="customLabels">
             <label>&fireie.options.ui.customLabelLabel;</label>
             <hbox class="indent" align="center">
-              <image src="chrome://fireie/skin/engine-fx.png" width="16" height="16" />
+              <image id="customLabels-fxIcon" src="chrome://fireie/skin/engine-fx.png"
+                     width="16" height="16" />
               <html:input id="fxLabel" type="text" size="12" maxlength="20"/>
               <separator orient="vertical" />
-              <image src="chrome://fireie/skin/engine-ie.png" width="16" height="16" />
+              <image id="customLabels-ieIcon" src="chrome://fireie/skin/engine-ie.png"
+                     width="16" height="16" />
               <html:input id="ieLabel" type="text" size="12" maxlength="20"/>
             </hbox>
           </vbox>
@@ -221,7 +243,10 @@
         <checkbox id="historyEnabled" label="&fireie.options.integration.historyEnabled;" />
         <checkbox id="disableFolderRedirection" label="&fireie.options.integration.disableFolderRedirection;*" />
       </groupbox>
-      <label id="integrationRestartDescr" class="descr" value="*&fireie.options.restart.descr;" />
+      <label id="integrationRestartDescr" class="descr" hidden="true"
+             value="*&fireie.options.restart.descr;" />
+      <label id="integrationReloadDescr" class="descr" hidden="true"
+             value="*&fireie.options.reload.descr;" />
     </vbox>
   </prefpane>
 
@@ -262,6 +287,8 @@
       </groupbox>
       <label id="iemodeRestartDescr" class="descr" style="margin-top:20px;" hidden="true"
              value="*&fireie.options.restart.descr;"/>
+      <label id="iemodeReloadDescr" class="descr" style="margin-top:20px;" hidden="true"
+             value="*&fireie.options.reload.descr;"/>
     </vbox>
   </prefpane>
 
@@ -269,7 +296,7 @@
     <iframe src="chrome://fireie/content/about.xul" flex="1" />
   </prefpane>
 
-  <hbox class="prefWindow-dlgbuttons">
+  <hbox class="prefWindow-dlgbuttons" flex="1">
     <button id="mySettingManager" type="menu"
     label="&fireie.options.manager;">
       <menupopup>

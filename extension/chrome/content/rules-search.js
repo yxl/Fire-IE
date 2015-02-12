@@ -156,7 +156,9 @@ RuleSearch.fakeBrowser =
     focusContent: function () {},
     removeSelection: function () {},
     requestMatchesCount: function() {},
-    enableSelection: function() {}
+    enableSelection: function() {},
+    // compatibility with Nightly 38+
+    getInitialSelection: function() {},
   },
   currentURI: Utils.makeURI("http://example.com/"),
   contentWindow:

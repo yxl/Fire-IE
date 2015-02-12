@@ -1,6 +1,6 @@
 // OOPP related
-pref("dom.ipc.plugins.enabled.npfireie32.dll", false);
-pref("dom.ipc.plugins.enabled.npfireie64.dll", false);
+pref("dom.ipc.plugins.enabled.npfireie32.dll", true);
+pref("dom.ipc.plugins.enabled.npfireie64.dll", true);
 
 // Miscellaneous
 pref("extensions.fireie.currentVersion", "0.0.9");
@@ -23,7 +23,8 @@ pref("extensions.fireie.OOPP_remoteSetCookie", true);
 // General
 pref("extensions.fireie.handleUrlBar", false);
 pref("extensions.fireie.autoswitch_enabled", true);
-pref("extensions.fireie.autoSwitchBackEnabled", true);
+pref("extensions.fireie.autoSwitchOnExceptionalRuleHit", "fx"); // "no"/"fx"
+pref("extensions.fireie.autoSwitchOnRuleMiss", "no"); // "no"/"fx"/"ie"
 pref("extensions.fireie.shortcutEnabled", true);
 pref("extensions.fireie.shortcut_modifiers", "alt");
 pref("extensions.fireie.shortcut_key", "C");

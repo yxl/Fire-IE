@@ -22,6 +22,15 @@ let FireIEContainer = {};
   let Ci = Components.interfaces;
   let Cr = Components.results;
   let Cu = Components.utils;
+  
+  if (!("@fireie.org/fireie/public;1" in Cc))
+  {
+    // Might be in a content process, reload the page to get rid of it
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent("fireie:reloadContainerPage", true, true, "");
+    window.dispatchEvent(event);
+    return;
+  }
 
   let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
   let jsm = {};
@@ -53,6 +62,13 @@ let FireIEContainer = {};
 
     E(Utils.statusBarId).hidden = true;
 
+    if (!Utils.isIEEngine(location.href) || !Utils.isValidUrl(Utils.fromContainerUrl(location.href)))
+    {
+      Utils.ERROR('Not a valid URL to navigate to.');
+      location.replace("about:blank");
+      return;
+    }
+    
     let container = E('container');
     if (!container)
     {
@@ -81,7 +97,14 @@ let FireIEContainer = {};
     else
     {
       getGFireIE().clearResumeFromPBW();
-      container.innerHTML = '<embed id="fireie-object" type="application/fireie" style="width:100%; height:100%;" />';
+
+      let embed = document.createElement("embed");
+      embed.setAttribute("id", Utils.containerPluginId);
+      embed.setAttribute("type", Utils.pluginMIMEType);
+      embed.style.width = "100%";
+      embed.style.height = "100%";
+      container.appendChild(embed);
+
       registerEventHandler();
     }
   }
@@ -101,9 +124,9 @@ let FireIEContainer = {};
     return !!need;
   }
 
-  function destory()
+  function destroy()
   {
-    window.removeEventListener("unload", destory, false);
+    window.removeEventListener("unload", destroy, false);
 
     let container = E('container');
 
@@ -129,6 +152,11 @@ let FireIEContainer = {};
       headers = navigateParams[name];
     }
     return headers;
+  }
+  
+  function getNavigateURL()
+  {
+    return Utils.convertToIEURL(Utils.fromContainerUrl(location.href));
   }
 
   function getNavigateHeaders()
@@ -165,6 +193,7 @@ let FireIEContainer = {};
     window.addEventListener("IERefresh", onIERefresh, false);
     window.addEventListener("IEProgressChanged", onIEProgressChange, false);
     window.addEventListener("IEURLChanged", onIEURLChanged, false);
+    window.addEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).addEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).addEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).addEventListener("mousemove", onStatusMouseMove, false);
@@ -181,6 +210,7 @@ let FireIEContainer = {};
     window.removeEventListener("IERefresh", onIERefresh, false);
     window.removeEventListener("IEProgressChanged", onIEProgressChange, false);
     window.removeEventListener("IEURLChanged", onIEURLChanged, false);
+    window.removeEventListener("HideContainerPlugin", onHideContainerPlugin, false);
     E(Utils.containerPluginId).removeEventListener("focus", onPluginFocus, false);
     E(Utils.statusBarId).removeEventListener("SetStatusText", onSetStatusText, false);
     E(Utils.statusBarId).removeEventListener("mousemove", onStatusMouseMove, false);
@@ -244,7 +274,7 @@ let FireIEContainer = {};
   
   function onIEURLChanged(event)
   {
-    checkSwitchBack(event.detail);
+    checkSwitchBack(Utils.convertToFxURL(event.detail));
   }
   
   let bSwitchEngineInitiated = false;
@@ -273,25 +303,39 @@ let FireIEContainer = {};
     return false;
   }
   
+  let syncedURL = "";
+  
   /** sync recorded url when IE engine navigates to another location */
   function syncURL()
   {
     let po = E(Utils.containerPluginId);
     if (!po) return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
 
     if (checkSwitchBack(url))
       return;
       
     let containerUrl = Utils.toContainerUrl(url);
-    if (window.location.href != containerUrl)
+    if (window.location.href != containerUrl || syncedURL != url)
     {
-      // HTML5 history manipulation,
-      // see http://spoiledmilk.com/blog/html5-changing-the-browser-url-without-refreshing-page
-      if (window.history)
+      syncedURL = url;
+      try
+      {
+        // HTML5 history manipulation,
+        // see https://developer.mozilla.org/en-US/docs/Web/Guide/API/DOM/Manipulating_the_browser_history#The_replaceState%28%29_method
         window.history.replaceState("", document.title, containerUrl);
+      }
+      catch (ex)
+      {
+        // Shouldn't normally happen, but it indeed happens. Don't know why...
+        Utils.ERROR("Failed to sync URL to " + url + ": " + ex);
+        // At least we can try to update the URL bar
+        let gFireIE = getGFireIE();
+        if (gFireIE)
+          gFireIE.updateInterface();
+      }
     }
   }
   
@@ -331,7 +375,7 @@ let FireIEContainer = {};
     if (!po.IsDocumentComplete)
       return;
     
-    let url = po.URL;
+    let url = Utils.convertToFxURL(po.URL);
     if (!url) return;
     
     if (url != syncHistoryURL)
@@ -477,19 +521,35 @@ let FireIEContainer = {};
   {
     let pluginObject = event.originalTarget;
     pluginObject.blur();
-    pluginObject.Focus();
+    try { pluginObject.Focus(); } catch (ex) { }
   }
 
+  function onHideContainerPlugin(event)
+  {
+    // We're reloading anyway, just boom everything
+    destroy();
+  }
+  
   window.addEventListener('load', init, false);
-  window.addEventListener('unload', destory, false);
+  window.addEventListener('unload', destroy, false);
   FireIEContainer.getNavigateWindowId = getNavigateWindowId;
+  FireIEContainer.getNavigateURL = getNavigateURL;
   FireIEContainer.getNavigateHeaders = getNavigateHeaders;
   FireIEContainer.getNavigatePostData = getNavigatePostData;
   FireIEContainer.removeNavigateParams = removeNavigateParams;
   FireIEContainer.getZoomLevel = function()
   {
     let gFireIE = getGFireIE();
-    let zoomLevel = gFireIE ? gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) : 1;
+    let zoomLevel = gFireIE ? (gFireIE.getZoomLevel(Utils.getTabFromDocument(document).linkedBrowser) || 1) : 1;
     return zoomLevel * Utils.DPIScaling;
-  }
+  };
+  
+  // Fast event dispatching, in order to reduce inter-process communication
+  FireIEContainer.dispatchEvent = function(type, detail)
+  {
+    let event = document.createEvent("CustomEvent");
+    event.initCustomEvent(type, true, true, detail);
+    let target = E(Utils.containerPluginId) || E("container");
+    return target.dispatchEvent(event);
+  };
 })();

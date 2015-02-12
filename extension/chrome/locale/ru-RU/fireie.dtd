@@ -17,6 +17,11 @@
 <!ENTITY fireie.options.switch.caption "Переключение режима движка:">
 <!ENTITY fireie.options.switch.handleurl "Всегда использовать текущий движок для открытия новых ссылок">
 <!ENTITY fireie.options.switch.disableAutoSwitch "Отключить авто-переключение">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "When URL doesn't match any switch rules:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "When URL matches an exceptional rule:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "Keep current rendering engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "Switch to Firefox engine">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "Switch to IE engine">
 <!ENTITY fireie.options.shorcut.caption "Горячая клавиша">
 <!ENTITY fireie.options.shorcut.enable "Вкл.">
 <!ENTITY fireie.options.private.caption "Приватный просмотр">
@@ -81,3 +86,4 @@
 <!ENTITY fireie.options.import "Импортировать настройки из файла">
 <!ENTITY fireie.options.export "Экспортирвоать настройки в файл">
 <!ENTITY fireie.options.restart.descr "Для применения настроек необходим перезапуск Firefox.">
+<!ENTITY fireie.options.reload.descr "Reload &quot;Fire IE DLL&quot; plugin to take effect.">

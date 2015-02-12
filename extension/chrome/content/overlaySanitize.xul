@@ -33,27 +33,31 @@
             />
     </listbox>
     <script type="text/javascript"><![CDATA[
-        function createSanitizeItem(topic)
-        {
-          return {
-            clear: function() {
-                let subject = null;
-                let data = null;
-                Components.classes["@mozilla.org/observer-service;1"]
-                    .getService(Components.interfaces.nsIObserverService)
-                    .notifyObservers(subject, topic, data);
-            },
-            get canClear() {
-                return true;
-            }
-          };
-        }
-        if ("Sanitizer" in this)
-        {
-            let items = Sanitizer.prototype.items;
-            items["extensions-fireie-cache"] = createSanitizeItem("fireie-clear-cache");
-            items["extensions-fireie-cookies"] = createSanitizeItem("fireie-clear-cookies");
-        }
+      let Cc = Components.classes;
+      let Ci = Components.interfaces;
+      let Cr = Components.results;
+      let Cu = Components.utils;
+
+      function createSanitizeItem(topic)
+      {
+        return {
+          clear: function() {
+            let subject = null;
+            let data = null;
+            Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService)
+              .notifyObservers(subject, topic, data);
+          },
+          get canClear() {
+            return true;
+          }
+        };
+      }
+      if ("Sanitizer" in this)
+      {
+        let items = Sanitizer.prototype.items;
+        items["extensions-fireie-cache"] = createSanitizeItem("fireie-clear-cache");
+        items["extensions-fireie-cookies"] = createSanitizeItem("fireie-clear-cookies");
+      }
     ]]>
     </script>
 </overlay>

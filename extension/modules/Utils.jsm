@@ -62,7 +62,7 @@ var Utils = {
     try
     {
       let versionInfo = Cc["@mozilla.org/xre/app-info;1"]
-        .getService(Components.interfaces.nsIXULAppInfo);
+        .getService(Ci.nsIXULAppInfo);
 
       let versionString = versionInfo.version;
       Utils.LOG("Host app version: " + versionString);
@@ -158,6 +158,16 @@ var Utils = {
     let platformVersion = Services.appinfo.platformVersion;
     Object.defineProperty(Utils, "platformVersion", { get: function() platformVersion });
     return platformVersion;
+  },
+  
+  get pluginName()
+  {
+    return "Fire IE DLL";
+  },
+  
+  get pluginMIMEType()
+  {
+    return "application/fireie";
   },
 
   /**
@@ -367,6 +377,11 @@ var Utils = {
     return "chrome://fireie/content/switchJumper.xhtml?url=";
   },
   
+  get fakeUrl()
+  {
+    return "chrome://fireie/content/fake.html?url=";
+  },
+  
   /** Whether url is IE engine container url */
   isIEEngine: function(url)
   {
@@ -378,47 +393,28 @@ var Utils = {
     return Utils.startsWith(url, Utils.switchJumperUrl);
   },
   
+  isFake: function(url)
+  {
+    return Utils.startsWith(url, Utils.fakeUrl);
+  },
+  
   toPrefixedUrl: function(url, prefix)
   {
     url = url.trim();
-    if (Utils.startsWith(url, prefix)) return url;
-    if (/^file:\/\/.*/.test(url))
-    {
-      try
-      {
-        url = decodeURI(url).replace(/\|/g, ":");
-      }
-      catch (e)
-      {}
-    }
-    return prefix + encodeURI(url);
+    return prefix + encodeURIComponent(url);
   },
 
   fromPrefixedUrl: function(url, prefix)
   {
-    if (url && url.length > 0)
-    {
-      url = url.trim();
-      if (!/^[\w\-]+:/.test(url))
-      {
-        url = "http://" + url;
-      }
-      if (/^file:\/\/.*/.test(url)) url = url.replace(/\|/g, ":");
-      if (url.substr(0, prefix.length) == prefix)
-      {
-        url = decodeURI(url.substring(prefix.length));
-        if (!/^[\w\-]+:/.test(url))
-        {
-          url = "http://" + url;
-        }
-      }
-    }
+    url = url.trim();
+    if (url.substr(0, prefix.length) == prefix)
+      url = decodeURIComponent(url.substring(prefix.length));
     return url;
   },
   
   fromAnyPrefixedUrl: function(url)
   {
-    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl];
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
     for (let i = 0, l = prefixes.length; i < l; i++)
     {
       let prefix = prefixes[i];
@@ -426,6 +422,12 @@ var Utils = {
         return Utils.fromPrefixedUrl(url, prefix);
     }
     return url;
+  },
+  
+  isPrefixedUrl: function(url)
+  {
+    const prefixes = [Utils.containerUrl, Utils.switchJumperUrl, Utils.fakeUrl];
+    return prefixes.some(function(prefix) Utils.startsWith(url, prefix));
   },
   
   /** Converts URL into IE Engine URL */
@@ -448,6 +450,60 @@ var Utils = {
   fromSwitchJumperUrl: function(url)
   {
     return Utils.fromPrefixedUrl(url, Utils.switchJumperUrl);
+  },
+  
+  toFakeUrl: function(url)
+  {
+    return Utils.toPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  fromFakeUrl: function(url)
+  {
+    return Utils.fromPrefixedUrl(url, Utils.fakeUrl);
+  },
+  
+  convertToIEURL: function(fxURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToIEURL = function(fxURL)
+    {
+      if (!/^file:\/\/.*/.test(fxURL))
+        return fxURL;
+      
+      let idxQ = fxURL.indexOf("?"), idxH = fxURL.indexOf("#");
+      let idx = idxQ === -1 ? idxH : (idxH === -1 ? idxQ : Math.min(idxQ, idxH));
+      if (idx === -1) idx = fxURL.length;
+      let queryAndHash = fxURL.substring(idx);
+      
+      let ieURL = WinPathURI.convertToIEFileURI(fxURL.substring(0, idx));
+      return ieURL && (ieURL + queryAndHash);
+    };
+    
+    return Utils.convertToIEURL(fxURL);
+  },
+  
+  convertToFxURL: function(ieURL)
+  {
+    let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+    Cu.import(baseURL.spec + "WinPathURI.jsm");
+    
+    Utils.convertToFxURL = function(ieURL)
+    {
+      if (!/^file:\/\/.*/.test(ieURL))
+        return ieURL;
+      
+      let idxQ = ieURL.indexOf("?"), idxH = ieURL.indexOf("#");
+      let idx = idxQ === -1 ? idxH : (idxH === -1 ? idxQ : Math.min(idxQ, idxH));
+      if (idx === -1) idx = ieURL.length;
+      let queryAndHash = ieURL.substring(idx);
+      
+      let fxURL = WinPathURI.convertToFxFileURI(ieURL.substring(0, idx));
+      return fxURL && fxURL + queryAndHash;
+    };
+    
+    return Utils.convertToFxURL(ieURL);
   },
 
   get containerPluginId()
@@ -481,7 +537,7 @@ var Utils = {
         }
         else
         {
-          let strBundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+          let strBundle = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
           var intlMess = strBundle.createBundle("chrome://global-platform/locale/intl.properties");
           try
           {
@@ -496,7 +552,7 @@ var Utils = {
       let charset = getDefaultCharset();
       if (charset)
       {
-        let uc = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+        let uc = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
         try
         {
           uc.charset = charset;
@@ -547,12 +603,12 @@ var Utils = {
   
   getChromeWindowFrom: function(window)
   {
-    let mainWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIWebNavigation)
-                           .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+    let mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShellTreeItem)
                            .rootTreeItem
-                           .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow); 
+                           .QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow); 
     return mainWindow;
   },
   
@@ -581,7 +637,7 @@ var Utils = {
     {
       for (; win; win = win.parent)
       {
-        if (!win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow)) return win;
+        if (!win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow)) return win;
       }
 
       return null;
@@ -595,7 +651,7 @@ var Utils = {
   
   isRootWindow: function(win)
   {
-    return !win.parent || win == win.parent || !(win.parent instanceof Components.interfaces.nsIDOMWindow);
+    return !win.parent || win == win.parent || !(win.parent instanceof Ci.nsIDOMWindow);
   },
   
   generatorFromEnumerator: function(enumerator, nsInterface)
@@ -738,6 +794,13 @@ var Utils = {
     
     return url !== uri.host || Utils.isValidDomainName(url);
   },
+
+  fuzzyUrlCompare: function(url1, url2)
+  {
+    let uri1 = Utils.makeURI(url1, true);
+    let uri2 = Utils.makeURI(url2, true);
+    return (uri1 && uri2 && uri1.specIgnoringRef === uri2.specIgnoringRef);
+  },
   
   escapeURLForCSS: function(url)
   {
@@ -859,6 +922,34 @@ var Utils = {
     try
     {
       if (channel.loadGroup && channel.loadGroup.notificationCallbacks) return channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext).associatedWindow;
+    }
+    catch (e)
+    {}
+
+    return null;
+  },
+  
+  /**
+   * Gets the XUL <browser> associated with a particular request (if any).
+   */
+  getRequestBrowser: function( /**nsIChannel*/ channel) /**nsIDOMWindow*/
+  {
+    try
+    {
+      let loadContext = null;
+      if (channel.notificationCallbacks) 
+        loadContext = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      else if (channel.loadGroup && channel.loadGroup.notificationCallbacks)
+        loadContext = channel.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      
+      if (loadContext)
+      {
+        if (loadContext.topFrameElement && loadContext.topFrameElement.localName === "browser")
+          return loadContext.topFrameElement;
+        
+        let window = loadContext.associatedWindow;
+        return Utils.getTabFromWindow(window).linkedBrowser;
+      }
     }
     catch (e)
     {}
@@ -1090,7 +1181,7 @@ var Utils = {
     try
     {
       // Assume an absolute path first
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.initWithPath(path);
       return file;
     }
@@ -1101,7 +1192,7 @@ var Utils = {
     {
       // Try relative path now
       let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       file.setRelativeDescriptor(profileDir, path);
       return file;
     }
@@ -1283,15 +1374,18 @@ var Utils = {
     
     update.scheduled = true;
     if (!update.delaying)
+    {
+      update.delaying = true;
       Utils.runAsync(this._doThrottledUpdate, this,
                      update, updateFunc, thisPtr);
+    }
   },
   
   // launch process with specified arguments
   launchProcess: function(exePath, args, description)
   {
     description = description || exePath;
-    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(exePath);
     if (!file.exists()) {
       Utils.ERROR("Cannot launch " + description + ", file not found: " + exePath);
@@ -1332,14 +1426,14 @@ var Utils = {
     let jsm = {};
     try
     {
-      Components.utils.import("resource://gre/modules/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/AddonLogging.jsm";
     }
     catch (e)
     {
       // Nightly 20140225
-      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
+      Cu.import("resource://gre/modules/addons/AddonLogging.jsm", jsm);
       if (!jsm.LogManager)
         throw "LogManager not found in resource://gre/modules/(addons/)AddonLogging.jsm";
     }
