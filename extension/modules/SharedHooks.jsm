@@ -40,23 +40,6 @@ let RET = HookManager.RET;
 let SharedHooks = {
   lazyStartup: function()
   {
-    try
-    {
-      let jsm = {};
-      Cu.import("resource:///modules/E10SUtils.jsm", jsm);
-      if (typeof(jsm.E10SUtils) === "object")
-      {
-        // Hook e10s blacklist
-        HM.hookCodeHead(
-          "JSM('resource:///modules/E10SUtils.jsm').E10SUtils.shouldBrowserBeRemote",
-          function(url)
-          {
-            if (Utils.isPrefixedUrl(url))
-              return RET.shouldReturn(false);
-          });
-      }
-    }
-    catch (ex) {}
   },
   
   shutdown: function()
