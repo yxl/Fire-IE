@@ -193,14 +193,19 @@ RuleSearch.fakeBrowser =
     }
   },
 
-  addEventListener: function(event, handler, capture)
+  addEventListener: function(type, handler, capture, wantsUntrusted)
   {
-    E("rulesTree").addEventListener(event, handler, capture);
+    E("rulesTree").addEventListener(type, handler, capture, wantsUntrusted);
   },
-  removeEventListener: function(event, handler, capture)
+  removeEventListener: function(type, handler, capture)
   {
-    E("rulesTree").addEventListener(event, handler, capture);
+    E("rulesTree").removeEventListener(type, handler, capture);
   },
+  dispatchEvent: function(event)
+  {
+    return E("rulesTree").dispatchEvent(event);
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventTarget]),
 };
 
 // compatibility with Nightly 26+
