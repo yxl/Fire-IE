@@ -18,7 +18,14 @@ var RuleSearch =
   init: function()
   {
     let findbar = E("findbar");
-    findbar.browser = findbar._browser = RuleSearch.fakeBrowser;
+    try
+    {
+      findbar.browser = findbar._browser = RuleSearch.fakeBrowser;
+    }
+    catch (ex)
+    {
+      Utils.ERROR("Failed to set fakeBrowser to findbar: " + ex);
+    }
 
     findbar.addEventListener("keypress", function(event)
     {
