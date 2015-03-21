@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-(function() {
+(function(global) {
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cr = Components.results;
@@ -35,8 +35,6 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   Cu.import(baseURL.spec + "ContentUtils.jsm");
   Cu.import(baseURL.spec + "ContentPrefs.jsm");
   
-  let global = this;
- 
   addEventListener("fireie:reloadContainerPage", function(event)
   {
     let containerWindow = event.target;
@@ -107,4 +105,4 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   addEventListener("InstallBrowserTheme", browserThemeEventHandler, false, true);
   addEventListener("PreviewBrowserTheme", browserThemeEventHandler, false, true);
   addEventListener("ResetBrowserThemePreview", browserThemeEventHandler, false, true);
-})();
+})(this);
