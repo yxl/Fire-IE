@@ -309,7 +309,7 @@
     </tabpanels>
   </tabbox>
 
-  <splitter id="rulesSplitter" persist="state" orient="horizontal" collapse="after" state="collapsed" oncommand="RuleView.refresh();onSplitterStateChange(this);">
+  <splitter id="rulesSplitter" persist="state" orient="horizontal" collapse="after" state="open" oncommand="RuleView.refresh();onSplitterStateChange(this);">
     <grippy id="rulesGrippy"/>
   </splitter>
 
