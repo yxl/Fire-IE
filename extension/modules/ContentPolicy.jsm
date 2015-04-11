@@ -374,7 +374,8 @@ var PolicyPrivate = {
     if (uploadChannel && uploadChannel.uploadStream)
     {
       let len = uploadChannel.uploadStream.available();
-      post = NetUtil.readInputStreamToString(uploadChannel.uploadStream, len);
+      if (len > 0)
+        post = NetUtil.readInputStreamToString(uploadChannel.uploadStream, len);
     }
 
     // Pass the navigation paramters througth tab attributes
