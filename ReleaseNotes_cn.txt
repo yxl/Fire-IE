@@ -1,3 +1,27 @@
+Fire-IE 0.4.5 @ 2015-04-19
+这个版本不再支持 Firefox 13 或以下版本。
+
+功能改进：
+* 实验性功能：支持多进程 Firefox (Electrolysis) 。
+* 插件崩溃保护 (OOPP) 默认开启。OOPP 模式解决了原本进程内加载时不能或很难解决的一些问题，包括：
+  * 开启硬件加速后，地址栏Alt+Enter会导致黑屏和闪烁 (https://github.com/yxl/Fire-IE/issues/81) 。
+  * 无法使用Win7任务栏的关闭全部窗口命令退出火狐 (https://github.com/yxl/Fire-IE/issues/70) 。
+  * 部分 ActiveX 控件会导致 Firefox 死锁 (https://github.com/yxl/Fire-IE/issues/45) 。
+  * 改变 IE 兼容模式可以直接重启插件进程，而不用重启 Firefox。
+* 支持 Firefox 主菜单的剪切、复制、粘贴功能。
+* 允许配置自动切换策略，指定在匹配例外规则或者未匹配任何规则时所执行的动作。
+
+Bug修复：
+* Tab Scope 扩展的进度指示有时不正确。
+* 部分 file:/// 开头的地址不能被 IE 引擎正确识别。
+* 为 Firefox 35 以上版本隐藏地址栏的插件提示。
+* 页面缩放有时不起作用。
+* PNG/JPG 格式的网站图标无法正常显示。
+* 一些本地化细节上的改进。
+* 右键菜单“在新标签页中以 IE 引擎打开链接”未正确设置 Referer 消息头。
+
+此版本同时提升了 OOPP 模式下的性能和稳定性。
+
 Fire-IE 0.4.4 @ 2015-02-09
 这个版本不再支持Firefox 12或以下版本。
 

@@ -1,3 +1,27 @@
+Fire-IE 0.4.5 @ April 19, 2015
+This version no longer supports Firefox 13 or lower.
+
+Enhancements:
+* Experimental feature: support multi-process Firefox (electrolysis).
+* Plugin crash protection (OOPP) is enabled by default. OOPP mode solves a few problems that are otherwise hard to solve when running the plugin in-process, e.g.,
+  * Alt-Enter causes the screen to flash if hardware acceleration is enabled (https://github.com/yxl/Fire-IE/issues/81).
+  * Cannot use Win7 taskbar's "Close All Windows" command to terminate Firefox (https://github.com/yxl/Fire-IE/issues/70).
+  * Some ActiveX controls could freeze Firefox when loaded by Fire IE (https://github.com/yxl/Fire-IE/issues/45).
+  * Changing IE compatibility mode no longer requires Firefox to restart -- you could just restart the plugin process.
+* Support Cut/Copy/Paste commands in Firefox main menu (Panel UI).
+* Allow configuring auto-switch policy, which defines the actions to perform when a URL matches an exceptional rule, or doesn't match any rules.
+
+Bug fixes:
+* The progress indicator of Tab Scope is sometimes broken.
+* Some file:/// URIs cannot be recognized by the IE engine.
+* Hide plugin notification in URL bar for Firefox 35+.
+* Page zooming sometimes don't work.
+* Favicons in PNG or JPG format cannot be displayed correctly.
+* Minor improvements in localization.
+* The "Referer:" header was not correctly set for the context menu item "Open Link in New Tab with IE Engine".
+
+This version also improves the performance and stability of Fire IE in OOPP mode.
+
 Fire-IE 0.4.4 @ February 9, 2015
 This version no longer supports Firefox 12 or lower.
 
