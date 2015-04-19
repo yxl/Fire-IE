@@ -145,7 +145,7 @@ HMS._warnIfAlreadyHooked = function(func, funcName)
   if (!HMS.isHooked(func))
     return;
   Utils.WARN(funcName + " is already hooked. Make sure you don't hook any shared functions " +
-             "in overlay scripts. Hook them in some shared module, please.");
+             "in overlay scripts. Shared functions should be hooked in SharedHooks.jsm.");
 };
 
 /** 
