@@ -296,10 +296,12 @@ void UserAgentListener::sendPlaceholderPage(SOCKET socket)
 
 void UserAgentListener::callURLCallback() const
 {
-	urlCallback(getLoopbackURL());
+	if (urlCallback)
+		urlCallback(getLoopbackURL());
 }
 
 void UserAgentListener::callUserAgentCallback() const
 {
-	userAgentCallback(userAgent);
+	if (userAgentCallback)
+		userAgentCallback(userAgent);
 }
