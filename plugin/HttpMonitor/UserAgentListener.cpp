@@ -98,13 +98,7 @@ UINT UserAgentListener::listenerThread()
 	do
 	{
 		int listeningPort = -1;
-		SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (INVALID_SOCKET == listenSocket)
-		{
-			TRACE("[UA Listener] Failed to create listenSocket, error = %d.\n", WSAGetLastError());
-			ret = -1;
-			break;
-		}
+		SOCKET listenSocket;
 
 		sockaddr_in sa_listener;
 		ZeroMemory(&sa_listener, sizeof(sa_listener));
@@ -112,16 +106,25 @@ UINT UserAgentListener::listenerThread()
 		sa_listener.sin_family = AF_INET;
 		for (int tryCount = 0; tryCount < MAX_TRIES; tryCount++)
 		{
+			listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+			if (INVALID_SOCKET == listenSocket)
+			{
+				TRACE("[UA Listener] Failed to create listenSocket, error = %d.\n", WSAGetLastError());
+				ret = -1;
+				break;
+			}
 			int port = getRandomPort();
 			sa_listener.sin_port = htons(port);
 			if (SOCKET_ERROR == ::bind(listenSocket, (const sockaddr*)&sa_listener, sizeof(sa_listener)))
 			{
 				TRACE("[UA Listener] Failed to bind on port %d, error = %d.\n", port, WSAGetLastError());
+				closesocket(listenSocket);
 				continue;
 			}
 			if (SOCKET_ERROR == ::listen(listenSocket, SOMAXCONN))
 			{
 				TRACE("[UA Listener] Failed to listen on port %d, error = %d.\n", port, WSAGetLastError());
+				closesocket(listenSocket);
 				continue;
 			}
 			listeningPort = port;
@@ -131,8 +134,7 @@ UINT UserAgentListener::listenerThread()
 		{
 			TRACE("[UA Listener] Cannot listen on %d random ports tried between %d and %d, quitting.\n",
 				MAX_TRIES, minPort, maxPort);
-			closesocket(listenSocket);
-			ret = -1;
+			ret = 1;
 			break;
 		}
 
