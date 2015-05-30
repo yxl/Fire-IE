@@ -1,3 +1,9 @@
+Fire-IE 0.4.5.2 @ May 30, 2015
+Updated version number to make backup/restore feature work correctly.
+
+Bug fixes：
+* Minor fixes to the way Fire IE detects IE's user agent string.
+
 Fire-IE 0.4.5 @ April 19, 2015
 This version no longer supports Firefox 13 or lower.
 
