@@ -7,8 +7,8 @@
 <subscriptions>
   <subscription title="中国大陆切换列表"
                 specialization="中文"
-                url="http://fireie.org/sites/rules/chinalist.txt"
-                homepage="http://fireie.org/zh-CN/report"
+                url="https://raw.githubusercontent.com/yxl/fireie.org/master/www/sites/rules/chinalist.txt"
+                homepage="https://github.com/yxl/fireie.org/issues/new?title=[chinalist]%20&amp;body=%E6%8F%90%E4%BA%A4%E7%BD%91%E5%9D%80%EF%BC%9A%0A%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0%EF%BC%9A"
                 prefixes="zh-CN"
                 author="魏大鹏"/>
 </subscriptions>
