@@ -1,0 +1,5 @@
+﻿<!ENTITY privatebrowsingwarning.title "Le moteur IE ne supporte pas la navigation privée">
+<!ENTITY privatebrowsingwarning.intro1 "Vous avez démarré la navigation privée pour &brandShortName;, mais elle n'est pas supportée par le moteur IE.">
+<!ENTITY privatebrowsingwarning.intro2 "Si vous démarrez le moteur IE, l'historique, l'historique de recherche, l'historique de téléchargement, l'historique de formulaires, les cookies et les fichiers temporaires de votre navigateur seront enregistrés dans les journaux d'historique IE.">
+<!ENTITY privatewarning.whatShouldIDo.content "Si vous ne voulez pas que vos données privées soient enregistrées, revenez SVP au moteur &brandShortName;.">
+<!ENTITY privatewarning.expert.content "Si vous voulez toujours démarrer le moteur IE pour afficher ces pages, cliquez SVP sur 'Reprendre'. Notez: Les autres onglets &brandShortName; n'utilisant pas le moteur IE sont toujours en sessions de navigation privée.">

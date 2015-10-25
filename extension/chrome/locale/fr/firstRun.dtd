@@ -1,0 +1,7 @@
+﻿<!ENTITY dialog.title               "Installation de Fire IE terminée">
+<!ENTITY confirmation               "Merci d'avoir installé Fire IE. Le moteur IE est maintenant encapsulé. Profitez-en!">
+<!ENTITY advancedSection            "Options avancées">
+<!ENTITY listSelection1             "la liste de règles suivante a été configurée pour permettre uen commutation automatique du moteur de rendu:">
+<!ENTITY noList                     "Aucune liste de règles">
+<!ENTITY visitHomepage.label        "Visitez la page d'accueil de la liste">
+<!ENTITY listSelection2             "Vous pouvez changer ce choix à tout moment dans [link]Préférences de règles[/link].">

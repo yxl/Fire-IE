@@ -1,0 +1,10 @@
+﻿<!ENTITY dialog.title               "Module Fire IE non chargé">
+<!ENTITY pluginNotFound1            "Fire IE a détecté que le module &quot;Fire IE DLL&quot; n'était pas chargé correctement.">
+<!ENTITY pluginNotFound2            "Vous avez peut-être installé une mauvaise version de Fire IE.">
+<!ENTITY correctVersion             "Selon votre configuration, vous devriez utiliser la version [bit]-bits.">
+<!ENTITY homepage                   "http://yxl.github.com/Fire-IE">
+<!ENTITY visitHomepage              "Visitez SVP [link][host][/link] pour le téléchargement et l'installation.">
+
+<!ENTITY pluginNotFound3            "Vous avez peut-être installé une mauvaise version de Fire IE; Le module a peut-être été supprimé ou désactivé dans le gestionnaire de modules.">
+<!ENTITY makeSure                   "Assurez-vous que &quot;Fire IE DLL&quot; est activé dans le [link]Add-ons Manager[/link].">
+<!ENTITY reinstall                  "Vous pouvez aussi essayer de réinstaller Fire IE à partir de [link][host][/link]">

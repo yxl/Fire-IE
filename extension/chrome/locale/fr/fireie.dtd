@@ -1,0 +1,94 @@
+﻿<!ENTITY fireie.switchButton.label "Fire IE">
+
+<!ENTITY fireie.urlbar.switch.tooltip1 "Clic gauche: Change de moteur de rendu">
+<!ENTITY fireie.urlbar.switch.tooltip1.disabled "Impossible de changer de moteur sur cette page">
+<!ENTITY fireie.urlbar.switch.tooltip3 "Clic droit: Affiche les options de Fire IE">
+<!ENTITY fireie.menu.switchRules.label "Editer des règles de commutation">
+<!ENTITY fireie.menu.internetProperties.label "Propriétés d'Internet (Panneau de configuration)">
+<!ENTITY fireie.menu.autoswitch.disable "Désactiver la commutation automatique partout">
+<!ENTITY fireie.menu.openInIE.label "Ouvrir cette page dans le navigateur IE">
+<!ENTITY fireie.menu.skin.label "Skins">
+<!ENTITY fireie.menu.skin.default.label "Défaut">
+<!ENTITY fireie.menu.skin.more.label "Plus...">
+<!ENTITY fireie.contextMenu.openLinkInTabWithIEEngine "Ouvrir le lien dans un nouvel onglet avec le moteur IE">
+<!ENTITY fireie.contextMenu.openLinkInIEBrowser "Ouvrir le lien dans le navigateur IE">
+
+<!ENTITY fireie.options.title "Options de Fire IE">
+
+<!ENTITY fireie.options.general.tab "Général">
+<!ENTITY fireie.options.general.pane "Général">
+<!ENTITY fireie.options.switch.caption "Stratégie de commutation automatique">
+<!ENTITY fireie.options.switch.handleurl "Toujours utiliser le moteur en cours pour les URL entrés dans la barre d'adresse">
+<!ENTITY fireie.options.switch.disableAutoSwitch "Désactiver la commutation automatique partout">
+<!ENTITY fireie.options.switch.onRuleMiss.caption "Lorsque l'URL ne correspond à aucune règle de commutation:">
+<!ENTITY fireie.options.switch.onExceptionalRuleHit.caption "Lorsque l'URL correspond à une règle exceptionnelle:">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.no "Garder le moteur de rendu en cours">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "Passer au moteur Firefox">
+<!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "Passer au moteur IE">
+<!ENTITY fireie.options.shorcut.caption "Touche de raccourci">
+<!ENTITY fireie.options.shorcut.enable "Activer">
+<!ENTITY fireie.options.private.caption "Navigation privée">
+<!ENTITY fireie.options.private.privatebrowsingwarning "Afficher la page d'avertissement de navigation privée">
+<!ENTITY fireie.options.private.descr "Les onglets en mode IE ne supportent pas la navigation privée. Vous pouvez choisir d'afficher une page d'avertissement dans ce cas.">
+<!ENTITY fireie.options.ui.tab "UI">
+<!ENTITY fireie.options.ui.pane "UI">
+<!ENTITY fireie.options.ui.urlBarButtonCaption "Bouton de barre d'adresse">
+<!ENTITY fireie.options.ui.iconDisplayLabel "Style d'affichage:">
+<!ENTITY fireie.options.ui.iconHidden "Caché">
+<!ENTITY fireie.options.ui.iconOnly "Affiche l'icône">
+<!ENTITY fireie.options.ui.iconAndText "Affiche l'icône et le texte">
+<!ENTITY fireie.options.ui.tooltipLabel "Infobulle:">
+<!ENTITY fireie.options.ui.showTooltipText "Afficher le statut du moteur de rendu lorsque le curseur est sur le bouton de barre d'adresse">
+<!ENTITY fireie.options.ui.statusBarCaption "Barre de statut flottante">
+<!ENTITY fireie.options.ui.showStatusText "Afficher le statut du moteur IE dans la barre de statut flottante">
+<!ENTITY fireie.options.ui.faviconCaption "Icône d'onglet">
+<!ENTITY fireie.options.ui.faviconSite "Utiliser le favicon du site Web">
+<!ENTITY fireie.options.ui.faviconIE "Utiliser l'icône du moteur IE">
+<!ENTITY fireie.options.ui.customLabelLabel "Personnaliser les textes:">
+<!ENTITY fireie.options.ui.showUrlBarButtonOnlyForIE "Afficher le bouton seulement lors de l'utilisation du moteur IE">
+<!ENTITY fireie.options.ui.contextMenuCaption "Menu contextuel">
+<!ENTITY fireie.options.ui.showContextMenuItems "Afficher les éléments du menu contextuel(Ouvrir le lien avec le navigateur/moteur IE)">
+<!ENTITY fireie.options.integration.tab "Intégration">
+<!ENTITY fireie.options.integration.pane "Intégration">
+<!ENTITY fireie.options.integration.mgCaption "Support des mouvements de souris">
+<!ENTITY fireie.options.integration.mgDescr "Les extensions et scripts de mouvements de souris sont détectés automatiquement. Dans le cas contraire, vous pouvez essayer d'activer cette option.">
+<!ENTITY fireie.options.integration.forceMGSupport "Forcer l'activation du support de mouvements de souris dans les onglets en mode IE.">
+<!ENTITY fireie.options.integration.alreadyEnabledMGSupport "Le support des mouvements de souris est actuellement activé.">
+<!ENTITY fireie.options.integration.abpCaption "Support d'Adblock Plus">
+<!ENTITY fireie.options.integration.abpDescr "Utiliser les filtres d'Adblock Plus pour bloquer les pubs dans le moteur IE.">
+<!ENTITY fireie.options.integration.abpSupportEnabled "Activer le support d'Adblock Plus">
+<!ENTITY fireie.options.integration.abpStatusLabel "Statut actuel: ">
+<!ENTITY fireie.options.integration.abpStatusNotDetected "Adblock Plus non détecté">
+<!ENTITY fireie.options.integration.abpStatusEnabled "Activé">
+<!ENTITY fireie.options.integration.abpStatusDisabled "Désactivé">
+<!ENTITY fireie.options.integration.abpStatusLoading "Chargement des filtres...">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "Echec du chargement des filtres">
+<!ENTITY fireie.options.integration.otherOptions "Autres Options">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "Synchroniser les cookies entre les moteurs IE et Firefox">
+<!ENTITY fireie.options.integration.privateCookieSyncEnabled "Synchroniser les cookies en mode navigation privée">
+<!ENTITY fireie.options.integration.historyEnabled "Enregistrer l'historique de navigation du moteur IE">
+<!ENTITY fireie.options.integration.disableFolderRedirection "Ne pas rediriger les fichiers temporaires et les cookies IE">
+
+<!ENTITY fireie.options.ieoptions.tab  "Options IE">
+<!ENTITY fireie.options.ieoptions.pane "Options IE">
+<!ENTITY fireie.options.iecompat.group "Mode de compatibilité IE">
+<!ENTITY fireie.options.iecompat.ie7   "Mode IE7 standard">
+<!ENTITY fireie.options.iecompat.ie8   "Mode IE8 standard">
+<!ENTITY fireie.options.iecompat.ie8f  "Mode IE8 standard forcé">
+<!ENTITY fireie.options.iecompat.ie9   "Mode IE9 standard">
+<!ENTITY fireie.options.iecompat.ie9f  "Mode IE9 standard forcé">
+<!ENTITY fireie.options.iecompat.ie10  "Mode IE10 standard">
+<!ENTITY fireie.options.iecompat.ie10f "Mode IE10 standard forcé">
+<!ENTITY fireie.options.iecompat.ie11e  "Mode IE11 Edge">
+<!ENTITY fireie.options.iecompat.ie11fe  "Mode IE11 Edge forcé">
+<!ENTITY fireie.options.iecompat.notSupported "Votre version d'IE ne supporte pas le mode compatibilité ou les fonctions avancées.">
+<!ENTITY fireie.options.iefeat.group   "Fonctions avancées">
+<!ENTITY fireie.options.iefeat.gpuRendering "Activer l'accélération matérielle">
+
+<!ENTITY fireie.options.apply "Appliquer">
+<!ENTITY fireie.options.manager "Gestionnaire d'options">
+<!ENTITY fireie.options.default "Restaurer par défaut">
+<!ENTITY fireie.options.import "Importer un fichier d'options">
+<!ENTITY fireie.options.export "Exporter un fichier d'options">
+<!ENTITY fireie.options.restart.descr "Redémarrer Firefox pour que les modifications soient effectuées.">
+<!ENTITY fireie.options.reload.descr "Recharger le module &quot;Fire IE DLL&quot; pour que les modifications soient effectuées.">

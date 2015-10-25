@@ -1,0 +1,107 @@
+<!ENTITY dialog.title                         "Préférences des règles de commutation de Fire-IE">
+
+<!ENTITY subscriptions.tab.label              "Abonnements aux règles">
+<!ENTITY rules.tab.label                    "Règles personnalisées">
+
+<!ENTITY subscription.autoupdate.label        "Mise à jour automatique">
+<!ENTITY subscription.autoupdate.accesskey    "a">
+<!ENTITY addSubscription.label                "Ajouter un abonnement">
+<!ENTITY addSubscription.accesskey            "f">
+
+<!ENTITY addSubscriptionAdd.label             "Ajouter">
+<!ENTITY addSubscriptionCancel.label          "Annuler">
+<!ENTITY addSubscriptionOther.label           "Ajouter un abonnement différent">
+
+<!ENTITY noSubscriptions.text                 "Vous n'avez encore aucun abonnement. Fire IE ne peut pas changer automatiquement de moteur de navigation et synchroniser les cookies sans règles, SVP utilisez &quot;Ajouter un abonnement&quot; pour ajouter des règles.">
+<!ENTITY subscription.homepage.label          "Page d'accueil">
+<!ENTITY subscription.external.label          "Mis à jour par un autre module">
+<!ENTITY subscription.source.label            "Liste de règles">
+<!ENTITY subscription.enabled.label           "Activé">
+<!ENTITY subscription.lastDownload.label      "Dernier téléchargement:">
+<!ENTITY subscription.lastDownload.inProgress "Téléchargement…">
+<!ENTITY subscription.lastDownload.unknown    "N/D">
+<!ENTITY subscription.lastDownload.invalidURL "Echec, ce n'est pas une adresse valide">
+<!ENTITY subscription.lastDownload.connectionError "Echec, erreur de téléchargement">
+<!ENTITY subscription.lastDownload.invalidData "Echec, liste de règles non valide">
+<!ENTITY subscription.lastDownload.checksumMismatch "Echec, erreur de checksum">
+<!ENTITY subscription.lastDownload.success    "Réussi">
+<!ENTITY subscription.minVersion.warning      "Cet abonnement nécessite une nouvelle version de Fire IE, vous devriez mettre à jour avec la dernière version de Fire IE.">
+<!ENTITY subscription.disabledRules.warning "Certaines règles de cet abonnement sont désactivées.">
+<!ENTITY subscription.disabledRules.enable  "Activer les règles désactivées">
+
+<!ENTITY subscription.actions.label           "Actions">
+<!ENTITY subscription.update.label            "Mise à jour des règles">
+<!ENTITY subscription.editTitle.label         "Modifier le titre">
+<!ENTITY subscription.delete.label            "Supprimer">
+<!ENTITY subscription.showHideRules.label   "Afficher/masquer les détails">
+<!ENTITY subscription.moveUp.label            "Déplacer vers le haut">
+<!ENTITY subscription.moveDown.label          "Déplacer vers le bas">
+
+<!ENTITY viewList.label                       "Afficher la liste">
+
+<!ENTITY addGroup.label                       "Ajouter un groupe de règles">
+<!ENTITY addGroup.accesskey                   "g">
+
+<!ENTITY noRules.text                       "Vous n'avez encore aucune règle personnalisée.">
+
+<!ENTITY addRule.label                      "Ajouter une règle">
+<!ENTITY addRule.accesskey                  "d">
+
+<!ENTITY rule.actions.label                 "Actions de la règle">
+<!ENTITY rule.edit.label                    "Modifier">
+<!ENTITY rule.cut.label                     "Couper">
+<!ENTITY rule.copy.label                    "Copier">
+<!ENTITY rule.paste.label                   "Coller">
+<!ENTITY rule.delete.label                  "Effacer">
+<!ENTITY rule.selectAll.label               "Sélectionner tout">
+<!ENTITY rule.resetHitCounts.label          "Réinitialiser les statistiques">
+<!ENTITY rule.moveUp.label                  "Déplacer vers le haut">
+<!ENTITY rule.moveDown.label                "Déplacer vers le bas">
+<!ENTITY viewMenu.label                       "Afficher">
+
+<!ENTITY rule.column                        "Changer de règle">
+<!ENTITY rule.accesskey                     "F">
+<!ENTITY slow.column                          "Ralentir les règles">
+<!ENTITY slow.accesskey                       "w">
+<!ENTITY enabled.column                       "Activé">
+<!ENTITY enabled.accesskey                    "n">
+<!ENTITY hitcount.column                      "Hits">
+<!ENTITY hitcount.accesskey                   "H">
+<!ENTITY lasthit.column                       "Dernier hit">
+<!ENTITY lasthit.accesskey                    "L">
+
+<!ENTITY sort.label                           "Trier par">
+<!ENTITY sort.accesskey                       "S">
+<!ENTITY sort.none.label                      "Unsorted">
+<!ENTITY sort.none.accesskey                  "U">
+<!ENTITY sort.ascending.label                 "Tri de A > Z">
+<!ENTITY sort.ascending.accesskey             "A">
+<!ENTITY sort.descending.label                "Tri de Z > A">
+<!ENTITY sort.descending.accesskey            "Z">
+
+<!ENTITY noGroupSelected.text                 "Vous devez choisir un groupe de règles avant de pouvoir afficher ces règles.">
+<!ENTITY noRulesInGroup.text                "Le groupe sélectionné est vide.">
+
+<!ENTITY rules.remove.warning               "Voulez-vous vraiment supprimer toutes les règles sélectionnées?">
+
+<!ENTITY backupButton.label                   "Sauvegarde et restauration">
+<!ENTITY backupButton.accesskey               "B">
+
+<!ENTITY backup.label                         "Créer une nouvelle sauvegarde">
+<!-- Note: the placeholder ?1? will be replaced by date/time of the automatic backup -->
+<!ENTITY restore.default.label                "Restaure la sauvegarde du ?1?">
+<!ENTITY restore.own.label                    "Restaure sa propre sauvegarde">
+
+<!ENTITY backup.complete.title                "Tous abonnements et règles">
+<!ENTITY backup.custom.title                  "Règles personnalisées seulement">
+
+<!ENTITY backup.error                         "Il y a eu une erreur lors de l'écriture de ces règles dans le fichier. Assurez-vous que le fichier n'est pas protégé en écriture ou utilisé par une autre apoplication.">
+<!ENTITY restore.error                        "Les données du fichier ne peuvent pas être traitées. Est-ce vraiment un fichier de sauvegarde Fire IE?">
+<!ENTITY restore.complete.warning             "Toutes vos préférences de règles seront remplacées par le contenu du fichier sélectionné. Voulez-vous continuer?">
+<!ENTITY restore.custom.warning               "Toutes vos règles personnalisées seront remplacées par le contenu du fichier sélectionné. Voulez-vous continuer?">
+<!ENTITY restore.minVersion.warning           "Attention: Ce fichier a été créé avec une nouvelle version de Fire IE. Vous devriez mettre à jour avec la dernière version de Fire IE avant de restaurer ce fichier.">
+
+<!ENTITY find.label                           "Rechercher">
+<!ENTITY find.accesskey                       "n">
+
+<!ENTITY close.label                          "Quitter">

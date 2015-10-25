@@ -1,0 +1,25 @@
+﻿<!ENTITY dialog.title               "Abonnement à des règles">
+
+<!ENTITY subscriptionSelector.label "SVP choisissez un abonnement dans la liste:">
+
+<!ENTITY viewList.label             "Afficher les règles">
+<!ENTITY visitHomepage.label        "Visiter la page d'accueil">
+
+<!ENTITY addSubscription.label      "Ajouter un abonnement">
+
+<!ENTITY list.download.failed       "Echec de la récupération de la liste d'abonnements.">
+<!ENTITY list.download.retry        "Essayer à nouveau">
+<!ENTITY list.download.website      "Visiter le site Web">
+
+<!ENTITY fromWeb.description        "SVP confirmez que vous voulez ajouter cet abonnement. Vous pouvez changer le titre ou l'emplacement de l'abonnement avant de l'ajouter.">
+
+<!ENTITY title.label                "Titre de l'abonnement:">
+<!ENTITY title.accesskey            "t">
+<!ENTITY location.label             "Emplacement de la liste de règles:">
+<!ENTITY location.accesskey         "l">
+
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY supplementMessage          "Cet abonnement doit-il être utilisé avec l'abonnement de règles &quot;?1?&quot; que vous n'utilisez pas encore.">
+<!-- Note: the placeholder (?1?) will be replaced by the name of the rule subscription required -->
+<!ENTITY addMain.label              "Ajouter également l'abonnement &quot;?1?&quot;">
+<!ENTITY addMain.accesskey          "s">
