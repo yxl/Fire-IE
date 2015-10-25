@@ -39,7 +39,14 @@
         let treepart = tree;
         for (let i = parts.length - 1; i >= 0; i--) {
           let part = parts[i];
+          let isThis = false;
+          if (part.length && part[0] == "!") {
+            part = part.substring(1);
+            isThis = true;
+          }
           treepart = treepart[part] || (treepart[part] = Object.create(null));
+          if (isThis)
+            treepart["!"] = Object.create(null);
         }
       })
     }
