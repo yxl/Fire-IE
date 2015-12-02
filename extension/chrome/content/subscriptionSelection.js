@@ -81,7 +81,7 @@ function loadSubscriptionList()
     }
     catch (e)
     {
-      Cu.reportError(e);
+      Components.utils.reportError(e);
       errorHandler();
     }
   };
@@ -233,9 +233,9 @@ function validateURL(url)
 
   // Is this a file path?
   try {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    let file = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
     file.initWithPath(url);
-    return Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService).newFileURI(file).spec;
+    return Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newFileURI(file).spec;
   } catch (e) {}
 
   // Is this a valid URL?

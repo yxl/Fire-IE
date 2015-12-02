@@ -203,10 +203,10 @@ function toggle(id) {
 }
 
 function markContinue() {
-  var baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
+  var baseURL = Components.classes["@fireie.org/fireie/private;1"].getService(Components.interfaces.nsIURI);
   var jsm = {};
-  Cu.import(baseURL.spec + "Prefs.jsm", jsm);
-  Cu.import(baseURL.spec + "Utils.jsm", jsm);
+  Components.utils.import(baseURL.spec + "Prefs.jsm", jsm);
+  Components.utils.import(baseURL.spec + "Utils.jsm", jsm);
 
   var win = jsm.Utils.getChromeWindowFrom(window);
   var gFireIE = win && win.gFireIE;

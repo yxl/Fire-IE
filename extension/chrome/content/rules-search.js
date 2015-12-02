@@ -4,7 +4,7 @@
  * http://mozilla.org/MPL/2.0/.
  */
 
- Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Implementation of the rule search functionality.
@@ -71,10 +71,10 @@ var RuleSearch =
 
     // First try to find the entry in the current list
     if (findText(text, direction, E("rulesTree").currentIndex))
-      return Ci.nsITypeAheadFind.FIND_FOUND;
+      return Components.interfaces.nsITypeAheadFind.FIND_FOUND;
 
     // Now go through the other subscriptions
-    let result = Ci.nsITypeAheadFind.FIND_FOUND;
+    let result = Components.interfaces.nsITypeAheadFind.FIND_FOUND;
     let subscriptions = RuleStorage.subscriptions.slice();
     subscriptions.sort(function(s1, s2) (s1 instanceof SpecialSubscription) - (s2 instanceof SpecialSubscription));
     let current = subscriptions.indexOf(RuleView.subscription);
@@ -84,12 +84,12 @@ var RuleSearch =
       if (i < 0)
       {
         i = subscriptions.length - 1;
-        result = Ci.nsITypeAheadFind.FIND_WRAPPED;
+        result = Components.interfaces.nsITypeAheadFind.FIND_WRAPPED;
       }
       else if (i >= subscriptions.length)
       {
         i = 0;
-        result = Ci.nsITypeAheadFind.FIND_WRAPPED;
+        result = Components.interfaces.nsITypeAheadFind.FIND_WRAPPED;
       }
       if (i == current)
         break;
@@ -122,7 +122,7 @@ var RuleSearch =
       }
     }
 
-    return Ci.nsITypeAheadFind.FIND_NOTFOUND;
+    return Components.interfaces.nsITypeAheadFind.FIND_NOTFOUND;
   }
 };
 
@@ -182,11 +182,11 @@ RuleSearch.fakeBrowser =
     {
       E("rulesTree").boxObject.scrollByPages(num);
     },
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
+    QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIInterfaceRequestor]),
     getInterface: function(aIID) {
-      if (aIID.equals(Ci.nsIDOMWindowUtils))
+      if (aIID.equals(Components.interfaces.nsIDOMWindowUtils))
         return this;
-      throw Cr.NS_NOINTERFACE;
+      throw Components.results.NS_NOINTERFACE;
     },
     get screenPixelsPerCSSPixel() {
       return Utils.DPIScaling;
@@ -205,7 +205,7 @@ RuleSearch.fakeBrowser =
   {
     return E("rulesTree").dispatchEvent(event);
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMEventTarget]),
+  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIDOMEventTarget]),
 };
 
 // compatibility with Nightly 26+

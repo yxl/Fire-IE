@@ -103,7 +103,7 @@ var Templater =
   process: function(/**Node*/ template, /**Object*/ data) /**Node*/
   {
     // Use a sandbox to resolve attributes (for convenience, not security)
-    let sandbox = Cu.Sandbox(window);
+    let sandbox = Components.utils.Sandbox(window);
     for (let key in data)
       sandbox[key] = data[key];
     sandbox.formatTime = Utils.formatTime;
@@ -126,7 +126,7 @@ var Templater =
         let attribute = node.attributes[i];
         let len = attribute.value.length;
         if (len >= 2 && attribute.value[0] == "{" && attribute.value[len - 1] == "}")
-          attribute.value = Cu.evalInSandbox(attribute.value.substr(1, len - 2), sandbox);
+          attribute.value = Components.utils.evalInSandbox(attribute.value.substr(1, len - 2), sandbox);
       }
     }
 
