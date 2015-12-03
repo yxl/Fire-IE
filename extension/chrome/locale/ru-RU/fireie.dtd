@@ -38,6 +38,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "Показывать статус движка при наведении курсора на кнопку">
 <!ENTITY fireie.options.ui.statusBarCaption "Всплывающая строка статуса">
 <!ENTITY fireie.options.ui.showStatusText "Показывать статус во всплывающей строке статуса при активном IE движке">
+<!ENTITY fireie.options.ui.useNativeStatusBar "Use the existing Firefox status bar (if any)">
 <!ENTITY fireie.options.ui.faviconCaption "Tab Icon">
 <!ENTITY fireie.options.ui.faviconSite "Use website's favicon">
 <!ENTITY fireie.options.ui.faviconIE "Use IE engine's icon">

@@ -103,6 +103,7 @@ Options.apply = function(quiet)
   Prefs.ieLabel = E("ieLabel").value;
   Prefs.showTooltipText = E("showTooltipText").checked;
   Prefs.showStatusText = E("showStatusText").checked;
+  Prefs.useNativeStatusBar = E("useNativeStatusBar").checked;
   Prefs.showContextMenuItems = E("showContextMenuItems").checked;
   
   // Integration
@@ -419,6 +420,11 @@ Options.updateAutoSwitchElements = function()
   });
 };
 
+Options.updateNativeStatusBarCheckbox = function()
+{
+  E("useNativeStatusBar").hidden = !E("showStatusText").checked;
+}
+
 Options._getGroupValue = function(value, allowedValues, defValue)
 {
   if (allowedValues.indexOf(value) !== -1)
@@ -448,6 +454,7 @@ Options.initDialog = function(restore)
   E("ieLabel").value = Prefs.ieLabel; E("ieLabel").placeholder = Utils.getString("fireie.urlbar.switch.label.ie");
   E("showTooltipText").checked = Prefs.showTooltipText;
   E("showStatusText").checked = Prefs.showStatusText;
+  E("useNativeStatusBar").checked = Prefs.useNativeStatusBar;
   E("showContextMenuItems").checked = Prefs.showContextMenuItems;
   // hide "showStatusText" if we don't handle status messages ourselves
   let ifHide = !AppIntegration.shouldShowStatusOurselves();
@@ -484,6 +491,7 @@ Options.initDialog = function(restore)
   Options.handleShortcutEnabled();
   Options.updateCustomLabelsUI();
   Options.updateABPStatus();
+  Options.updateNativeStatusBarCheckbox();
   Options.updateApplyButton(false);
 };
 
@@ -555,6 +563,8 @@ Options.init = function()
   E("iconDisplay").addEventListener("command", Options.updateCustomLabelsUI, false);
   E("showUrlBarButtonOnlyForIE").addEventListener("command", Options.updateCustomLabelsUI, false);
   E("iemode-menulist").addEventListener("command", Options.updateIECompatDescription, false);
+  
+  E("showStatusText").addEventListener("command", Options.updateNativeStatusBarCheckbox, false);
 
   ABPObserver.addListener(Options.updateABPStatus);
   window.addEventListener("unload", function()
