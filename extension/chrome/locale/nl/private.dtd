@@ -1,5 +1,9 @@
 <!ENTITY privatebrowsingwarning.title "De IE-engine ondersteunt geen privénavigatie">
 <!ENTITY privatebrowsingwarning.intro1 "U bent gestart met privénavigatie voor &brandShortName;, maar dit wordt niet ondersteund door de IE-engine.">
 <!ENTITY privatebrowsingwarning.intro2 "Als u de IE-engine start worden uw browsergeschiedenis, zoekgeschiedenis, downloadgeschiedenis, webformuliergeschiedenis, cookies en tijdelijke internetbestanden opgeslagen in de IE-geschiedenis.">
+<!ENTITY privatewarning.whatShouldIDo.heading "Wat moet ik doen?">
 <!ENTITY privatewarning.whatShouldIDo.content "Als u niet wilt dat deze privégegevens worden opgeslagen, wissel dan weer om naar de &brandShortName;-engine.">
+<!ENTITY privatewarning.getMeOutOfHere.label "Haal me hier vandaan!">
+<!ENTITY privatewarning.expert.heading "Ik begrijp de risico’s">
 <!ENTITY privatewarning.expert.content "Als u nog steeds de IE-engine wilt gebruiken om de pagina’s te bekijken, klik dan op ‘Hervatten’. Opmerking: Andere &brandShortName;-tabbladen die geen gebruik maken van de IE-engine zijn nog steeds in de privénavigatie-sessie.">
+<!ENTITY privatewarning.askAlways "Altijd vragen">

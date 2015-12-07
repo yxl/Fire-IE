@@ -5,20 +5,18 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "DTD/xhtml1-strict.dtd">
   %htmlDTD;
+  <!ENTITY % brandDTD
+    SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
   <!ENTITY % globalDTD
     SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
-  <!ENTITY % certerrorDTD
-    SYSTEM "chrome://browser/locale/aboutCertError.dtd">
-  %certerrorDTD;
   <!ENTITY % privateBrowsingDTD
     SYSTEM "chrome://fireie/locale/private.dtd">
   %privateBrowsingDTD;
   <!ENTITY % downloadsDTD
     SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd">
   %downloadsDTD;
-  <!ENTITY % pageInfoDTD SYSTEM "chrome://browser/locale/pageInfo.dtd">
-  %pageInfoDTD;
 ]>
 
 <!-- ***** BEGIN LICENSE BLOCK *****
@@ -67,6 +65,7 @@
     <title>&privatebrowsingwarning.title;</title>
     <link rel="stylesheet" href="chrome://browser/skin/aboutCertError.css" type="text/css" media="all" />
     <link rel="stylesheet" href="chrome://browser/content/certerror/aboutCertError.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="chrome://communicator/skin/certError.css" type="text/css" media="all" />
     <!-- This page currently uses the same favicon as neterror.xhtml.
          If the location of the favicon is changed for both pages, the
          FAVICON_ERRORPAGE_URL symbol in toolkit/components/places/src/nsFaviconService.h
@@ -95,21 +94,21 @@
         </div>
         
         <div id="whatShouldIDoContent">
-          <h2>&certerror.whatShouldIDo.heading;</h2>
+          <h2>&privatewarning.whatShouldIDo.heading;</h2>
           <div id="whatShouldIDoContentText">
             <p>&privatewarning.whatShouldIDo.content;</p>
-            <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' label='&certerror.getMeOutOfHere.label;' onclick="javascript:history.go(-1);"/>
+            <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' label='&privatewarning.getMeOutOfHere.label;' onclick="javascript:history.go(-1);"/>
           </div>
         </div>
         
         <!-- The following sections can be unhidden by default by setting the
              "browser.xul.error_pages.expert_bad_cert" pref to true -->
         <div id="expertContent" collapsed="true">
-          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
+          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&privatewarning.expert.heading;</h2>
           <div>
             <p>&privatewarning.expert.content;</p>
             <xul:button xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' label='&cmd.resume.label;' onclick="javascript:markContinue();"/>
-            <xul:checkbox xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' label='&permAskAlways;' checked="true" id="chkWarning" />
+            <xul:checkbox xmlns:xul='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' label='&privatewarning.askAlways;' checked="true" id="chkWarning" />
           </div>
         </div>
       </div>
