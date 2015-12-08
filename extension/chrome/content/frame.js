@@ -24,21 +24,21 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
   // Don't do anything if we are not in e10s window
   if ("@fireie.org/fireie/public;1" in Cc) return;
 
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-  Components.utils.import("resource://gre/modules/Services.jsm");
-  Components.utils.import("resource://fireie/ChromeBridge.jsm");
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://fireie/ChromeBridge.jsm");
   
-  let baseURL = Components.classes["@fireie.org/fireie/private;1"].getService(Components.interfaces.nsIURI);
+  let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
   
-  Components.utils.import(baseURL.spec + "ContentPrefs.jsm");
-  Components.utils.import(baseURL.spec + "ContentProcessContentPolicy.jsm");
-  Components.utils.import(baseURL.spec + "ContentUtils.jsm");
-  Components.utils.import(baseURL.spec + "ContentPrefs.jsm");
+  Cu.import(baseURL.spec + "ContentPrefs.jsm");
+  Cu.import(baseURL.spec + "ContentProcessContentPolicy.jsm");
+  Cu.import(baseURL.spec + "ContentUtils.jsm");
+  Cu.import(baseURL.spec + "ContentPrefs.jsm");
   
   addEventListener("fireie:reloadContainerPage", function(event)
   {
     let containerWindow = event.target;
-    if (!containerWindow instanceof Components.interfaces.nsIDOMWindow) return;
+    if (!containerWindow instanceof Ci.nsIDOMWindow) return;
     
     let url = containerWindow.location.href;
     if (ContentUtils.isIEEngine(url))

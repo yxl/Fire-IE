@@ -372,13 +372,13 @@ var RuleActions =
 
     if (event.charCode == " ".charCodeAt(0) && modifiers == 0 && !E("col-enabled").hidden)
       this.selectionToggleDisabled();
-    else if (event.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_UP && modifiers == SubscriptionActions._accelMask)
+    else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP && modifiers == SubscriptionActions._accelMask)
     {
       E("rules-moveUp-command").doCommand();
       event.preventDefault();
       event.stopPropagation();
     }
-    else if (event.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_DOWN && modifiers == SubscriptionActions._accelMask)
+    else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN && modifiers == SubscriptionActions._accelMask)
     {
       E("rules-moveDown-command").doCommand();
       event.preventDefault();
@@ -412,7 +412,7 @@ var RuleActions =
     if (!RuleView.editable || this.treeElement.editingColumn)
       return;
 
-    let transferable = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+    let transferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
     transferable.addDataFlavor("text/unicode");
 
     let data;
@@ -421,7 +421,7 @@ var RuleActions =
       data = {};
       Utils.clipboard.getData(transferable, Utils.clipboard.kGlobalClipboard);
       transferable.getTransferData("text/unicode", data, {});
-      data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+      data = data.value.QueryInterface(Ci.nsISupportsString).data;
     }
     catch (e) {
       return;

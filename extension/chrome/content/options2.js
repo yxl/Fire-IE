@@ -19,11 +19,11 @@ along with Fire-IE.  If not, see <http://www.gnu.org/licenses/>.
  * @namespace
  */
 
-Components.utils.import(baseURL.spec + "AppIntegration.jsm");
-Components.utils.import(baseURL.spec + "GesturePrefObserver.jsm");
-Components.utils.import(baseURL.spec + "ABPObserver.jsm");
-Components.utils.import(baseURL.spec + "UtilsPluginManager.jsm");
-Components.utils.import(baseURL.spec + "LightweightTheme.jsm");
+Cu.import(baseURL.spec + "AppIntegration.jsm");
+Cu.import(baseURL.spec + "GesturePrefObserver.jsm");
+Cu.import(baseURL.spec + "ABPObserver.jsm");
+Cu.import(baseURL.spec + "UtilsPluginManager.jsm");
+Cu.import(baseURL.spec + "LightweightTheme.jsm");
 
 if (typeof(Options) == "undefined")
 {
@@ -166,7 +166,7 @@ Options.apply = function(quiet)
 
 Options.getIECompatMode = function()
 {
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
   let value = 7000;
   try
   {
@@ -258,7 +258,7 @@ Options.applyIECompatMode = function()
     break;
   }
   
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
   try
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION", wrk.ACCESS_WRITE);
@@ -276,7 +276,7 @@ Options.applyIECompatMode = function()
 
 Options.getGPURenderingState = function()
 {
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
   let state = false;
   try
   {
@@ -297,7 +297,7 @@ Options.getGPURenderingState = function()
 
 Options.applyGPURenderingState = function()
 {
-  let wrk = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(Components.interfaces.nsIWindowsRegKey);
+  let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
   try
   {
     wrk.create(wrk.ROOT_KEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_GPU_RENDERING", wrk.ACCESS_WRITE);
@@ -577,9 +577,9 @@ Options.close = function()
 
 Options._saveToFile = function(aList)
 {
-  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
-  let stream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-  let converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].createInstance(Components.interfaces.nsIConverterOutputStream);
+  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  let stream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+  let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
 
   fp.init(window, null, fp.modeSave);
   fp.defaultExtension = "txt";
@@ -611,9 +611,9 @@ Options._saveToFile = function(aList)
 
 Options._loadFromFile = function()
 {
-  let fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
-  let stream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
-  let converter = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
+  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+  let converter = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
 
   fp.init(window, null, fp.modeOpen);
   fp.defaultExtension = "txt";
@@ -660,7 +660,7 @@ Options._getAllOptions = function(isDefault)
         value = prefs.getIntPref(preflist[i]);
         break;
       case prefs.PREF_STRING:
-        value = prefs.getComplexValue(preflist[i], Components.interfaces.nsISupportsString).data;
+        value = prefs.getComplexValue(preflist[i], Ci.nsISupportsString).data;
         break;
       }
       aList.push(preflist[i] + "=" + value);
@@ -708,9 +708,9 @@ Options._setAllOptions = function(aList)
         break;
       case prefs.PREF_STRING:
         if (value.indexOf('"') == 0) value = value.substring(1, value.length - 1);
-        let sString = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
+        let sString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
         sString.data = value;
-        prefs.setComplexValue(name, Components.interfaces.nsISupportsString, sString);
+        prefs.setComplexValue(name, Ci.nsISupportsString, sString);
         break;
       }
     }

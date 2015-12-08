@@ -32,12 +32,12 @@ let FireIEContainer = {};
     return;
   }
 
-  let baseURL = Components.classes["@fireie.org/fireie/private;1"].getService(Components.interfaces.nsIURI);
+  let baseURL = Cc["@fireie.org/fireie/private;1"].getService(Ci.nsIURI);
   let jsm = {};
-  Components.utils.import(baseURL.spec + "Utils.jsm", jsm);
-  Components.utils.import(baseURL.spec + "Prefs.jsm", jsm);
-  Components.utils.import(baseURL.spec + "Favicon.jsm", jsm);
-  Components.utils.import(baseURL.spec + "LightweightTheme.jsm", jsm);
+  Cu.import(baseURL.spec + "Utils.jsm", jsm);
+  Cu.import(baseURL.spec + "Prefs.jsm", jsm);
+  Cu.import(baseURL.spec + "Favicon.jsm", jsm);
+  Cu.import(baseURL.spec + "LightweightTheme.jsm", jsm);
   let
   {
     Utils, Prefs, Favicon, LightweightTheme

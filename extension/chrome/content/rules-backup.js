@@ -53,12 +53,12 @@ var Backup =
   {
     try
     {
-      return Services.prefs.getComplexValue("browser.download.lastDir", Components.interfaces.nsIFile);
+      return Services.prefs.getComplexValue("browser.download.lastDir", Ci.nsIFile);
     }
     catch (e)
     {
       // No default download location. Default to desktop.
-      return Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
+      return Services.dirsvc.get("Desk", Ci.nsIFile);
     }
   },
 
@@ -70,7 +70,7 @@ var Backup =
   {
     try
     {
-      Services.prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsIFile, dir);
+      Services.prefs.setComplexValue("browser.download.lastDir", Ci.nsIFile, dir);
     } catch(e) {};
   },
 
@@ -104,7 +104,7 @@ var Backup =
    */
   restoreFromFile: function()
   {
-    let picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+    let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_restoreDialogTitle"), picker.modeOpen);
     picker.defaultExtension = ".ini";
     picker.appendFilter(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
@@ -125,12 +125,12 @@ var Backup =
    */
   restoreAllData: function(/**nsIFile*/ file)
   {
-    let fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
     fileStream.init(file, 0x01, 0444, 0);
 
-    let stream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
-    stream.init(fileStream, "UTF-8", 16384, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-    stream = stream.QueryInterface(Components.interfaces.nsIUnicharLineInputStream);
+    let stream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+    stream.init(fileStream, "UTF-8", 16384, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+    stream = stream.QueryInterface(Ci.nsIUnicharLineInputStream);
 
     let lines = [];
     let line = {value: null};
@@ -162,12 +162,12 @@ var Backup =
    */
   restoreCustomRules: function(/**nsIFile*/ file)
   {
-    let fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+    let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
     fileStream.init(file, 0x01, 0444, 0);
 
-    let stream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].createInstance(Components.interfaces.nsIConverterInputStream);
-    stream.init(fileStream, "UTF-8", 16384, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-    stream = stream.QueryInterface(Components.interfaces.nsIUnicharLineInputStream);
+    let stream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+    stream.init(fileStream, "UTF-8", 16384, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+    stream = stream.QueryInterface(Ci.nsIUnicharLineInputStream);
 
     let lines = [];
     let line = {value: null};
@@ -236,7 +236,7 @@ var Backup =
    */
   backupToFile: function()
   {
-    let picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+    let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     picker.init(window, E("backupButton").getAttribute("_backupDialogTitle"), picker.modeSave);
     picker.defaultExtension = ".ini";
     picker.appendFilter(E("backupButton").getAttribute("_fileRuleCustom"), "*.txt");
@@ -294,11 +294,11 @@ var Backup =
 
     try
     {
-      let fileStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
+      let fileStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
       fileStream.init(file, 0x02 | 0x08 | 0x20, 0644, 0);
 
-      let stream = Components.classes["@mozilla.org/intl/converter-output-stream;1"].createInstance(Components.interfaces.nsIConverterOutputStream);
-      stream.init(fileStream, "UTF-8", 16384, Components.interfaces.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+      let stream = Cc["@mozilla.org/intl/converter-output-stream;1"].createInstance(Ci.nsIConverterOutputStream);
+      stream.init(fileStream, "UTF-8", 16384, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 
       stream.writeString(list.join(Utils.getLineBreak()));
 
@@ -306,7 +306,7 @@ var Backup =
     }
     catch (e)
     {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
       Utils.alert(window, E("backupButton").getAttribute("_backupError"), E("backupButton").getAttribute("_backupDialogTitle"));
     }
   }

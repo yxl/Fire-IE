@@ -29,7 +29,7 @@ function init()
   }
   else
   {
-    Components.utils.import("resource://gre/modules/AddonManager.jsm");
+    Cu.import("resource://gre/modules/AddonManager.jsm");
     AddonManager.getAddonByID(Utils.addonID, initAddon);
   }
 }

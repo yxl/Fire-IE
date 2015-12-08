@@ -218,9 +218,9 @@ var SubscriptionActions =
     let result = this._ctrlMask;
     try {
       let accelKey = Services.prefs.getIntPref("ui.key.accelKey");
-      if (accelKey == Components.interfaces.nsIDOMKeyEvent.DOM_VK_META)
+      if (accelKey == Ci.nsIDOMKeyEvent.DOM_VK_META)
         result = this._metaMask;
-      else if (accelKey == Components.interfaces.nsIDOMKeyEvent.DOM_VK_ALT)
+      else if (accelKey == Ci.nsIDOMKeyEvent.DOM_VK_ALT)
         result = this._altMask;
     } catch(e) {}
     Object.defineProperty(this, "_accelMask", {
@@ -253,13 +253,13 @@ var SubscriptionActions =
       if (data)
         data.subscription.disabled = !data.subscription.disabled;
     }
-    else if (event.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_UP && modifiers == this._accelMask)
+    else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP && modifiers == this._accelMask)
     {
       E("subscription-moveUp-command").doCommand();
       event.preventDefault();
       event.stopPropagation();
     }
-    else if (event.keyCode == Components.interfaces.nsIDOMKeyEvent.DOM_VK_DOWN && modifiers == this._accelMask)
+    else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN && modifiers == this._accelMask)
     {
       E("subscription-moveDown-command").doCommand();
       event.preventDefault();
@@ -524,7 +524,7 @@ var SelectSubscription =
     try {
       request.send();
     } catch (e) {
-      Components.utils.reportError(e);
+      Cu.reportError(e);
     }
   },
 

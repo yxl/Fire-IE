@@ -4,7 +4,7 @@
  * http://mozilla.org/MPL/2.0/.
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Simulates nsISupportsArray to be used in place of getColumnProperties, getRowProperties
@@ -617,7 +617,7 @@ var RuleView =
     }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsITreeView]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView]),
 
   setTree: function(boxObject)
   {
@@ -630,7 +630,7 @@ var RuleView =
       this.noRulesDummy = {index: 0, rule: {text: this.boxObject.treeBody.getAttribute("noRulesText"), dummy: true}};
       this.editDummy = {rule: {text: ""}};
 
-      let atomService = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
+      let atomService = Cc["@mozilla.org/atom-service;1"].getService(Ci.nsIAtomService);
       let stringAtoms = ["col-rule", "col-enabled", "col-hitcount", "col-lasthit", "type-comment", "type-rulelist", "type-whitelist", "type-useragent", "type-useragentexceptional", "type-invalid"];
       let boolAtoms = ["selected", "dummy", "slow", "disabled"];
 
@@ -767,21 +767,21 @@ var RuleView =
 
   canDrop: function(row, orientation, dataTransfer)
   {
-    if (orientation == Components.interfaces.nsITreeView.DROP_ON || row < 0 || row >= this.data.length || !this.editable)
+    if (orientation == Ci.nsITreeView.DROP_ON || row < 0 || row >= this.data.length || !this.editable)
       return false;
 
     let item = this.data[row];
-    let position = (orientation == Components.interfaces.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
+    let position = (orientation == Ci.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
     return RuleActions.canDrop(position, dataTransfer);
   },
 
   drop: function(row, orientation, dataTransfer)
   {
-    if (orientation == Components.interfaces.nsITreeView.DROP_ON || row < 0 || row >= this.data.length || !this.editable)
+    if (orientation == Ci.nsITreeView.DROP_ON || row < 0 || row >= this.data.length || !this.editable)
       return;
 
     let item = this.data[row];
-    let position = (orientation == Components.interfaces.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
+    let position = (orientation == Ci.nsITreeView.DROP_BEFORE ? item.index : item.index + 1);
     RuleActions.drop(position, dataTransfer);
   },
 
