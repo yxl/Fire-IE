@@ -1429,7 +1429,7 @@ WindowWrapper.prototype = {
           statusBar.dispatchEvent(event);
         }
       }
-      else if (!statusBar.hidden)
+      if (!statusBar.hidden && (!Prefs.showStatusText || Prefs.useNativeStatusBar))
       {
         // event to notify content doc to hide status text
         let event = this.window.gBrowser.contentDocument.createEvent("CustomEvent");
