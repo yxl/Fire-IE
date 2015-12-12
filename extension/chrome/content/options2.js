@@ -422,7 +422,7 @@ Options.updateAutoSwitchElements = function()
 
 Options.updateNativeStatusBarCheckbox = function()
 {
-  E("useNativeStatusBar").hidden = !E("showStatusText").checked;
+  E("useNativeStatusBar").disabled = !E("showStatusText").checked;
 }
 
 Options._getGroupValue = function(value, allowedValues, defValue)
