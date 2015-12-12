@@ -38,6 +38,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "滑鼠停留時顯示引擎狀態資訊">
 <!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
 <!ENTITY fireie.options.ui.showStatusText "在浮動狀態列中顯示 IE 引擎的狀態訊息">
+<!ENTITY fireie.options.ui.useNativeStatusBar "使用現有的 Firefox 狀態列 (如果有)">
 <!ENTITY fireie.options.ui.faviconCaption "分頁圖示">
 <!ENTITY fireie.options.ui.faviconSite "使用網站圖示">
 <!ENTITY fireie.options.ui.faviconIE "使用 IE 引擎圖示">

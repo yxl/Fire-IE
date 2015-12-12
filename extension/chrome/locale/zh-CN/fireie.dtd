@@ -41,6 +41,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "鼠标悬停时显示引擎状态信息">
 <!ENTITY fireie.options.ui.statusBarCaption "浮动状态栏">
 <!ENTITY fireie.options.ui.showStatusText "在浮动状态栏中显示 IE 引擎的状态消息">
+<!ENTITY fireie.options.ui.useNativeStatusBar "使用现有的 Firefox 状态栏 (如果有)">
 <!ENTITY fireie.options.ui.faviconCaption "标签页图标">
 <!ENTITY fireie.options.ui.faviconSite "使用网站图标">
 <!ENTITY fireie.options.ui.faviconIE "使用 IE 引擎图标">

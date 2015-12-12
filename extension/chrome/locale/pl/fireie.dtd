@@ -38,6 +38,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "Pokazuj status silnika przy wskazywaniu paska adresu">
 <!ENTITY fireie.options.ui.statusBarCaption "Pasek dodatków">
 <!ENTITY fireie.options.ui.showStatusText "Pokaż status silnika IE na pasku dodatków (stanu)">
+<!ENTITY fireie.options.ui.useNativeStatusBar "Use the existing Firefox status bar (if any)">
 <!ENTITY fireie.options.ui.faviconCaption "Ikona karty">
 <!ENTITY fireie.options.ui.faviconSite "Używaj favikony strony">
 <!ENTITY fireie.options.ui.faviconIE "Używaj ikony silnika IE">
