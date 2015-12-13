@@ -880,9 +880,12 @@ var gFireIE = null;
       if (e.target.id == "fireie-urlbar-switch")
         return RET.shouldReturn();
     }
-    HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
-    HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
+    if (gURLBar.onDragOver && gURLBar.onDrop)
+    {
+      HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
+      HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
     }
+  }
   
   let loadListener = function()
   {
