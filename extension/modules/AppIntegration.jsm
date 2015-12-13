@@ -1324,7 +1324,6 @@ WindowWrapper.prototype = {
   _setSecureLockIcon: function(info)
   {
     let self = this.gIdentityHandler;
-    if (!self || !self._identityBox) return;
 
     if (!info) info = "Unsecure";
     let classname = null;
@@ -1333,17 +1332,17 @@ WindowWrapper.prototype = {
     switch (info)
     {
     case "Unsecure":
-      classname = self.IDENTITY_MODE_UNKNOWN;
+      if (self) classname = self.IDENTITY_MODE_UNKNOWN;
       tooltip = Utils.getString("fireie.security.notEntrypted");
       break;
     case "Mixed":
-      classname = self.IDENTITY_MODE_MIXED_ACTIVE_CONTENT ||
-                  self.IDENTITY_MODE_MIXED_ACTIVE_LOADED ||
-                  self.IDENTITY_MODE_MIXED_CONTENT;
+      if (self) classname = self.IDENTITY_MODE_MIXED_ACTIVE_CONTENT ||
+                            self.IDENTITY_MODE_MIXED_ACTIVE_LOADED ||
+                            self.IDENTITY_MODE_MIXED_CONTENT;
       tooltip = Utils.getString("fireie.security.partiallyEncrypted");
       break;
     default:
-      classname = self.IDENTITY_MODE_DOMAIN_VERIFIED;
+      if (self) classname = self.IDENTITY_MODE_DOMAIN_VERIFIED;
       tooltip = Utils.getString("fireie.security.encrypted") + " ";
       switch (info)
       {
@@ -1368,6 +1367,26 @@ WindowWrapper.prototype = {
     }
     if (info !== "Unsecure")
       tooltip += "\n" + Utils.getString("fireie.security.iconClick");
+
+    if (this.securityButton)
+    {
+      // SeaMonkey - right edge of status bar
+      this.securityButton.tooltipText = tooltip;
+      switch (info)
+      {
+      case "Unsecure":
+        break;
+      case "Mixed":
+        this.securityButton.setAttribute("level", "broken");
+        break;
+      default:
+        this.securityButton.setAttribute("level", "high");
+        if (Services.prefs.getBoolPref("browser.urlbar.highlight.secure")) this.window.gURLBar.setAttribute("level", "high");
+        break;
+      }
+    }
+
+    if (!self || !self._identityBox) return;
 
     let identityBox = self._identityBox;
     let identityIconLabel = self._identityIconLabel;

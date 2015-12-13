@@ -223,8 +223,13 @@ var gFireIE = null;
       Utils.ERROR("Failed to add tab open/close listeners: " + ex);
     }
     
+    // SeaMonkey: security button is in lower-right corner. If it exists, don't use identity-box.
+    let securityButton = document.getElementById("security-button");
+    if (typeof securityButton !== "undefined") gFireIE.securityButton = securityButton;
+    
     try
     {
+      if (!securityButton) {
       let displaySecurityInfoHandler = function(event)
       {
         if ((typeof(event) == 'undefined'
@@ -257,6 +262,7 @@ var gFireIE = null;
           dt.setData("text/html", htmlString);
         }
       }, false);
+    }
     }
     catch (ex)
     {
@@ -416,6 +422,16 @@ var gFireIE = null;
             return data;
           });
           return RET.modifyValue(newPromise);
+        });
+      
+      if (typeof(BrowserPageInfo) !== "undefined")
+        HM.hookCodeHead("BrowserPageInfo", function (doc, initialTab) {
+          if (initialTab == "securityTab"
+            && gFireIE.isIEEngine() && gFireIE.getContainerPlugin().SecureLockInfo !== "Unsecure"
+            && gFireIE.goDoCommand('DisplaySecurityInfo'))
+            {
+              return RET.shouldReturn();
+            }
         });
       
       //hook Interface Commands
@@ -866,7 +882,7 @@ var gFireIE = null;
     }
     HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
     HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
-  }
+    }
   
   let loadListener = function()
   {
