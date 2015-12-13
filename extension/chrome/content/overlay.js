@@ -449,7 +449,13 @@ var gFireIE = null;
       }
       HM.hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
       HM.hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return RET.shouldReturn(); });    
-      HM.hookCodeHead("BrowserViewSourceOfDocument", function() { if(gFireIE.goDoCommand('ViewPageSource')) return RET.shouldReturn(); });
+      HM.hookCodeHead("BrowserViewSourceOfDocument", function(aArgsOrDocument) {
+        // Ignore view documents request from the browser console
+        if (aArgsOrDocument && typeof(aArgsOrDocument.URL) == "string" && !Utils.isIEEngine(aArgsOrDocument.URL))
+            return;
+        if (gFireIE.goDoCommand('ViewPageSource'))
+            return RET.shouldReturn();
+      });
       
       // make firegestures' and others' selection based functions work
       HM.hookCodeHead("getBrowserSelection", function(maxlen)
