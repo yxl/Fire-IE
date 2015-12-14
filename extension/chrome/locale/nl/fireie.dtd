@@ -38,6 +38,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "Enginestatus weergeven bij aanwijzen adresbalkknop">
 <!ENTITY fireie.options.ui.statusBarCaption "Drijvende statusbalk">
 <!ENTITY fireie.options.ui.showStatusText "Status IE-engine weergeven in drijvende statusbalk">
+<!ENTITY fireie.options.ui.useNativeStatusBar "Use the existing Firefox status bar (if any)">
 <!ENTITY fireie.options.ui.faviconCaption "Tabbladpictogram">
 <!ENTITY fireie.options.ui.faviconSite "Favicon van website gebruiken">
 <!ENTITY fireie.options.ui.faviconIE "Pictogram IE-engine gebruiken">

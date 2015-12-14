@@ -41,6 +41,7 @@
 <!ENTITY fireie.options.ui.showTooltipText "Afficher le statut du moteur de rendu lorsque le curseur est sur le bouton de barre d'adresse">
 <!ENTITY fireie.options.ui.statusBarCaption "Barre de statut flottante">
 <!ENTITY fireie.options.ui.showStatusText "Afficher le statut du moteur IE dans la barre de statut flottante">
+<!ENTITY fireie.options.ui.useNativeStatusBar "Utiliser le statut du moteur Firefox (en supposant qu'il existe)">
 <!ENTITY fireie.options.ui.faviconCaption "Icône d'onglet">
 <!ENTITY fireie.options.ui.faviconSite "Utiliser le favicon du site Web">
 <!ENTITY fireie.options.ui.faviconIE "Utiliser l'icône du moteur IE">

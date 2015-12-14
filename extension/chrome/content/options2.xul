@@ -200,6 +200,7 @@
         <caption label="&fireie.options.ui.statusBarCaption;" />
         <vbox>
           <checkbox label="&fireie.options.ui.showStatusText;" id="showStatusText" />
+          <checkbox label="&fireie.options.ui.useNativeStatusBar;" id="useNativeStatusBar" class="indent" />
         </vbox>
       </groupbox>
       <groupbox id="contextMenuGroup">
