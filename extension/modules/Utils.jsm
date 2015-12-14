@@ -681,7 +681,7 @@ var Utils = {
       return null;
     }
     
-    let windows = Utils.generatorFromEnumerator(Services.wm.getEnumerator("navigator:browser"),
+    let windows = Utils.generatorFromEnumerator(Services.wm.getEnumerator(null),
       Ci.nsIDOMWindow);
     for (let window in windows)
     {
