@@ -1,5 +1,9 @@
 <!ENTITY privatebrowsingwarning.title "Silnik IE nie wspiera przeglądania prywatnego">
 <!ENTITY privatebrowsingwarning.intro1 "Masz aktywowane przeglądanie prywatne w &brandShortName;, ale nie jest ono wspierane przez silnik IE.">
 <!ENTITY privatebrowsingwarning.intro2 "Jeśli zmienisz silnik na IE, Twoja historia przeglądania, wyszukiwania, pobierania, formularzy, ciasteczka i tymczasowe pliki internetowe będą zapisane w dzienniku historii IE.">
+<!ENTITY privatewarning.whatShouldIDo.heading "Co teraz zrobić?">
 <!ENTITY privatewarning.whatShouldIDo.content "jeśli nie chcesz, żeby Twoje prywatne dane były rejestrowane, powróć do silnika &brandShortName;.">
+<!ENTITY privatewarning.getMeOutOfHere.label "Zabierz mnie stąd!">
+<!ENTITY privatewarning.expert.heading "Rozumiem zagrożenie">
 <!ENTITY privatewarning.expert.content "Jeśli mimo to dalej chcesz zmienić silnik na IE, kliknij &quot;Kontynuuj&quot;. Zauważ, że pozostałe karty nie korzystające z silnika IE, będą dalej przeglądane prywatnie">
+<!ENTITY privatewarning.askAlways "Zawsze pytaj">

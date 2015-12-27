@@ -223,8 +223,13 @@ var gFireIE = null;
       Utils.ERROR("Failed to add tab open/close listeners: " + ex);
     }
     
+    // SeaMonkey: security button is in lower-right corner. If it exists, don't use identity-box.
+    let securityButton = document.getElementById("security-button");
+    if (typeof securityButton !== "undefined") gFireIE.securityButton = securityButton;
+    
     try
     {
+      if (!securityButton) {
       let displaySecurityInfoHandler = function(event)
       {
         if ((typeof(event) == 'undefined'
@@ -258,12 +263,13 @@ var gFireIE = null;
         }
       }, false);
     }
+    }
     catch (ex)
     {
       Utils.ERROR("Failed to add event listener on #identity-box: " + ex);
     }
 
-    gFireIE.gIdentityHandler = gIdentityHandler;
+    if (typeof gIdentityHandler !== "undefined") gFireIE.gIdentityHandler = gIdentityHandler;
   }
   
   function initLazyHooks()
@@ -418,6 +424,16 @@ var gFireIE = null;
           return RET.modifyValue(newPromise);
         });
       
+      if (typeof(BrowserPageInfo) !== "undefined")
+        HM.hookCodeHead("BrowserPageInfo", function (doc, initialTab) {
+          if (initialTab == "securityTab"
+            && gFireIE.isIEEngine() && gFireIE.getContainerPlugin().SecureLockInfo !== "Unsecure"
+            && gFireIE.goDoCommand('DisplaySecurityInfo'))
+            {
+              return RET.shouldReturn();
+            }
+        });
+      
       //hook Interface Commands
       HM.hookCodeHead("BrowserBack", function() { if (gFireIE.goDoCommand('Back')) return RET.shouldReturn(); });
       HM.hookCodeHead("BrowserForward", function() { if (gFireIE.goDoCommand('Forward')) return RET.shouldReturn(); });
@@ -499,15 +515,17 @@ var gFireIE = null;
     // FF25+ check: is gFindBar initialized yet?
     if (gBrowser.isFindBarInitialized && !gBrowser.isFindBarInitialized())
       return;
+
+    gFireIE.findbar = (typeof gFindBar !== "undefined") ? gFindBar : document.getElementById("FindToolbar");
   
-    if (gFindBar.FireIE_hooked)
+    if (gFireIE.findbar.FireIE_hooked)
       return;
 
-    gFindBar.FireIE_hooked = true;
+    gFireIE.findbar.FireIE_hooked = true;
     Utils.LOG("Hooking findbar...");
     
     // find_next, find_prev, arguments[0] denotes whether find_prev
-    HM.hookCodeHead("gFindBar.onFindAgainCommand", function(prev)
+    HM.hookCodeHead("gFireIE.findbar.onFindAgainCommand", function(prev)
     {
       if (this.getElement('findbar-textbox').value.length != 0
         && gFireIE.setFindParams(this.getElement('findbar-textbox').value,
@@ -520,7 +538,7 @@ var gFireIE = null;
       }
     });
 
-    HM.hookCodeHead("gFindBar.toggleHighlight", function()
+    HM.hookCodeHead("gFireIE.findbar.toggleHighlight", function()
     {
       if (gFireIE.setFindParams(this.getElement('findbar-textbox').value,
                                 this.getElement('highlight').checked,
@@ -532,9 +550,9 @@ var gFireIE = null;
     });
 
     // do not return in order to let findbar set the case sensitivity pref
-    HM.hookAttr(gFindBar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFindBar); }");
+    HM.hookAttr(gFireIE.findbar.getElement("find-case-sensitive"), "oncommand", "if (gFireIE.setFindParams(gFireIE.findbar.getElement('findbar-textbox').value, gFireIE.findbar.getElement('highlight').checked, gFireIE.findbar.getElement('find-case-sensitive').checked)) { gFireIE.updateFindBarUI(gFireIE.findbar); }");
 
-    HM.hookCodeHead("gFindBar._find", function(text)
+    HM.hookCodeHead("gFireIE.findbar._find", function(text)
     {
       let value = text || this.getElement('findbar-textbox').value;
       if (gFireIE.setFindParams(value, this.getElement('highlight').checked,
@@ -546,16 +564,16 @@ var gFireIE = null;
       }
     });
 
-    HM.hookAttrTail(document.getElementById("cmd_find"), "oncommand", "gFireIE.setFindParams(gFindBar.getElement('findbar-textbox').value, gFindBar.getElement('highlight').checked, gFindBar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFindBar);");
+    HM.hookAttrTail(document.getElementById("cmd_find"), "oncommand", "gFireIE.setFindParams(gFireIE.findbar.getElement('findbar-textbox').value, gFireIE.findbar.getElement('highlight').checked, gFireIE.findbar.getElement('find-case-sensitive').checked); gFireIE.resetFindBarUI(gFireIE.findbar);");
 
-    if (typeof(gFindBar._getInitialSelection) === "function")
-      HM.hookCodeHead("gFindBar._getInitialSelection", function()
+    if (typeof(gFireIE.findbar._getInitialSelection) === "function")
+      HM.hookCodeHead("gFireIE.findbar._getInitialSelection", function()
       {
         let value = gFireIE.getSelectionText(this._selectionMaxLen);
         if (value != null) return RET.shouldReturn(value);
       });
     else
-      HM.hookCodeHead("gFindBar.onCurrentSelection", function(selectionString)
+      HM.hookCodeHead("gFireIE.findbar.onCurrentSelection", function(selectionString)
       {
         if (this.prefillWithSelection &&
             Services.prefs.getBoolPref("accessibility.typeaheadfind.prefillwithselection"))
@@ -571,7 +589,7 @@ var gFireIE = null;
     
     try
     {
-      gFindBar.getElement("findbar-textbox").addEventListener('keypress', function(event)
+      gFireIE.findbar.getElement("findbar-textbox").addEventListener('keypress', function(event)
       {
         var shouldHandle = !event.altKey && !event.ctrlKey &&
                            !event.metaKey && !event.shiftKey;
@@ -868,8 +886,11 @@ var gFireIE = null;
       if (e.target.id == "fireie-urlbar-switch")
         return RET.shouldReturn();
     }
-    HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
-    HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
+    if (gURLBar.onDragOver && gURLBar.onDrop)
+    {
+      HM.hookCodeHead("gURLBar.onDragOver", checkURLBarButton);
+      HM.hookCodeHead("gURLBar.onDrop", checkURLBarButton);
+    }
   }
   
   let loadListener = function()
