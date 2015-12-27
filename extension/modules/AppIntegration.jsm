@@ -1332,17 +1332,18 @@ WindowWrapper.prototype = {
     switch (info)
     {
     case "Unsecure":
-      if (self) classname = self.IDENTITY_MODE_UNKNOWN;
+      if (self) classname = self.IDENTITY_MODE_UNKNOWN || "unknownIdentity";
       tooltip = Utils.getString("fireie.security.notEntrypted");
       break;
     case "Mixed":
       if (self) classname = self.IDENTITY_MODE_MIXED_ACTIVE_CONTENT ||
                             self.IDENTITY_MODE_MIXED_ACTIVE_LOADED ||
-                            self.IDENTITY_MODE_MIXED_CONTENT;
+                            self.IDENTITY_MODE_MIXED_CONTENT ||
+                            "unknownIdentity mixedActiveContent";
       tooltip = Utils.getString("fireie.security.partiallyEncrypted");
       break;
     default:
-      if (self) classname = self.IDENTITY_MODE_DOMAIN_VERIFIED;
+      if (self) classname = self.IDENTITY_MODE_DOMAIN_VERIFIED || "verifiedDomain";
       tooltip = Utils.getString("fireie.security.encrypted") + " ";
       switch (info)
       {
