@@ -205,9 +205,6 @@
     <ClInclude Include="jscre\JSRegExp_internal.h">
       <Filter>jscre</Filter>
     </ClInclude>
-    <ClInclude Include="jscre\stdint.h">
-      <Filter>jscre</Filter>
-    </ClInclude>
     <ClInclude Include="re\RegExp.h">
       <Filter>re</Filter>
     </ClInclude>
@@ -272,6 +269,9 @@
     </ClInclude>
     <ClInclude Include="Utils\StringUtils.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="jscre\jscre_stdint.h">
+      <Filter>jscre</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

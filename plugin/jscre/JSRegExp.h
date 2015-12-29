@@ -39,7 +39,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "stdint.h"
+#if _MSC_VER >= 1900 // VS2015
+#include <stdint.h>
+#else
+#include "jscre_stdint.h"
+#endif
 
 namespace jscre {
 

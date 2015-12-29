@@ -34,6 +34,7 @@ namespace Utils
 
 		static Application GetApplication();
 		static CString GetProcessName();
+		static uint32_t GetProcessId();
 		static CString GetModulePath();
 	private:
 		static Application s_app;

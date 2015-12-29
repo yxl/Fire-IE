@@ -183,6 +183,11 @@ var Utils = {
     let ipcPrefName = "dom.ipc.plugins.enabled.npfireie" + (Utils.is64bit ? "64" : "32") + ".dll";
     return Services.prefs.getBoolPref(ipcPrefName);
   },
+  
+  get processId()
+  {
+    return Services.appinfo.processID;
+  },
 
   get ieUserAgent()
   {

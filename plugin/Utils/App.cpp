@@ -63,6 +63,10 @@ CString App::GetProcessName()
 	return s_strProcessName = _T("firefox.exe");
 }
 
+uint32_t App::GetProcessId()
+{
+	return (uint32_t)::GetProcessId(NULL);
+}
 
 HMODULE WINAPI App::ModuleFromAddress(PVOID pv)
 {

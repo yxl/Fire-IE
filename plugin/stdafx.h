@@ -66,5 +66,6 @@
 #include <algorithm>
 // std::function
 #include <functional>
+#include <iterator>
 
 using namespace std;

@@ -119,6 +119,7 @@ namespace Plugin
 		NPI_DEF(ShouldPreventStatusFlash);
 		NPI_DEF(IsDocumentComplete);
 		NPI_DEF(ProcessName);
+		NPI_DEF(ProcessId);
 		NPI_DEF(Alive);
 
 		// ABP properties
@@ -210,6 +211,7 @@ namespace Plugin
 			NPN_GSI_P(ShouldPreventStatusFlash);
 			NPN_GSI_P(IsDocumentComplete);
 			NPN_GSI_P(ProcessName);
+			NPN_GSI_P(ProcessId);
 			NPN_GSI_P(Alive);
 			NPN_GSI_P(ABPIsEnabled);
 			NPN_GSI_P(ABPIsLoading);

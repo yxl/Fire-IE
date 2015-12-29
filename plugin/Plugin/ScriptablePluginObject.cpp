@@ -201,6 +201,12 @@ namespace Plugin
 			STRINGZ_TO_NPVARIANT(CStringToNPStringCharacters(name), *result);
 			return true;
 		}
+		else if (name == NPI_ID(ProcessId))
+		{
+			int32_t id = (int32_t)Utils::App::GetProcessId();
+			INT32_TO_NPVARIANT(id, *result);
+			return true;
+		}
 		// readonly property {bool} Alive
 		else if (name == NPI_ID(Alive))
 		{

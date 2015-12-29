@@ -228,6 +228,7 @@ let UtilsPluginManager = {
     this.fireAfterInit(function()
     {
       this._isPluginInitialized = true;
+      this._updateOOPStatus();
       this._setPluginPrefs();
     }, this, [], true);
 
@@ -262,6 +263,7 @@ let UtilsPluginManager = {
     this.fireAfterInit(function()
     {
       this._isPluginInitialized = true;
+      this._updateOOPStatus();
       this._setPluginPrefs();
       
       // Tell tabs in IE engine to reload
@@ -340,6 +342,12 @@ let UtilsPluginManager = {
         Utils.ERROR("Failed calling pref setter: " + ex);
       }
     });
+  },
+  
+  // Update OOP status - Firefox 43 no longer supports in-process plugins
+  _updateOOPStatus: function()
+  {
+    this._isRunningOOP = Utils.processId != this.getPlugin().ProcessId;
   },
   
   getPluginBindingType: function(plugin)
