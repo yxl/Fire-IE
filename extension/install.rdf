@@ -5,11 +5,12 @@
 
    <em:id>fireie@fireie.org</em:id>
    <em:name>Fire IE</em:name>
-   <em:version>0.4.5.3</em:version>
+   <em:version>0.4.6</em:version>
    <em:description>Switch to IE engine in one click and give up your Internet Explorer.</em:description>
    <em:creator>Yuan Xulei</em:creator>
    <em:contributor>Wei Deng</em:contributor>
    <em:contributor>Yifan Wu</em:contributor>
+   <em:contributor>IsaacSchemm</em:contributor>
    <em:homepageURL>http://fireie.org/</em:homepageURL>
    <em:optionsURL>chrome://fireie/content/options2.xul</em:optionsURL>
    <em:aboutURL>chrome://fireie/content/about.xul</em:aboutURL>
@@ -24,7 +25,7 @@
      <Description>
        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
        <em:minVersion>14.0</em:minVersion>
-       <em:maxVersion>44.0a1</em:maxVersion>
+       <em:maxVersion>47.0a1</em:maxVersion>
      </Description>
    </em:targetApplication>
 
@@ -44,6 +45,7 @@
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>
        <em:contributor>Yifan Wu</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
@@ -61,6 +63,7 @@
        <em:creator>袁徐磊</em:creator>
        <em:contributor>邓威</em:contributor>
        <em:contributor>吴一帆</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
@@ -78,6 +81,7 @@
        <em:creator>袁徐磊</em:creator>
        <em:contributor>邓威</em:contributor>
        <em:contributor>吴一帆</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
@@ -95,6 +99,7 @@
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>
        <em:contributor>Yifan Wu</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
@@ -112,6 +117,7 @@
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>
        <em:contributor>Yifan Wu</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>
@@ -130,6 +136,7 @@
        <em:creator>Yuan Xulei</em:creator>
        <em:contributor>Wei Deng</em:contributor>
        <em:contributor>Yifan Wu</em:contributor>
+       <em:contributor>IsaacSchemm</em:contributor>
        <em:translator>cck168, Merci chao (zh-TW)</em:translator>
        <em:translator>Alexander Gvaramiya (ru-RU)</em:translator>
        <em:translator>github.com/piotrex (pl)</em:translator>

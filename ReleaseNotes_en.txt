@@ -1,3 +1,11 @@
+Fire-IE 0.4.6 @ January 29th, 2016
+Enhancements:
+* Added SeaMonkey support.
+
+Bug fixes:
+* Compatibility with Firefox 44.
+* Fix the https secure lock icon in Firefox 43+.
+
 Fire-IE 0.4.5.3 @ October 25, 2015
 Add French locale by bb84000.
 
