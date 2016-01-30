@@ -2,4 +2,4 @@
 <!ENTITY privatebrowsingwarning.intro1 "您已經啟用了隱私瀏覽模式，但是 IE 引擎並不支援。">
 <!ENTITY privatebrowsingwarning.intro2 "如果您使用 IE 引擎，瀏覽歷史、搜索歷史、下載歷史、表單歷史、Cookie 或者 Internet 暫存檔案會被保留在 IE 的記錄中。">
 <!ENTITY privatewarning.whatShouldIDo.content "如果您不希望保留隱私訊息，請切換回 &brandShortName; 引擎。">
-<!ENTITY privatewarning.expert.content "如果您仍然打算繼續使用 IE 引擎瀏覽頁面，可以點擊下面的「繼續」。注意，其他沒有使用 IE 引擎的 &brandShortName; 分頁仍然處於隱私瀏覽模式中。">
+<!ENTITY privatewarning.expert.content "如果您仍然打算繼續使用 IE 引擎瀏覽頁面，可以按下面的「繼續」。注意，其他沒有使用 IE 引擎的 &brandShortName; 分頁仍然處於隱私瀏覽模式中。">
