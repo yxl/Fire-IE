@@ -15,26 +15,26 @@
                                    [p]本擴充套件已支援 Adblock Plus，您將不再被 IE 引擎下的廣告所打擾。[/p]
 
                                    [p]從版本 0.3.3 起，32 位和 64 位元版本已合併，我們不再單獨提供 64 位元版本的擴充套件。[/p]">
-<!ENTITY about.why "[p]解雇 IE 主要目的是為了解決 Firefox 在中國市場的網頁相容問題。中國大陸及台灣地區存在大量僅支援 IE 瀏覽器的網站，解雇 IE 可以讓使用者在 Firefox 下無障礙地訪問這些網站。[/p]">
+<!ENTITY about.why "[p]解雇 IE 主要目的是為了解決 Firefox 在中國市場的網頁相容問題。中國大陸及台灣地區存在大量僅支援 IE 瀏覽器的網站，解雇 IE 可以讓使用者在 Firefox 下無障礙地存取這些網站。[/p]">
 <!ENTITY about.whatsNext "[p]智能切換功能。[/p]">
-<!ENTITY about.links "[p]項目首頁： [link href='http://fireie.org/zh-CN'][/link][/p]
+<!ENTITY about.links "[p]計畫首頁： [link href='http://fireie.org/zh-CN'][/link][/p]
 
 
-                                   [p]常見問題： [link href='http://fireie.org/zh-CN/faq'][/link][br/]
+                                   [p]常見問題： [link href='http://fireie.org/zh-TW/faq'][/link][br/]
 
-                                      更換面板： [link href='http://fireie.org/zh-CN/skins'][/link][br/]
+                                      更換面板： [link href='http://fireie.org/zh-TW/skins'][/link][br/]
 
-                                      如何編寫切換規則： [link href='http://fireie.org/zh-CN/switch_rules'][/link]
+                                      如何編寫切換規則： [link href='http://fireie.org/zh-TW/switch_rules'][/link]
 
                                    [/p]
 
                                    [p]原始程式碼： [link href='https://github.com/yxl/Fire-IE'][/link][br/]
 
-                                      您可以通過下列 URL 回饋問題、提出建議或是提供翻譯：
+                                      您可以透過下列 URL 回饋問題、提出建議或是提供翻譯：
 
                                    [ul][li][link href='https://g.mozest.com/forum-83-1'][/link] (中文支援論壇)[/li]
 
-                                       [li][link href='https://github.com/yxl/Fire-IE/issues'][/link] (GitHub issue 列表)[/li]
+                                       [li][link href='https://github.com/yxl/Fire-IE/issues'][/link] (GitHub issue 清單)[/li]
 
                                    [/ul]
 
