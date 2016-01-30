@@ -1,7 +1,7 @@
 <!ENTITY fireie.switchButton.label "解雇 IE">
-<!ENTITY fireie.urlbar.switch.tooltip1 "左鍵點擊：切換瀏覽引擎">
+<!ENTITY fireie.urlbar.switch.tooltip1 "按滑鼠左鍵：切換瀏覽引擎">
 <!ENTITY fireie.urlbar.switch.tooltip1.disabled "無法在該頁面進行切換">
-<!ENTITY fireie.urlbar.switch.tooltip3 "右鍵點擊：設定 解雇 IE 選項">
+<!ENTITY fireie.urlbar.switch.tooltip3 "按滑鼠右鍵：設定 解雇 IE 選項">
 <!ENTITY fireie.menu.switchRules.label "切換規則">
 <!ENTITY fireie.menu.internetProperties.label "網際網路選項（控制台）">
 <!ENTITY fireie.menu.autoswitch.disable "完全停用自動切換">
@@ -22,7 +22,7 @@
 <!ENTITY fireie.options.switch.autoSwitchOnCondition.no "保持目前的渲染引擎">
 <!ENTITY fireie.options.switch.autoSwitchOnCondition.fx "切換到 Firefox 引擎">
 <!ENTITY fireie.options.switch.autoSwitchOnCondition.ie "切換到 IE 引擎">
-<!ENTITY fireie.options.shorcut.caption "快捷鍵">
+<!ENTITY fireie.options.shorcut.caption "快速鍵">
 <!ENTITY fireie.options.shorcut.enable "啟用">
 <!ENTITY fireie.options.private.caption "隱私瀏覽模式">
 <!ENTITY fireie.options.private.privatebrowsingwarning "顯示隱私瀏覽模式警告頁面">
@@ -33,7 +33,7 @@
 <!ENTITY fireie.options.ui.iconDisplayLabel "顯示方式：">
 <!ENTITY fireie.options.ui.iconHidden "隱藏">
 <!ENTITY fireie.options.ui.iconOnly "顯示圖示">
-<!ENTITY fireie.options.ui.iconAndText "顯示圖示和標籤">
+<!ENTITY fireie.options.ui.iconAndText "顯示圖示與標籤">
 <!ENTITY fireie.options.ui.tooltipLabel "工具提示：">
 <!ENTITY fireie.options.ui.showTooltipText "滑鼠停留時顯示引擎狀態資訊">
 <!ENTITY fireie.options.ui.statusBarCaption "浮動狀態列">
@@ -48,23 +48,23 @@
 <!ENTITY fireie.options.integration.tab "集成">
 <!ENTITY fireie.options.integration.pane "集成">
 <!ENTITY fireie.options.integration.mgCaption "滑鼠手勢支援">
-<!ENTITY fireie.options.integration.mgDescr "解雇 IE 會自動偵測您的滑鼠手勢擴充套件和腳本。如果您的滑鼠手勢擴充套件或腳本沒有被偵測到，請嘗試啟用這個選項。">
+<!ENTITY fireie.options.integration.mgDescr "解雇 IE 會自動偵測您的滑鼠手勢擴充套件和腳本。如果您的滑鼠手勢擴充套件或指令碼沒有被偵測到，請嘗試啟用這個選項。">
 <!ENTITY fireie.options.integration.forceMGSupport "強制啟用 IE 引擎滑鼠手勢支援">
 <!ENTITY fireie.options.integration.alreadyEnabledMGSupport "目前已啟用滑鼠手勢支援。">
 <!ENTITY fireie.options.integration.abpCaption "Adblock Plus 支援">
-<!ENTITY fireie.options.integration.abpDescr "在 IE 引擎中使用 Adblock Plus 的規則來過濾廣告。">
+<!ENTITY fireie.options.integration.abpDescr "在 IE 引擎中使用 Adblock Plus 的規則來篩選廣告。">
 <!ENTITY fireie.options.integration.abpSupportEnabled "啟用 Adblock Plus 支援">
 <!ENTITY fireie.options.integration.abpStatusLabel "目前狀態：">
 <!ENTITY fireie.options.integration.abpStatusNotDetected "未偵測到 Adblock Plus">
 <!ENTITY fireie.options.integration.abpStatusEnabled "已啟用">
 <!ENTITY fireie.options.integration.abpStatusDisabled "已停用">
-<!ENTITY fireie.options.integration.abpStatusLoading "正在載入過濾規則...">
-<!ENTITY fireie.options.integration.abpStatusLoadFailed "載入過濾規則失敗">
+<!ENTITY fireie.options.integration.abpStatusLoading "正在載入篩選規則...">
+<!ENTITY fireie.options.integration.abpStatusLoadFailed "載入篩選規則失敗">
 <!ENTITY fireie.options.integration.otherOptions "其他選項">
-<!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 和 Firefox 引擎之間同步 Cookie">
+<!ENTITY fireie.options.integration.cookieSyncEnabled "在 IE 與 Firefox 引擎之間同步 Cookie">
 <!ENTITY fireie.options.integration.privateCookieSyncEnabled "在隱私瀏覽模式下啟用 Cookie 同步">
 <!ENTITY fireie.options.integration.historyEnabled "記錄 IE 引擎的瀏覽歷史">
-<!ENTITY fireie.options.integration.disableFolderRedirection "不要重定向 IE 的暫存檔案和 Cookie">
+<!ENTITY fireie.options.integration.disableFolderRedirection "不要重新導向 IE 的暫存檔案及 Cookie">
 <!ENTITY fireie.options.ieoptions.tab "IE 引擎選項">
 <!ENTITY fireie.options.ieoptions.pane "IE 引擎選項">
 <!ENTITY fireie.options.iecompat.group "IE 相容性檢視模式">
