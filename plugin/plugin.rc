@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文(简体，中国) resources
+// Chinese (Simplified, PRC) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -114,12 +114,12 @@ BEGIN
     0
 END
 
-#endif    // 中文(简体，中国) resources
+#endif    // Chinese (Simplified, PRC) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英语(美国) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -131,8 +131,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,4,6,0
- PRODUCTVERSION 1,4,6,0
+ FILEVERSION 1,4,6,1
+ PRODUCTVERSION 1,4,6,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -150,13 +150,13 @@ BEGIN
             VALUE "CompanyName", "fireie@fireie.org"
             VALUE "FileDescription", "Fire IE DLL"
             VALUE "FileExtents", "*"
-            VALUE "FileVersion", "1.4.6.0"
+            VALUE "FileVersion", "1.4.6.1"
             VALUE "InternalName", "npfireie.dll"
             VALUE "LegalCopyright", "Copyright (C) 2012-2016 fireie.org"
             VALUE "MIMEType", "application/fireie"
             VALUE "OriginalFilename", "npfireie.dll"
             VALUE "ProductName", "Fire IE DLL"
-            VALUE "ProductVersion", "1.4.6.0"
+            VALUE "ProductVersion", "1.4.6.1"
         END
     END
     BLOCK "VarFileInfo"
@@ -165,7 +165,7 @@ BEGIN
     END
 END
 
-#endif    // 英语(美国) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

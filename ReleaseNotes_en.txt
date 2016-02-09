@@ -1,3 +1,6 @@
+Fire-IE 0.4.6.1 @ February 9th, 2016
+Fix crash on Windows XP/2003.
+
 Fire-IE 0.4.6 @ January 29th, 2016
 Enhancements:
 * Added SeaMonkey support.
