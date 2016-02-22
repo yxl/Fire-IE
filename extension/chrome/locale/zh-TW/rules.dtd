@@ -8,7 +8,7 @@
 <!ENTITY addSubscriptionAdd.label "訂閱">
 <!ENTITY addSubscriptionCancel.label "取消">
 <!ENTITY addSubscriptionOther.label "訂閱其他規則">
-<!ENTITY noSubscriptions.text "您還沒有訂閱的規則。解雇 IE 沒有切換規則無法自動切換核心和同步 Cookie, 請使用 &quot;訂閱新規則&quot;進行新增。">
+<!ENTITY noSubscriptions.text "您還沒有訂閱的規則。解雇 IE 沒有切換規則無法自動切換核心與同步 Cookie，請使用 &quot;訂閱新規則&quot;進行新增。">
 <!ENTITY subscription.homepage.label "首頁">
 <!ENTITY subscription.external.label "由其他擴充套件更新">
 <!ENTITY subscription.source.label "切換規則清單">
@@ -16,14 +16,14 @@
 <!ENTITY subscription.lastDownload.label "最新下載:">
 <!ENTITY subscription.lastDownload.inProgress "下載中……">
 <!ENTITY subscription.lastDownload.unknown "N/A">
-<!ENTITY subscription.lastDownload.invalidURL "失敗，不是有效地址">
+<!ENTITY subscription.lastDownload.invalidURL "失敗，不是有效位址">
 <!ENTITY subscription.lastDownload.connectionError "失敗，下載失敗">
 <!ENTITY subscription.lastDownload.invalidData "失敗，不是有效的切換規則清單">
 <!ENTITY subscription.lastDownload.checksumMismatch "失敗，校驗和不匹配">
 <!ENTITY subscription.lastDownload.success "成功">
 <!ENTITY subscription.minVersion.warning "該訂閱的切換規則需要新版本的解雇 IE, 請更新至最新版本。">
-<!ENTITY subscription.disabledRules.warning "該訂閱中的某些切換規則被禁用.">
-<!ENTITY subscription.disabledRules.enable "啟用已禁用的切換規則">
+<!ENTITY subscription.disabledRules.warning "該訂閱中的某些切換規則被停用。">
+<!ENTITY subscription.disabledRules.enable "啟用已停用的切換規則">
 <!ENTITY subscription.actions.label "動作">
 <!ENTITY subscription.update.label "更新規則">
 <!ENTITY subscription.editTitle.label "編輯標題">
@@ -34,7 +34,7 @@
 <!ENTITY viewList.label "檢視清單">
 <!ENTITY addGroup.label "新增規則清單">
 <!ENTITY addGroup.accesskey "g">
-<!ENTITY noRules.text "您還沒有自定義的切換規則.">
+<!ENTITY noRules.text "您還沒有自訂的切換規則。">
 <!ENTITY addRule.label "新增">
 <!ENTITY addRule.accesskey "d">
 <!ENTITY rule.actions.label "切換規則動作">
@@ -66,7 +66,7 @@
 <!ENTITY sort.ascending.accesskey "A">
 <!ENTITY sort.descending.label "Z &gt; A 順序">
 <!ENTITY sort.descending.accesskey "Z">
-<!ENTITY noGroupSelected.text "想要顯示規則清單中的切換規則, 您需要先選取一個清單.">
+<!ENTITY noGroupSelected.text "想要顯示規則清單中的切換規則，您需要先選取一個清單。">
 <!ENTITY noRulesInGroup.text "選取的規則清單是空的">
 <!ENTITY rules.remove.warning "您確定刪除所有選取的切換規則嗎?">
 <!ENTITY backupButton.label "備份與還原">
@@ -79,8 +79,8 @@
 <!ENTITY backup.custom.title "僅自訂切換規則">
 <!ENTITY backup.error "切換規則寫入檔案時發生錯誤。請確認該檔案沒有寫保護或者正在被其他程式使用。">
 <!ENTITY restore.error "無法處理該檔案, 可能該檔案不是 解雇IE 的備份檔案?">
-<!ENTITY restore.complete.warning "所有的切換規則參數將被替代, 是否繼續?">
-<!ENTITY restore.custom.warning "所有的自定義規則將被替代, 是否繼續?">
+<!ENTITY restore.complete.warning "所有的切換規則參數將被取代, 是否繼續?">
+<!ENTITY restore.custom.warning "所有的自定義規則將被取代, 是否繼續?">
 <!ENTITY restore.minVersion.warning "警告: 該檔案由新版本的解雇 IE 建立, 請更新解雇 IE。">
 <!ENTITY find.label "尋找">
 <!ENTITY find.accesskey "n">

@@ -5,5 +5,5 @@
 <!ENTITY privatewarning.whatShouldIDo.content "如果您不希望保留隱私訊息，請切換回 &brandShortName; 引擎。">
 <!ENTITY privatewarning.getMeOutOfHere.label "帶我離開這裡！">
 <!ENTITY privatewarning.expert.heading "我了解此安全風險">
-<!ENTITY privatewarning.expert.content "如果您仍然打算繼續使用 IE 引擎瀏覽頁面，可以點擊下面的「繼續」。注意，其他沒有使用 IE 引擎的 &brandShortName; 分頁仍然處於隱私瀏覽模式中。">
+<!ENTITY privatewarning.expert.content "如果您仍然打算繼續使用 IE 引擎瀏覽頁面，可以按下面的「繼續」。注意，其他沒有使用 IE 引擎的 &brandShortName; 分頁仍然處於隱私瀏覽模式中。">
 <!ENTITY privatewarning.askAlways "每次詢問">

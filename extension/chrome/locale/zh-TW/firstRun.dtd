@@ -1,7 +1,7 @@
 <!ENTITY dialog.title "解雇 IE 安裝完成">
 <!ENTITY confirmation "感謝您安裝解雇 IE。今後您可以捨棄 IE, 盡情享用強大的 Firefox。">
 <!ENTITY advancedSection "進階選項">
-<!ENTITY listSelection1 "已配置以下規則清單，用於自動切換核心:">
+<!ENTITY listSelection1 "已設定以下規則清單，用於自動切換核心:">
 <!ENTITY noList "無規則清單">
-<!ENTITY visitHomepage.label "訪問清單首頁">
-<!ENTITY listSelection2 "您可以在任何時候在 [link]切換規則[/link] 中更改選擇.">
+<!ENTITY visitHomepage.label "造訪清單首頁">
+<!ENTITY listSelection2 "您可以在任何時候在 [link]切換規則[/link] 中變更選擇。">
