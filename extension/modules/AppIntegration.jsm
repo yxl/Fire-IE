@@ -2331,7 +2331,7 @@ WindowWrapper.prototype = {
     try
     {
       this.window.urlSecurityCheck(url,
-        this.window.gBrowser.contentPrincipal,
+        this.window.gBrowser.contentDocument.nodePrincipal,
         Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
       return true;
     }
