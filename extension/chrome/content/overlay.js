@@ -464,9 +464,9 @@ var gFireIE = null;
           return RET.shouldReturn();
       }
       HM.hookCodeHead("displaySecurityInfo", displaySecurityInfoFunc);
-      if (gIdentityHandler && gIdentityHandler.checkIdentity)
+      if (typeof gIdentityHandler !== "undefined" && gIdentityHandler && gIdentityHandler.checkIdentity)
         HM.hookCodeHead("gIdentityHandler.checkIdentity", function() { if (gFireIE.checkIdentity()) return RET.shouldReturn(); });
-      if (gIdentityHandler && gIdentityHandler.refreshIdentityBlock)
+      if (typeof gIdentityHandler !== "undefined" && gIdentityHandler && gIdentityHandler.refreshIdentityBlock)
         HM.hookCodeHead("gIdentityHandler.refreshIdentityBlock", function() { if (gFireIE.checkIdentity()) return RET.shouldReturn(); });    
       HM.hookCodeHead("BrowserViewSourceOfDocument", function(aArgsOrDocument) {
         // Ignore view documents request from the browser console
