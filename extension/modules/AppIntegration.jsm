@@ -1207,7 +1207,9 @@ WindowWrapper.prototype = {
       const wpl = Ci.nsIWebProgressListener;
       let aMaxTotalProgress = 100;
       let aStopped = aCurTotalProgress == -1 || aCurTotalProgress == 100;
-      let aTabListener = this.window.gBrowser.mTabListeners[tab._tPos];
+      let aTabListener = this.window.gBrowser.mTabListeners ? this.window.gBrowser.mTabListeners[tab._tPos] :
+                         this.window.gBrowser._tabListeners ? this.window.gBrowser._tabListeners.get(tab) :
+                                                              null;
       let aWebProgress = tab.linkedBrowser.webProgress;
       let aRequest = Services.io.newChannelFromURI(tab.linkedBrowser.currentURI);
       let aStateFlags = (aStopped ? wpl.STATE_STOP : wpl.STATE_START) | wpl.STATE_IS_NETWORK;

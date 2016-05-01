@@ -359,7 +359,7 @@ let FileUtils = {
     }
      
     // convert the binary hash data to a hex string.
-    return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    return [].map.call(hash, function(ch) { return toHexString(ch.charCodeAt(0)); }).join("");
   },
   
   /**
