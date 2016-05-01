@@ -1,3 +1,6 @@
+Fire-IE 0.4.6.2 @ May 1st, 2016
+Compatibility with Firefox 46.
+
 Fire-IE 0.4.6.1 @ February 9th, 2016
 Fix crash on Windows XP/2003.
 
