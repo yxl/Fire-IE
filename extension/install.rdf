@@ -17,7 +17,7 @@
    <em:iconURL>chrome://fireie/skin/icon.png</em:iconURL>
    <em:targetPlatform>WINNT</em:targetPlatform>
    <em:unpack>true</em:unpack>
-   <em:multiprocessCompatible>true</em:multiprocessCompatible>
+   <em:multiprocessCompatible>false</em:multiprocessCompatible>
    <em:type>2</em:type>
 
    <!-- Firefox -->
