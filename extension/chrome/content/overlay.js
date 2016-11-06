@@ -457,6 +457,16 @@ var gFireIE = null;
       HM.hookCodeHead("PrintUtils.printPreview", function() { if (gFireIE.goDoCommand('PrintPreview')) return RET.shouldReturn(); });
       // cmd_cut, cmd_copy, cmd_paste, cmd_selectAll
       HM.hookCodeHead("goDoCommand", function(cmd) { if (gFireIE.goDoCommand(cmd)) return RET.shouldReturn(); }); 
+      HM.hookCodeTail("gURLBar._getSelectedValueForClipboard", function(ret)
+      {
+        Utils.LOG("Checking selected value " + ret);
+        if (Utils.isPrefixedUrl(ret))
+        {
+          ret = Utils.fromAnyPrefixedUrl(ret);
+          Utils.LOG("Fixed selected value: " + ret);
+          return RET.modifyValue(ret);
+        }
+      });
       
       let displaySecurityInfoFunc = function()
       {
